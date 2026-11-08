@@ -5,33 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ClosingHub – Vorschau</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,500&family=Cinzel:wght@400;500;600&family=Plus+Jakarta+Sans:ital,wght@1,600;1,700&family=Inter:wght@400;500;600;700&display=swap">
+<script>try{if(localStorage.getItem('ch_theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = { theme: { extend: {
-  colors: { bg:'#0A0A0B', panel:'#121214', line:'#232327', muted:'#8A8A93', gold:{ DEFAULT:'#D4A843', light:'#F3D58A', dark:'#A97C22' } },
+  colors: { bg:'rgb(var(--bg) / <alpha-value>)', panel:'rgb(var(--panel) / <alpha-value>)', line:'rgb(var(--line) / <alpha-value>)', muted:'rgb(var(--muted) / <alpha-value>)', gold:{ DEFAULT:'#D4A843', light:'#F3D58A', dark:'#A97C22' } },
   fontFamily: { serif:['Lora','serif'], sans:['Inter','sans-serif'] } } } };
 </script>
 <style>
-  html,body{background:#0A0A0B;color:#EDEDED;font-family:Inter,sans-serif}
+  :root,.dark-zone,.breath-ov,.mode-ov,#psheet{--bg:10 10 11;--panel:18 18 20;--line:35 35 39;--muted:138 138 147;--fg:237 237 237;--ic:217 217 222;--icl:58 58 64;--chip:20 18 16;--sheet1:22 22 26;--sheet2:13 13 15}
+  html.light{--bg:247 246 242;--panel:255 255 255;--line:226 225 220;--muted:110 110 118;--fg:17 17 17;--ic:30 30 34;--icl:200 199 194;--chip:252 248 238;--sheet1:255 255 255;--sheet2:250 249 246}
+  html.light #psheet{--bg:247 246 242;--panel:255 255 255;--line:226 225 220;--muted:110 110 118;--fg:17 17 17;--ic:30 30 34;--icl:200 199 194;--sheet1:255 255 255;--sheet2:250 249 246}
+  html,body{background:rgb(var(--bg));color:rgb(var(--fg));font-family:Inter,sans-serif;transition:background .4s,color .4s}
+  .dark-zone,.breath-ov,.mode-ov{color:rgb(var(--fg))}
+  html.light .text-white\/90{color:rgb(var(--fg) / .9)}
+  html.light .dark-zone .text-white\/90{color:rgba(255,255,255,.9)}
   .gold-text{background:linear-gradient(90deg,#F3D58A,#D4A843,#A97C22);-webkit-background-clip:text;background-clip:text;color:transparent}
   .gold-bg{background:linear-gradient(135deg,#F3D58A,#D4A843,#A97C22)}
-  .card{background:#121214;border:1px solid #232327;border-radius:1rem}
+  .card{background:rgb(var(--panel));border:1px solid rgb(var(--line));border-radius:1rem}
   .btn-gold{background:linear-gradient(135deg,#F3D58A,#D4A843,#A97C22);color:#000;font-weight:600;border-radius:.75rem;padding:.55rem 1rem;display:inline-block;text-align:center}
-  .btn-ghost{border:1px solid #232327;border-radius:.75rem;padding:.55rem 1rem;display:inline-block;text-align:center}
+  .btn-ghost{border:1px solid rgb(var(--line));border-radius:.75rem;padding:.55rem 1rem;display:inline-block;text-align:center}
   .btn-ghost:hover{border-color:#D4A843}
-  .input{width:100%;background:#0A0A0B;border:1px solid #232327;border-radius:.75rem;padding:.55rem .75rem;outline:none;color:#EDEDED}
+  .input{width:100%;background:rgb(var(--bg));border:1px solid rgb(var(--line));border-radius:.75rem;padding:.55rem .75rem;outline:none;color:rgb(var(--fg))}
   .input:focus{border-color:#D4A843}
   .nav-a{display:flex;align-items:center;gap:1rem;padding:.75rem;border-radius:.75rem}
-  .nav-a:hover,.nav-a.on{background:#121214}
+  .nav-a:hover,.nav-a.on{background:rgb(var(--panel))}
   .nav-a.on{font-weight:600}
   .ico{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:20px}
   .noscroll::-webkit-scrollbar{display:none}
-  .icbox{width:38px;height:38px;border-radius:11px;background:#1C1C1F;border:1px solid #2A2A2F;display:inline-flex;align-items:center;justify-content:center;color:#D9D9DE;flex-shrink:0}
-  .icbox,button>svg,a>svg{transition:color .15s,border-color .15s}
-  a:hover .icbox,button:hover .icbox,.icbox:hover{color:#D4A843;border-color:#D4A843}
-  button:hover>svg,a:hover>svg{color:#D4A843}
-  .icgold{color:#D4A843;border-color:#A97C22}
-  .icon-on .icbox,.nav-a.on .icbox{color:#D4A843;border-color:#A97C22}
+  .icbox{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:rgb(var(--ic));background:transparent;border:1px solid rgb(var(--icl));transition:border-color .5s ease,box-shadow .5s ease}
+  .icbox svg{stroke-width:1.25}
+  a:hover .icbox,button:hover .icbox,.icbox:hover{border-color:#D4A843;box-shadow:0 0 8px rgba(212,168,67,.25)}
+  .icon-on .icbox,.nav-a.on .icbox{border-color:#A97C22}
   .mode-ov{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(8,8,9,.78);backdrop-filter:blur(10px) grayscale(.4);-webkit-backdrop-filter:blur(10px);animation:ovIn .45s ease forwards}
   .mode-ov.out{animation:ovOut .55s ease forwards}
   .mode-inner{display:flex;flex-direction:column;align-items:center;gap:18px}
@@ -51,6 +56,20 @@ tailwind.config = { theme: { extend: {
   @keyframes breathe{0%{transform:scale(1)}40%{transform:scale(2)}50%{transform:scale(2)}100%{transform:scale(1)}}
   @keyframes kb{from{transform:scale(1.04)}to{transform:scale(1.14) translateY(-2%)}}
   .kb{animation:kb 9s ease-in-out infinite alternate}
+  @keyframes drawGold{0%{stroke-dashoffset:100;stroke:#F3D58A;filter:drop-shadow(0 0 0 rgba(212,168,67,0))}60%{filter:drop-shadow(0 0 3px rgba(243,213,138,.9))}100%{stroke-dashoffset:0;stroke:#D4A843;filter:drop-shadow(0 0 1px rgba(212,168,67,.5))}}
+  a:hover .icbox svg *,button:hover .icbox svg *,.icbox:hover svg *,button:hover>svg *,a:hover>svg *{stroke-dasharray:100;animation:drawGold .65s cubic-bezier(.6,.05,.3,1) forwards}
+  .icon-on .icbox svg *,.nav-a.on .icbox svg *{stroke:#D4A843}
+  .icon-on .icbox svg path{fill:rgba(212,168,67,.35)}
+  @keyframes adOut{from{transform:translateX(0)}to{transform:translateX(-110%)}}
+  @keyframes adIn{from{transform:translateX(110%)}to{transform:translateX(0)}}
+  .ad-out{animation:adOut 1.5s cubic-bezier(.6,0,1,.6) forwards}
+  .ad-in{animation:adIn 1.5s cubic-bezier(0,.4,.4,1) forwards}
+  @keyframes slUp{from{transform:translateY(18%);opacity:.3}to{transform:none;opacity:1}}
+  @keyframes slDown{from{transform:translateY(-18%);opacity:.3}to{transform:none;opacity:1}}
+  .slide-up{animation:slUp .35s cubic-bezier(.2,.8,.2,1)}
+  .slide-down{animation:slDown .35s cubic-bezier(.2,.8,.2,1)}
+  /* Anzeige mittig über der Feed-Spalte (Feed 480 + Abstand 40 + rechte Spalte 320 → Versatz 180 px) */
+  @media (min-width:1024px){ .adlane{transform:translateX(-180px)} }
   .rk{font-size:max(11px,.7em);line-height:1.25;padding:.12em .5em;border-radius:.4em;border:1px solid;font-weight:500}
 </style>
 </head>
@@ -126,6 +145,15 @@ const PERKS = [
   ['Geschäftskonto','Bonus bei Eröffnung','Anzeige'],
   ['KI-Skriptgenerator','Exklusiv für Elite+','Anzeige'],
 ];
+function adItem(i,cls){ const p=PERKS[i%PERKS.length]; return `<a id="adcur" href="#vorteile" class="absolute inset-0 flex items-center justify-center gap-2 whitespace-nowrap ${cls}"><span class="pointer-events-auto flex items-center gap-2"><span class="text-[10px] uppercase tracking-wide text-muted border border-line rounded px-1.5">Anzeige</span><span>${p[0]}</span><span class="text-gold">· ${p[1]}</span></span></a>`; }
+// Laufband: alle 20 s fährt die Anzeige raus (1,5 s beschleunigen) und die nächste rein (1,5 s abbremsen)
+S.adIdx = 0;
+setInterval(()=>{
+  const cur=document.getElementById('adcur'); S.adIdx=(S.adIdx+1)%PERKS.length;
+  if(!cur) return;
+  cur.classList.add('ad-out');
+  setTimeout(()=>{ const box=cur.parentElement; if(!box) return; box.innerHTML=adItem(S.adIdx,'ad-in'); },1500);
+},20000);
 const REGIONS = {
   'Deutschland':['Baden-Württemberg','Bayern','Berlin','Brandenburg','Bremen','Hamburg','Hessen','Mecklenburg-Vorpommern','Niedersachsen','Nordrhein-Westfalen','Rheinland-Pfalz','Saarland','Sachsen','Sachsen-Anhalt','Schleswig-Holstein','Thüringen'],
   'Österreich':['Wien','Niederösterreich','Oberösterreich','Steiermark','Tirol','Salzburg','Kärnten','Vorarlberg','Burgenland'],
@@ -154,7 +182,7 @@ const OFFERS = [
 ];
 const NEARBY = [['Felix','Pro','München · 4 km'],['Hannah','Rising','Augsburg · 31 km'],['Tobias','Elite','München · 7 km'],['Mia','Rookie','Freising · 22 km'],['David','Pro','Rosenheim · 48 km']];
 const BADGE_IC = {'Founding Member':'b_found','Ausweis verifiziert':'b_id','Verified 50k':'b_money','High-Ticket':'b_diamond','Platform-verified':'b_shield'};
-function badgePill(b){ return `<span class="inline-flex items-center gap-2 pl-1 pr-3.5 py-1 rounded-full border text-sm" style="border-color:#3a3020;background:#141210"><span class="w-7 h-7 rounded-full flex items-center justify-center" style="border:1px solid #D4A843;color:#D4A843;background:#1C1C1F">${svg(BADGE_IC[b]||'b_shield',15)}</span>${b}</span>`; }
+function badgePill(b){ return `<span class="inline-flex items-center gap-2 pl-1 pr-3.5 py-1 rounded-full border text-sm" style="border-color:#3a3020;background:rgb(var(--chip))"><span class="w-7 h-7 rounded-full flex items-center justify-center" style="border:1px solid #D4A843;color:#D4A843;background:rgb(var(--panel))">${svg(BADGE_IC[b]||'b_shield',15)}</span>${b}</span>`; }
 const RKC = {Rookie:'color:#8A8A93;border-color:#232327',Rising:'color:#7dd3fc;border-color:#0c4a6e',Pro:'color:#6ee7b7;border-color:#064e3b',Elite:'color:#D4A843;border-color:#A97C22',Legend:'color:#F3D58A;border-color:#D4A843;background:#2a2210'};
 
 
@@ -164,13 +192,13 @@ const IC = {
   globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
   search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
   bell:'<path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9M10 20a2 2 0 0 0 4 0"/>',
-  chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  chat:'<path d="M12 4.5a7.5 7.5 0 1 1-3.6 14.08L4.5 19.5l.93-3.7A7.5 7.5 0 0 1 12 4.5z"/>',
   plus:'<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
   swap:'<path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>',
-  heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
-  share:'<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>',
+  heart:'<path d="M12 19.2s-7-4.3-7-9.7A3.9 3.9 0 0 1 12 7.3a3.9 3.9 0 0 1 7 2.2c0 5.4-7 9.7-7 9.7z"/>',
+  share:'<path d="M19.5 4.5 10.6 13.4"/><path d="M19.5 4.5 14 19.5l-3.4-6.1-6.1-3.4z"/>',
   shop:'<path d="M4 8h16l-1.2 11.2a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
   pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
   b_found:'<path d="M3 21h18M4 10h16M12 3 4 7h16zM6 10v8M10 10v8M14 10v8M18 10v8"/>',
@@ -178,19 +206,31 @@ const IC = {
   b_money:'<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6.5V8M12 16v1.5"/>',
   b_diamond:'<path d="M6 4h12l3 5-9 11L3 9zM3 9h18M9.5 4 8 9l4 11 4-11-1.5-5"/>',
   b_shield:'<path d="M12 3 5 6v5c0 4.5 3 8.2 7 10 4-1.8 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/>',
+  gearplay:'<path d="M21.80 8.24 L22.50 11.72 L20.20 12.22 L19.66 14.94 L21.59 16.27 L19.62 19.23 L17.64 17.95 L15.34 19.49 L15.76 21.80 L12.28 22.50 L11.78 20.20 L9.06 19.66 L7.73 21.59 L4.77 19.62 L6.05 17.64 L4.51 15.34 L2.20 15.76 L1.50 12.28 L3.80 11.78 L4.34 9.06 L2.41 7.73 L4.38 4.77 L6.36 6.05 L8.66 4.51 L8.24 2.20 L11.72 1.50 L12.22 3.80 L14.94 4.34 L16.27 2.41 L19.23 4.38 L17.95 6.36 L19.49 8.66Z"/><circle cx="12" cy="12" r="5.6"/><path d="M10.6 9.6v4.8l3.8-2.4z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+  moon:'<path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10z"/>',
   gift:'<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8S10 3 7.5 4.5 9 8 12 8zm0 0s2-5 4.5-3.5S15 8 12 8z"/>',
 };
-function svg(k,size=22,extra=''){ return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" ${extra}>${IC[k]}</svg>`; }
-function ic(k,gold){ return `<span class="icbox ${gold?'icgold':''}">${svg(k)}</span>`; }
+function svg(k,size=22,extra=''){ const inner=IC[k].replace(/<(path|circle|rect|ellipse)\b/g,'<$1 pathLength="100"'); return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" ${extra}>${inner}</svg>`; }
+function ic(k,gold){ return `<span class="icbox">${svg(k)}</span>`; }
 
 const NAV = [
   ['feed','play','Feed'],['jobs','jobs','Jobs'],['forum','globe','Forum'],['markt','shop','Marktplatz'],['search','search','Suche'],['notifications','bell','Mitteilungen'],
   ['messages','chat','Nachrichten',1],['create','plus','Erstellen',1],['profile','user','Profil'] ];
 const MNAV = [['feed','play'],['jobs','globe'],['create','plus',1],['messages','chat',1],['profile','user']];
 
-const route = () => (location.hash.replace('#','') || 'feed');
-const go = h => { location.hash = h; };
-window.addEventListener('hashchange', render);
+// Eigenes Routing: funktioniert auch in Vorschau-Fenstern, die Link-Klicks blockieren
+S.route = (location.hash||'').replace('#','') || 'feed';
+const route = () => S.route || 'feed';
+const go = h => { S.route = h; try{ if(location.hash!=='#'+h) history.replaceState(null,'','#'+h); }catch(e){} render(); };
+window.addEventListener('hashchange', ()=>{ const h=(location.hash||'').replace('#','')||'feed'; if(h!==S.route){ S.route=h; render(); } });
+document.addEventListener('click', e=>{
+  const a = e.target.closest && e.target.closest('a[href^="#"]');
+  if(!a) return;
+  e.preventDefault();
+  const h=a.getAttribute('href').slice(1);
+  setTimeout(()=>go(h||'feed'),0); // erst inline-onclick (z. B. S.job=…) laufen lassen
+}, true);
 
 function nameRank(n, r, medals){
   const total = medals ? medals.reduce((s,m)=>s+m[1],0) : 0;
@@ -221,6 +261,7 @@ function shell(content){
       <a href="#feed" class="px-3 mb-8 font-serif italic gold-text text-2xl xl:hidden">CH</a>
       <nav class="flex flex-col gap-1 flex-1">${side}</nav>
       <div class="flex flex-col gap-1 border-t border-line pt-4">
+        <button onclick="toggleTheme()" class="nav-a text-left">${ic(isLight()?'moon':'sun')}<span class="hidden xl:inline text-sm">${isLight()?'Nacht-Modus':'Tag-Modus'}</span></button>
         <button onclick="toggleMode()" class="nav-a text-left">${ic('swap')}<span class="hidden xl:inline text-sm">${S.mode==='consumer'?'Zu Auftraggeber wechseln':'Zu Member wechseln'}</span></button>
         <a href="#${S.user?'einstellungen':'login'}" class="nav-a ${S.user?'':'opacity-40'}">${ic('gear')}<span class="hidden xl:inline">Einstellungen</span></a>
       </div>
@@ -228,11 +269,11 @@ function shell(content){
     <div class="flex-1 md:ml-20 xl:ml-64 pb-20 md:pb-0 min-w-0">
       <header class="md:hidden sticky top-0 z-30 bg-bg/95 backdrop-blur border-b border-line flex items-center justify-between px-4 h-14">
         <a href="#feed" class="font-serif italic gold-text text-2xl">ClosingHub</a>
-        <div class="flex gap-2"><a href="#notifications">${ic('bell')}</a><a href="#search">${ic('search')}</a></div>
+        <div class="flex gap-2"><button onclick="toggleTheme()" aria-label="Tag/Nacht">${ic(isLight()?'moon':'sun')}</button><a href="#notifications">${ic('bell')}</a><a href="#search">${ic('search')}</a></div>
       </header>
-      <div class="border-b border-line bg-panel/60 overflow-x-auto whitespace-nowrap px-4 py-2 text-sm noscroll flex items-center gap-3">
-        <span class="text-gold font-semibold inline-flex items-center gap-1.5">${svg('gift',16)} Member-Vorteile</span>
-        ${PERKS.map(p=>`<a href="#vorteile" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-line hover:border-gold"><span class="text-[10px] uppercase tracking-wide ${p[2]==='Anzeige'?'text-muted':'text-gold'}">${p[2]}</span> ${p[0]} · <span class="text-gold">${p[1]}</span></a>`).join('')}
+      <div class="relative border-b border-line bg-panel/60 px-4 py-2 text-sm flex items-center gap-3 h-11 overflow-hidden">
+        <span class="relative z-10 text-gold font-semibold inline-flex items-center gap-1.5 shrink-0 pr-3" style="background:linear-gradient(90deg,rgb(var(--panel)) 80%,transparent)">${svg('gift',16)} <span class="hidden sm:inline">Member-Vorteile</span></span>
+        <div class="adlane absolute inset-0 overflow-hidden pointer-events-none">${adItem(S.adIdx||0,'')}</div>
       </div>
       ${S.mode==='auftraggeber'?`<div class="px-4 py-2 text-xs bg-gold/10 text-gold border-b border-line">Auftraggeber-Modus aktiv · <a href="#jobs" class="underline">Meine Jobs</a> · Bewerber · Rechnungen</div>`:''}
       <main>${content}</main>
@@ -240,6 +281,8 @@ function shell(content){
     <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-bg/95 backdrop-blur border-t border-line flex justify-around items-center h-16">${bottom}</nav>
   </div>`;
 }
+function isLight(){ return document.documentElement.classList.contains('light'); }
+function toggleTheme(){ const on=!isLight(); document.documentElement.classList.toggle('light',on); try{localStorage.setItem('ch_theme',on?'light':'dark')}catch(e){} render(); }
 function toggleMode(){
   S.mode = S.mode==='consumer'?'auftraggeber':'consumer'; save();
   const o=document.createElement('div'); o.className='mode-ov';
@@ -253,27 +296,24 @@ function toggleMode(){
 const GUEST = 5;
 function feed(){
   const pool = S.topics ? POSTS.filter(p=>S.topics.includes(p.k)) : POSTS;
-  const list = S.user ? pool : pool.slice(0,GUEST);
+  const list = S.user ? pool : pool.slice(0,GUEST); S.feedList = list;
   const posts = list.map((p,i)=>`
     <article class="card overflow-hidden">
       <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block ${p.a==='ClosingHub'?'gold-bg':''}">${p.a==='ClosingHub'?'<span class="w-full h-full flex items-center justify-center font-serif italic text-black text-sm">CH</span>':avatar(p.a)}</span>${nameRank(p.a,p.r)}</span><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span></div>
-      <div class="relative aspect-square bg-bg flex items-center justify-center p-8 cursor-pointer border-y border-line overflow-hidden" onclick="startPlayer(${i})" style="${p.v&&p.vid===undefined?'background:radial-gradient(circle at 50% 40%,#1c1a14,#0A0A0B 70%)':''}">
+      <div class="relative aspect-square bg-bg flex items-center justify-center p-8 cursor-pointer border-y border-line overflow-hidden" onclick="S.plist=S.feedList;startPlayer(${i})" style="${p.v&&p.vid===undefined?'background:radial-gradient(circle at 50% 40%,#1c1a14,#0A0A0B 70%)':''}">
         ${p.vid!==undefined?`<img src="${VIDS[p.vid]}" class="absolute inset-0 w-full h-full object-cover"><span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}
         ${p.bg?bgSvg(p.bg):''}
-        ${p.v?`<span class="absolute inset-0 flex items-center justify-center opacity-25">${svg('play',120)}</span><span class="absolute bottom-3 right-3 text-xs bg-black/70 rounded px-2 py-0.5">▶ ${p.v}</span>`:''}
-        ${p.vid!==undefined?`<p class="absolute left-4 right-20 bottom-3 text-sm relative-none" style="position:absolute">${p.t}</p>`:`<p class="font-serif text-xl leading-relaxed text-center relative">${p.t}</p>`}</div>
+        ${p.v?`<span class="absolute inset-0 flex items-center justify-center opacity-25">${svg('play',120)}</span><span class="absolute bottom-3 right-3 text-xs bg-black/70 rounded px-2 py-0.5" style="color:#fff">▶ ${p.v}</span>`:''}
+        ${p.vid!==undefined?`<p class="absolute left-4 right-20 bottom-3 text-sm" style="position:absolute;color:#fff">${p.t}</p>`:`<p class="font-serif text-xl leading-relaxed text-center relative">${p.t}</p>`}</div>
       <div class="p-4">
-        <div class="flex gap-4">
-          <button onclick="S.liked[${p.id}]=!S.liked[${p.id}];render()" style="${S.liked[p.id]?'color:#D4A843':''}">${svg('heart',26,S.liked[p.id]?'fill="#D4A843"':'')}</button><button>${svg('chat',26)}</button><button>${svg('share',26)}</button></div>
-        <p class="text-sm mt-2 font-semibold">${p.l+(S.liked[p.id]?1:0)} Gefällt mir</p>
-        ${p.tg?`<p class="text-xs text-muted mt-1">${p.tg.map(t=>'#'+t).join(' ')}</p>`:''}
-        <p class="text-sm text-muted">Alle ${p.c} Kommentare ansehen</p>
+        ${actionBar(p,'feed')}
+        ${p.tg?`<p class="text-xs text-muted mt-3">${p.tg.map(t=>'#'+t).join(' ')}</p>`:''}
       </div></article>`).join('');
   const guest = S.user?'':`<div class="card p-6 text-center space-y-3"><p class="font-serif text-xl">Du willst mehr sehen?</p><p class="text-muted text-sm">Melde dich kostenlos an – Feed, Jobs, Forum und dein Rang warten.</p><a href="#login" class="btn-gold">Kostenlos anmelden</a></div>`;
   return `<div class="flex justify-center gap-10 px-4">
     <section class="w-full max-w-[480px] py-6 space-y-6">
       ${storiesRow()}
-      <button onclick="startPlayer(0)" class="btn-ghost w-full">▶︎ <span class="text-gold">Player starten</span></button>
+      <div class="flex items-center gap-3"><button onclick="playerMenu()" aria-label="Player-Einstellungen">${ic('gearplay')}</button><span class="text-xs text-muted">${S.ptopics?S.ptopics.length+' Kategorien':'Alle Kategorien'}${S.timerMin?' · Timer '+S.timerMin+' Min.':''}</span></div>
       ${posts.split('</article>').map((x,i)=>i===2?x+'</article>'+nearbyStrip():(x?x+'</article>':'')).join('')}${guest}
     </section>${rightRail()}</div>`;
 }
@@ -302,7 +342,7 @@ const BREATH_AFTER = 300; // Sekunden Player-Zeit
 S.watch = 0;
 function tick(){ const p=S.player; if(!p||p.paused||S.breath) return; p.t+=0.1; S.watch+=0.1;
   if(S.watch>=BREATH_AFTER){ S.watch=0; return startBreath(); }
-  if(p.t>=DUR){ p.t=0; nextP(); } else updBar(); }
+  if(p.t>=DUR){ p.t=0; updBar(); } else updBar(); }
 function startBreath(){
   S.breath={left:30};
   const o=document.createElement('div'); o.id='breath'; o.className='breath-ov';
@@ -317,26 +357,67 @@ function startBreath(){
     if(t>=30){ clearInterval(id); l.outerHTML='<button onclick="endBreath()" class="btn-gold">Weiter schauen</button>'; } },100);
 }
 function endBreath(){ const o=document.getElementById('breath'); if(o) o.remove(); S.breath=null; }
-const limit = () => S.user ? POSTS.length : GUEST;
-function nextP(){ const p=S.player; p.i=Math.min(p.i+1,limit()); p.t=0; drawPlayer(); }
-function prevP(){ const p=S.player; p.i=Math.max(p.i-1,0); p.t=0; drawPlayer(); }
+const PL = () => S.plist || POSTS;
+const limit = () => S.user ? PL().length : Math.min(GUEST,PL().length);
+function nextP(){ const p=S.player; if(p.i>=limit()) return; p.i=Math.min(p.i+1,limit()); p.t=0; p.dir='up'; drawPlayer(); }
+function prevP(){ const p=S.player; if(p.i===0) return; p.i=p.i-1; p.t=0; p.dir='down'; drawPlayer(); }
 function updBar(){ const b=document.getElementById('pbar'), s=document.getElementById('ptime'); if(b) b.style.width=(S.player.t/DUR*100)+'%'; if(s) s.textContent=Math.ceil(DUR-S.player.t)+'s'; }
+
+S.cm = {};
+function actionBar(p,ctx){
+  const re = ctx==='feed' ? 'render()' : 'drawPlayer()';
+  return `<div class="flex gap-4 items-center">
+    <button class="inline-flex items-center gap-2 ${S.liked[p.id]?'icon-on':''}" onclick="event.stopPropagation();S.liked[${p.id}]=!S.liked[${p.id}];${re}">${ic('heart')}<span class="text-sm">${p.l+(S.liked[p.id]?1:0)}</span></button>
+    <button class="inline-flex items-center gap-2" onclick="event.stopPropagation();commentsP(${p.id})">${ic('chat')}<span class="text-sm">${p.c+(S.cm[p.id]||[]).length}</span></button>
+    <button class="ml-auto" aria-label="Teilen" onclick="event.stopPropagation();shareP(${p.id})">${ic('share')}</button>
+  </div>`;
+}
+function togglePause(){ if(!S.player) return; S.player.paused=!S.player.paused; drawPlayer(); }
+function likeP(id){ S.liked[id]=!S.liked[id]; drawPlayer(); }
+function sheet(html){ const old=document.getElementById('psheet'); if(old) old.remove();
+  if(S.player) S.player.paused=true;
+  const d=document.createElement('div'); d.id='psheet'; d.className='fixed inset-0 z-[60] flex items-end md:items-center justify-center'; d.style.background='rgba(8,8,9,.55)';
+  d.innerHTML=`<div class="w-full md:max-w-md max-h-[75vh] overflow-y-auto rounded-t-3xl md:rounded-3xl p-5 space-y-4" style="background:linear-gradient(180deg,rgb(var(--sheet1)),rgb(var(--sheet2)));border:1px solid rgb(var(--line))" onclick="event.stopPropagation()">${html}</div>`;
+  d.onclick=closeSheet; document.body.appendChild(d); }
+function closeSheet(){ const d=document.getElementById('psheet'); if(d) d.remove(); if(S.player){ S.player.paused=false; drawPlayer(); } }
+function commentsP(id){
+  const base=[['Lena','Elite','Genau so mache ich es auch 🔥'],['Jonas','Pro','Direkt im nächsten Call getestet – funktioniert!'],['Hannah','Rising','Danke für den Input!']];
+  const mine=(S.cm[id]||[]).map(t=>[ME.name,ME.rank,t]);
+  sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Kommentare</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
+    <div class="space-y-3">${[...base,...mine].map(([n,r,t])=>`<div class="flex gap-3"><span class="w-8 h-8 rounded-full overflow-hidden shrink-0">${avatar(n)}</span><div><div class="text-sm">${nameRank(n,r)}</div><p class="text-sm text-white/90">${t}</p></div></div>`).join('')}</div>
+    ${S.user?`<form class="flex gap-2 pt-2" onsubmit="event.preventDefault();const v=this.c.value.trim();if(!v)return;(S.cm[${id}]=S.cm[${id}]||[]).push(v);commentsP(${id})"><input name="c" class="input" placeholder="Kommentar schreiben…" autocomplete="off"><button class="btn-gold">Senden</button></form>`:`<a href="#login" onclick="closeSheet();closeModal()" class="btn-gold block">Anmelden zum Kommentieren</a>`}`);
+  const inp=document.querySelector('#psheet input'); if(inp) inp.focus();
+}
+function shareP(id){
+  const friends=['Lena','Jonas','Sofia','Felix','Hannah','Tobias'];
+  sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Teilen mit Freunden</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
+    <div class="grid grid-cols-3 gap-3">${friends.map(n=>`<label class="flex flex-col items-center gap-1 cursor-pointer"><input type="checkbox" class="peer hidden" value="${n}"><span class="w-14 h-14 rounded-full overflow-hidden ring-2 ring-transparent peer-checked:ring-[#D4A843]">${avatar(n)}</span><span class="text-xs">${n}</span></label>`).join('')}</div>
+    <div class="flex gap-2"><button class="btn-gold flex-1" onclick="const n=[...document.querySelectorAll('#psheet input:checked')].map(x=>x.value);this.parentElement.innerHTML=n.length?'<p class=\'text-emerald-400 text-sm\'>✓ Gesendet an '+n.join(', ')+'</p>':'<p class=\'text-muted text-sm\'>Bitte mindestens einen Freund auswählen</p>'">Senden</button>
+    <button class="btn-ghost" onclick="try{navigator.clipboard.writeText('https://getclosinghub.com/p/${id}');this.textContent='✓ Kopiert'}catch(e){this.textContent='getclosinghub.com/p/${id}'}">Link kopieren</button></div>`);
+}
+// Scrollen/Wischen = nächster/vorheriger Beitrag
+let wheelLock=false, touchY=null;
+window.addEventListener('wheel',e=>{ if(!S.player||document.getElementById('psheet')||S.breath) return; if(wheelLock||Math.abs(e.deltaY)<25) return; wheelLock=true; setTimeout(()=>wheelLock=false,650); e.deltaY>0?nextP():prevP(); },{passive:true});
+window.addEventListener('touchstart',e=>{ if(S.player) touchY=e.touches[0].clientY; },{passive:true});
+window.addEventListener('touchend',e=>{ if(!S.player||touchY===null||document.getElementById('psheet')) return; const dy=touchY-e.changedTouches[0].clientY; touchY=null; if(Math.abs(dy)>50) dy>0?nextP():prevP(); },{passive:true});
+window.addEventListener('keydown',e=>{ if(!S.player||document.getElementById('psheet')) return; if(e.key==='ArrowDown') nextP(); if(e.key==='ArrowUp') prevP(); if(e.key===' '){ e.preventDefault(); togglePause(); } });
+
 function tapP(e){ const x=e.clientX-e.currentTarget.getBoundingClientRect().left; (x>e.currentTarget.offsetWidth/2)?nextP():prevP(); }
 function drawPlayer(){
-  const p=S.player, post=POSTS[p.i];
+  const p=S.player, post=PL()[p.i];
   const inner = p.i>=limit() ? `<div class="h-full flex flex-col items-center justify-center gap-4 p-8 text-center"><p class="font-serif text-2xl">Mehr sehen?</p><p class="text-muted">Melde dich kostenlos an, um weiterzuschauen.</p><a href="#login" onclick="closeModal()" class="btn-gold">Kostenlos anmelden</a></div>` : `
     ${post.bg?bgSvg(post.bg):''}
     ${post.vid!==undefined?`<img src="${VIDS[post.vid]}" class="vidimg absolute inset-0 w-full h-full object-cover ${p.paused?'':'kb'}">`:''}
-    <div class="relative h-full flex items-center justify-center p-10 select-none" onclick="tapP(event)" ondblclick="S.player.paused=!S.player.paused;drawPlayer()">
+    <div class="relative h-full flex items-center justify-center p-10 select-none" onclick="togglePause()">
       ${post.vid!==undefined?'':`<p class="font-serif text-2xl leading-relaxed text-center">${post.t}</p>`}</div>
-    ${p.paused?'<div class="absolute inset-0 flex items-center justify-center pointer-events-none text-6xl">⏸</div>':''}
+    ${p.paused?`<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><span class="icbox" style="width:72px;height:72px">${svg('play',34)}</span></div>`:''}
     <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
       <div>${nameRank(post.a,post.r)}</div>${post.vid!==undefined?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
-      <div class="flex gap-6 mt-3 text-xl"><button class="inline-flex items-center gap-1" onclick="S.liked[${post.id}]=!S.liked[${post.id}];drawPlayer()" style="${S.liked[post.id]?'color:#D4A843':''}">${svg('heart',26,S.liked[post.id]?'fill="#D4A843"':'')} <span class="text-sm">${post.l+(S.liked[post.id]?1:0)}</span></button><button class="inline-flex items-center gap-1">${svg('chat',26)} <span class="text-sm">${post.c}</span></button><button>${svg('share',26)}</button></div>
+      <div class="mt-3">${actionBar(post,'player')}</div>
     </div>`;
   document.getElementById('modal').innerHTML = `
-  <div class="fixed inset-0 z-50 bg-black flex items-center justify-center">
-    <div class="relative w-full h-full md:max-w-md md:h-[92vh] md:rounded-2xl overflow-hidden bg-panel">
+  <div class="dark-zone fixed inset-0 z-50 bg-black flex items-center justify-center">
+    <div class="relative w-full h-full md:max-w-md md:h-[92vh] md:rounded-2xl overflow-hidden bg-panel ${p.dir?'slide-'+p.dir:''}">
       <div class="absolute top-0 inset-x-0 h-1 bg-line z-10"><div id="pbar" class="h-full gold-bg" style="width:${p.t/DUR*100}%"></div></div>
       <div class="absolute top-4 right-12 z-10 bg-black/80 rounded-full px-3 py-1 text-xs text-gold">⏱ <span id="ptime">${Math.ceil(DUR-p.t)}s</span></div>
       <button onclick="closeModal()" class="absolute top-3 right-4 z-10 text-xl">✕</button>
@@ -344,6 +425,7 @@ function drawPlayer(){
       ${inner}
       ${p.i<limit()?`<p id="plabel" class="absolute z-10 pointer-events-none whitespace-nowrap" style="top:calc(16px + 1.5625%);left:calc(20px + 2.778%);font-family:'Plus Jakarta Sans',sans-serif;font-style:italic;font-weight:700;font-size:44px;line-height:1;letter-spacing:-.02em;white-space:nowrap;color:rgba(255,255,255,.45)">${post.k}</p>`:''}
     </div></div>`;
+  p.dir=null;
   fitLabel(); if(document.fonts) document.fonts.ready.then(fitLabel);
 }
 
@@ -432,6 +514,7 @@ function applyJob(){
 }
 const FCATS=[['Vertrieb-Basics',[['💬','Einwandbehandlung',128],['📞','Setting & Terminierung',94],['🎯','High-Ticket Closing',76]]],['Mindset & Routinen',[['🧠','Motivation & Absagen',61],['🗓️','Tagesplanung',38]]],['Tools & Erfolge',[['🛠️','CRM & Dialer',40],['🏆','Erfolge feiern',152]]]];
 S.helpful={};
+
 function forum(){
   if(S.thread) return thread();
   return `<div class="max-w-3xl mx-auto px-4 py-6"><div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><span class="btn-gold">Forum</span><a href="#markt" class="btn-ghost">Marktplatz</a></div>
@@ -505,6 +588,8 @@ function settings(){
   return `<div class="max-w-lg mx-auto px-4 py-8 space-y-6"><h1 class="font-serif text-2xl">Einstellungen</h1>
     <div class="card p-4 flex items-center gap-4"><div class="w-20 h-20 rounded-full gold-bg p-[2px] shrink-0"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(ME.name)}</div></div>
       <div><p class="font-semibold mb-2">Profilbild</p><div class="flex flex-wrap gap-2"><label class="btn-ghost text-sm cursor-pointer">Bild auswählen<input type="file" accept="image/*" class="hidden" onchange="setAvatar(this)"></label><button class="btn-ghost text-sm" onclick="this.outerHTML='<span class=\'text-xs text-gold\'>✨ KI-Profilbild wird erstellt… (in der Vorschau simuliert)</span>'">✨ KI-Profilbild erstellen</button></div></div></div>
+    <div class="card p-4 flex justify-between items-center"><div><p class="font-semibold">Darstellung</p><p class="text-xs text-muted">Tag- oder Nacht-Modus</p></div>
+      <div class="flex gap-2"><button onclick="if(isLight())toggleTheme()" class="${isLight()?'btn-ghost':'btn-gold'} text-sm">Nacht</button><button onclick="if(!isLight())toggleTheme()" class="${isLight()?'btn-gold':'btn-ghost'} text-sm">Tag</button></div></div>
     <div class="card p-4"><p class="font-semibold mb-1">Was willst du im Feed sehen?</p><p class="text-xs text-muted mb-3">Die KI ordnet jeden Beitrag einem Thema zu – du entscheidest, welche Themen bei dir erscheinen.</p>
       <div class="flex flex-wrap gap-2">${FTOPICS.map(t=>`<button onclick="toggleTopic('${t}')" class="${(!S.topics||S.topics.includes(t))?'btn-gold':'btn-ghost'} text-sm">${t}</button>`).join('')}</div></div>
     <div class="card p-4"><p class="font-semibold mb-3">Welche Abzeichen sollen im Profil angezeigt werden?</p>
@@ -541,7 +626,7 @@ function closeStory(){ clearInterval(STT); S.story=null; closeModal(); }
 function drawStory(){
   const st=STORIES[S.story.i];
   document.getElementById('modal').innerHTML=`
-  <div class="fixed inset-0 z-50 bg-black flex items-center justify-center">
+  <div class="dark-zone fixed inset-0 z-50 bg-black flex items-center justify-center">
     <div class="relative w-full h-full md:max-w-sm md:h-[88vh] md:rounded-2xl overflow-hidden" style="background:${st.ad?'linear-gradient(160deg,#1a1a1d,#0A0A0B)':'linear-gradient(160deg,#2a2210,#0A0A0B 60%)'}">
       <div class="absolute top-2 inset-x-2 flex gap-1 z-10">${STORIES.map((_,j)=>`<div class="h-[3px] flex-1 bg-white/20 rounded"><div id="sb${j}" class="h-full rounded gold-bg" style="width:${j<S.story.i?100:0}%"></div></div>`).join('')}</div>
       <div class="absolute top-6 left-4 right-12 z-10 flex items-center gap-2 text-sm">${st.ad?'<span class="text-[10px] uppercase tracking-wider border border-line rounded px-1.5 py-0.5 text-muted">Anzeige</span> <b>'+st.n+'</b>':'<span class="w-8 h-8 rounded-full overflow-hidden inline-block">'+avatar(st.n)+'</span>'+nameRank(st.n,st.r)}</div>
@@ -585,6 +670,34 @@ function avatar(n){
     ${glasses?`<g fill="none" stroke="#111" stroke-width="1.6"><circle cx="43" cy="46" r="5"/><circle cx="57" cy="46" r="5"/><path d="M48 46h4"/></g>`:''}
   </svg>`;
 }
+
+
+// Player-Menü (gilt nur für diese Sitzung – verschwindet beim Schließen der App)
+function playerMenu(){
+  const sel = S.ptopics || [...FTOPICS];
+  document.getElementById('modal').innerHTML = `
+  <div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4" style="background:rgba(8,8,9,.72);backdrop-filter:blur(8px)" onclick="closeModal()">
+    <div class="w-full md:max-w-md p-6 space-y-6 relative rounded-t-3xl md:rounded-3xl" style="background:linear-gradient(180deg,rgb(var(--sheet1)),rgb(var(--sheet2)));border:1px solid rgb(var(--line));box-shadow:0 -10px 40px rgba(0,0,0,.6)" onclick="event.stopPropagation()">
+      <div class="w-10 h-1 rounded-full bg-line mx-auto md:hidden -mt-2"></div>
+      <button onclick="closeModal()" class="absolute top-4 right-5 text-muted hover:text-white text-xl">✕</button>
+      <div class="flex items-center gap-3">${ic('gearplay')}<div><p style="font-family:Cinzel,serif;letter-spacing:.18em" class="text-gold text-sm">PLAYER</p><p class="text-xs text-muted">Gilt nur für diese Sitzung</p></div></div>
+      <div><p class="text-xs uppercase tracking-[.25em] text-muted mb-3">Was willst du sehen?</p>
+        <div class="grid grid-cols-2 gap-2">${FTOPICS.map(t=>`<button onclick="toggleP('${t}')" class="flex items-center gap-2 text-left text-sm px-3 py-2.5 rounded-xl border transition" style="${sel.includes(t)?'border-color:#A97C22;background:rgb(var(--chip))':'border-color:rgb(var(--line))'}"><span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px]" style="${sel.includes(t)?'background:#D4A843;color:#000':'border:1px solid #55575d'}">${sel.includes(t)?'✓':''}</span>${t}</button>`).join('')}</div></div>
+      <div><p class="text-xs uppercase tracking-[.25em] text-muted mb-3">App schließen nach</p>
+        <div class="grid grid-cols-4 gap-2">${[0,5,10,15].map(m=>`<button onclick="S.timerMin=${m};playerMenu()" class="py-2.5 rounded-xl border text-sm" style="${(S.timerMin||0)===m?'border-color:#D4A843;color:#F3D58A;background:rgb(var(--chip))':'border-color:rgb(var(--line));color:#8A8A93'}">${m?m+' Min.':'Aus'}</button>`).join('')}</div></div>
+      <button class="btn-gold w-full !py-3" onclick="startFromMenu()">▶︎ Player starten</button>
+    </div></div>`;
+}
+function toggleP(t){ let cur=S.ptopics||[...FTOPICS]; cur=cur.includes(t)?cur.filter(x=>x!==t):[...cur,t]; if(!cur.length) return; S.ptopics=cur.length===FTOPICS.length?null:cur; playerMenu(); }
+function startFromMenu(){
+  S.plist = S.ptopics ? POSTS.filter(p=>S.ptopics.includes(p.k)) : null;
+  if(S.timerMin){ S.timerEnd = Date.now()+S.timerMin*60000; } else S.timerEnd=null;
+  render(); startPlayer(0);
+}
+setInterval(()=>{ if(S.timerEnd && Date.now()>=S.timerEnd){ S.timerEnd=null; S.timerMin=0; stopPlayer();
+  document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-[130] flex flex-col items-center justify-center gap-5 text-center p-8" style="background:rgba(8,8,9,.92);backdrop-filter:blur(12px)">
+    <p style="font-family:Cinzel,serif;letter-spacing:.2em" class="text-gold text-2xl">ZEIT UM</p><p class="text-muted">Dein Timer ist abgelaufen – ClosingHub schließt sich jetzt.<br>Zeit, das Gelernte umzusetzen. 💪</p>
+    <button class="btn-gold" onclick="closeModal();go('feed')">Okay</button></div>`; } },1000);
 
 function nearbyStrip(){
   return `<div class="card p-4"><p class="text-sm font-semibold mb-3 inline-flex items-center gap-1.5">${svg('pin',16)} Member in deiner Nähe <span class="text-muted font-normal">· ${S.region}</span></p>
