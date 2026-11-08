@@ -70,6 +70,11 @@ tailwind.config = { theme: { extend: {
   .slide-down{animation:slDown .35s cubic-bezier(.2,.8,.2,1)}
   /* Anzeige mittig über der Feed-Spalte (Feed 480 + Abstand 40 + rechte Spalte 320 → Versatz 180 px) */
   @media (min-width:1024px){ .adlane{transform:translateX(-180px)} }
+  @media (min-width:768px){ .perk-label{background:linear-gradient(90deg,rgb(var(--panel)) 80%,transparent)} }
+  .chat-back{background:rgba(0,0,0,0);pointer-events:none;transition:background .28s ease}
+  #chatwrap.open .chat-back{background:rgba(0,0,0,.35);pointer-events:auto}
+  .chat-sheet{transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.85,.25,1)}
+  #chatwrap.open .chat-sheet{transform:translateY(0)}
   .rk{font-size:max(11px,.7em);line-height:1.25;padding:.12em .5em;border-radius:.4em;border:1px solid;font-weight:500}
 </style>
 </head>
@@ -217,7 +222,7 @@ function ic(k,gold){ return `<span class="icbox">${svg(k)}</span>`; }
 const NAV = [
   ['feed','play','Feed'],['jobs','jobs','Jobs'],['forum','globe','Forum'],['markt','shop','Marktplatz'],['search','search','Suche'],['notifications','bell','Mitteilungen'],
   ['messages','chat','Nachrichten',1],['create','plus','Erstellen',1],['profile','user','Profil'] ];
-const MNAV = [['feed','play'],['jobs','globe'],['create','plus',1],['messages','chat',1],['profile','user']];
+const MNAV = [['feed','play'],['jobs','globe'],['create','plus',1],['profile','user']];
 
 // Eigenes Routing: funktioniert auch in Vorschau-Fenstern, die Link-Klicks blockieren
 S.route = (location.hash||'').replace('#','') || 'feed';
@@ -266,19 +271,25 @@ function shell(content){
         <a href="#${S.user?'einstellungen':'login'}" class="nav-a ${S.user?'':'opacity-40'}">${ic('gear')}<span class="hidden xl:inline">Einstellungen</span></a>
       </div>
     </aside>
-    <div class="flex-1 md:ml-20 xl:ml-64 pb-20 md:pb-0 min-w-0">
+    <div class="flex-1 md:ml-20 xl:ml-64 pb-24 md:pb-0 min-w-0">
       <header class="md:hidden sticky top-0 z-30 bg-bg/95 backdrop-blur border-b border-line flex items-center justify-between px-4 h-14">
         <a href="#feed" class="font-serif italic gold-text text-2xl">ClosingHub</a>
         <div class="flex gap-2"><button onclick="toggleTheme()" aria-label="Tag/Nacht">${ic(isLight()?'moon':'sun')}</button><a href="#notifications">${ic('bell')}</a><a href="#search">${ic('search')}</a></div>
       </header>
-      <div class="relative border-b border-line bg-panel/60 px-4 py-2 text-sm flex items-center gap-3 h-11 overflow-hidden">
-        <span class="relative z-10 text-gold font-semibold inline-flex items-center gap-1.5 shrink-0 pr-3" style="background:linear-gradient(90deg,rgb(var(--panel)) 80%,transparent)">${svg('gift',16)} <span class="hidden sm:inline">Member-Vorteile</span></span>
-        <div class="adlane absolute inset-0 overflow-hidden pointer-events-none">${adItem(S.adIdx||0,'')}</div>
+      <div class="relative border-b border-line bg-panel/60 px-4 pt-1.5 pb-1 md:py-2 text-sm flex flex-col md:flex-row items-center gap-0.5 md:gap-3 md:h-11 overflow-hidden">
+        <span class="relative z-10 text-gold font-semibold inline-flex items-center gap-1.5 shrink-0 text-[11px] md:text-sm md:pr-3 perk-label">${svg('gift',14)} Member-Vorteile</span>
+        <div class="adlane relative h-6 w-full md:absolute md:inset-0 md:h-auto overflow-hidden pointer-events-none">${adItem(S.adIdx||0,'')}</div>
       </div>
       ${S.mode==='auftraggeber'?`<div class="px-4 py-2 text-xs bg-gold/10 text-gold border-b border-line">Auftraggeber-Modus aktiv · <a href="#jobs" class="underline">Meine Jobs</a> · Bewerber · Rechnungen</div>`:''}
       <main>${content}</main>
     </div>
-    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-bg/95 backdrop-blur border-t border-line flex justify-around items-center h-16">${bottom}</nav>
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-bg/95 backdrop-blur border-t border-line pb-1">
+      <div class="flex justify-around items-center h-14">${bottom}</div>
+      <div id="chathandle" class="relative flex justify-center items-center h-6" onclick="openChat()">
+        <div class="w-32 h-[5px] rounded-full" style="background:rgb(var(--fg) / .85)"></div>
+        ${unread()?`<span class="absolute left-1/2 ml-[72px] text-[10px] gold-bg text-black rounded-full px-1.5 leading-4">${unread()}</span>`:''}
+      </div>
+    </nav>
   </div>`;
 }
 function isLight(){ return document.documentElement.classList.contains('light'); }
@@ -295,7 +306,8 @@ function toggleMode(){
 
 const GUEST = 5;
 function feed(){
-  const pool = S.topics ? POSTS.filter(p=>S.topics.includes(p.k)) : POSTS;
+  const ft = S.ptopics || S.topics;
+  const pool = ft ? POSTS.filter(p=>ft.includes(p.k)) : POSTS;
   const list = S.user ? pool : pool.slice(0,GUEST); S.feedList = list;
   const posts = list.map((p,i)=>`
     <article class="card overflow-hidden">
@@ -515,6 +527,48 @@ function applyJob(){
 const FCATS=[['Vertrieb-Basics',[['💬','Einwandbehandlung',128],['📞','Setting & Terminierung',94],['🎯','High-Ticket Closing',76]]],['Mindset & Routinen',[['🧠','Motivation & Absagen',61],['🗓️','Tagesplanung',38]]],['Tools & Erfolge',[['🛠️','CRM & Dialer',40],['🏆','Erfolge feiern',152]]]];
 S.helpful={};
 
+
+// ---- Handy: Chat als Halb-Sheet (Linie unten nach oben wischen) ----
+S.chatMsgs = {1:[['in','Danke für den Tipp mit der Pause!']],2:[['in','Kontakt freigeschaltet ✓ – Lass uns Dienstag telefonieren.']],3:[['in','Lust auf ein Testgespräch?']]};
+S.read = {};
+function unread(){ return S.user ? CHATS.filter(c=>!S.read[c.id]).length : 0; }
+function chatEl(){
+  let w=document.getElementById('chatwrap'); if(w) return w;
+  w=document.createElement('div'); w.id='chatwrap'; w.className='md:hidden';
+  w.innerHTML=`<div class="fixed inset-0 z-[70] chat-back" onclick="closeChat()"></div>
+    <div id="chatsheet" class="fixed inset-x-0 bottom-0 z-[71] chat-sheet" style="height:50vh">
+      <div class="h-full rounded-t-3xl flex flex-col overflow-hidden" style="background:linear-gradient(180deg,rgb(var(--sheet1)),rgb(var(--sheet2)));border:1px solid rgb(var(--line));box-shadow:0 -12px 40px rgba(0,0,0,.45)">
+        <div id="chatgrab" class="flex justify-center py-2.5"><div class="w-12 h-[5px] rounded-full" style="background:rgb(var(--muted) / .6)"></div></div>
+        <div id="chatbody" class="flex-1 flex flex-col min-h-0"></div></div></div>`;
+  document.body.appendChild(w);
+  const g=w.querySelector('#chatgrab'), sh=w.querySelector('#chatsheet'); let y0=null;
+  g.addEventListener('touchstart',e=>{ y0=e.touches[0].clientY; sh.style.transition='none'; },{passive:true});
+  g.addEventListener('touchmove',e=>{ if(y0===null) return; sh.style.transform=`translateY(${Math.max(0,e.touches[0].clientY-y0)}px)`; },{passive:true});
+  g.addEventListener('touchend',e=>{ if(y0===null) return; const dy=e.changedTouches[0].clientY-y0; y0=null; sh.style.transition=''; sh.style.transform=''; if(dy>70) closeChat(); });
+  return w;
+}
+function openChat(){ if(!S.user){ go('login'); return; } const w=chatEl(); drawChat(); requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('open'))); }
+function closeChat(){ const w=document.getElementById('chatwrap'); if(w) w.classList.remove('open'); }
+function drawChat(){
+  const b=document.getElementById('chatbody'); if(!b) return;
+  if(!S.chatSel){
+    b.innerHTML=`<p class="px-5 pb-2 font-semibold">Nachrichten</p><div class="overflow-y-auto flex-1">${CHATS.map(c=>{ const nm=c.n.split(' · ')[0], last=(S.chatMsgs[c.id]||[]).slice(-1)[0], ag=c.k==='Auftraggeber';
+      return `<button onclick="S.chatSel=${c.id};S.read[${c.id}]=1;drawChat();render()" class="w-full flex items-center gap-3 px-5 py-3 border-t border-line text-left">
+        <span class="w-11 h-11 rounded-full overflow-hidden shrink-0 ${ag?'gold-bg flex items-center justify-center text-black text-xs font-bold':''}">${ag?'AG':avatar(nm)}</span>
+        <span class="flex-1 min-w-0"><span class="flex justify-between"><b class="text-sm">${c.n}</b>${S.read[c.id]?'':'<span class="w-2 h-2 rounded-full gold-bg mt-1.5"></span>'}</span><span class="block text-xs text-muted truncate">${last?last[1]:''}</span><span class="text-[10px] text-gold">${c.k}</span></span></button>`; }).join('')}</div>`;
+    return;
+  }
+  const c=CHATS.find(x=>x.id===S.chatSel), nm=c.n.split(' · ')[0], ag=c.k==='Auftraggeber', msgs=S.chatMsgs[c.id]||[];
+  b.innerHTML=`<div class="flex items-center gap-3 px-4 pb-2 border-b border-line"><button onclick="S.chatSel=null;drawChat()" class="text-2xl px-1 leading-none">‹</button><span class="w-8 h-8 rounded-full overflow-hidden ${ag?'gold-bg flex items-center justify-center text-black text-[10px] font-bold':''}">${ag?'AG':avatar(nm)}</span><b class="text-sm">${c.n}</b><span class="ml-auto text-[10px] text-muted">online</span></div>
+    <div id="chatmsgs" class="flex-1 overflow-y-auto px-4 py-3 space-y-2">${msgs.map(([d,t])=>`<div class="flex ${d==='out'?'justify-end':''}"><span class="max-w-[75%] px-3 py-2 rounded-2xl text-sm ${d==='out'?'gold-bg text-black rounded-br-md':'rounded-bl-md'}" style="${d==='out'?'':'background:rgb(var(--panel));border:1px solid rgb(var(--line))'}">${t}</span></div>`).join('')}${msgs.some(m=>m[0]==='out')?'<p class="text-right text-[10px] text-muted">Gelesen ✓✓</p>':''}</div>
+    <form class="flex gap-2 p-3 border-t border-line" onsubmit="event.preventDefault();sendChat(this.m)"><input name="m" class="input" placeholder="Nachricht…" autocomplete="off"><button class="btn-gold">↑</button></form>`;
+  const m=document.getElementById('chatmsgs'); m.scrollTop=m.scrollHeight;
+}
+function sendChat(inp){ const v=inp.value.trim(); if(!v) return; (S.chatMsgs[S.chatSel]=S.chatMsgs[S.chatSel]||[]).push(['out',v]); drawChat(); const i=document.querySelector('#chatbody input'); if(i) i.focus(); }
+let hY=null;
+document.addEventListener('touchstart',e=>{ if(e.target.closest&&e.target.closest('#chathandle')) hY=e.touches[0].clientY; },{passive:true});
+document.addEventListener('touchend',e=>{ if(hY===null) return; const dy=hY-e.changedTouches[0].clientY; hY=null; if(dy>30) openChat(); },{passive:true});
+
 function forum(){
   if(S.thread) return thread();
   return `<div class="max-w-3xl mx-auto px-4 py-6"><div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><span class="btn-gold">Forum</span><a href="#markt" class="btn-ghost">Marktplatz</a></div>
@@ -680,15 +734,15 @@ function playerMenu(){
     <div class="w-full md:max-w-md p-6 space-y-6 relative rounded-t-3xl md:rounded-3xl" style="background:linear-gradient(180deg,rgb(var(--sheet1)),rgb(var(--sheet2)));border:1px solid rgb(var(--line));box-shadow:0 -10px 40px rgba(0,0,0,.6)" onclick="event.stopPropagation()">
       <div class="w-10 h-1 rounded-full bg-line mx-auto md:hidden -mt-2"></div>
       <button onclick="closeModal()" class="absolute top-4 right-5 text-muted hover:text-white text-xl">✕</button>
-      <div class="flex items-center gap-3">${ic('gearplay')}<div><p style="font-family:Cinzel,serif;letter-spacing:.18em" class="text-gold text-sm">PLAYER</p><p class="text-xs text-muted">Gilt nur für diese Sitzung</p></div></div>
+      <div class="flex items-center gap-3">${ic('gearplay')}<div><p style="font-family:Cinzel,serif;letter-spacing:.18em" class="text-gold text-sm">FEED & PLAYER</p><p class="text-xs text-muted">Passt Feed und Player an · gilt nur für diese Sitzung</p></div></div>
       <div><p class="text-xs uppercase tracking-[.25em] text-muted mb-3">Was willst du sehen?</p>
         <div class="grid grid-cols-2 gap-2">${FTOPICS.map(t=>`<button onclick="toggleP('${t}')" class="flex items-center gap-2 text-left text-sm px-3 py-2.5 rounded-xl border transition" style="${sel.includes(t)?'border-color:#A97C22;background:rgb(var(--chip))':'border-color:rgb(var(--line))'}"><span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px]" style="${sel.includes(t)?'background:#D4A843;color:#000':'border:1px solid #55575d'}">${sel.includes(t)?'✓':''}</span>${t}</button>`).join('')}</div></div>
       <div><p class="text-xs uppercase tracking-[.25em] text-muted mb-3">App schließen nach</p>
         <div class="grid grid-cols-4 gap-2">${[0,5,10,15].map(m=>`<button onclick="S.timerMin=${m};playerMenu()" class="py-2.5 rounded-xl border text-sm" style="${(S.timerMin||0)===m?'border-color:#D4A843;color:#F3D58A;background:rgb(var(--chip))':'border-color:rgb(var(--line));color:#8A8A93'}">${m?m+' Min.':'Aus'}</button>`).join('')}</div></div>
-      <button class="btn-gold w-full !py-3" onclick="startFromMenu()">▶︎ Player starten</button>
+      <div class="grid grid-cols-2 gap-2"><button class="btn-ghost !py-3" onclick="closeModal();render()">Feed anpassen</button><button class="btn-gold !py-3" onclick="startFromMenu()">▶︎ Player starten</button></div>
     </div></div>`;
 }
-function toggleP(t){ let cur=S.ptopics||[...FTOPICS]; cur=cur.includes(t)?cur.filter(x=>x!==t):[...cur,t]; if(!cur.length) return; S.ptopics=cur.length===FTOPICS.length?null:cur; playerMenu(); }
+function toggleP(t){ let cur=S.ptopics||[...FTOPICS]; cur=cur.includes(t)?cur.filter(x=>x!==t):[...cur,t]; if(!cur.length) return; S.ptopics=cur.length===FTOPICS.length?null:cur; playerMenu(); render(); }
 function startFromMenu(){
   S.plist = S.ptopics ? POSTS.filter(p=>S.ptopics.includes(p.k)) : null;
   if(S.timerMin){ S.timerEnd = Date.now()+S.timerMin*60000; } else S.timerEnd=null;
