@@ -301,7 +301,7 @@
     <path d="M60 340V60M60 340h300" opacity=".5"/><path d="M60 300l60-40 50 25 60-80 50 20 70-110"/><path d="M325 95l25 20 0-35z"/><path d="M60 260h300M60 200h300M60 140h300" opacity=".25"/>
   </svg>
   <div class="wrap" style="position:relative">
-    <h1><span id="heroTop">Close mehr.</span><br><span class="gold" id="heroGold">Verdien mehr.</span></h1>
+    <h1><span id="heroTop">Mehr closen,</span><br><span class="gold" id="heroGold">mehr verdienen.</span></h1>
     <p class="sub" id="heroSub">Die Plattform für Closer, Setter und Auftraggeber.</p>
     <p class="lead">Top-Jobs mit fairer Provision, Skripte, die verkaufen, und eine Community, die dich jeden Tag besser macht.</p>
     <div class="cta">
@@ -543,10 +543,6 @@ const I = {
 };
 
 const SEGMENTS = [
-  { key:'neu', label:'Noch keine Erfahrung', cta:'Jetzt einsteigen', items:[
-    ['play','Lerninhalte im Feed','Kurze Videos, Zitate und Seminar-Ausschnitte, die dir Closing Schritt für Schritt beibringen.'],
-    ['mic','Übungsgespräche','Trainiere echte Verkaufsgespräche mit anderen Membern, bevor es ernst wird.'],
-    ['jobs','Deine ersten Jobs','Finde Einsteiger-Jobs als Setter oder Closer mit klarer Provision.'] ]},
   { key:'einsteiger', label:'Einsteiger', cta:'Schneller besser werden', items:[
     ['doc','Skripte vom Marktplatz','Kauf erprobte Skripte und Einwand-Antworten von erfahrenen Closern.'],
     ['chat','Forum','Stell deine Fragen und bekomm Antworten von Leuten, die täglich closen.'],
@@ -561,16 +557,16 @@ const SEGMENTS = [
     ['users','Nur für Kontakte zahlen','Kein Abo nötig: Du zahlst erst, wenn du einen passenden Kandidaten freischaltest.'] ]},
 ];
 let seg = 0;
-// Zeilen: [Vorteil, Erklärung, ohne Erfahrung, Einsteiger, Profi]  2 = besonders wichtig, 1 = dabei, 0 = weniger relevant
+// Zeilen: [Vorteil, Erklärung, Einsteiger, Profi]  2 = besonders wichtig, 1 = dabei · sortiert nach Wichtigkeit
 const ROWS = [
-  ['Lerninhalte im Feed','Kurze Videos, Zitate, Seminar-Ausschnitte',2,2,1],
-  ['Übungsgespräche & Closer Arena','Trainieren mit echten Membern',2,2,1],
-  ['Forum mit Profi-Antworten','Fragen stellen, voneinander lernen',2,2,1],
-  ['Jobs als Setter & Closer','Einsteigen mit klarer Provision',2,2,0],
-  ['Marktplatz','Individuelles Material für dich',2,2,1],
-  ['Top-Jobs mit hoher Provision','Geprüfte Auftraggeber, hohe Tickets',0,2,2],
-  ['Eigene Services verkaufen','Skripte, Coachings, Call-Analysen',0,2,2],
-  ['Kontakte in deiner Umgebung','Closer & Setter aus deiner Stadt',2,2,2],
+  ['Jobs als Setter & Closer','Klare Provision, Bewerbung mit einem Klick',2,2],
+  ['Top-Jobs mit hoher Provision','Geprüfte Auftraggeber, hohe Tickets',1,2],
+  ['Kontakte in deiner Umgebung','Closer & Setter aus deiner Stadt',2,2],
+  ['Übungsgespräche & Closer Arena','Trainieren mit echten Membern',2,1],
+  ['Lerninhalte im Feed','Kurze Videos, Zitate, Seminar-Ausschnitte',2,1],
+  ['Forum mit Profi-Antworten','Fragen stellen, voneinander lernen',2,1],
+  ['Marktplatz','Skripte, Vorlagen und Call-Analysen kaufen',2,1],
+  ['Eigene Services verkaufen','Skripte, Coachings, Call-Analysen',1,2],
 ];
 const CLIENT = [
   ['shield','Geprüfte Vertriebler finden','Closer und Setter mit Erfahrung, Rang, Bewertungen und verifizierten Erfolgen.'],
@@ -582,16 +578,16 @@ const CLIENT = [
 function drawSeg(){
   document.getElementById('seg').innerHTML = SEGMENTS.map((s,i)=>`<button role="tab" aria-selected="${i===seg}" class="${i===seg?'on':''}" onclick="seg=${i};drawSeg()">${s.label}</button>`).join('');
   const body = document.getElementById('segBody');
-  if(seg===3){
+  if(seg===2){
     body.innerHTML = `<div class="agrid">${CLIENT.map(([ic,t,d])=>`<div class="card benefit"><span class="ic">${svgI(I[ic])}</span><h3>${t}</h3><p>${d}</p></div>`).join('')}</div>`;
   } else {
-    const head = ['Noch keine Erfahrung','Einsteiger','Profi'];
+    const head = ['Einsteiger','Profi'];
     const cell = v => v===2?'<span class="star">★ wichtig</span>':v===1?'<span class="yes">✓</span>':'<span class="no">–</span>';
     body.innerHTML = `<table class="tbl"><thead><tr><th>Vorteil</th>${head.map((h,i)=>`<th class="${i===seg?'col-on':'col-off'}">${h}</th>`).join('')}</tr></thead>
-      <tbody>${ROWS.map(r=>`<tr><td><b>${r[0]}</b><span>${r[1]}</span></td>${[r[2],r[3],r[4]].map((v,i)=>`<td class="${i===seg?'col-on':'col-off'}">${cell(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>
+      <tbody>${ROWS.map(r=>`<tr><td><b>${r[0]}</b><span>${r[1]}</span></td>${[r[2],r[3]].map((v,i)=>`<td class="${i===seg?'col-on':'col-off'}">${cell(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>
       <div class="legend"><span><span class="star" style="padding:1px 8px">★</span> besonders wichtig für dich</span><span><span class="yes">✓</span> inklusive</span></div>`;
   }
-  const c=document.getElementById('segCta'); c.textContent = seg===3 ? 'Kontakt aufnehmen' : 'Auf die Warteliste'; if(seg===3){ c.setAttribute('data-open','kontakt'); c.setAttribute('href','#'); } else { c.removeAttribute('data-open'); c.setAttribute('href','#warteliste'); }
+  const c=document.getElementById('segCta'); c.textContent = seg===2 ? 'Kontakt aufnehmen' : 'Auf die Warteliste'; if(seg===2){ c.setAttribute('data-open','kontakt'); c.setAttribute('href','#'); } else { c.removeAttribute('data-open'); c.setAttribute('href','#warteliste'); }
 }
 
 const FEATURES = [
