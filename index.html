@@ -157,8 +157,8 @@
   .perks .num{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--grad);color:#0A0A0B;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
   .badge{aspect-ratio:1;max-width:320px;margin:0 auto;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px solid var(--gold);box-shadow:0 0 60px rgba(212,168,67,.18),inset 0 0 40px rgba(212,168,67,.08);position:relative}
   .badge::before{content:"";position:absolute;inset:14px;border-radius:50%;border:1px dashed rgba(212,168,67,.45)}
-  .badge .big{font-family:Lora,serif;font-style:italic;font-size:64px;line-height:1}
-  .badge small{letter-spacing:.3em;text-transform:uppercase;font-size:11px;color:var(--gold);margin-top:8px}
+  .badge .big{font-family:Parisienne,cursive;font-size:clamp(38px,4.6vw,50px);line-height:1.2;white-space:nowrap;padding:0 .15em}
+  .badge small{letter-spacing:.22em;text-transform:uppercase;font-size:10px;white-space:nowrap;color:var(--gold);margin-top:8px}
   .meter{margin-top:30px}
   .meter .bar{height:8px;border-radius:99px;background:#2a2620;overflow:hidden}
   .meter .fill{height:100%;background:var(--grad);border-radius:99px;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
@@ -239,7 +239,7 @@
   .spot:hover::before{opacity:1}
   /* Laufband */
   .marquee{border-block:1px solid var(--line);background:linear-gradient(90deg,var(--bg),var(--panel) 20%,var(--panel) 80%,var(--bg));overflow:hidden;padding:18px 0;position:relative}
-  .marquee .track{display:flex;gap:46px;width:max-content;animation:marq 32s linear infinite;font-family:Lora,serif;font-style:italic;font-size:22px;color:#cfcfd4;white-space:nowrap}
+  .marquee .track{display:flex;gap:46px;width:max-content;animation:marq 32s linear infinite;font-family:Parisienne,cursive;font-size:28px;color:#cfcfd4;white-space:nowrap}
   .marquee .track span{display:inline-flex;align-items:center;gap:46px}
   .marquee .track span::after{content:"✦";color:var(--gold);font-style:normal;font-size:14px}
   .marquee:hover .track{animation-play-state:paused}
@@ -301,9 +301,9 @@
     <path d="M60 340V60M60 340h300" opacity=".5"/><path d="M60 300l60-40 50 25 60-80 50 20 70-110"/><path d="M325 95l25 20 0-35z"/><path d="M60 260h300M60 200h300M60 140h300" opacity=".25"/>
   </svg>
   <div class="wrap" style="position:relative">
-    <h1><span id="heroTop">Mehr closen,</span><br><span class="gold" id="heroGold">mehr verdienen.</span></h1>
-    <p class="sub" id="heroSub">Die Plattform für Closer, Setter und Auftraggeber.</p>
-    <p class="lead">Top-Jobs mit fairer Provision, Skripte, die verkaufen, und eine Community, die dich jeden Tag besser macht.</p>
+    <h1><span id="heroTop">Mehr closen –</span><br><span class="gold" id="heroGold">mehr verdienen.</span></h1>
+    <p class="sub" id="heroSub">Die Plattform für Closer &amp; Setter, die mehr wollen.</p>
+    <p class="lead">Attraktive Jobs, ein motivierender Feed, Kontakte in deiner Nähe und besondere Member-Vorteile, die dich jeden Tag besser machen – für maximale Abschlüsse.</p>
     <div class="cta">
       <a href="#warteliste" class="btn btn-gold">Auf die Warteliste
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>

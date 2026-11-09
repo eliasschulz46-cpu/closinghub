@@ -153,10 +153,6 @@ const PERKS = [
   ['Geschäftskonto','Bonus bei Eröffnung','Anzeige'],
   ['KI-Skriptgenerator','Exklusiv für Elite+','Anzeige'],
 ];
-// Laufband live aus der Zentrale (Supabase)
-const SB_URL='https://bzcnqggwyfocpbkwqhsy.supabase.co', SB_KEY='sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D';
-fetch(`${SB_URL}/rest/v1/ticker_public?select=title,offer&order=sort.asc`,{headers:{apikey:SB_KEY}})
-  .then(r=>r.ok?r.json():null).then(rows=>{ if(Array.isArray(rows)&&rows.length){ PERKS.splice(0,PERKS.length,...rows.map(r=>[r.title,r.offer,'Anzeige'])); } }).catch(()=>{});
 function adItem(i,cls){ const p=PERKS[i%PERKS.length]; return `<a id="adcur" href="#vorteile" class="absolute inset-0 flex items-center justify-center gap-2 whitespace-nowrap ${cls}"><span class="pointer-events-auto flex items-center gap-2"><span class="text-[10px] uppercase tracking-wide text-muted border border-line rounded px-1.5">Anzeige</span><span>${p[0]}</span><span class="text-gold">· ${p[1]}</span></span></a>`; }
 // Laufband: alle 20 s fährt die Anzeige raus (1,5 s beschleunigen) und die nächste rein (1,5 s abbremsen)
 S.adIdx = 0;
