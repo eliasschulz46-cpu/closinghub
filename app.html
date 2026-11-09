@@ -235,6 +235,17 @@ const PERKS = [
   ['Geschäftskonto','Bonus bei Eröffnung','Anzeige'],
   ['KI-Skriptgenerator','Exklusiv für Elite+','Anzeige'],
 ];
+const esc = v => String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// Jobs live aus der Zentrale (Supabase)
+fetch(`https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/jobs_public?select=*`,{headers:{apikey:'sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D'}})
+  .then(r=>r.ok?r.json():null).then(rows=>{
+    if(!Array.isArray(rows)||!rows.length) return;
+    JOBS.splice(0,JOBS.length,...rows.map(r=>({ id:100000+r.id, live:true, t:r.titel, ind:r.branche||'–', p:r.produkt||'–', reg:r.region||'–',
+      pay:[r.provision,r.fixum&&('+ '+r.fixum)].filter(Boolean).join(' '), roles:r.rolle||'–', top:r.top?1:0,
+      d:Math.max(0,Math.floor((Date.now()-new Date(r.published_at))/864e5)), left:r.expires_at?Math.max(0,Math.ceil((new Date(r.expires_at)-Date.now())/864e5)):null,
+      ticket:r.ticket, modell:r.modell, umfang:r.umfang, start:r.start_text, dauer:r.auftragsdauer, desc:r.beschreibung, req:r.anforderungen, fragen:r.fragen||[] })));
+    if(typeof route==='function' && route()==='jobs') render();
+  }).catch(()=>{});
 // Laufband live aus der Zentrale (Supabase)
 const SB_URL='https://bzcnqggwyfocpbkwqhsy.supabase.co', SB_KEY='sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D';
 fetch(`${SB_URL}/rest/v1/ticker_public?select=title,offer&order=sort.asc`,{headers:{apikey:SB_KEY}})
@@ -351,7 +362,7 @@ function shell(content){
   return `
   <div class="min-h-screen flex">
     <aside class="hidden md:flex flex-col fixed inset-y-0 left-0 w-20 xl:w-64 border-r border-line px-3 py-6 bg-bg z-30">
-      <a href="#feed" class="px-3 mb-8 text-3xl hidden xl:block"><span class="chlogo ${LP()}"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas><i class="lg-glow"></i></span></span></a>
+      <a href="#feed" class="px-3 mb-8 text-3xl hidden xl:block"><span class="chlogo ${LP()}"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></span></a>
       <a href="#feed" class="px-3 mb-8 xl:hidden"><span class="chlogo"><span class="l2" style="font-size:30px">HUB</span></span></a>
       <nav class="flex flex-col gap-1 flex-1">${side}</nav>
       <div class="flex flex-col gap-1 border-t border-line pt-4">
@@ -362,7 +373,7 @@ function shell(content){
     </aside>
     <div class="flex-1 md:ml-20 xl:ml-64 pb-24 md:pb-0 min-w-0">
       <header class="md:hidden sticky top-0 z-30 bg-bg/95 backdrop-blur border-b border-line flex items-center justify-between px-4 h-14">
-        <a href="#feed" class="text-2xl"><span class="chlogo ${LP()}"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas><i class="lg-glow"></i></span></span></a>
+        <a href="#feed" class="text-2xl"><span class="chlogo ${LP()}"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></span></a>
         <div class="flex gap-2"><button onclick="toggleTheme()" aria-label="Tag/Nacht">${ic(isLight()?'moon':'sun')}</button><a href="#notifications">${ic('bell')}</a><a href="#search">${ic('search')}</a></div>
       </header>
       <div class="relative border-b border-line bg-panel/60 px-4 pt-1.5 pb-1 md:py-2 text-sm flex flex-col md:flex-row items-center gap-0.5 md:gap-3 md:h-11 overflow-hidden">
@@ -573,7 +584,7 @@ function jobs(){
     : S.sent ? `<p class="text-emerald-400">✓ Bewerbung gesendet. Der Auftraggeber sieht dein anonymes Profil und kann den Kontakt für 25 € freischalten.</p>`
     : `<div class="space-y-3">
         <p class="text-sm text-muted">Fragen des Auftraggebers:</p>
-        <input class="input" placeholder="1. Wie viele High-Ticket-Abschlüsse hattest du 2026?">
+        ${(j.fragen&&j.fragen.length?j.fragen:['Wie viele High-Ticket-Abschlüsse hattest du 2026?']).map((f,i)=>`<input class="input" placeholder="${i+1}. ${esc(f)}">`).join('')}
         <textarea id="amsg" maxlength="300" oninput="document.getElementById('cnt').textContent=this.value.length" class="input h-24" placeholder="Kurze Nachricht an den Auftraggeber (max. 300 Zeichen)"></textarea>
         <div class="flex justify-between items-center gap-3"><span class="text-xs text-muted"><span id="cnt">0</span>/300 · Kontaktdaten werden automatisch gefiltert</span><button onclick="applyJob()" class="btn-gold">Anonym bewerben</button></div></div>`;
   return `<div class="px-4 py-6 max-w-6xl mx-auto">
@@ -590,8 +601,13 @@ function jobs(){
         <h1 class="font-serif text-3xl mb-1">${j.t}</h1>
         <p class="text-gold text-lg mb-5">${j.pay}</p>
         <dl class="grid grid-cols-2 gap-4 text-sm mb-6">
-          ${[['Branche',j.ind],['Produkt',j.p],['Region',j.reg],['Gesucht',j.roles],['Firmengröße',j.size],['Firmenalter',j.age],['Bewertung','⭐ '+j.rt],['Online','noch '+(30-j.d)+' Tage']].map(([k,v])=>`<div><dt class="text-muted">${k}</dt><dd>${v}</dd></div>`).join('')}
-        </dl>${action}</div></div></div>`;
+          ${(j.live ? [['Gesucht',j.roles],['Branche',j.ind],['Produkt',j.p],['Ticket',j.ticket],['Arbeitsmodell',j.modell],['Region',j.reg],['Umfang',j.umfang],['Start',j.start],['Auftragsdauer',j.dauer],['Online',j.left!=null?'noch '+j.left+' Tage':'–']]
+              : [['Branche',j.ind],['Produkt',j.p],['Region',j.reg],['Gesucht',j.roles],['Firmengröße',j.size],['Firmenalter',j.age],['Bewertung','⭐ '+j.rt],['Online','noch '+(30-j.d)+' Tage']])
+            .filter(([k,v])=>v).map(([k,v])=>`<div><dt class="text-muted">${k}</dt><dd>${esc(v)}</dd></div>`).join('')}
+        </dl>
+        ${j.desc?`<p class="text-sm mb-4">${esc(j.desc)}</p>`:''}
+        ${j.req?`<div class="text-sm mb-6"><p class="text-muted mb-1">Das bringst du mit</p><p style="white-space:pre-line">${esc(j.req)}</p></div>`:''}
+        ${action}</div></div></div>`;
 }
 
 const CONTACT_RE = /(\+?\d[\d\s\/\-().]{6,}\d)|([\w.+-]+@[\w-]+\.[\w.]+)|(@[\w.]{3,})|((https?:\/\/|www\.)\S+)|(\b(insta(gram)?|whats ?app|telegram|tiktok|linkedin)\b[:\s]*\S*)/gi;
@@ -981,7 +997,7 @@ function search(){ return `<div class="max-w-lg mx-auto px-4 py-8"><input class=
 
 function login(){
   return `<div class="min-h-screen flex items-center justify-center px-4"><div class="card w-full max-w-sm p-8 space-y-5">
-    <h1 class="text-4xl text-center"><span class="chlogo ${LP()}"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas><i class="lg-glow"></i></span></span></h1>
+    <h1 class="text-4xl text-center"><span class="chlogo ${LP()}"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></span></h1>
     <p class="text-center text-muted text-sm">Die Plattform für Closer, Setter & Auftraggeber</p>
     <div class="grid grid-cols-2 gap-2"><button id="r1" class="btn-gold" onclick="S.mode='consumer';r1.className='btn-gold';r2.className='btn-ghost'">Closer / Setter</button><button id="r2" class="btn-ghost" onclick="S.mode='auftraggeber';r2.className='btn-gold';r1.className='btn-ghost'">Auftraggeber</button></div>
     <button class="btn-ghost w-full" onclick="doLogin()">Weiter mit Google</button>

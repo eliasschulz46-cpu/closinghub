@@ -140,7 +140,7 @@
 </head>
 <body>
 <div class="top">
-  <a href="#dashboard" class="logo play"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas><i class="lg-glow"></i></span></a>
+  <a href="#dashboard" class="logo play"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></a>
   <span class="tag">Zentrale</span>
   <span class="sp"></span>
   <input class="in search" id="q" placeholder="Suchen: Member, Rechnung, Ticket …">
@@ -229,21 +229,22 @@ const DEMO = {
     {id:2,title:'Bewerbung von max_sales',why:'Telefonnummer im Text (Mahnung 2/3)'}
   ]
 };
-let D = { settings:structuredClone(DEFAULT_SETTINGS), waitlist:[], requests:[], ticker:[], invoices:[], tickets:[], ai:[], ...structuredClone(DEMO) };
+let D = { settings:structuredClone(DEFAULT_SETTINGS), jobs:[], waitlist:[], requests:[], ticker:[], invoices:[], tickets:[], ai:[], ...structuredClone(DEMO) };
 let LOADED = false;
 const save = () => {}; // Beispielbereiche werden nicht gespeichert
 
 const fmtAt = iso => { const d=new Date(iso), now=new Date(); const same=d.toDateString()===now.toDateString(); return same ? 'heute ' + d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('de-DE'); };
 
 async function loadAll(){
-  const [wl, cr, st, tk, inv, tix, ai] = await Promise.all([
+  const [wl, cr, st, tk, inv, tix, ai, jb] = await Promise.all([
     q('waitlist?select=*&order=created_at.desc'),
     q('contact_requests?select=*&order=created_at.desc'),
     q('settings?select=key,value'),
     q('ticker?select=*&order=sort.asc,id.asc'),
     q('invoices?select=*&order=created_at.desc'),
     q('tickets?select=*&order=created_at.desc'),
-    q('ai_suggestions?select=*&order=created_at.desc')
+    q('ai_suggestions?select=*&order=created_at.desc'),
+    api('jobs?select=*&order=created_at.desc').catch(()=>[])
   ]);
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
@@ -256,6 +257,7 @@ async function loadAll(){
   D.invoices = inv.map(i=>({ id:i.id, no:i.no, date:i.created_at.slice(0,10), cust:i.customer, email:i.email||'', item:i.item, net:+i.net, vat:+i.vat, st:i.status }));
   D.tickets = tix.map(t=>({ id:t.id, from:t.from_name, email:t.email, topic:t.topic, prio:t.prio, st:t.status, msgs:t.messages||[] }));
   D.ai = ai.map(a=>({ id:a.id, area:a.area||'Allgemein', title:a.title, text:a.text||'', why:a.why||'', impact:a.impact||'', st:a.status, t:fmtAt(a.created_at) }));
+  D.jobs = jb||[];
   LOADED = true;
 }
 
@@ -278,6 +280,7 @@ const NAV = [
   ['dashboard','Dashboard','dash'],
   ['mitteilungen','KI-Mitteilungen','spark', ()=>D.ai.filter(a=>a.st==='neu').length],
   ['Geschäft'],
+  ['stellen','Stellenangebote','users', ()=>D.jobs.filter(j=>j.status==='anfrage').length],
   ['rechnungen','Rechnungen','invoice', ()=>D.invoices.filter(i=>i.st==='überfällig').length],
   ['laufband','Laufband & Angebote','ticker'],
   ['anfragen','Anfragen & Warteliste','inbox', ()=>D.requests.filter(r=>r.st==='neu').length],
@@ -299,7 +302,7 @@ function drawNav(){
 /* ===== Login ===== */
 function loginView(){
   return `<div style="max-width:380px;margin:8vh auto" class="card">
-    <div style="text-align:center;margin-bottom:18px"><span class="logo play" style="font-size:34px"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas><i class="lg-glow"></i></span></span><div class="muted" style="font-size:11px;letter-spacing:.25em;text-transform:uppercase;margin-top:6px">Zentrale</div></div>
+    <div style="text-align:center;margin-bottom:18px"><span class="logo play" style="font-size:34px"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></span><div class="muted" style="font-size:11px;letter-spacing:.25em;text-transform:uppercase;margin-top:6px">Zentrale</div></div>
     <form id="lf" class="grid" style="gap:12px">
       <label class="f">E-Mail<input class="in" id="le" type="email" autocomplete="username" required></label>
       <label class="f">Passwort<input class="in" id="lp" type="password" autocomplete="current-password" required></label>
@@ -313,6 +316,118 @@ document.addEventListener('submit', async e=>{
   try{ await auth('password',{ email:$('le').value.trim(), password:$('lp').value }); LOADED=false; render(); }
   catch(x){ err.textContent = /invalid/i.test(x.message) ? 'E-Mail oder Passwort falsch.' : x.message; err.style.display='block'; b.disabled=false; b.textContent='Anmelden'; }
 });
+
+
+/* ===== Stellenangebote ===== */
+let jobTab='anfrage';
+const JOB_FIELDS=[
+  ['titel','Titel','text','z. B. High-Ticket Closer Coaching (Remote)'],
+  ['rolle','Gesucht','select',['Closer','Setter','Closer & Setter']],
+  ['branche','Branche','text','z. B. Coaching'],
+  ['produkt','Produkt / Angebot','text','Was wird verkauft?'],
+  ['ticket','Ticketgröße','text','z. B. 3.000–8.000 €'],
+  ['provision','Provision','text','z. B. 10 % pro Abschluss'],
+  ['fixum','Fixum (optional)','text','z. B. 1.500 € / Monat'],
+  ['modell','Arbeitsmodell','select',['Remote','Vor Ort','Hybrid']],
+  ['region','Region','text','z. B. DACH'],
+  ['umfang','Umfang','text','z. B. Freelance, ca. 20 Std./Woche'],
+  ['start_text','Start','text','z. B. ab sofort'],
+  ['auftragsdauer','Auftragsdauer','text','z. B. 3 Monate oder unbefristet'],
+];
+const jobDays = j => j.expires_at ? Math.max(0, Math.ceil((new Date(j.expires_at)-Date.now())/864e5)) : null;
+function stellen(){
+  const by=s=>D.jobs.filter(j=>j.status===s);
+  const tabs=[['anfrage','Anfragen'],['entwurf','Entwürfe'],['live','Live'],['beendet','Beendet']];
+  const list=by(jobTab);
+  const card=j=>`<div class="card"><div class="row between"><div class="row"><span class="pill ${j.top?'p-gold':''}">${j.top?'★ Top-Job':esc(j.rolle||'Anfrage')}</span><b>${esc(j.titel||j.firma||'Neue Anfrage')}</b></div>
+      <span class="muted" style="font-size:12px">${fmtAt(j.created_at)}</span></div>
+    <div class="muted" style="font-size:12px;margin-top:4px">${esc(j.firma||'–')} · ${esc(j.kontakt_name||'')} ${j.kontakt_email?'· '+esc(j.kontakt_email):''}</div>
+    ${j.status==='anfrage'?`<p style="margin-top:10px;white-space:pre-wrap;background:var(--bg2);border-radius:10px;padding:10px 12px;max-height:160px;overflow:auto">${esc(j.anfrage_text)||'<span class="muted">Kein Text</span>'}</p>`
+      :`<p style="margin-top:10px">${esc(j.beschreibung)}</p><div class="row" style="margin-top:8px;gap:6px">${[j.provision,j.region,j.modell,j.umfang,j.auftragsdauer].filter(Boolean).map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div>`}
+    ${j.status==='live'?`<p class="muted" style="font-size:12px;margin-top:8px">Online seit ${fmtAt(j.published_at)} · noch ${jobDays(j)} Tage</p>`:''}
+    <div class="row" style="margin-top:12px">
+      ${j.status==='anfrage'?`<button class="btn gold-b sm" onclick="kiJob(${j.id},this)">${ic('spark',14)} Mit KI zusammenfassen</button><button class="btn sm" onclick="editJob(${j.id})">Selbst ausfüllen</button><button class="btn sm red" onclick="setJob(${j.id},{status:'abgelehnt'},'Abgelehnt')">Ablehnen</button>`:''}
+      ${j.status==='entwurf'?`<button class="btn gold-b sm" onclick="editJob(${j.id})">${ic('pen',13)} Prüfen & veröffentlichen</button>`:''}
+      ${j.status==='live'?`<button class="btn sm" onclick="editJob(${j.id})">${ic('pen',13)} Bearbeiten</button><button class="btn sm" onclick="extendJob(${j.id})">+ 30 Tage</button><button class="btn sm red" onclick="setJob(${j.id},{status:'beendet'},'Beendet')">Beenden</button>`:''}
+      ${j.status==='beendet'?`<button class="btn sm" onclick="editJob(${j.id})">Wieder veröffentlichen</button>`:''}
+      ${j.kontakt_email?`<a class="btn sm" href="mailto:${esc(j.kontakt_email)}?subject=${encodeURIComponent('Dein Stellenangebot bei ClosingHub')}">Mail</a>`:''}
+    </div></div>`;
+  return `<div class="row between"><div><h1 class="h1">Stellenangebote</h1><p class="sub">Anfragen von Auftraggebern prüfen, mit KI aufbereiten und in der App veröffentlichen.</p></div><button class="btn gold-b" onclick="editJob()">+ Stelle anlegen</button></div>
+  <div class="tabs">${tabs.map(([k,l])=>`<button class="${jobTab===k?'on':''}" onclick="jobTab='${k}';render()">${l} <span class="muted">${by(k).length}</span></button>`).join('')}</div>
+  <div class="grid">${list.map(card).join('')||`<div class="card empty">${jobTab==='anfrage'?'Noch keine Anfragen. Auftraggeber reichen Stellen über die Website ein („Stellenangebot einreichen“).':'Hier ist noch nichts.'}</div>`}</div>`;
+}
+async function setJob(id,patch,msg){ await q(`jobs?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(D.jobs.find(j=>j.id===id),patch); render(); if(msg) toast(msg); }
+async function extendJob(id){ const j=D.jobs.find(x=>x.id===id); const base=Math.max(Date.now(), new Date(j.expires_at||Date.now()).getTime()); await setJob(id,{expires_at:new Date(base+30*864e5).toISOString()},'Um 30 Tage verlängert'); }
+
+// Schnell-Vorschlag ohne KI (falls die KI-Funktion noch nicht eingerichtet ist)
+function quickParse(t){
+  t=t||''; const low=t.toLowerCase(), f={};
+  f.rolle = /closer/.test(low)&&/setter/.test(low) ? 'Closer & Setter' : /setter/.test(low) ? 'Setter' : 'Closer';
+  f.modell = /remote|home.?office|online/.test(low) ? 'Remote' : /vor ort|außendienst|aussendienst/.test(low) ? 'Vor Ort' : null;
+  const prov=t.match(/(\d{1,2}(?:[.,]\d)?\s?%[^.,;\n]{0,30})/); if(prov) f.provision=prov[1].trim();
+  const eur=t.match(/(\d[\d.]*\s?(?:–|-|bis)?\s?\d*[\d.]*\s?(?:€|eur))/i); if(eur) f.ticket=eur[1].trim();
+  f.beschreibung=t.replace(/\S+@\S+|\+?\d[\d\s\/-]{7,}\d|https?:\/\/\S+|www\.\S+/g,'').trim().slice(0,280);
+  f.titel=`${f.rolle} ${f.modell==='Remote'?'(Remote)':''}`.trim();
+  return f;
+}
+async function kiJob(id,b){
+  const j=D.jobs.find(x=>x.id===id); b.disabled=true; b.textContent='KI arbeitet …';
+  let r=null;
+  try{
+    const res=await fetch(`${SB_URL}/functions/v1/ki-job`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SESSION.access_token,'Content-Type':'application/json'},body:JSON.stringify({text:j.anfrage_text||''})});
+    const out=await res.json().catch(()=>({}));
+    if(res.ok && out && !out.error) r=out; else throw new Error(out.error||('Status '+res.status));
+  }catch(e){
+    r=quickParse(j.anfrage_text); toast('KI noch nicht verbunden – Schnell-Vorschlag ohne KI eingefügt');
+  }
+  if(Array.isArray(r.anforderungen)) r.anforderungen=r.anforderungen.map(x=>'• '+String(x).replace(/^•\s*/,'')).join('\n');
+  editJob(id, r);
+  b.disabled=false; b.innerHTML=`${ic('spark',14)} Mit KI zusammenfassen`;
+}
+function editJob(id, pre={}){
+  const j={ rolle:'Closer', modell:'Remote', anzeige_tage:30, top:false, fragen:[], kosten_freischaltung:D.settings.unlock, kosten_top:D.settings.topJob, ...(D.jobs.find(x=>x.id===id)||{}) };
+  Object.entries(pre).forEach(([k,v])=>{ if(v!==null&&v!==undefined&&v!=='') j[k]=v; });
+  const fr=[0,1,2].map(i=>(j.fragen||[])[i]||'');
+  const fld=([k,l,t,o])=>`<label class="f">${l}${t==='select'?`<select class="in" data-j="${k}">${o.map(x=>`<option ${x===j[k]?'selected':''}>${x}</option>`).join('')}</select>`:`<input class="in" data-j="${k}" value="${esc(j[k]||'')}" placeholder="${o}">`}</label>`;
+  openModal(`<h3 style="font-size:18px">${id?'Stellenangebot prüfen':'Neue Stelle'}</h3>
+  ${j.anfrage_text?`<details style="margin:10px 0"><summary class="muted" style="cursor:pointer;font-size:13px">Original-Anfrage anzeigen</summary><p style="white-space:pre-wrap;font-size:13px;background:var(--bg2);border-radius:10px;padding:10px;margin-top:6px">${esc(j.anfrage_text)}</p></details>`:''}
+  <div class="grid g2" style="gap:12px;margin-top:10px">${JOB_FIELDS.map(fld).join('')}</div>
+  <div class="grid" style="gap:12px;margin-top:12px">
+    <label class="f">Beschreibung (öffentlich, ohne Firmennamen)<textarea class="in" data-j="beschreibung" rows="3">${esc(j.beschreibung||'')}</textarea></label>
+    <label class="f">Anforderungen (eine pro Zeile)<textarea class="in" data-j="anforderungen" rows="3">${esc(j.anforderungen||'')}</textarea></label>
+    <label class="f">Fragen an Bewerber (bis zu 3)${fr.map((x,i)=>`<input class="in" data-f="${i}" value="${esc(x)}" placeholder="Frage ${i+1}" style="margin-top:4px">`).join('')}</label>
+  </div>
+  <h3 style="margin:16px 0 8px">Veröffentlichung & Kosten</h3>
+  <div class="grid g2" style="gap:12px">
+    <label class="f">Anzeigedauer (Tage)<input class="in" type="number" data-j="anzeige_tage" value="${j.anzeige_tage||30}"></label>
+    <label class="f">Top-Job (oben, gold markiert)<select class="in" data-j="top"><option value="false" ${!j.top?'selected':''}>Nein</option><option value="true" ${j.top?'selected':''}>Ja</option></select></label>
+    <label class="f">Kosten Auftraggeber pro Freischaltung (€)<input class="in" type="number" step="0.01" data-j="kosten_freischaltung" value="${j.kosten_freischaltung??''}"></label>
+    <label class="f">Kosten Top-Job (€)<input class="in" type="number" step="0.01" data-j="kosten_top" value="${j.kosten_top??''}"></label>
+  </div>
+  <details style="margin-top:12px"><summary class="muted" style="cursor:pointer;font-size:13px">Interne Angaben (nicht öffentlich)</summary><div class="grid g2" style="gap:12px;margin-top:8px">
+    <label class="f">Firma<input class="in" data-j="firma" value="${esc(j.firma||'')}"></label><label class="f">Kontakt<input class="in" data-j="kontakt_name" value="${esc(j.kontakt_name||'')}"></label>
+    <label class="f">E-Mail<input class="in" data-j="kontakt_email" value="${esc(j.kontakt_email||'')}"></label></div></details>
+  <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn" onclick="saveJob(${id||0},'entwurf',this)">Als Entwurf speichern</button><button class="btn gold-b" onclick="saveJob(${id||0},'live',this)">Veröffentlichen</button></div>`);
+}
+async function saveJob(id,status,b){
+  const v={};
+  document.querySelectorAll('#mbox [data-j]').forEach(el=>{ const k=el.dataset.j; let x=el.value.trim();
+    if(k==='top') x = x==='true'; else if(['anzeige_tage'].includes(k)) x=parseInt(x)||30; else if(k.startsWith('kosten_')) x = x===''?null:parseFloat(x); else if(x==='') x=null;
+    v[k]=x; });
+  v.fragen=[...document.querySelectorAll('#mbox [data-f]')].map(el=>el.value.trim()).filter(Boolean).slice(0,3);
+  if(!v.titel) return toast('Bitte einen Titel eingeben');
+  if(status==='live' && !v.provision) return toast('Bitte die Provision angeben');
+  if(status==='live' && /\S+@\S+|\+?\d[\d\s\/-]{8,}\d|https?:\/\//.test((v.beschreibung||'')+(v.anforderungen||''))) return toast('Bitte keine Kontaktdaten oder Links in Beschreibung/Anforderungen');
+  v.status=status;
+  const old=D.jobs.find(x=>x.id===id);
+  if(status==='live' && (!old || old.status!=='live')){ v.published_at=new Date().toISOString(); v.expires_at=new Date(Date.now()+v.anzeige_tage*864e5).toISOString(); }
+  b.disabled=true;
+  try{
+    if(id){ await q(`jobs?id=eq.${id}`,{method:'PATCH',body:v}); Object.assign(old,v); }
+    else { const [r]=await q('jobs',{method:'POST',prefer:'return=representation',body:v}); D.jobs.unshift(r); }
+    closeModal(); jobTab=status; render(); toast(status==='live'?'Veröffentlicht – ist jetzt in der App':'Entwurf gespeichert');
+  }catch(e){ b.disabled=false; }
+}
 
 /* ===== Dashboard ===== */
 function chart(vals, labels){
@@ -639,7 +754,7 @@ $('q').addEventListener('keydown',e=>{
 });
 
 /* ===== Render ===== */
-const PAGES={dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
+const PAGES={stellen,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
 async function reload(){ LOADED=false; await render(); toast('Aktualisiert'); }
 async function render(){
   const logged=!!SESSION;

@@ -319,7 +319,7 @@
 
 <header>
   <div class="wrap">
-    <a href="#top" class="logo play" aria-label="ClosingHub"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas><i class="lg-glow"></i></span></a>
+    <a href="#top" class="logo play" aria-label="ClosingHub"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></a>
     <nav><a href="#fuer-wen">Für wen</a><a href="#funktionen">Funktionen</a><a href="#preise">Preise</a><a href="#day-ones">Day Ones</a><a href="#faq">FAQ</a></nav>
   </div>
 </header>
@@ -425,7 +425,7 @@
         <a href="#warteliste" class="btn btn-ghost" style="width:100%" onclick="pickAbo('premium')">Auf die Warteliste</a>
       </div>
     </div>
-    <div class="card client reveal"><span><b>Auftraggeber?</b> <span class="muted">Kein Abo. Du zahlst nur <span data-p="unlock">25 €</span> pro freigeschaltetem Kandidaten.</span></span><a href="#" class="btn btn-ghost" data-open="kontakt">Kontakt aufnehmen</a></div>
+    <div class="card client reveal"><span><b>Auftraggeber?</b> <span class="muted">Kein Abo. Du zahlst nur <span data-p="unlock">25 €</span> pro freigeschaltetem Kandidaten.</span></span><a href="#" class="btn btn-ghost" data-open="kontakt">Stellenangebot einreichen</a></div>
   </div>
 </section>
 
@@ -506,24 +506,25 @@
 
 <footer>
   <div class="wrap">
-    <span><span class="logo play" style="font-size:20px"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas><i class="lg-glow"></i></span></span> &nbsp;© 2026</span>
+    <span><span class="logo play" style="font-size:20px"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></span> &nbsp;© 2026</span>
     <span><button data-open="imp">Impressum</button><button data-open="ds">Datenschutz</button></span>
   </div>
 </footer>
 
 <div class="modal" id="m-kontakt"><div class="card box"><button class="x" data-close>×</button>
-  <h3>Kontakt für Auftraggeber</h3>
-  <p style="margin-bottom:18px">Du suchst Closer oder Setter? Schreib uns kurz, wir melden uns persönlich bei dir. Kein Abo, du zahlst nur <span data-p="unlock">25 €</span> pro freigeschaltetem Kandidaten.</p>
+  <h3>Stellenangebot einreichen</h3>
+  <p style="margin-bottom:18px">Du suchst Closer oder Setter? Beschreib kurz deinen Job. Wir bereiten ihn auf, veröffentlichen ihn anonym und melden uns bei dir. Kein Abo, du zahlst nur <span data-p="unlock">25 €</span> pro freigeschaltetem Kandidaten.</p>
   <form id="kf" novalidate>
     <div class="row"><div class="field"><label for="kf-firma">Firma</label><input id="kf-firma" name="firma" autocomplete="organization"></div>
     <div class="field"><label for="kf-name">Name</label><input id="kf-name" name="name" autocomplete="name" required></div></div>
     <div class="field"><label for="kf-mail">E-Mail</label><input id="kf-mail" name="email" type="email" autocomplete="email" required></div>
-    <div class="field"><label for="kf-msg">Wen suchst du?</label><textarea id="kf-msg" name="nachricht" rows="4" placeholder="z. B. 2 Closer für Coaching-Angebot, Provision 15 %"></textarea></div>
+    <div class="field"><label for="kf-rolle">Wen suchst du?</label><select id="kf-rolle" name="rolle"><option>Closer</option><option>Setter</option><option>Closer &amp; Setter</option></select></div>
+    <div class="field"><label for="kf-msg">Beschreib den Job</label><textarea id="kf-msg" name="nachricht" rows="6" required placeholder="Was verkaufst du, zu welchem Preis? Wie hoch ist die Provision (und gibt es ein Fixum)? Remote oder vor Ort, welche Region? Umfang, Start und wie lange? Was muss die Person mitbringen?"></textarea></div>
     <input name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px">
     <p id="kf-err" style="display:none;color:#e57373;font-size:13px;margin-bottom:10px"></p>
-    <button class="btn btn-gold" id="kf-btn" style="width:100%">Anfrage senden</button>
+    <button class="btn btn-gold" id="kf-btn" style="width:100%">Stellenangebot senden</button>
   </form>
-  <div id="kf-ok" style="display:none;text-align:center;padding:20px 0"><h4 style="font-size:20px">Danke, ist angekommen!</h4><p>Wir melden uns in Kürze bei dir.</p></div>
+  <div id="kf-ok" style="display:none;text-align:center;padding:20px 0"><h4 style="font-size:20px">Danke, ist angekommen!</h4><p>Wir bereiten dein Stellenangebot auf und melden uns, sobald es live ist.</p></div>
 </div></div>
 <div class="modal" id="m-imp"><div class="card box"><button class="x" data-close>×</button>
   <h3>Impressum</h3>
@@ -623,7 +624,7 @@ function drawSeg(){
       <tbody>${ROWS.map(r=>`<tr><td><b>${r[0]}</b><span>${r[1]}</span></td>${[r[2],r[3]].map((v,i)=>`<td class="${i===seg?'col-on':'col-off'}">${cell(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>
       <div class="legend"><span><span class="star" style="padding:1px 8px">★</span> besonders wichtig für dich</span><span><span class="yes">✓</span> inklusive</span></div>`;
   }
-  const c=document.getElementById('segCta'); c.textContent = seg===2 ? 'Kontakt aufnehmen' : 'Auf die Warteliste'; if(seg===2){ c.setAttribute('data-open','kontakt'); c.setAttribute('href','#'); } else { c.removeAttribute('data-open'); c.setAttribute('href','#warteliste'); }
+  const c=document.getElementById('segCta'); c.textContent = seg===2 ? 'Stellenangebot einreichen' : 'Auf die Warteliste'; if(seg===2){ c.setAttribute('data-open','kontakt'); c.setAttribute('href','#'); } else { c.removeAttribute('data-open'); c.setAttribute('href','#warteliste'); }
 }
 
 const FEATURES = [
@@ -741,12 +742,13 @@ document.getElementById('kf').addEventListener('submit', async e=>{
   const fail=m=>{ err.textContent=m; err.style.display='block'; };
   if(!d.name||!d.name.trim()) return fail('Bitte gib deinen Namen ein.');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email||'')) return fail('Bitte gib eine gültige E-Mail-Adresse ein.');
+  if(!d.nachricht || d.nachricht.trim().length<20) return fail('Bitte beschreib den Job in ein paar Sätzen.');
   const b=document.getElementById('kf-btn'); b.disabled=true; b.textContent='Wird gesendet …';
   try{
-    const r = await sb('contact_requests',{ method:'POST', headers:{ Prefer:'return=minimal' }, body:JSON.stringify({ typ:'auftraggeber', firma:(d.firma||'').trim()||null, name:d.name.trim(), email:d.email.trim(), nachricht:(d.nachricht||'').trim()||null }) });
+    const r = await sb('jobs',{ method:'POST', headers:{ Prefer:'return=minimal' }, body:JSON.stringify({ status:'anfrage', firma:(d.firma||'').trim()||null, kontakt_name:d.name.trim(), kontakt_email:d.email.trim(), rolle:d.rolle||null, anfrage_text:(d.nachricht||'').trim() }) });
     if(!r.ok) throw new Error('save');
     f.style.display='none'; document.getElementById('kf-ok').style.display='block';
-  }catch(x){ b.disabled=false; b.textContent='Anfrage senden'; fail('Das hat nicht geklappt. Bitte versuch es gleich nochmal.'); }
+  }catch(x){ b.disabled=false; b.textContent='Stellenangebot senden'; fail('Das hat nicht geklappt. Bitte versuch es gleich nochmal.'); }
 });
 
 // Impressum / Datenschutz
