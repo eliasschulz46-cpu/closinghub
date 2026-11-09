@@ -100,11 +100,31 @@
   }
   @media(max-width:480px){.g4{grid-template-columns:1fr 1fr}.kpi .v{font-size:22px}}
   @media print{.top,.side,.no-print{display:none!important}}
+
+  /* Logo-Animation: Linien von „closing“ leuchten nach und nach auf wie ein LED-Band (≈6 s) */
+  .l1{position:relative;display:inline-block}
+  .l1 .ink{display:inline-block;opacity:.38}
+  .light .l1 .ink{opacity:1}
+  .l1 .glow{position:absolute;left:0;top:0;pointer-events:none;color:#fff;
+    text-shadow:0 0 1px #fff,0 0 2px rgba(255,255,255,.95),0 0 5px rgba(255,255,255,.6);
+    clip-path:inset(-60% -25% -70% -15%)}
+  .play .l1 .glow{animation:chGlow 6s linear .3s both}
+  @keyframes chGlow{
+    0%{clip-path:inset(-60% 100% -70% -15%)} 10%{clip-path:inset(-60% 97% -70% -15%)} 30%{clip-path:inset(-60% 72% -70% -15%)}
+    50%{clip-path:inset(-60% 50% -70% -15%)} 70%{clip-path:inset(-60% 28% -70% -15%)} 88%{clip-path:inset(-60% 8% -70% -15%)}
+    100%{clip-path:inset(-60% -25% -70% -15%)} }
+  @keyframes chDot{
+    0%{left:2%;top:18%;opacity:0;transform:translate(-50%,-50%) scale(.3)}
+    5%{opacity:1;transform:translate(-50%,-50%) scale(1.25)} 10%{left:3%;top:22%;transform:translate(-50%,-50%) scale(1)}
+    30%{left:28%;top:58%} 50%{left:50%;top:42%} 70%{left:72%;top:58%} 88%{left:92%;top:50%;opacity:1}
+    100%{left:100%;top:50%;opacity:0;transform:translate(-50%,-50%) scale(.5)} }
+  .light .l1 .glow{color:inherit;text-shadow:none}
+  @media (prefers-reduced-motion:reduce){.play .l1 .glow{animation:none}}
 </style>
 </head>
 <body>
 <div class="top">
-  <a href="#dashboard" class="logo"><span class="l1">closing</span><span class="l2">HUB</span></a>
+  <a href="#dashboard" class="logo play"><span class="l1"><span class="ink">closing</span><span class="glow" aria-hidden="true">closing</span></span><span class="l2">HUB</span></a>
   <span class="tag">Zentrale</span>
   <span class="sp"></span>
   <input class="in search" id="q" placeholder="Suchen: Member, Rechnung, Ticket …">
@@ -172,7 +192,7 @@ function logout(){ keepSession(null); render(); }
 const DEFAULT_SETTINGS = {
   plus:3.33, premiumM:9.99, premiumY:89, unlock:25, marketFee:9.9, topJob:19, vat:21,
   dayoneTotal:250, dayoneFreeMonths:12, dayonePremiumMonths:3, maxPerCountry:1000, perCategory:10,
-  heroTop:'Mehr closen –', heroGold:'mehr verdienen.', heroSub:'Die Plattform für Closer & Setter, die mehr wollen.',
+  heroTop:'Mehr closen –', heroGold:'mehr verdienen.', heroSub:'Die Plattform für Closer & Setter, die mehr wollen.', heroLead:'Attraktive Jobs, motivierender Feed, Kontakte auch in deiner Nähe und mehr besondere Member-Vorteile, die dich jeden Tag besser machen – für maximale Abschlüsse.',
   features:{arena:false, marketplace:true, stories:true, breathing:true, forum:true, topjobs:true, waitlistOpen:true}
 };
 // Beispielbereiche, bis die App echte Member hat
@@ -214,7 +234,7 @@ async function loadAll(){
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
   const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{};
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
-    maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub,
+    maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
   D.ticker = tk.map(t=>({ id:t.id, title:t.title, offer:t.offer, partner:t.partner||'', price:+t.price||0, until:t.until||'', on:t.active, sort:t.sort }));
   D.invoices = inv.map(i=>({ id:i.id, no:i.no, date:i.created_at.slice(0,10), cust:i.customer, email:i.email||'', item:i.item, net:+i.net, vat:+i.vat, st:i.status }));
@@ -263,7 +283,7 @@ function drawNav(){
 /* ===== Login ===== */
 function loginView(){
   return `<div style="max-width:380px;margin:8vh auto" class="card">
-    <div style="text-align:center;margin-bottom:18px"><span class="logo" style="font-size:34px"><span class="l1">closing</span><span class="l2">HUB</span></span><div class="muted" style="font-size:11px;letter-spacing:.25em;text-transform:uppercase;margin-top:6px">Zentrale</div></div>
+    <div style="text-align:center;margin-bottom:18px"><span class="logo play" style="font-size:34px"><span class="l1"><span class="ink">closing</span><span class="glow" aria-hidden="true">closing</span></span><span class="l2">HUB</span></span><div class="muted" style="font-size:11px;letter-spacing:.25em;text-transform:uppercase;margin-top:6px">Zentrale</div></div>
     <form id="lf" class="grid" style="gap:12px">
       <label class="f">E-Mail<input class="in" id="le" type="email" autocomplete="username" required></label>
       <label class="f">Passwort<input class="in" id="lp" type="password" autocomplete="current-password" required></label>
@@ -541,8 +561,8 @@ function inhalte(){
   return `<h1 class="h1">Website & App</h1><p class="sub">Texte und Funktionen. Gespeichertes ist sofort live.</p>
   <div class="grid g2">
     <div class="card"><h3>Landingpage · Hero</h3>
-      <div class="grid" style="gap:12px"><label class="f">Headline Zeile 1<input class="in" id="h1" value="${esc(s.heroTop)}"></label><label class="f">Headline Zeile 2 (gold)<input class="in" id="h2" value="${esc(s.heroGold)}"></label><label class="f">Untertitel<input class="in" id="h3" value="${esc(s.heroSub)}"></label>
-      <div style="background:var(--bg2);border-radius:12px;padding:18px;text-align:center"><div style="font-size:26px;font-weight:700;line-height:1.1" id="pv1">${esc(s.heroTop)}</div><div class="gold" style="font-size:26px;font-weight:700" id="pv2">${esc(s.heroGold)}</div><div class="muted" style="margin-top:6px" id="pv3">${esc(s.heroSub)}</div></div>
+      <div class="grid" style="gap:12px"><label class="f">Headline Zeile 1<input class="in" id="h1" value="${esc(s.heroTop)}"></label><label class="f">Headline Zeile 2 (gold)<input class="in" id="h2" value="${esc(s.heroGold)}"></label><label class="f">Untertitel<input class="in" id="h3" value="${esc(s.heroSub)}"></label><label class="f">Text darunter<textarea class="in" id="h4" rows="3">${esc(s.heroLead)}</textarea></label>
+      <div style="background:var(--bg2);border-radius:12px;padding:18px;text-align:center"><div style="font-size:26px;font-weight:700;line-height:1.1" id="pv1">${esc(s.heroTop)}</div><div class="gold" style="font-size:26px;font-weight:700" id="pv2">${esc(s.heroGold)}</div><div style="margin-top:6px;font-weight:600" id="pv3">${esc(s.heroSub)}</div><div class="muted" style="margin-top:6px;font-size:13px" id="pv4">${esc(s.heroLead)}</div></div>
       <button class="btn gold-b" onclick="saveHero()">Speichern</button></div></div>
     <div class="card"><h3>Funktionen</h3>
       ${sw('waitlistOpen','Warteliste offen','Live: Formular auf der Landingpage an/aus')}
@@ -556,8 +576,8 @@ function inhalte(){
   </div>`;
 }
 async function setFeature(k,v){ D.settings.features[k]=v; await setKey('features',D.settings.features); toast('Gespeichert'); }
-async function saveHero(){ const h={top:$('h1').value.trim(),gold:$('h2').value.trim(),sub:$('h3').value.trim()}; await setKey('hero',h); Object.assign(D.settings,{heroTop:h.top,heroGold:h.gold,heroSub:h.sub}); render(); toast('Hero ist live'); }
-document.addEventListener('input',e=>{ if(['h1','h2','h3'].includes(e.target.id)) $('pv'+e.target.id[1]).textContent=e.target.value; });
+async function saveHero(){ const h={top:$('h1').value.trim(),gold:$('h2').value.trim(),sub:$('h3').value.trim(),lead:$('h4').value.trim()}; await setKey('hero',h); Object.assign(D.settings,{heroTop:h.top,heroGold:h.gold,heroSub:h.sub,heroLead:h.lead}); render(); toast('Hero ist live'); }
+document.addEventListener('input',e=>{ if(['h1','h2','h3','h4'].includes(e.target.id)) $('pv'+e.target.id[1]).textContent=e.target.value; });
 
 /* ===== Preise & Einstellungen ===== */
 function einstellungen(){
@@ -621,6 +641,9 @@ window.addEventListener('hashchange',()=>{ render(); window.scrollTo(0,0); });
 setInterval(()=>{ if(SESSION && LOADED && document.visibilityState==='visible' && !document.querySelector('.modal.open') && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){ loadAll().then(()=>{ if(!document.querySelector('.modal.open')){ drawNav(); $('main').innerHTML=(PAGES[route()]||dashboard)(); } }).catch(()=>{}); } }, 60000);
 render();
 
+
+// Logo-Schweif beim Drüberfahren neu abspielen
+document.addEventListener('mouseover',e=>{ const l=e.target.closest('.logo,.chlogo'); if(!l||l._busy||!l.querySelector('.ink')) return; l._busy=true; l.classList.remove('play'); void l.offsetWidth; l.classList.add('play'); setTimeout(()=>l._busy=false,6500); });
 </script>
 </body>
 </html>

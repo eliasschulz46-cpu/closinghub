@@ -8,6 +8,10 @@
 <script>try{if(localStorage.getItem('ch_theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
+const _lp0=Date.now(); const LP=()=> Date.now()-_lp0<3000 ? 'play' : '';
+// Logo-Schweif beim Drüberfahren neu abspielen
+document.addEventListener('mouseover',e=>{ const l=e.target.closest('.logo,.chlogo'); if(!l||l._busy||!l.querySelector('.ink')) return; l._busy=true; l.classList.remove('play'); void l.offsetWidth; l.classList.add('play'); setTimeout(()=>l._busy=false,6500); });
+
 tailwind.config = { theme: { extend: {
   colors: { bg:'rgb(var(--bg) / <alpha-value>)', panel:'rgb(var(--panel) / <alpha-value>)', line:'rgb(var(--line) / <alpha-value>)', muted:'rgb(var(--muted) / <alpha-value>)', gold:{ DEFAULT:'#D4A843', light:'#F3D58A', dark:'#A97C22' } },
   fontFamily: { serif:['Lora','serif'], sans:['Inter','sans-serif'] } } } };
@@ -79,6 +83,26 @@ tailwind.config = { theme: { extend: {
   .chlogo .l1{font-family:Parisienne,cursive;font-weight:400;margin-right:.08em}
   .chlogo .l2{font-family:'Bebas Neue',sans-serif;font-size:1.12em;letter-spacing:.01em;background:linear-gradient(120deg,#FFF1C2,#E8C35A 35%,#C8962E 70%,#8C6418);-webkit-background-clip:text;background-clip:text;color:transparent}
   .rk{font-size:max(11px,.7em);line-height:1.25;padding:.12em .5em;border-radius:.4em;border:1px solid;font-weight:500}
+
+  /* Logo-Animation: Linien von „closing“ leuchten nach und nach auf wie ein LED-Band (≈6 s) */
+  .l1{position:relative;display:inline-block}
+  .l1 .ink{display:inline-block;opacity:.38}
+  .light .l1 .ink{opacity:1}
+  .l1 .glow{position:absolute;left:0;top:0;pointer-events:none;color:#fff;
+    text-shadow:0 0 1px #fff,0 0 2px rgba(255,255,255,.95),0 0 5px rgba(255,255,255,.6);
+    clip-path:inset(-60% -25% -70% -15%)}
+  .play .l1 .glow{animation:chGlow 6s linear .3s both}
+  @keyframes chGlow{
+    0%{clip-path:inset(-60% 100% -70% -15%)} 10%{clip-path:inset(-60% 97% -70% -15%)} 30%{clip-path:inset(-60% 72% -70% -15%)}
+    50%{clip-path:inset(-60% 50% -70% -15%)} 70%{clip-path:inset(-60% 28% -70% -15%)} 88%{clip-path:inset(-60% 8% -70% -15%)}
+    100%{clip-path:inset(-60% -25% -70% -15%)} }
+  @keyframes chDot{
+    0%{left:2%;top:18%;opacity:0;transform:translate(-50%,-50%) scale(.3)}
+    5%{opacity:1;transform:translate(-50%,-50%) scale(1.25)} 10%{left:3%;top:22%;transform:translate(-50%,-50%) scale(1)}
+    30%{left:28%;top:58%} 50%{left:50%;top:42%} 70%{left:72%;top:58%} 88%{left:92%;top:50%;opacity:1}
+    100%{left:100%;top:50%;opacity:0;transform:translate(-50%,-50%) scale(.5)} }
+  .light .l1 .glow{color:inherit;text-shadow:none}
+  @media (prefers-reduced-motion:reduce){.play .l1 .glow{animation:none}}
 </style>
 </head>
 <body>
@@ -153,6 +177,10 @@ const PERKS = [
   ['Geschäftskonto','Bonus bei Eröffnung','Anzeige'],
   ['KI-Skriptgenerator','Exklusiv für Elite+','Anzeige'],
 ];
+// Laufband live aus der Zentrale (Supabase)
+const SB_URL='https://bzcnqggwyfocpbkwqhsy.supabase.co', SB_KEY='sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D';
+fetch(`${SB_URL}/rest/v1/ticker_public?select=title,offer&order=sort.asc`,{headers:{apikey:SB_KEY}})
+  .then(r=>r.ok?r.json():null).then(rows=>{ if(Array.isArray(rows)&&rows.length){ PERKS.splice(0,PERKS.length,...rows.map(r=>[r.title,r.offer,'Anzeige'])); } }).catch(()=>{});
 function adItem(i,cls){ const p=PERKS[i%PERKS.length]; return `<a id="adcur" href="#vorteile" class="absolute inset-0 flex items-center justify-center gap-2 whitespace-nowrap ${cls}"><span class="pointer-events-auto flex items-center gap-2"><span class="text-[10px] uppercase tracking-wide text-muted border border-line rounded px-1.5">Anzeige</span><span>${p[0]}</span><span class="text-gold">· ${p[1]}</span></span></a>`; }
 // Laufband: alle 20 s fährt die Anzeige raus (1,5 s beschleunigen) und die nächste rein (1,5 s abbremsen)
 S.adIdx = 0;
@@ -265,7 +293,7 @@ function shell(content){
   return `
   <div class="min-h-screen flex">
     <aside class="hidden md:flex flex-col fixed inset-y-0 left-0 w-20 xl:w-64 border-r border-line px-3 py-6 bg-bg z-30">
-      <a href="#feed" class="px-3 mb-8 text-3xl hidden xl:block"><span class="chlogo"><span class="l1">closing</span><span class="l2">HUB</span></span></a>
+      <a href="#feed" class="px-3 mb-8 text-3xl hidden xl:block"><span class="chlogo ${LP()}"><span class="l1"><span class="ink">closing</span><span class="glow" aria-hidden="true">closing</span></span><span class="l2">HUB</span></span></a>
       <a href="#feed" class="px-3 mb-8 xl:hidden"><span class="chlogo"><span class="l2" style="font-size:30px">HUB</span></span></a>
       <nav class="flex flex-col gap-1 flex-1">${side}</nav>
       <div class="flex flex-col gap-1 border-t border-line pt-4">
@@ -276,7 +304,7 @@ function shell(content){
     </aside>
     <div class="flex-1 md:ml-20 xl:ml-64 pb-24 md:pb-0 min-w-0">
       <header class="md:hidden sticky top-0 z-30 bg-bg/95 backdrop-blur border-b border-line flex items-center justify-between px-4 h-14">
-        <a href="#feed" class="text-2xl"><span class="chlogo"><span class="l1">closing</span><span class="l2">HUB</span></span></a>
+        <a href="#feed" class="text-2xl"><span class="chlogo ${LP()}"><span class="l1"><span class="ink">closing</span><span class="glow" aria-hidden="true">closing</span></span><span class="l2">HUB</span></span></a>
         <div class="flex gap-2"><button onclick="toggleTheme()" aria-label="Tag/Nacht">${ic(isLight()?'moon':'sun')}</button><a href="#notifications">${ic('bell')}</a><a href="#search">${ic('search')}</a></div>
       </header>
       <div class="relative border-b border-line bg-panel/60 px-4 pt-1.5 pb-1 md:py-2 text-sm flex flex-col md:flex-row items-center gap-0.5 md:gap-3 md:h-11 overflow-hidden">
@@ -895,7 +923,7 @@ function search(){ return `<div class="max-w-lg mx-auto px-4 py-8"><input class=
 
 function login(){
   return `<div class="min-h-screen flex items-center justify-center px-4"><div class="card w-full max-w-sm p-8 space-y-5">
-    <h1 class="text-4xl text-center"><span class="chlogo"><span class="l1">closing</span><span class="l2">HUB</span></span></h1>
+    <h1 class="text-4xl text-center"><span class="chlogo ${LP()}"><span class="l1"><span class="ink">closing</span><span class="glow" aria-hidden="true">closing</span></span><span class="l2">HUB</span></span></h1>
     <p class="text-center text-muted text-sm">Die Plattform für Closer, Setter & Auftraggeber</p>
     <div class="grid grid-cols-2 gap-2"><button id="r1" class="btn-gold" onclick="S.mode='consumer';r1.className='btn-gold';r2.className='btn-ghost'">Closer / Setter</button><button id="r2" class="btn-ghost" onclick="S.mode='auftraggeber';r2.className='btn-gold';r1.className='btn-ghost'">Auftraggeber</button></div>
     <button class="btn-ghost w-full" onclick="doLogin()">Weiter mit Google</button>
