@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Zentrale · ClosingHub</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%230A0A0B%22/%3E%3Ctext x=%2232%22 y=%2248%22 text-anchor=%22middle%22 font-family=%22Arial Black,Arial%22 font-weight=%22900%22 font-size=%2246%22 fill=%22%23D4A843%22%3EH%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Parisienne&family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root{--bg:#0A0A0B;--bg2:#111113;--card:#141416;--line:#232327;--fg:#F5F5F5;--muted:#8B8B93;--gold:#D4A843;--grad:linear-gradient(135deg,#F3D58A,#D4A843 50%,#A97C22);--ok:#5FBF7A;--warn:#E0A84A;--bad:#E06A6A}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.5}
+  a{color:inherit;text-decoration:none}
+  button,input,select,textarea{font:inherit;color:inherit}
+  .gold{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .muted{color:var(--muted)}
+  .logo{display:inline-flex;align-items:baseline;white-space:nowrap;line-height:1;font-size:24px}
+  .logo .l1{font-family:Parisienne,cursive;margin-right:.08em}
+  .logo .l2{font-family:'Bebas Neue',sans-serif;font-size:1.12em;letter-spacing:.01em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  .top{position:sticky;top:0;z-index:30;height:60px;display:flex;align-items:center;gap:16px;padding:0 20px;background:rgba(10,10,11,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .top .tag{font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);border-left:1px solid var(--line);padding-left:14px}
+  .top .sp{flex:1}
+  .top .search{width:260px;max-width:30vw}
+  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 60px)}
+  .side{border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:60px;height:calc(100vh - 60px);overflow:auto}
+  .side a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--muted);font-weight:500;transition:background .15s,color .15s}
+  .side a:hover{background:var(--bg2);color:var(--fg)}
+  .side a.on{background:#1a1710;color:var(--fg)}
+  .side a.on svg{color:var(--gold)}
+  .side .grp{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#5d5d64;margin:16px 12px 6px}
+  .side .bdg{margin-left:auto;font-size:11px;background:var(--gold);color:#111;border-radius:99px;padding:0 7px;font-weight:700}
+  .main{padding:26px 28px 60px;min-width:0}
+  .h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+  .sub{color:var(--muted);margin:2px 0 20px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .between{justify-content:space-between}
+  .grid{display:grid;gap:14px}
+  .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .card h3{font-size:14px;font-weight:600;margin-bottom:12px}
+  .kpi .l{font-size:12px;color:var(--muted)} .kpi .v{font-size:28px;font-weight:700;margin-top:4px;letter-spacing:-.02em} .kpi .s{font-size:12px;margin-top:2px;color:var(--muted)}
+  .up{color:var(--ok)} .down{color:var(--bad)}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:10px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--bg2);transition:border-color .15s,transform .1s}
+  .btn:hover{border-color:var(--gold)} .btn:active{transform:scale(.97)}
+  .btn.gold-b{background:var(--grad);color:#111;border:0}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .btn.red:hover{border-color:var(--bad);color:var(--bad)}
+  .in,select.in,textarea.in{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;outline:none}
+  .in:focus{border-color:var(--gold)}
+  label.f{display:grid;gap:5px;font-size:12px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line)}
+  td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#17171a}
+  .tw{overflow-x:auto;padding:0}
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+  .p-ok{color:var(--ok);border-color:#2c4a34} .p-warn{color:var(--warn);border-color:#4d3d22} .p-bad{color:var(--bad);border-color:#4d2a2a} .p-gold{color:var(--gold);border-color:#4a3c1c}
+  .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+  .tabs button{border:1px solid var(--line);background:none;border-radius:99px;padding:6px 14px;cursor:pointer;color:var(--muted);font-weight:500}
+  .tabs button.on{border-color:var(--gold);color:var(--fg);background:#1a1710}
+  .bar{height:8px;border-radius:9px;background:#1f1f23;overflow:hidden} .bar i{display:block;height:100%;background:var(--grad);border-radius:9px}
+  .item{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)} .item:first-child{border-top:0}
+  .ico{width:36px;height:36px;border-radius:50%;border:1px solid #3a3222;display:grid;place-items:center;flex:none;color:var(--gold)}
+  .empty{padding:40px;text-align:center;color:var(--muted)}
+  .demo{font-size:12px;color:var(--warn);border:1px dashed #4d3d22;border-radius:10px;padding:8px 12px;margin-bottom:18px}
+  .switch{position:relative;width:38px;height:22px;flex:none;cursor:pointer}
+  .switch input{opacity:0;width:0;height:0}
+  .switch span{position:absolute;inset:0;background:#2a2a2f;border-radius:99px;transition:.2s}
+  .switch span:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+  .switch input:checked+span{background:var(--gold)} .switch input:checked+span:before{transform:translateX(16px)}
+  .ticker{height:38px;border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative;background:var(--bg2);display:flex;align-items:center}
+  .ticker .lab{position:relative;z-index:2;padding:0 12px;height:100%;display:flex;align-items:center;background:var(--bg2);color:var(--gold);font-weight:600;font-size:12px;border-right:1px solid var(--line)}
+  .ticker .track{display:flex;gap:40px;white-space:nowrap;animation:run 30s linear infinite;padding-left:20px;font-size:13px}
+  .ticker .track b{color:var(--gold);font-weight:600}
+  @keyframes run{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .chat{display:flex;flex-direction:column;gap:10px;max-height:380px;overflow:auto;padding:4px}
+  .msg{max-width:78%;padding:10px 14px;border-radius:14px;background:var(--bg2);border:1px solid var(--line)}
+  .msg.me{align-self:flex-end;background:#1a1710;border-color:#3a3222}
+  .msg small{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+  .list-sel{cursor:pointer;padding:12px;border-radius:12px;border:1px solid transparent}
+  .list-sel:hover{background:var(--bg2)} .list-sel.on{border-color:var(--gold);background:#1a1710}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+  .modal.open{display:flex}
+  .modal .card{width:100%;max-width:560px;max-height:88vh;overflow:auto}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--gold);padding:10px 18px;border-radius:12px;transition:transform .3s;z-index:70}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  svg{flex:none}
+  .chart text{fill:var(--muted);font-size:11px}
+  .supg{grid-template-columns:320px 1fr}.dashg{grid-template-columns:1.6fr 1fr}
+  @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}}
+  @media(max-width:820px){
+    .layout{grid-template-columns:1fr}
+    .side{position:sticky;top:60px;height:auto;display:flex;gap:4px;overflow-x:auto;padding:8px;border-right:0;border-bottom:1px solid var(--line);background:var(--bg);z-index:20}
+    .side .grp{display:none} .side a{white-space:nowrap;padding:8px 12px}
+    .main{padding:18px 14px 50px} .g2,.g3,.supg,.dashg{grid-template-columns:1fr} .top .search,.top .tag{display:none}
+  }
+  @media(max-width:480px){.g4{grid-template-columns:1fr 1fr}.kpi .v{font-size:22px}}
+  @media print{.top,.side,.no-print{display:none!important}}
+</style>
+</head>
+<body>
+<div class="top">
+  <a href="#dashboard" class="logo"><span class="l1">closing</span><span class="l2">HUB</span></a>
+  <span class="tag">Zentrale</span>
+  <span class="sp"></span>
+  <input class="in search" id="q" placeholder="Suchen: Member, Rechnung, Ticket …">
+  <a class="btn sm" href="index.html" target="_blank">Website ↗</a>
+  <a class="btn sm" href="app.html" target="_blank">App ↗</a>
+</div>
+<div class="layout">
+  <nav class="side" id="side"></nav>
+  <main class="main" id="main"></main>
+</div>
+<div class="modal" id="modal"><div class="card" id="mbox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== Icons ===== */
+const I = {
+  dash:'<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
+  bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+  spark:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17l.8 2.2L22 20l-2.2.8L19 23l-.8-2.2L16 20l2.2-.8z"/>',
+  ticker:'<rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 12h4M14 12h4"/>',
+  invoice:'<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/>',
+  support:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13L22 12v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7z"/>',
+  users:'<circle cx="9" cy="8" r="4"/><path d="M1 21v-1a7 7 0 0 1 14 0v1M17 4a4 4 0 0 1 0 8M23 21v-1a7 7 0 0 0-5-6.7"/>',
+  shield:'<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  pen:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  check:'<path d="M20 6L9 17l-5-5"/>', x:'<path d="M18 6L6 18M6 6l12 12"/>',
+  up:'<path d="M18 15l-6-6-6 6"/>', down:'<path d="M6 9l6 6 6-6"/>', trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+  euro:'<path d="M18 7a7 7 0 1 0 0 10M4 10h10M4 14h10"/>', globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/>'
+};
+const ic = (n,s=18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
+
+/* ===== Supabase-Verbindung ===== */
+const SB_URL = 'https://bzcnqggwyfocpbkwqhsy.supabase.co';
+const SB_KEY = 'sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D';
+const SKEY = 'ch_zentrale_session';
+let SESSION = null;
+try{ SESSION = JSON.parse(localStorage.getItem(SKEY)); }catch(e){}
+const keepSession = s => { SESSION = s; try{ s ? localStorage.setItem(SKEY, JSON.stringify(s)) : localStorage.removeItem(SKEY); }catch(e){} };
+
+async function auth(grant, body){
+  const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=${grant}`, { method:'POST', headers:{ apikey:SB_KEY, 'Content-Type':'application/json' }, body:JSON.stringify(body) });
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error_description || j.msg || j.message || 'Login fehlgeschlagen');
+  keepSession({ access_token:j.access_token, refresh_token:j.refresh_token, expires_at:j.expires_at || (Date.now()/1000 + (j.expires_in||3600)), email:j.user && j.user.email });
+}
+async function refresh(){ if(!SESSION) throw new Error('nicht angemeldet'); await auth('refresh_token', { refresh_token:SESSION.refresh_token }); }
+
+async function api(path, { method='GET', body, prefer } = {}, retry=true){
+  if(SESSION && SESSION.expires_at - 60 < Date.now()/1000){ try{ await refresh(); }catch(e){ logout(); throw e; } }
+  const headers = { apikey:SB_KEY, 'Content-Type':'application/json' };
+  if(SESSION) headers.Authorization = 'Bearer ' + SESSION.access_token;
+  if(prefer) headers.Prefer = prefer;
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, { method, headers, body: body!==undefined ? JSON.stringify(body) : undefined });
+  if(r.status===401 && retry && SESSION){ try{ await refresh(); return api(path, { method, body, prefer }, false); }catch(e){ logout(); throw e; } }
+  if(!r.ok){ const j = await r.json().catch(()=>({})); throw new Error(j.message || ('Fehler ' + r.status)); }
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+const q = (p, o) => api(p, o).catch(e => { toast('⚠️ ' + e.message); throw e; });
+
+function logout(){ keepSession(null); render(); }
+
+/* ===== Daten ===== */
+const DEFAULT_SETTINGS = {
+  plus:3.33, premiumM:9.99, premiumY:89, unlock:25, marketFee:9.9, topJob:19, vat:21,
+  dayoneTotal:250, dayoneFreeMonths:12, dayonePremiumMonths:3, maxPerCountry:1000, perCategory:10,
+  heroTop:'Close mehr.', heroGold:'Verdien mehr.', heroSub:'Die Plattform für Closer, Setter und Auftraggeber.',
+  features:{arena:false, marketplace:true, stories:true, breathing:true, forum:true, topjobs:true, waitlistOpen:true}
+};
+// Beispielbereiche, bis die App echte Member hat
+const DEMO = {
+  members:[
+    {name:'Lena K.',rank:'Elite',abo:'Premium',land:'DE · Bayern',warn:0,st:'aktiv'},
+    {name:'Felix W.',rank:'Pro',abo:'Day One',land:'DE · NRW',warn:0,st:'aktiv'},
+    {name:'max_sales',rank:'Rookie',abo:'Plus',land:'AT · Wien',warn:2,st:'aktiv'},
+    {name:'Carla V.',rank:'Rookie',abo:'Day One',land:'ES · Balearen',warn:3,st:'gesperrt'}
+  ],
+  queue:[
+    {id:1,kind:'Video',title:'„Einwand Zeitmangel“ von Felix',ai:'KI unsicher: 62 % Themenbezug'},
+    {id:2,kind:'Auftraggeber',title:'Solar GmbH (GmbH, 12 MA)',ai:'Website passt, USt-ID prüfen'},
+    {id:3,kind:'Erfolgsnachweis',title:'Lena · Provisionsabrechnung 8.400 €',ai:'Keine Manipulation erkannt'}
+  ],
+  reports:[
+    {id:1,title:'Beitrag „Schnell reich mit …“',why:'4 Meldungen · Spam'},
+    {id:2,title:'Bewerbung von max_sales',why:'Telefonnummer im Text (Mahnung 2/3)'}
+  ]
+};
+let D = { settings:structuredClone(DEFAULT_SETTINGS), waitlist:[], requests:[], ticker:[], invoices:[], tickets:[], ai:[], ...structuredClone(DEMO) };
+let LOADED = false;
+const save = () => {}; // Beispielbereiche werden nicht gespeichert
+
+const fmtAt = iso => { const d=new Date(iso), now=new Date(); const same=d.toDateString()===now.toDateString(); return same ? 'heute ' + d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('de-DE'); };
+
+async function loadAll(){
+  const [wl, cr, st, tk, inv, tix, ai] = await Promise.all([
+    q('waitlist?select=*&order=created_at.desc'),
+    q('contact_requests?select=*&order=created_at.desc'),
+    q('settings?select=key,value'),
+    q('ticker?select=*&order=sort.asc,id.asc'),
+    q('invoices?select=*&order=created_at.desc'),
+    q('tickets?select=*&order=created_at.desc'),
+    q('ai_suggestions?select=*&order=created_at.desc')
+  ]);
+  D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at }));
+  D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
+  const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{};
+  D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
+    maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub,
+    features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
+  D.ticker = tk.map(t=>({ id:t.id, title:t.title, offer:t.offer, partner:t.partner||'', price:+t.price||0, until:t.until||'', on:t.active, sort:t.sort }));
+  D.invoices = inv.map(i=>({ id:i.id, no:i.no, date:i.created_at.slice(0,10), cust:i.customer, email:i.email||'', item:i.item, net:+i.net, vat:+i.vat, st:i.status }));
+  D.tickets = tix.map(t=>({ id:t.id, from:t.from_name, email:t.email, topic:t.topic, prio:t.prio, st:t.status, msgs:t.messages||[] }));
+  D.ai = ai.map(a=>({ id:a.id, area:a.area||'Allgemein', title:a.title, text:a.text||'', why:a.why||'', impact:a.impact||'', st:a.status, t:fmtAt(a.created_at) }));
+  LOADED = true;
+}
+
+/* ===== Helfer ===== */
+const eur = n => (+n).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = id => document.getElementById(id);
+function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2600); }
+function openModal(html){ $('mbox').innerHTML=html; $('modal').classList.add('open'); }
+function closeModal(){ $('modal').classList.remove('open'); }
+$('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+const pill = st => { const m={bezahlt:'p-ok',gelöst:'p-ok',aktiv:'p-ok',übernommen:'p-ok',beantwortet:'p-ok',offen:'p-warn',neu:'p-gold',wartet:'p-warn',einbehalten:'p-gold',überfällig:'p-bad',gesperrt:'p-bad',abgelehnt:'p-bad',später:'p-warn',hoch:'p-bad',normal:'',niedrig:''}; return `<span class="pill ${m[st]||''}">${esc(st)}</span>`; };
+const gross = inv => inv.net*(1+(inv.vat ?? D.settings.vat)/100);
+const demoNote = t => `<div class="demo">${t}</div>`;
+
+/* ===== Navigation ===== */
+const NAV = [
+  ['Übersicht'],
+  ['dashboard','Dashboard','dash'],
+  ['mitteilungen','KI-Mitteilungen','spark', ()=>D.ai.filter(a=>a.st==='neu').length],
+  ['Geschäft'],
+  ['rechnungen','Rechnungen','invoice', ()=>D.invoices.filter(i=>i.st==='überfällig').length],
+  ['laufband','Laufband & Angebote','ticker'],
+  ['anfragen','Anfragen & Warteliste','inbox', ()=>D.requests.filter(r=>r.st==='neu').length],
+  ['Community'],
+  ['support','Support','support', ()=>D.tickets.filter(t=>t.st==='offen').length],
+  ['member','Member','users'],
+  ['moderation','Prüfen & Meldungen','shield', ()=>D.queue.length+D.reports.length],
+  ['System'],
+  ['inhalte','Website & App','pen'],
+  ['einstellungen','Preise & Einstellungen','gear']
+];
+const route = () => (location.hash.slice(1)||'dashboard').split('?')[0];
+function drawNav(){
+  const r=route();
+  $('side').innerHTML = NAV.map(n => n.length===1 ? `<div class="grp">${n[0]}</div>` :
+    `<a href="#${n[0]}" class="${r===n[0]?'on':''}">${ic(n[2])}<span>${n[1]}</span>${n[3]&&n[3]()?`<span class="bdg">${n[3]()}</span>`:''}</a>`).join('');
+}
+
+/* ===== Login ===== */
+function loginView(){
+  return `<div style="max-width:380px;margin:8vh auto" class="card">
+    <div style="text-align:center;margin-bottom:18px"><span class="logo" style="font-size:34px"><span class="l1">closing</span><span class="l2">HUB</span></span><div class="muted" style="font-size:11px;letter-spacing:.25em;text-transform:uppercase;margin-top:6px">Zentrale</div></div>
+    <form id="lf" class="grid" style="gap:12px">
+      <label class="f">E-Mail<input class="in" id="le" type="email" autocomplete="username" required></label>
+      <label class="f">Passwort<input class="in" id="lp" type="password" autocomplete="current-password" required></label>
+      <p id="lerr" class="down" style="display:none;font-size:13px"></p>
+      <button class="btn gold-b" style="justify-content:center;padding:11px">Anmelden</button>
+    </form></div>`;
+}
+document.addEventListener('submit', async e=>{
+  if(e.target.id!=='lf') return; e.preventDefault();
+  const b=e.target.querySelector('button'), err=$('lerr'); err.style.display='none'; b.disabled=true; b.textContent='Anmelden …';
+  try{ await auth('password',{ email:$('le').value.trim(), password:$('lp').value }); LOADED=false; render(); }
+  catch(x){ err.textContent = /invalid/i.test(x.message) ? 'E-Mail oder Passwort falsch.' : x.message; err.style.display='block'; b.disabled=false; b.textContent='Anmelden'; }
+});
+
+/* ===== Dashboard ===== */
+function chart(vals, labels){
+  const w=640,h=200,p=28, max=Math.max(...vals,1)*1.15, stepX=(w-p*2)/(vals.length-1);
+  const pts=vals.map((v,i)=>[p+i*stepX, h-p-(v/max)*(h-p*2)]);
+  const line=pts.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
+  return `<svg class="chart" viewBox="0 0 ${w} ${h}" width="100%" preserveAspectRatio="none" style="height:200px">
+    <defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D4A843" stop-opacity=".35"/><stop offset="1" stop-color="#D4A843" stop-opacity="0"/></linearGradient></defs>
+    ${[0,.5,1].map(k=>`<line x1="${p}" x2="${w-p}" y1="${p+k*(h-p*2)}" y2="${p+k*(h-p*2)}" stroke="#232327"/>`).join('')}
+    <path d="${line} L${pts.at(-1)[0]},${h-p} L${p},${h-p}Z" fill="url(#ga)"/>
+    <path d="${line}" fill="none" stroke="#D4A843" stroke-width="2.2"/>
+    ${pts.map((q,i)=>`<circle cx="${q[0]}" cy="${q[1]}" r="3" fill="#0A0A0B" stroke="#D4A843" stroke-width="1.6"><title>${labels[i]}: ${vals[i]}</title></circle>`).join('')}
+    ${labels.map((l,i)=> i%2===0?`<text x="${p+i*stepX}" y="${h-6}" text-anchor="middle">${l}</text>`:'').join('')}
+  </svg>`;
+}
+function dashboard(){
+  const s=D.settings, wl=D.waitlist, day1=wl.filter(w=>w.abo==='dayone').length;
+  const today=new Date().toDateString(), newToday=wl.filter(w=>new Date(w.at).toDateString()===today).length;
+  const month=new Date().toISOString().slice(0,7);
+  const paidMonth=D.invoices.filter(i=>(i.st==='bezahlt'||i.st==='einbehalten')&&i.date.startsWith(month)).reduce((a,i)=>a+gross(i),0);
+  const open=D.invoices.filter(i=>i.st==='offen'||i.st==='überfällig').reduce((a,i)=>a+gross(i),0);
+  const tickerRev=D.ticker.filter(t=>t.on).reduce((a,t)=>a+t.price,0);
+  const days=[...Array(14)].map((_,i)=>{ const d=new Date(); d.setDate(d.getDate()-13+i); return d; });
+  const sign=days.map(d=>wl.filter(w=>new Date(w.at).toDateString()===d.toDateString()).length);
+  const lab=days.map(d=>d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}));
+  const kpi=(l,v,sub,cls='')=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s ${cls}">${sub}</div></div>`;
+  const byItem={}; D.invoices.filter(i=>i.st==='bezahlt'||i.st==='einbehalten').forEach(i=>{ byItem[i.item]=(byItem[i.item]||0)+gross(i); });
+  const src=Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,6), mx=Math.max(1,...src.map(x=>x[1]));
+  const abos=[['Day One','dayone'],['Plus','plus'],['Premium','premium']].map(([l,k])=>[l,wl.filter(w=>w.abo===k).length]);
+  const act=[...wl.slice(0,6).map(w=>({i:'users',t:`${w.name} hat sich eingetragen (${({dayone:'Day One',plus:'Plus',premium:'Premium'})[w.abo]})`,at:w.at})),
+             ...D.requests.slice(0,4).map(r=>({i:'inbox',t:`${r.type}-Anfrage: ${r.name}`,at:null,label:r.at}))].slice(0,6);
+  const h=new Date().getHours(), greet=h<11?'Guten Morgen':h<18?'Hallo':'Guten Abend';
+  return `<div class="row between"><div><h1 class="h1">${greet}, Elias</h1><p class="sub">Live aus deiner Datenbank.</p></div>
+    <div class="row no-print"><button class="btn" onclick="reload()">↻ Aktualisieren</button><a class="btn gold-b" href="#rechnungen?neu">+ Rechnung</a></div></div>
+  <div class="grid g4">
+    ${kpi('Warteliste gesamt', wl.length, newToday?`+${newToday} heute`:'heute noch keine', newToday?'up':'')}
+    ${kpi('Day-One-Plätze', `${day1}<span class="muted" style="font-size:16px"> / ${s.dayoneTotal}</span>`, `${Math.max(0,s.dayoneTotal-day1)} noch frei`)}
+    ${kpi('Umsatz diesen Monat', eur(paidMonth), 'aus bezahlten Rechnungen')}
+    ${kpi('Offene Rechnungen', eur(open), D.invoices.filter(i=>i.st==='überfällig').length+' überfällig', open?'down':'')}
+    ${kpi('Laufband / Monat', eur(tickerRev), D.ticker.filter(t=>t.on).length+' aktive Angebote')}
+    ${kpi('Support offen', D.tickets.filter(t=>t.st==='offen').length, D.tickets.length+' Tickets gesamt')}
+    ${kpi('Anfragen neu', D.requests.filter(r=>r.st==='neu').length, D.requests.length+' gesamt')}
+    ${kpi('KI-Vorschläge', D.ai.filter(a=>a.st==='neu').length, 'warten auf dich')}
+  </div>
+  <div class="grid g2 dashg" style="margin-top:14px">
+    <div class="card"><h3>Neue Eintragungen (14 Tage)</h3>${chart(sign,lab)}</div>
+    <div class="card"><h3>Umsatz nach Leistung</h3>
+      ${src.length?src.map(([k,v])=>`<div style="margin-bottom:12px"><div class="row between" style="font-size:13px"><span>${esc(k)}</span><b class="gold">${eur(v)}</b></div><div class="bar" style="margin-top:5px"><i style="width:${v/mx*100}%"></i></div></div>`).join(''):'<p class="muted">Noch keine bezahlten Rechnungen.</p>'}</div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card"><h3>Abo-Wahl auf der Warteliste</h3>
+      ${abos.map(([k,v])=>{const t=Math.max(1,wl.length);return `<div style="margin-bottom:12px"><div class="row between" style="font-size:13px"><span>${k}</span><span class="muted">${v} · ${Math.round(v/t*100)} %</span></div><div class="bar" style="margin-top:5px"><i style="width:${v/t*100}%"></i></div></div>`}).join('')}</div>
+    <div class="card"><h3>Letzte Aktivitäten</h3>
+      ${act.length?act.map(a=>`<div class="item" style="padding:9px 0"><div class="ico" style="width:30px;height:30px">${ic(a.i,14)}</div><div><div style="font-size:13px">${esc(a.t)}</div><div class="muted" style="font-size:11px">${a.at?fmtAt(a.at):esc(a.label)}</div></div></div>`).join(''):'<p class="muted">Noch nichts los. Sobald sich jemand einträgt, siehst du es hier.</p>'}</div>
+  </div>`;
+}
+
+/* ===== KI-Mitteilungen ===== */
+let aiFilter='neu';
+function mitteilungen(){
+  const list=D.ai.filter(a=>aiFilter==='alle'||a.st===aiFilter);
+  return `<h1 class="h1">KI-Mitteilungen</h1><p class="sub">Die KI analysiert Website, App, Support und Zahlen und schlägt Änderungen vor. Du entscheidest.</p>
+  <div class="tabs">${['neu','später','übernommen','abgelehnt','alle'].map(f=>`<button class="${aiFilter===f?'on':''}" onclick="aiFilter='${f}';render()">${f[0].toUpperCase()+f.slice(1)} ${f!=='alle'?`<span class="muted">${D.ai.filter(a=>a.st===f).length}</span>`:''}</button>`).join('')}</div>
+  <div class="grid">${list.length?list.map(a=>`<div class="card"><div class="row between"><div class="row"><span class="pill p-gold">${esc(a.area)}</span><span class="muted" style="font-size:12px">${esc(a.t)}</span></div>${pill(a.st)}</div>
+    <h3 style="font-size:16px;margin:10px 0 4px">${esc(a.title)}</h3><p>${esc(a.text)}</p>
+    <div class="grid g2" style="margin-top:12px;gap:10px"><div style="background:var(--bg2);border-radius:10px;padding:10px 12px"><div class="muted" style="font-size:11px">WARUM</div>${esc(a.why)}</div><div style="background:var(--bg2);border-radius:10px;padding:10px 12px"><div class="muted" style="font-size:11px">ERWARTETE WIRKUNG</div><span class="up">${esc(a.impact)}</span></div></div>
+    ${a.st==='neu'||a.st==='später'?`<div class="row" style="margin-top:14px"><button class="btn gold-b sm" onclick="aiSet(${a.id},'übernommen')">${ic('check',14)} Übernehmen</button><button class="btn sm" onclick="aiSet(${a.id},'später')">Später</button><button class="btn sm red" onclick="aiSet(${a.id},'abgelehnt')">${ic('x',14)} Ablehnen</button></div>`:`<div class="row" style="margin-top:14px"><button class="btn sm" onclick="aiSet(${a.id},'neu')">Zurück in „Neu“</button></div>`}
+  </div>`).join(''):`<div class="card empty">${D.ai.length?'Keine Mitteilungen in diesem Bereich. 👌':'Noch keine KI-Vorschläge. Die automatische Analyse wird als Nächstes angebunden.'}</div>`}</div>`;
+}
+async function aiSet(id,st){ await q(`ai_suggestions?id=eq.${id}`,{method:'PATCH',body:{status:st}}); D.ai.find(a=>a.id===id).st=st; render(); toast(st==='übernommen'?'Übernommen':'Gespeichert'); }
+
+/* ===== Rechnungen ===== */
+let invFilter='alle', invQ='';
+function rechnungen(){
+  const list=D.invoices.filter(i=>(invFilter==='alle'||i.st===invFilter)&&(!invQ||(i.no+i.cust+i.item).toLowerCase().includes(invQ.toLowerCase())));
+  const sum=st=>D.invoices.filter(i=>st.includes(i.st)).reduce((a,i)=>a+gross(i),0);
+  if(location.hash.includes('?neu')) setTimeout(newInvoice,0);
+  return `<div class="row between"><div><h1 class="h1">Rechnungen</h1><p class="sub">Schreib Rechnungen, markiere Zahlungen und exportiere alles für die Buchhaltung.</p></div>
+    <div class="row"><button class="btn" onclick="csv('rechnungen')">CSV-Export</button><button class="btn gold-b" onclick="newInvoice()">+ Neue Rechnung</button></div></div>
+  <div class="grid g3" style="margin-bottom:16px">
+    <div class="card kpi"><div class="l">Bezahlt</div><div class="v up">${eur(sum(['bezahlt','einbehalten']))}</div></div>
+    <div class="card kpi"><div class="l">Offen</div><div class="v" style="color:var(--warn)">${eur(sum(['offen']))}</div></div>
+    <div class="card kpi"><div class="l">Überfällig</div><div class="v down">${eur(sum(['überfällig']))}</div></div></div>
+  <div class="row between" style="margin-bottom:12px"><div class="tabs" style="margin:0">${['alle','offen','überfällig','bezahlt','einbehalten'].map(f=>`<button class="${invFilter===f?'on':''}" onclick="invFilter='${f}';render()">${f[0].toUpperCase()+f.slice(1)}</button>`).join('')}</div>
+    <input class="in" style="max-width:240px" placeholder="Rechnung suchen …" value="${esc(invQ)}" onchange="invQ=this.value;render()"></div>
+  <div class="card tw"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Kunde</th><th>Leistung</th><th>Brutto</th><th>Status</th><th></th></tr></thead><tbody>
+  ${list.map(i=>`<tr><td style="white-space:nowrap"><b>${esc(i.no)}</b></td><td class="muted">${new Date(i.date).toLocaleDateString('de-DE')}</td><td>${esc(i.cust)}</td><td class="muted">${esc(i.item)}</td><td><b>${eur(gross(i))}</b></td><td>${pill(i.st)}</td>
+    <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="showInvoice(${i.id})">Ansehen</button> ${i.st==='offen'||i.st==='überfällig'?`<button class="btn sm" onclick="invSet(${i.id},'bezahlt')">${ic('check',13)} Bezahlt</button> ${i.st==='offen'?`<button class="btn sm" onclick="invSet(${i.id},'überfällig')">Überfällig</button>`:''} <a class="btn sm" href="mailto:${esc(i.email)}?subject=${encodeURIComponent('Zahlungserinnerung '+i.no)}">Erinnern</a>`:''}</td></tr>`).join('')||`<tr><td colspan="7" class="empty">${D.invoices.length?'Keine Rechnungen gefunden.':'Noch keine Rechnungen. Leg oben rechts die erste an.'}</td></tr>`}
+  </tbody></table></div>`;
+}
+async function invSet(id,st){ await q(`invoices?id=eq.${id}`,{method:'PATCH',body:{status:st}}); D.invoices.find(i=>i.id===id).st=st; render(); toast('Gespeichert'); }
+function nextNo(){ const y=new Date().getFullYear(); const n=Math.max(0,...D.invoices.filter(i=>i.no.startsWith('CH-'+y)).map(i=>+i.no.split('-')[2]||0))+1; return `CH-${y}-${String(n).padStart(4,'0')}`; }
+function newInvoice(){
+  if(location.hash.includes('?neu')) history.replaceState(null,'','#rechnungen');
+  openModal(`<h3 style="font-size:18px">Neue Rechnung · ${nextNo()}</h3>
+  <div class="grid" style="gap:12px;margin-top:12px">
+    <label class="f">Kunde<input class="in" id="iCust" placeholder="Firma oder Name"></label>
+    <label class="f">E-Mail<input class="in" id="iMail" type="email" placeholder="rechnung@firma.de"></label>
+    <label class="f">Leistung<select class="in" id="iItem" onchange="iNet.value=this.selectedOptions[0].dataset.p||iNet.value">
+      <option data-p="${D.settings.unlock}">Freischaltung Kandidat</option><option data-p="${D.settings.topJob}">Top-Job (30 Tage)</option><option data-p="149">Laufband-Anzeige (1 Monat)</option><option data-p="">Sonstiges</option></select></label>
+    <div class="grid g2" style="gap:12px"><label class="f">Netto (€)<input class="in" id="iNet" type="number" step="0.01" value="${D.settings.unlock}"></label><label class="f">MwSt / IVA<input class="in" value="${D.settings.vat} %" disabled></label></div>
+    <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="saveInvoice(this)">Rechnung erstellen</button></div>
+  </div>`);
+}
+async function saveInvoice(b){
+  const c=$('iCust').value.trim(), n=parseFloat($('iNet').value);
+  if(!c||!(n>0)) return toast('Bitte Kunde und Betrag ausfüllen');
+  b.disabled=true;
+  try{
+    const [r]=await q('invoices',{method:'POST',prefer:'return=representation',body:{no:nextNo(),customer:c,email:$('iMail').value.trim()||null,item:$('iItem').value,net:n,vat:D.settings.vat,status:'offen'}});
+    D.invoices.unshift({id:r.id,no:r.no,date:r.created_at.slice(0,10),cust:r.customer,email:r.email||'',item:r.item,net:+r.net,vat:+r.vat,st:r.status});
+    closeModal(); render(); toast('Rechnung erstellt');
+  }catch(e){ b.disabled=false; }
+}
+function showInvoice(id){
+  const i=D.invoices.find(x=>x.id===id), v=i.vat;
+  openModal(`<div id="invdoc" style="background:#fff;color:#111;border-radius:10px;padding:28px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start"><span class="logo" style="font-size:26px"><span class="l1" style="color:#111">closing</span><span class="l2">HUB</span></span><div style="text-align:right;font-size:12px">Elias Schulz<br>Carrer de Julio Cortázar 18<br>Calvià, Mallorca<br>NIF: [NIF]</div></div>
+    <h2 style="margin:24px 0 4px;font-size:20px">Rechnung ${esc(i.no)}</h2><div style="font-size:12px;color:#666">Datum: ${new Date(i.date).toLocaleDateString('de-DE')}</div>
+    <div style="margin:18px 0;font-size:13px"><b>An:</b> ${esc(i.cust)}<br>${esc(i.email)}</div>
+    <table style="font-size:13px"><tr><th style="color:#666">Leistung</th><th style="color:#666;text-align:right">Betrag</th></tr>
+      <tr><td style="border-color:#eee">${esc(i.item)}</td><td style="border-color:#eee;text-align:right">${eur(i.net)}</td></tr>
+      <tr><td style="border-color:#eee">MwSt / IVA ${v} %</td><td style="border-color:#eee;text-align:right">${eur(i.net*v/100)}</td></tr>
+      <tr><td><b>Gesamt</b></td><td style="text-align:right"><b>${eur(gross(i))}</b></td></tr></table>
+  </div>
+  <div class="row no-print" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Schließen</button><a class="btn" href="mailto:${esc(i.email)}?subject=${encodeURIComponent('Rechnung '+i.no)}">Per Mail senden</a><button class="btn gold-b" onclick="printInvoice()">Drucken / PDF</button></div>`);
+}
+function printInvoice(){
+  const w=window.open('','_blank'); if(!w) return toast('Pop-up blockiert');
+  w.document.write(`<html><head><title>Rechnung</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Parisienne&family=Bebas+Neue&family=Inter:wght@400;600&display=swap"><style>body{font-family:Inter,sans-serif;padding:30px}table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #eee;text-align:left}.logo{display:inline-flex;align-items:baseline}.l1{font-family:Parisienne}.l2{font-family:'Bebas Neue';color:#A97C22;font-size:1.12em}</style></head><body>${$('invdoc').innerHTML}<script>setTimeout(()=>print(),600)<\/script></body></html>`);
+  w.document.close();
+}
+
+/* ===== Laufband ===== */
+function laufband(){
+  const on=D.ticker.filter(t=>t.on), items=on.map(t=>`<span>${esc(t.title)} · <b>${esc(t.offer)}</b></span>`).join('');
+  return `<div class="row between"><div><h1 class="h1">Laufband & Angebote</h1><p class="sub">Was oben in der App durchläuft. Änderungen sind sofort live.</p></div><button class="btn gold-b" onclick="editTick()">+ Angebot</button></div>
+  <div class="card" style="margin-bottom:16px"><h3>Live-Vorschau</h3>
+    <div class="ticker"><span class="lab">🎁 Member-Vorteile</span><div style="overflow:hidden;flex:1"><div class="track">${items}${items}</div></div></div>
+    <p class="muted" style="font-size:12px;margin-top:8px">${on.length} aktiv · Umsatz Laufband: <b class="gold">${eur(on.reduce((a,t)=>a+(+t.price||0),0))} / Monat</b></p></div>
+  <div class="card tw"><table><thead><tr><th></th><th>Angebot</th><th>Partner</th><th>Preis/Monat</th><th>Läuft bis</th><th>Aktiv</th><th></th></tr></thead><tbody>
+  ${D.ticker.map((t,i)=>`<tr><td style="white-space:nowrap"><button class="btn sm" ${i?'':'disabled'} onclick="moveTick(${i},-1)">${ic('up',13)}</button> <button class="btn sm" ${i<D.ticker.length-1?'':'disabled'} onclick="moveTick(${i},1)">${ic('down',13)}</button></td>
+    <td><b>${esc(t.title)}</b><div class="gold" style="font-size:12px">${esc(t.offer)}</div></td><td class="muted">${esc(t.partner)||'–'}</td><td>${eur(t.price||0)}</td>
+    <td class="${t.until&&new Date(t.until)<new Date(Date.now()+864e6)?'down':'muted'}">${t.until?new Date(t.until).toLocaleDateString('de-DE'):'unbegrenzt'}</td>
+    <td><label class="switch"><input type="checkbox" ${t.on?'checked':''} onchange="tickActive(${t.id},this.checked)"><span></span></label></td>
+    <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="editTick(${t.id})">${ic('pen',13)}</button> <button class="btn sm red" onclick="delTick(${t.id})">${ic('trash',13)}</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Noch keine Angebote.</td></tr>'}
+  </tbody></table></div>`;
+}
+async function tickActive(id,on){ await q(`ticker?id=eq.${id}`,{method:'PATCH',body:{active:on}}); D.ticker.find(t=>t.id===id).on=on; render(); toast(on?'Läuft jetzt':'Pausiert'); }
+async function moveTick(i,d){
+  const a=D.ticker; [a[i],a[i+d]]=[a[i+d],a[i]];
+  await Promise.all(a.map((t,k)=>t.sort!==k+1 ? (t.sort=k+1, q(`ticker?id=eq.${t.id}`,{method:'PATCH',body:{sort:k+1}})) : null));
+  render();
+}
+async function delTick(id){ const t=D.ticker.find(x=>x.id===id); if(!confirm(`„${t.title}“ wirklich löschen?`)) return; await q(`ticker?id=eq.${id}`,{method:'DELETE'}); D.ticker=D.ticker.filter(x=>x.id!==id); render(); toast('Gelöscht'); }
+function editTick(id){
+  const t=D.ticker.find(x=>x.id===id)||{title:'',offer:'',partner:'',price:149,until:'',on:true};
+  openModal(`<h3 style="font-size:18px">${id?'Angebot bearbeiten':'Neues Angebot'}</h3>
+  <div class="grid" style="gap:12px;margin-top:12px">
+    <label class="f">Titel<input class="in" id="tT" value="${esc(t.title)}" placeholder="z. B. Profi-Headset"></label>
+    <label class="f">Angebot (gold)<input class="in" id="tO" value="${esc(t.offer)}" placeholder="z. B. −25 % für Member"></label>
+    <label class="f">Partner (nur für dich sichtbar)<input class="in" id="tP" value="${esc(t.partner)}"></label>
+    <div class="grid g2" style="gap:12px"><label class="f">Preis / Monat (€)<input class="in" id="tPr" type="number" value="${t.price}"></label><label class="f">Läuft bis (leer = unbegrenzt)<input class="in" id="tU" type="date" value="${t.until}"></label></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="saveTick(${id||0},this)">Speichern</button></div></div>`);
+}
+async function saveTick(id,b){
+  const v={title:$('tT').value.trim(),offer:$('tO').value.trim(),partner:$('tP').value.trim(),price:+$('tPr').value||0,until:$('tU').value||null};
+  if(!v.title||!v.offer) return toast('Titel und Angebot ausfüllen');
+  b.disabled=true;
+  try{
+    if(id){ await q(`ticker?id=eq.${id}`,{method:'PATCH',body:v}); Object.assign(D.ticker.find(x=>x.id===id),{...v,until:v.until||''}); }
+    else { const [r]=await q('ticker',{method:'POST',prefer:'return=representation',body:{...v,active:true,sort:D.ticker.length+1}}); D.ticker.push({id:r.id,title:r.title,offer:r.offer,partner:r.partner||'',price:+r.price,until:r.until||'',on:r.active,sort:r.sort}); }
+    closeModal(); render(); toast('Gespeichert – ist live');
+  }catch(e){ b.disabled=false; }
+}
+
+/* ===== Anfragen & Warteliste ===== */
+let reqTab='anfragen';
+function anfragen(){
+  const abo={dayone:'Day One',plus:'Plus',premium:'Premium'};
+  return `<h1 class="h1">Anfragen & Warteliste</h1><p class="sub">Kontaktformular für Auftraggeber und alle Einträge der Warteliste.</p>
+  <div class="tabs">${[['anfragen',`Anfragen (${D.requests.length})`],['warteliste',`Warteliste (${D.waitlist.length})`]].map(([k,l])=>`<button class="${reqTab===k?'on':''}" onclick="reqTab='${k}';render()">${l}</button>`).join('')}</div>
+  ${reqTab==='anfragen'?`<div class="grid">${D.requests.map(r=>`<div class="card"><div class="row between"><div class="row"><span class="pill ${r.type==='Werbung'?'':'p-gold'}">${r.type}</span><b>${esc(r.name)}</b><span class="muted" style="font-size:12px">${esc(r.email)} · ${esc(r.at)}</span></div>${pill(r.st)}</div>
+    <p style="margin-top:8px;white-space:pre-wrap">${esc(r.text)||'<span class="muted">Keine Nachricht</span>'}</p>
+    <div class="row" style="margin-top:12px"><a class="btn sm gold-b" href="mailto:${esc(r.email)}?subject=${encodeURIComponent('Deine Anfrage bei ClosingHub')}" onclick="reqDone(${r.id})">Antworten</a>${r.type==='Werbung'?`<button class="btn sm" onclick="location.hash='laufband';setTimeout(editTick,50)">Als Laufband-Angebot anlegen</button>`:`<button class="btn sm" onclick="location.hash='rechnungen?neu'">Rechnung schreiben</button>`}${r.st!=='beantwortet'?`<button class="btn sm" onclick="reqDone(${r.id})">Als erledigt markieren</button>`:''}</div></div>`).join('')||'<div class="card empty">Noch keine Anfragen.</div>'}</div>`
+  :`<div class="row between" style="margin-bottom:12px"><span class="muted">${D.waitlist.length} Einträge</span><button class="btn" onclick="csv('warteliste')">CSV-Export</button></div>
+    <div class="card tw"><table><thead><tr><th>Name</th><th>E-Mail</th><th>Abo</th><th>Eingetragen</th></tr></thead><tbody>${D.waitlist.map(w=>`<tr><td><b>${esc(w.name)}</b></td><td class="muted">${esc(w.email)}</td><td><span class="pill ${w.abo==='dayone'?'p-gold':''}">${abo[w.abo]||esc(w.abo)}</span></td><td class="muted">${fmtAt(w.at)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">Noch keine Einträge.</td></tr>'}</tbody></table></div>`}`;
+}
+async function reqDone(id){ await q(`contact_requests?id=eq.${id}`,{method:'PATCH',body:{status:'beantwortet'}}); D.requests.find(r=>r.id===id).st='beantwortet'; setTimeout(render,200); }
+
+/* ===== Support ===== */
+let tSel=null;
+function support(){
+  const t=D.tickets.find(x=>x.id===tSel)||D.tickets[0];
+  const head=`<div class="row between"><div><h1 class="h1">Support</h1><p class="sub">Alle Anfragen von Membern und Auftraggebern. Die KI schreibt dir Antwortvorschläge.</p></div><button class="btn gold-b" onclick="newTicket()">+ Ticket</button></div>`;
+  if(!t) return head+`<div class="card empty">Noch keine Tickets. Sobald die App live ist, landen Support-Anfragen hier. Du kannst auch selbst eins anlegen, z. B. für eine Mail.</div>`;
+  return head+`<div class="grid g2 supg">
+    <div class="card" style="padding:8px">${D.tickets.map(x=>`<div class="list-sel ${x.id===t.id?'on':''}" onclick="tSel=${x.id};render()"><div class="row between"><b>#${x.id} ${esc(x.from)}</b>${pill(x.st)}</div><div class="muted" style="font-size:13px">${esc(x.topic)}</div></div>`).join('')}</div>
+    <div class="card"><div class="row between" style="margin-bottom:12px"><div><b style="font-size:16px">${esc(t.topic)}</b><div class="muted" style="font-size:12px">#${t.id} · ${esc(t.from)}${t.email?' · '+esc(t.email):''} · Priorität ${pill(t.prio)}</div></div>
+      <select class="in" style="width:auto" onchange="tSet(${t.id},{status:this.value})">${['offen','wartet','gelöst'].map(s=>`<option ${s===t.st?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="chat">${t.msgs.map(m=>`<div class="msg ${m.me?'me':''}">${esc(m.t)}<small>${m.me?'Du':esc(t.from)} · ${esc(m.at)}</small></div>`).join('')||'<p class="muted">Noch keine Nachrichten.</p>'}</div>
+      <textarea class="in" id="rep" rows="3" style="margin-top:14px" placeholder="Antwort schreiben …"></textarea>
+      <div class="row" style="margin-top:10px;justify-content:space-between"><button class="btn" onclick="aiReply(${t.id})">${ic('spark',14)} KI-Vorschlag</button><div class="row">${t.email?`<a class="btn" href="mailto:${esc(t.email)}?subject=${encodeURIComponent(t.topic)}">Per Mail</a>`:''}<button class="btn gold-b" onclick="sendRep(${t.id})">Speichern</button></div></div></div>
+  </div>`;
+}
+async function tSet(id,patch){ await q(`tickets?id=eq.${id}`,{method:'PATCH',body:patch}); const t=D.tickets.find(x=>x.id===id); if(patch.status) t.st=patch.status; if(patch.messages) t.msgs=patch.messages; render(); }
+function aiReply(id){
+  const t=D.tickets.find(x=>x.id===id), s=D.settings;
+  const map={'Freischalt':`Hi! Für ${eur(s.unlock)} pro Kandidat schaltest du das komplette Profil inkl. Kontaktdaten frei. Kein Abo, keine Grundgebühr. Bei Fragen bin ich da.`,
+    'Day':`Hey! Dein Eintrag ist gespeichert. Die Day-One-Plätze werden nach Reihenfolge vergeben, du bekommst zum Start eine Mail mit allen Infos.`};
+  const k=Object.keys(map).find(k=>t.topic.includes(k));
+  $('rep').value = map[k] || `Hi ${t.from.split(' ')[0]}, danke für deine Nachricht! Ich schau mir das direkt an und melde mich kurzfristig bei dir.`;
+}
+async function sendRep(id){ const v=$('rep').value.trim(); if(!v) return; const t=D.tickets.find(x=>x.id===id); const msgs=[...t.msgs,{me:1,t:v,at:new Date().toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})}]; await tSet(id,{messages:msgs,status:'wartet'}); toast('Gespeichert'); }
+function newTicket(){
+  openModal(`<h3 style="font-size:18px">Neues Ticket</h3><div class="grid" style="gap:12px;margin-top:12px">
+    <label class="f">Von<input class="in" id="nF"></label><label class="f">E-Mail<input class="in" id="nE" type="email"></label>
+    <label class="f">Thema<input class="in" id="nT"></label><label class="f">Nachricht<textarea class="in" id="nM" rows="3"></textarea></label>
+    <div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="saveTicket(this)">Anlegen</button></div></div>`);
+}
+async function saveTicket(b){
+  const f=$('nF').value.trim(), t=$('nT').value.trim(); if(!f||!t) return toast('Von und Thema ausfüllen');
+  b.disabled=true;
+  try{
+    const m=$('nM').value.trim(), msgs=m?[{me:0,t:m,at:new Date().toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})}]:[];
+    const [r]=await q('tickets',{method:'POST',prefer:'return=representation',body:{from_name:f,email:$('nE').value.trim()||null,topic:t,messages:msgs}});
+    D.tickets.unshift({id:r.id,from:r.from_name,email:r.email,topic:r.topic,prio:r.prio,st:r.status,msgs:r.messages}); tSel=r.id; closeModal(); render();
+  }catch(e){ b.disabled=false; }
+}
+
+/* ===== Member (Beispiel) ===== */
+function member(){
+  return `<h1 class="h1">Member</h1><p class="sub">Ränge, Abos, Mahnungen. Bei 3 Mahnungen wird automatisch 1 Woche gesperrt.</p>
+  ${demoNote('Beispieldaten: Echte Member gibt es, sobald die App mit Login live ist.')}
+  <div class="card tw"><table><thead><tr><th>Name</th><th>Rang</th><th>Abo</th><th>Region</th><th>Mahnungen</th><th>Status</th><th></th></tr></thead><tbody>
+  ${D.members.map((m,i)=>`<tr><td><b>${esc(m.name)}</b></td><td><span class="pill p-gold">${m.rank}</span></td><td>${m.abo}</td><td class="muted">${m.land}</td><td>${[0,1,2].map(k=>`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;background:${k<m.warn?'var(--bad)':'#2a2a2f'}"></span>`).join('')} <span class="muted">${m.warn}/3</span></td><td>${pill(m.st)}</td>
+    <td style="text-align:right;white-space:nowrap">${m.st==='gesperrt'?`<button class="btn sm" onclick="D.members[${i}].st='aktiv';D.members[${i}].warn=0;render();toast('Entsperrt')">Entsperren</button>`:`<button class="btn sm" onclick="warn(${i})">+ Mahnung</button> <button class="btn sm red" onclick="ban(${i})">Sperren</button>`}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+function warn(i){ const m=D.members[i]; m.warn=Math.min(3,m.warn+1); if(m.warn>=3){ m.st='gesperrt'; toast(m.name+' für 1 Woche gesperrt'); } else toast('Mahnung '+m.warn+'/3 an '+m.name); render(); }
+function ban(i){ if(!confirm(D.members[i].name+' für 1 Woche sperren?')) return; D.members[i].st='gesperrt'; render(); }
+
+/* ===== Moderation (Beispiel) ===== */
+function moderation(){
+  return `<h1 class="h1">Prüfen & Meldungen</h1><p class="sub">Die KI prüft alles vor. Du gibst nur noch frei oder lehnst ab.</p>
+  ${demoNote('Beispieldaten: Inhalte zum Prüfen kommen, sobald Member in der App posten.')}
+  <div class="grid g2">
+    <div class="card"><h3>Zur Prüfung (${D.queue.length})</h3>${D.queue.map(x=>`<div class="item"><div class="ico">${ic(x.kind==='Auftraggeber'?'users':x.kind==='Video'?'spark':'shield',16)}</div><div style="flex:1"><span class="pill">${x.kind}</span><div style="margin-top:4px"><b>${esc(x.title)}</b></div><div class="muted" style="font-size:12px">KI: ${esc(x.ai)}</div>
+      <div class="row" style="margin-top:8px"><button class="btn sm gold-b" onclick="qDone(${x.id},'Freigegeben')">Freigeben</button><button class="btn sm red" onclick="qDone(${x.id},'Abgelehnt')">Ablehnen</button></div></div></div>`).join('')||'<div class="empty">Alles geprüft. 👌</div>'}</div>
+    <div class="card"><h3>Meldungen (${D.reports.length})</h3>${D.reports.map(r=>`<div class="item"><div class="ico" style="color:var(--bad);border-color:#4d2a2a">${ic('bell',16)}</div><div style="flex:1"><b>${esc(r.title)}</b><div class="muted" style="font-size:12px">${esc(r.why)}</div>
+      <div class="row" style="margin-top:8px"><button class="btn sm" onclick="rDone(${r.id},'Ausgeblendet')">Ausblenden</button><button class="btn sm" onclick="rDone(${r.id},'Mahnung verschickt')">Mahnung</button><button class="btn sm" onclick="rDone(${r.id},'Erledigt')">Ignorieren</button></div></div></div>`).join('')||'<div class="empty">Keine Meldungen.</div>'}</div>
+  </div>`;
+}
+function qDone(id,t){ D.queue=D.queue.filter(x=>x.id!==id); render(); toast(t); }
+function rDone(id,t){ D.reports=D.reports.filter(x=>x.id!==id); render(); toast(t); }
+
+/* ===== Website & App ===== */
+const setKey = (key,value) => q('settings',{method:'POST',prefer:'resolution=merge-duplicates',body:{key,value,public:true,updated_at:new Date().toISOString()}});
+function inhalte(){
+  const s=D.settings, f=s.features;
+  const sw=(k,l,d)=>`<div class="row between" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>${l}</b><div class="muted" style="font-size:12px">${d}</div></div><label class="switch"><input type="checkbox" ${f[k]?'checked':''} onchange="setFeature('${k}',this.checked)"><span></span></label></div>`;
+  return `<h1 class="h1">Website & App</h1><p class="sub">Texte und Funktionen. Gespeichertes ist sofort live.</p>
+  <div class="grid g2">
+    <div class="card"><h3>Landingpage · Hero</h3>
+      <div class="grid" style="gap:12px"><label class="f">Headline Zeile 1<input class="in" id="h1" value="${esc(s.heroTop)}"></label><label class="f">Headline Zeile 2 (gold)<input class="in" id="h2" value="${esc(s.heroGold)}"></label><label class="f">Untertitel<input class="in" id="h3" value="${esc(s.heroSub)}"></label>
+      <div style="background:var(--bg2);border-radius:12px;padding:18px;text-align:center"><div style="font-size:26px;font-weight:700;line-height:1.1" id="pv1">${esc(s.heroTop)}</div><div class="gold" style="font-size:26px;font-weight:700" id="pv2">${esc(s.heroGold)}</div><div class="muted" style="margin-top:6px" id="pv3">${esc(s.heroSub)}</div></div>
+      <button class="btn gold-b" onclick="saveHero()">Speichern</button></div></div>
+    <div class="card"><h3>Funktionen</h3>
+      ${sw('waitlistOpen','Warteliste offen','Live: Formular auf der Landingpage an/aus')}
+      ${sw('marketplace','Marktplatz','Wirkt, sobald die echte App läuft')}
+      ${sw('topjobs','Top-Jobs','Wirkt, sobald die echte App läuft')}
+      ${sw('forum','Forum','Wirkt, sobald die echte App läuft')}
+      ${sw('stories','Stories','Wirkt, sobald die echte App läuft')}
+      ${sw('breathing','Atempause','Wirkt, sobald die echte App läuft')}
+      ${sw('arena','Closer Arena','Wirkt, sobald die echte App läuft')}
+    </div>
+  </div>`;
+}
+async function setFeature(k,v){ D.settings.features[k]=v; await setKey('features',D.settings.features); toast('Gespeichert'); }
+async function saveHero(){ const h={top:$('h1').value.trim(),gold:$('h2').value.trim(),sub:$('h3').value.trim()}; await setKey('hero',h); Object.assign(D.settings,{heroTop:h.top,heroGold:h.gold,heroSub:h.sub}); render(); toast('Hero ist live'); }
+document.addEventListener('input',e=>{ if(['h1','h2','h3'].includes(e.target.id)) $('pv'+e.target.id[1]).textContent=e.target.value; });
+
+/* ===== Preise & Einstellungen ===== */
+function einstellungen(){
+  const s=D.settings;
+  const n=(k,l,step='0.01',suf='')=>`<label class="f">${l}<div class="row" style="flex-wrap:nowrap"><input class="in" type="number" step="${step}" data-k="${k}" value="${s[k]}">${suf?`<span class="muted">${suf}</span>`:''}</div></label>`;
+  return `<h1 class="h1">Preise & Einstellungen</h1><p class="sub">Alle Zahlen des Geschäftsmodells an einem Ort.</p>
+  <div class="grid g2">
+    <div class="card"><h3>Abos</h3><div class="grid g2" style="gap:12px">${n('plus','Plus / Monat','0.01','€')}${n('premiumM','Premium / Monat','0.01','€')}${n('premiumY','Premium / Jahr','1','€')}${n('vat','MwSt / IVA','1','%')}</div></div>
+    <div class="card"><h3>Day Ones</h3><div class="grid g2" style="gap:12px">${n('dayoneTotal','Anzahl Plätze (live)','1')}${n('dayoneFreeMonths','Gratis-Monate','1')}${n('dayonePremiumMonths','Premium-Monate gratis','1')}${n('maxPerCountry','Max. Member je Land','1')}</div></div>
+    <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('marketFee','Marktplatz-Gebühr','0.1','%')}${n('topJob','Top-Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
+    <div class="card"><h3>Verbindung</h3><div class="row" style="margin-bottom:8px"><span class="pill p-ok">Supabase verbunden</span></div><p class="muted" style="font-size:13px">Angemeldet als ${esc(SESSION&&SESSION.email)}</p><button class="btn" style="margin-top:12px" onclick="logout()">Abmelden</button></div>
+  </div>
+  <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn gold-b" onclick="saveSettings(this)">Alles speichern</button></div>`;
+}
+async function saveSettings(b){
+  document.querySelectorAll('[data-k]').forEach(i=>{ D.settings[i.dataset.k]=parseFloat(i.value)||0; });
+  const s=D.settings; b.disabled=true;
+  try{
+    await Promise.all([
+      setKey('preise',{plus:s.plus,premiumM:s.premiumM,premiumY:s.premiumY,unlock:s.unlock,marketFee:s.marketFee,topJob:s.topJob,vat:s.vat}),
+      setKey('dayone',{total:s.dayoneTotal,freeMonths:s.dayoneFreeMonths,premiumMonths:s.dayonePremiumMonths}),
+      setKey('limits',{maxPerCountry:s.maxPerCountry,perCategory:s.perCategory})
+    ]);
+    toast('Einstellungen gespeichert');
+  }finally{ b.disabled=false; }
+}
+
+/* ===== CSV ===== */
+function csv(kind){
+  const rows = kind==='rechnungen' ? [['Nr','Datum','Kunde','E-Mail','Leistung','Netto','MwSt %','Brutto','Status'],...D.invoices.map(i=>[i.no,i.date,i.cust,i.email,i.item,i.net.toFixed(2),i.vat,gross(i).toFixed(2),i.st])]
+    : [['Name','E-Mail','Abo','Datum'],...D.waitlist.map(w=>[w.name,w.email,w.abo,w.at.slice(0,10)])];
+  const blob=new Blob(['﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`closinghub-${kind}.csv`; a.click();
+}
+
+/* ===== Suche ===== */
+$('q').addEventListener('keydown',e=>{
+  if(e.key!=='Enter') return; const s=e.target.value.toLowerCase().trim(); if(!s) return;
+  if(D.invoices.some(i=>(i.no+i.cust).toLowerCase().includes(s))){ invQ=s; location.hash='rechnungen'; return; }
+  const t=D.tickets.find(x=>(x.from+x.topic).toLowerCase().includes(s)); if(t){ tSel=t.id; location.hash='support'; return; }
+  if(D.waitlist.some(w=>(w.name+w.email).toLowerCase().includes(s))){ reqTab='warteliste'; location.hash='anfragen'; return; }
+  toast('Nichts gefunden');
+});
+
+/* ===== Render ===== */
+const PAGES={dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
+async function reload(){ LOADED=false; await render(); toast('Aktualisiert'); }
+async function render(){
+  const logged=!!SESSION;
+  document.querySelector('.layout').style.gridTemplateColumns = logged ? '' : '1fr';
+  $('side').style.display = logged ? '' : 'none';
+  document.querySelectorAll('.top .search,.top .btn').forEach(x=>x.style.visibility = logged ? '' : 'hidden');
+  if(!logged){ $('main').innerHTML=loginView(); return; }
+  if(!LOADED){
+    $('main').innerHTML='<div class="empty">Lade Daten …</div>';
+    try{ await loadAll(); }catch(e){ if(!SESSION) return; $('main').innerHTML=`<div class="card empty">Daten konnten nicht geladen werden: ${esc(e.message)}<br><br><button class="btn" onclick="reload()">Nochmal versuchen</button> <button class="btn" onclick="logout()">Abmelden</button></div>`; return; }
+  }
+  drawNav(); $('main').innerHTML=(PAGES[route()]||dashboard)();
+}
+window.addEventListener('hashchange',()=>{ render(); window.scrollTo(0,0); });
+setInterval(()=>{ if(SESSION && LOADED && document.visibilityState==='visible' && !document.querySelector('.modal.open') && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){ loadAll().then(()=>{ if(!document.querySelector('.modal.open')){ drawNav(); $('main').innerHTML=(PAGES[route()]||dashboard)(); } }).catch(()=>{}); } }, 60000);
+render();
+
+</script>
+</body>
+</html>
