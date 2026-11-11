@@ -621,6 +621,12 @@
     .show .sh.dim{opacity:0 !important}
     .show[data-act="0"] .sh-l,.show[data-act="1"] .sh-m,.show[data-act="2"] .sh-r{opacity:1 !important;filter:none !important}
     .show .sh{pointer-events:none}
+    /* Handy: statische Screens statt Überblend-Animationen im Handy */
+    .show .sh:not(.act){visibility:hidden}
+    .show[data-act="0"] .sh-l{visibility:visible}
+    .sh .f{transform:none !important;filter:none !important;transition:none !important}
+    .sh-l .f1b,.sh-l .f2,.sh-m .f2,.sh-r .f1,.sh .tap,.sh .breath{display:none !important}
+    .sh-r .f2{opacity:1 !important}
   }
 </style>
 </head>
