@@ -614,6 +614,14 @@
     header .logo{font-size:32px}
     .meter p{font-size:12px;gap:10px}
   }
+  /* Fixes 11.11. */
+  .perks b [data-p]{color:inherit !important;font-size:inherit !important;font-weight:inherit;display:inline !important;margin:0;padding:0}
+  .seg button{display:flex;align-items:center;justify-content:center;text-align:center}
+  @media(max-width:900px){
+    .show .sh.dim{opacity:0 !important}
+    .show[data-act="0"] .sh-l,.show[data-act="1"] .sh-m,.show[data-act="2"] .sh-r{opacity:1 !important;filter:none !important}
+    .show .sh{pointer-events:none}
+  }
 </style>
 </head>
 <body>
