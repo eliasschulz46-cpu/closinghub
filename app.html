@@ -267,26 +267,73 @@ const REGIONS = {
   'Schweiz':['Zürich','Bern','Basel','Zug','Luzern','Genf','St. Gallen','Tessin'],
   'Spanien':['Balearen','Madrid','Katalonien','Andalusien','Valencia','Kanaren'],
 };
-const MCATS = ['Skripte','Call-Analysen & Einschätzungen','Coaching & 1:1','Vorlagen & Leitfäden','Mini-Kurse','Sonstiges'];
+const MCATS = ['1:1 Closing-Coaching','1:1 Setter-Coaching','Chat-Setting-Training','Einwandbehandlung-Training','Kaltakquise-Training','Sprach- und Stimmtraining','Auftreten im Video-Call','Call-Analyse','Chat-Analyse','Skripte anfertigen','Fertige Skripte nach Branche','Vorlagen & Leitfäden','Mindset-Coaching','Bewerbungs-Check','Angebots-Check','Personal Branding','Start in die Selbstständigkeit','CRM- und KI-Tools im Vertrieb','Mini-Kurse für Einsteiger'];
 const OFFERS = [
-  {cat:'Skripte',t:'Follow-up-Skript nach No-Show',s:'Felix',r:'Pro',st:4.6,n:12,pr:19,reg:'Bayern'},
-  {cat:'Skripte',t:'Preis-Einwand: 7 Antworten',s:'Tobias',r:'Elite',st:4.9,n:31,pr:24,reg:'Bayern'},
-  {cat:'Skripte',t:'Setter-Skript Immobilien',s:'Hannah',r:'Rising',st:4.4,n:5,pr:22,reg:'Bayern'},
-  {cat:'Skripte',t:'Upsell-Skript nach Abschluss',s:'Felix',r:'Pro',st:4.5,n:9,pr:17,reg:'Bayern'},
-  {cat:'Skripte',t:'Telefon-Opener in 15 Sekunden',s:'Mia',r:'Rookie',st:4.2,n:2,pr:9,reg:'Bayern'},
-  {cat:'Skripte',t:'Closing-Skript Solar',s:'Tobias',r:'Elite',st:4.8,n:26,pr:39,reg:'Bayern'},
-  {cat:'Skripte',t:'High-Ticket Closing-Skript (Coaching)',s:'Lena',r:'Elite',st:4.9,n:37,pr:49,reg:'Bayern'},
-  {cat:'Skripte',t:'Kaltakquise-Skript B2B Handwerk',s:'Jonas',r:'Pro',st:4.7,n:21,pr:29,reg:'Bayern'},
-  {cat:'Skripte',t:'Setter-Opener für Instagram-DMs',s:'Sofia',r:'Pro',st:4.6,n:18,pr:19,reg:'Nordrhein-Westfalen'},
-  {cat:'Call-Analysen & Einschätzungen',t:'Ich analysiere deinen Sales-Call (Video-Feedback)',s:'Lena',r:'Elite',st:5.0,n:44,pr:79,reg:'Bayern'},
-  {cat:'Call-Analysen & Einschätzungen',t:'Einschätzung: Passt dein Angebot zum Markt?',s:'Marco',r:'Rising',st:4.4,n:6,pr:25,reg:'Berlin'},
-  {cat:'Coaching & 1:1',t:'1:1 Einwand-Training (60 Min.)',s:'Jonas',r:'Pro',st:4.8,n:29,pr:89,reg:'Bayern'},
-  {cat:'Coaching & 1:1',t:'Vom Setter zum Closer – Mentoring',s:'Lena',r:'Elite',st:4.9,n:15,pr:149,reg:'Hamburg'},
-  {cat:'Vorlagen & Leitfäden',t:'CRM-Pipeline-Vorlage + Follow-up-Plan',s:'Amira',r:'Rookie',st:4.5,n:4,pr:15,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Follow-up-Skript nach No-Show',s:'Felix',r:'Pro',st:4.6,n:12,pr:19,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Preis-Einwand: 7 Antworten',s:'Tobias',r:'Elite',st:4.9,n:31,pr:24,reg:'Bayern'},
+  {cat:'Fertige Skripte nach Branche',t:'Setter-Skript Immobilien',s:'Hannah',r:'Rising',st:4.4,n:5,pr:22,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Upsell-Leitfaden nach Abschluss',s:'Felix',r:'Pro',st:4.5,n:9,pr:17,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Telefon-Opener in 15 Sekunden',s:'Mia',r:'Rookie',st:4.2,n:2,pr:9,reg:'Bayern'},
+  {cat:'Fertige Skripte nach Branche',t:'Closing-Skript Solar',s:'Tobias',r:'Elite',st:4.8,n:26,pr:39,reg:'Bayern'},
+  {cat:'Fertige Skripte nach Branche',t:'High-Ticket Closing-Skript (Coaching)',s:'Lena',r:'Elite',st:4.9,n:37,pr:49,reg:'Bayern'},
+  {cat:'Fertige Skripte nach Branche',t:'Kaltakquise-Skript B2B Handwerk',s:'Jonas',r:'Pro',st:4.7,n:21,pr:29,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Setter-Opener für Instagram-DMs',s:'Sofia',r:'Pro',st:4.6,n:18,pr:19,reg:'Nordrhein-Westfalen'},
+  {cat:'Call-Analyse',t:'Ich analysiere deinen Sales-Call (Video-Feedback)',s:'Lena',r:'Elite',st:5.0,n:44,pr:79,reg:'Bayern'},
+  {cat:'Angebots-Check',t:'Einschätzung: Ist dieser Auftrag seriös und fair bezahlt?',s:'Marco',r:'Rising',st:4.4,n:6,pr:25,reg:'Berlin'},
+  {cat:'Einwandbehandlung-Training',t:'1:1 Einwand-Training (60 Min.)',s:'Jonas',r:'Pro',st:4.8,n:29,pr:89,reg:'Bayern'},
+  {cat:'1:1 Closing-Coaching',t:'Vom Setter zum Closer – Mentoring',s:'Lena',r:'Elite',st:4.9,n:15,pr:149,reg:'Hamburg'},
+  {cat:'CRM- und KI-Tools im Vertrieb',t:'CRM-Pipeline-Vorlage + Follow-up-Plan',s:'Amira',r:'Rookie',st:4.5,n:4,pr:15,reg:'Bayern'},
   {cat:'Vorlagen & Leitfäden',t:'Einwand-Bibliothek (120 Antworten)',s:'Sofia',r:'Pro',st:4.8,n:52,pr:39,reg:'Hessen'},
-  {cat:'Mini-Kurse',t:'Remote Closer in 14 Tagen',s:'Lena',r:'Elite',st:4.7,n:63,pr:199,reg:'Bayern'},
-  {cat:'Sonstiges',t:'LinkedIn-Profil-Check für Closer',s:'Marco',r:'Rising',st:4.3,n:3,pr:19,reg:'Berlin'},
+  {cat:'Mini-Kurse für Einsteiger',t:'Remote Closer in 14 Tagen',s:'Lena',r:'Elite',st:4.7,n:63,pr:199,reg:'Bayern'},
+  {cat:'Personal Branding',t:'LinkedIn-Profil-Check für Closer',s:'Marco',r:'Rising',st:4.3,n:3,pr:19,reg:'Berlin'},
+  {cat:'Skripte anfertigen',t:'Individuelles Closing-Skript für dein Angebot',s:'Tobias',r:'Elite',st:4.9,n:19,pr:149,reg:'Bayern'},
+  {cat:'Chat-Setting-Training',t:'Chat-Setting: 4 Wochen Begleitung',s:'Sofia',r:'Pro',st:4.8,n:23,pr:129,reg:'Nordrhein-Westfalen'},
+  {cat:'Sprach- und Stimmtraining',t:'Stimme & Betonung am Telefon (45 Min.)',s:'Felix',r:'Pro',st:4.7,n:14,pr:59,reg:'Bayern'},
 ];
+// Partner: je ein hervorgehobener Experte pro Dienstleistung (Beispieldaten)
+const PARTNERS = [
+  {n:'Lena',r:'Elite',s:'Call-Analyse',bio:'Closerin im High-Ticket-Coaching. Analysiert deine Calls per Video und zeigt dir, an welcher Stelle der Abschluss verloren geht.'},
+  {n:'Tobias',r:'Elite',s:'Skripte anfertigen',bio:'Schreibt Closing- und Setting-Skripte passgenau für dein Angebot und deine Zielgruppe.'},
+  {n:'Jonas',r:'Pro',s:'Einwandbehandlung-Training',bio:'Trainiert mit dir die häufigsten Einwände, bis die Antworten sitzen.'},
+  {n:'Sofia',r:'Pro',s:'Chat-Setting-Training',bio:'Setterin für Instagram und LinkedIn. Begleitet dich vom ersten Opener bis zum gebuchten Termin.'},
+  {n:'Felix',r:'Pro',s:'Sprach- und Stimmtraining',bio:'Arbeitet mit dir an Tempo, Pausen und Betonung, damit du am Telefon souverän klingst.'},
+];
+const partnerOf = s => PARTNERS.find(p=>p.s===s && MCATS.includes(p.s));
+function partnersRow(){
+  const ps=PARTNERS.filter(p=>MCATS.includes(p.s)); if(!ps.length) return '';
+  return `<div class="mb-6"><div class="flex items-center gap-2 mb-3"><p class="font-semibold">Unsere Partner</p><span class="text-[10px] uppercase tracking-wide text-muted border border-line rounded px-1.5">Partner</span></div>
+    <div class="flex gap-4 overflow-x-auto noscroll pb-1">${ps.map(p=>`<button onclick="personModal('${p.n}')" class="flex flex-col items-center gap-1.5 shrink-0 w-[108px]">
+      <div class="w-[88px] h-[88px] rounded-full p-[3px] gold-bg"><div class="w-full h-full rounded-full bg-panel border-2 border-bg overflow-hidden">${avatar(p.n)}</div></div>
+      <span class="text-sm font-semibold truncate w-full text-center">${p.n}</span>
+      <span class="text-[11px] text-gold leading-tight text-center">${p.s}</span></button>`).join('')}</div></div>`;
+}
+function personModal(n){
+  const p=PARTNERS.find(x=>x.n===n), offers=OFFERS.filter(o=>o.s===n && MCATS.includes(o.cat));
+  const r=(p&&p.r)||(offers[0]&&offers[0].r)||'Rookie';
+  const rt=offers.length?(offers.reduce((s,o)=>s+o.st,0)/offers.length).toFixed(1):null;
+  document.getElementById('modal').innerHTML = `
+  <div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()">
+    <div class="card w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <button onclick="closeModal()" class="absolute top-3 right-4 text-muted hover:text-white text-xl">✕</button>
+      <div class="flex items-center gap-4">
+        <div class="w-20 h-20 rounded-full gold-bg p-[3px] shrink-0"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(n)}</div></div>
+        <div class="min-w-0"><div class="text-lg">${nameRank(n,r)}</div>
+          ${rt?`<p class="text-sm mt-0.5">⭐ <b>${rt.replace('.',',')}</b> <span class="text-muted">· ${offers.reduce((s,o)=>s+o.n,0)} Bewertungen</span></p>`:''}
+          ${p?`<span class="inline-block mt-1.5 text-[11px] px-2.5 py-0.5 rounded-full border" style="border-color:#D4A843;color:#F3D58A">Partner für ${p.s}</span>`:''}</div></div>
+      ${p?`<p class="text-sm text-muted mt-4">${p.bio}</p>`:''}
+      ${offers.length?`<p class="text-xs uppercase tracking-wide text-muted mt-5 mb-2">Angebote im Marktplatz</p><div class="space-y-2">${offers.map(o=>`<div class="flex items-center justify-between gap-3 border border-line rounded-xl px-3 py-2"><span class="min-w-0"><span class="block text-[10px] uppercase tracking-wide text-gold">${o.cat}</span><span class="block text-sm truncate">${o.t}</span></span><span class="font-serif text-lg text-gold whitespace-nowrap">${o.pr} €</span></div>`).join('')}</div>`:''}
+      <div id="pmsg" class="mt-5">${S.user?`<textarea id="pmtxt" maxlength="500" class="input h-24 text-sm" placeholder="Schreib ${n} eine Nachricht …"></textarea>
+        <button class="btn-gold w-full mt-2" onclick="sendPersonMsg('${n}')">Nachricht senden</button>`
+        :`<button class="btn-gold w-full" onclick="closeModal();go('login')">Anmelden, um ${n} zu schreiben</button>`}</div>
+    </div></div>`;
+}
+function sendPersonMsg(n){
+  const t=document.getElementById('pmtxt'); if(!t||!t.value.trim()){ if(t) t.focus(); return; }
+  document.getElementById('pmsg').innerHTML=`<p class="text-emerald-400 text-center text-sm">✓ Nachricht an ${n} gesendet. Die Antwort findest du unter Nachrichten.</p>`;
+}
+// Dienstleistungen live aus der Zentrale (Supabase)
+fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/settings?select=value&key=eq.markt',{headers:{apikey:'sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D'}})
+  .then(r=>r.ok?r.json():null).then(rows=>{ const l=rows&&rows[0]&&rows[0].value&&rows[0].value.services; if(Array.isArray(l)&&l.length){ MCATS.splice(0,MCATS.length,...l.map(x=>String(x).replace(/[<>"'`]/g,'').trim()).filter(Boolean).slice(0,40)); if(S.mcat!=='Alle'&&!MCATS.includes(S.mcat)) S.mcat='Alle'; if(typeof route==='function' && route()==='markt') render(); } }).catch(()=>{});
 const NEARBY = [['Felix','Pro','München · 4 km'],['Hannah','Rising','Augsburg · 31 km'],['Tobias','Elite','München · 7 km'],['Mia','Rookie','Freising · 22 km'],['David','Pro','Rosenheim · 48 km']];
 const BADGE_IC = {'Founding Member':'b_found','Ausweis verifiziert':'b_id','Verified 50k':'b_money','High-Ticket':'b_diamond','Platform-verified':'b_shield'};
 function badgeIcon(b){ return `<span title="${b}" aria-label="${b}" class="w-11 h-11 rounded-full flex items-center justify-center" style="border:1px solid #D4A843;color:#D4A843;background:rgb(var(--panel));box-shadow:0 0 14px rgba(212,168,67,.18)">${svg(BADGE_IC[b]||'b_shield',20)}</span>`; }
@@ -880,25 +927,31 @@ function regionSelect(){
 }
 function markt(){
   const inRegion = o => S.wide ? true : o.reg===S.region;
-  const pool = OFFERS.filter(inRegion);
+  const pool = OFFERS.filter(inRegion).filter(o=>MCATS.includes(o.cat));
+  const pt = S.mcat!=='Alle' ? partnerOf(S.mcat) : null;
   const cats = ['Alle',...MCATS];
   const shown = S.mcat==='Alle'?pool:pool.filter(o=>o.cat===S.mcat);
   const slots = c => OFFERS.filter(o=>o.cat===c && o.reg===S.region).length;
   return `<div class="px-4 py-6 max-w-6xl mx-auto">
     <div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><a href="#forum" class="btn-ghost">Forum</a><span class="btn-gold">Marktplatz</span></div>
     <div class="flex flex-wrap justify-between items-end gap-3 mb-4">
-      <div><h1 class="font-serif text-3xl">Marktplatz</h1><p class="text-muted text-sm">Member verkaufen Skripte, Call-Analysen, Coachings & mehr – verdiene passiv mit deinem Wissen.</p></div>
+      <div><h1 class="font-serif text-3xl">Marktplatz</h1><p class="text-muted text-sm">Coaching, Training, Analysen und Skripte von Membern für Member – buche Experten oder verdiene mit deinem Wissen.</p></div>
       ${S.user?`<button onclick="sellModal()" class="btn-gold">+ Angebot einstellen</button>`:`<a href="#login" class="btn-gold">Anmelden zum Inserieren</a>`}
     </div>
+    ${partnersRow()}
     ${regionSelect()}
     <div class="flex gap-2 overflow-x-auto noscroll mb-5">${cats.map(c=>`<button onclick="S.mcat='${c}';render()" class="${S.mcat===c?'btn-gold':'btn-ghost'} text-sm whitespace-nowrap">${c}${c!=='Alle'&&!S.wide?` <span class="opacity-70">${slots(c)}/10</span>${10-slots(c)<=3&&10-slots(c)>0?' <span class="text-[10px] font-bold" style="color:#ff8a5c">🔥</span>':''}`:''}</button>`).join('')}</div>
     ${!S.wide?scarcity(slots):''}
     ${!S.wide&&S.mcat!=='Alle'?`<p class="text-xs text-muted mb-4">${slots(S.mcat)} von 10 Plätzen in ${S.region} belegt${slots(S.mcat)>=10?' – <span class="text-gold">Kategorie voll, Warteliste</span>':''}</p>`:''}
+    ${pt?`<button onclick="personModal('${pt.n}')" class="card w-full text-left p-4 mb-4 flex items-center gap-4" style="border-color:#D4A843;box-shadow:0 0 0 1px #A97C22 inset">
+      <span class="w-14 h-14 rounded-full gold-bg p-[2px] shrink-0"><span class="block w-full h-full rounded-full overflow-hidden bg-panel">${avatar(pt.n)}</span></span>
+      <span class="flex-1 min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">Partner für ${pt.s}</span><span class="block mt-0.5">${nameRank(pt.n,pt.r)}</span><span class="block text-xs text-muted truncate">${pt.bio}</span></span>
+      <span class="btn-ghost text-sm whitespace-nowrap">Profil ansehen</span></button>`:''}
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       ${shown.length?shown.map(o=>`<div class="card p-5 flex flex-col">
         <span class="text-[10px] uppercase tracking-wide text-gold">${o.cat}</span>
         <p class="font-semibold mt-1 flex-1">${o.t}</p>
-        <div class="mt-3 text-sm">${nameRank(o.s,o.r)}</div>
+        <button onclick="personModal('${o.s}')" class="mt-3 text-sm flex items-center gap-2 text-left"><span class="w-7 h-7 rounded-full overflow-hidden shrink-0">${avatar(o.s)}</span>${nameRank(o.s,o.r)}</button>
         <p class="text-xs text-muted mt-1">⭐ ${o.st.toFixed(1)} · ${o.n} Bewertungen · ${o.reg}</p>
         <div class="flex justify-between items-center mt-4"><span class="font-serif text-2xl text-gold">${o.pr} €</span><button onclick="${S.user?`buyModal('${o.t.replace(/'/g,'')}',${o.pr})`:`go('login')`}" class="btn-ghost text-sm">Kaufen</button></div>
       </div>`).join(''):`<div class="card p-6 text-muted text-sm">Noch keine Angebote in ${S.region}. ${S.user?'Sei der Erste und sichere dir einen der 10 Plätze!':''} Tipp: „Ganzes Land durchsuchen“ aktivieren.</div>`}

@@ -239,6 +239,7 @@ const save = () => {}; // Beispielbereiche werden nicht gespeichert
 
 const fmtAt = iso => { const d=new Date(iso), now=new Date(); const same=d.toDateString()===now.toDateString(); return same ? 'heute ' + d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('de-DE'); };
 
+const MARKT_DEFAULT=['1:1 Closing-Coaching','1:1 Setter-Coaching','Chat-Setting-Training','Einwandbehandlung-Training','Kaltakquise-Training','Sprach- und Stimmtraining','Auftreten im Video-Call','Call-Analyse','Chat-Analyse','Skripte anfertigen','Fertige Skripte nach Branche','Vorlagen & Leitfäden','Mindset-Coaching','Bewerbungs-Check','Angebots-Check','Personal Branding','Start in die Selbstständigkeit','CRM- und KI-Tools im Vertrieb','Mini-Kurse für Einsteiger'];
 const LOADERR={jobs:'',clients:''};
 const loadNote=k=>LOADERR[k]?`<div class="card" style="border-color:#b4543c;margin-bottom:14px"><b>⚠️ Daten konnten nicht geladen werden:</b> ${esc(LOADERR[k])}</div>`:'';
 async function refreshData(b){ if(b) b.disabled=true; try{ await loadAll(); drawNav(); $('main').innerHTML=(PAGES[route()]||dashboard)(); toast('Aktualisiert'); }catch(e){ toast('⚠️ '+e.message); if(b) b.disabled=false; } }
@@ -257,7 +258,7 @@ async function loadAll(){
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
-  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{};
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
@@ -823,7 +824,17 @@ function inhalte(){
       ${sw('breathing','Atempause','Wirkt, sobald die echte App läuft')}
       ${sw('arena','Closer Arena','Wirkt, sobald die echte App läuft')}
     </div>
+    <div class="card" style="grid-column:1/-1"><div class="row between"><div><h3>Marktplatz · Dienstleistungen</h3><p class="muted" style="font-size:13px;margin-top:2px">Nur diese Dienstleistungen können im Marktplatz angeboten werden. Eine pro Zeile, die Reihenfolge gilt auch in der App.</p></div><span class="pill p-gold" id="mkCount">${(D.markt||[]).length} Dienstleistungen</span></div>
+      <textarea class="in" id="mkList" rows="12" style="margin-top:12px;line-height:1.6" oninput="$('mkCount').textContent=this.value.split('\\n').filter(x=>x.trim()).length+' Dienstleistungen'">${esc((D.markt||[]).join('\n'))}</textarea>
+      <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="saveMarkt(this)">Speichern</button><button class="btn" onclick="$('mkList').value=MARKT_DEFAULT.join('\\n');$('mkList').dispatchEvent(new Event('input'))">Standardliste laden</button></div></div>
   </div>`;
+}
+async function saveMarkt(b){
+  const seen=new Set(), l=$('mkList').value.split('\n').map(x=>x.replace(/[<>"'`]/g,'').trim()).filter(x=>x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase()));
+  if(!l.length) return toast('Mindestens eine Dienstleistung eintragen');
+  if(l.length>40) return toast('Maximal 40 Dienstleistungen');
+  if(l.some(x=>x.length>60)) return toast('Bitte kürzer: maximal 60 Zeichen pro Zeile');
+  b.disabled=true; try{ await setKey('markt',{services:l}); D.markt=l; render(); toast('Gespeichert – ist live in der App'); }finally{ b.disabled=false; }
 }
 async function setFeature(k,v){ D.settings.features[k]=v; await setKey('features',D.settings.features); toast('Gespeichert'); }
 async function saveHero(){ const h={top:$('h1').value.trim(),gold:$('h2').value.trim(),sub:$('h3').value.trim(),lead:$('h4').value.trim()}; await setKey('hero',h); Object.assign(D.settings,{heroTop:h.top,heroGold:h.gold,heroSub:h.sub,heroLead:h.lead}); render(); toast('Hero ist live'); }
