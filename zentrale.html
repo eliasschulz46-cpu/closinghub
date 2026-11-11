@@ -261,7 +261,7 @@ async function loadAll(){
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
-  D.ticker = tk.map(t=>({ id:t.id, title:t.title, offer:t.offer, partner:t.partner||'', price:+t.price||0, until:t.until||'', on:t.active, sort:t.sort }));
+  D.ticker = tk.map(t=>({ id:t.id, title:t.title, offer:t.offer, partner:t.partner||'', price:+t.price||0, until:t.until||'', on:t.active, sort:t.sort, link:t.link||'' }));
   D.invoices = inv.map(i=>({ id:i.id, no:i.no, date:i.created_at.slice(0,10), cust:i.customer, email:i.email||'', item:i.item, net:+i.net, vat:+i.vat, st:i.status, client_id:i.client_id??null }));
   D.tickets = tix.map(t=>({ id:t.id, from:t.from_name, email:t.email, topic:t.topic, prio:t.prio, st:t.status, msgs:t.messages||[] }));
   D.ai = ai.map(a=>({ id:a.id, area:a.area||'Allgemein', title:a.title, text:a.text||'', why:a.why||'', impact:a.impact||'', st:a.status, t:fmtAt(a.created_at) }));
@@ -288,8 +288,7 @@ const NAV = [
   ['dashboard','Dashboard','dash'],
   ['mitteilungen','KI-Mitteilungen','spark', ()=>D.ai.filter(a=>a.st==='neu').length],
   ['Geschäft'],
-  ['stellen','Stellenangebote','inbox', ()=>D.jobs.filter(j=>j.status==='anfrage').length],
-  ['auftraggeber','Auftraggeber','users', ()=>D.jobs.filter(j=>j.client_id&&j.status==='anfrage').length],
+  ['auftraggeber','Auftraggeber','users', ()=>D.jobs.filter(j=>j.status==='anfrage').length],
   ['rechnungen','Rechnungen','invoice', ()=>D.invoices.filter(i=>i.st==='überfällig').length],
   ['laufband','Laufband & Angebote','ticker'],
   ['anfragen','Anfragen & Warteliste','inbox', ()=>D.requests.filter(r=>r.st==='neu').length],
@@ -344,7 +343,7 @@ const JOB_FIELDS=[
   ['auftragsdauer','Auftragsdauer','text','z. B. 3 Monate oder unbefristet'],
 ];
 const jobDays = j => j.expires_at ? Math.max(0, Math.ceil((new Date(j.expires_at)-Date.now())/864e5)) : null;
-function stellen(){
+function stellenBlock(){
   const by=s=>D.jobs.filter(j=>j.status===s);
   const tabs=[['anfrage','Anfragen'],['entwurf','Entwürfe'],['live','Live'],['beendet','Beendet']];
   const list=by(jobTab);
@@ -361,9 +360,9 @@ function stellen(){
       ${j.status==='beendet'?`<button class="btn sm" onclick="editJob(${j.id})">Wieder veröffentlichen</button>`:''}
       ${j.kontakt_email?`<a class="btn sm" href="mailto:${esc(j.kontakt_email)}?subject=${encodeURIComponent('Dein Stellenangebot bei ClosingHub')}">Mail</a>`:''}
     </div></div>`;
-  return `<div class="row between"><div><h1 class="h1">Stellenangebote</h1><p class="sub">Anfragen von Auftraggebern prüfen, mit KI aufbereiten und in der App veröffentlichen.</p></div><div class="row"><button class="btn" onclick="refreshData(this)">↻ Aktualisieren</button><button class="btn gold-b" onclick="editJob()">+ Stelle anlegen</button></div></div>${loadNote('jobs')}
+  return `<div class="row between" id="jobsec" style="margin:30px 0 10px"><div><h3 style="font-size:18px">Stellenangebote</h3><p class="muted" style="font-size:13px;margin-top:2px">Anfragen prüfen, mit KI aufbereiten und in der App veröffentlichen.</p></div><button class="btn gold-b" onclick="editJob()">+ Stelle anlegen</button></div>${loadNote('jobs')}
   <div class="tabs">${tabs.map(([k,l])=>`<button class="${jobTab===k?'on':''}" onclick="jobTab='${k}';render()">${l} <span class="muted">${by(k).length}</span></button>`).join('')}</div>
-  <div class="grid">${list.map(card).join('')||`<div class="card empty">${jobTab==='anfrage'?'Noch keine Anfragen. Auftraggeber reichen Stellen über die Website ein („Stellenangebot einreichen“).':'Hier ist noch nichts.'}</div>`}</div>`;
+  <div class="grid">${list.map(card).join('')||`<div class="card empty">${jobTab==='anfrage'?'Noch keine Anfragen. Auftraggeber reichen Stellen über das Portal oder die Website ein.':'Hier ist noch nichts.'}</div>`}</div>`;
 }
 async function setJob(id,patch,msg){ await q(`jobs?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(D.jobs.find(j=>j.id===id),patch); render(); if(msg) toast(msg); }
 async function extendJob(id){ const j=D.jobs.find(x=>x.id===id); const base=Math.max(Date.now(), new Date(j.expires_at||Date.now()).getTime()); await setJob(id,{expires_at:new Date(base+30*864e5).toISOString()},'Um 30 Tage verlängert'); }
@@ -461,7 +460,8 @@ function auftraggeber(){
   const paid=D.invoices.filter(i=>i.client_id&&(i.st==='bezahlt'||i.st==='einbehalten')).reduce((a,i)=>a+gross(i),0);
   const open=D.invoices.filter(i=>i.client_id&&(i.st==='offen'||i.st==='überfällig')).reduce((a,i)=>a+gross(i),0);
   return `<div class="row between"><div><h1 class="h1">Auftraggeber</h1><p class="sub">Alle registrierten Auftraggeber, ihre Umsätze, Gebühren und Jobs. Registrierung läuft über das <a href="portal.html" target="_blank" class="gold">Auftraggeber-Portal ↗</a>.</p></div>
-    <div class="row"><input class="in" style="max-width:260px" placeholder="Auftraggeber suchen …" value="${esc(clQ)}" onchange="clQ=this.value;render()"><button class="btn" onclick="refreshData(this)">↻ Aktualisieren</button></div></div>${loadNote('clients')}${loadNote('jobs')}
+    <div class="row"><input class="in" style="max-width:260px" placeholder="Auftraggeber suchen …" value="${esc(clQ)}" onchange="clQ=this.value;render()"><button class="btn" onclick="refreshData(this)">↻ Aktualisieren</button></div></div>${loadNote('clients')}
+  ${D.jobs.some(j=>j.status==='anfrage')?`<div class="card" style="border-color:var(--gold);margin-bottom:14px;cursor:pointer" onclick="jobTab='anfrage';render();document.getElementById('jobsec').scrollIntoView({behavior:'smooth'})"><b class="gold">${D.jobs.filter(j=>j.status==='anfrage').length} Stellenangebot(e) warten auf deine Prüfung</b> <span class="muted">· hier klicken ↓</span></div>`:''}
   <div class="grid g4" style="margin-bottom:16px">
     ${kpi('Auftraggeber', D.clients.filter(c=>c.status==='aktiv').length, D.clients.length+' gesamt')}
     ${kpi('Jobs online', live.length, D.jobs.filter(j=>j.status==='anfrage').length+' warten auf Prüfung')}
@@ -476,13 +476,7 @@ function auftraggeber(){
     <td>${eur(feeOf(c,'fee_job'))}${c.fee_job!==null&&c.fee_job!==undefined?' <span class="pill p-gold">individuell</span>':''}</td>
     <td>${pill(clStatus(c.status))}</td><td style="text-align:right"><button class="btn sm">Profil</button></td></tr>`).join('')||`<tr><td colspan="8" class="empty">${D.clients.length?'Niemand gefunden.':'Noch keine registrierten Auftraggeber. Sie registrieren sich im Auftraggeber-Portal (portal.html).'}</td></tr>`}
   </tbody></table></div>
-  <h3 style="margin:26px 0 10px;font-size:16px">Veröffentlichte Jobs (${live.length})</h3>
-  <div class="card tw"><table><thead><tr><th>Job</th><th>Auftraggeber</th><th>Provision</th><th>Online seit</th><th>Läuft noch</th><th></th></tr></thead><tbody>
-  ${live.map(j=>`<tr><td><b>${esc(j.titel||'–')}</b> ${j.top?'<span class="pill p-gold">★ Top</span>':''}<div class="muted" style="font-size:12px">${esc([j.rolle,j.region,j.modell].filter(Boolean).join(' · '))}</div></td>
-    <td>${j.client_id&&clById(j.client_id)?`<a class="gold" href="#auftraggeber" onclick="clSel=${j.client_id};render()">${esc(clById(j.client_id).firma)}</a>`:esc(j.firma||'–')}</td>
-    <td>${esc(j.provision||'–')}</td><td class="muted">${j.published_at?fmtAt(j.published_at):'–'}</td><td>${jobDays(j)??'–'} Tage</td>
-    <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="editJob(${j.id})">${ic('pen',13)} Bearbeiten</button> <button class="btn sm" onclick="extendJob(${j.id})">+ 30 Tage</button> <button class="btn sm red" onclick="setJob(${j.id},{status:'beendet'},'Beendet')">Beenden</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine veröffentlichten Jobs.</td></tr>'}
-  </tbody></table></div>`;
+  ${stellenBlock()}`;
 }
 function clProfile(c){
   const jobs=clJobs(c.id), inv=clInv(c.id);
@@ -629,9 +623,10 @@ function rechnungen(){
     <input class="in" style="max-width:240px" placeholder="Rechnung suchen …" value="${esc(invQ)}" onchange="invQ=this.value;render()"></div>
   <div class="card tw"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Kunde</th><th>Leistung</th><th>Brutto</th><th>Status</th><th></th></tr></thead><tbody>
   ${list.map(i=>`<tr><td style="white-space:nowrap"><b>${esc(i.no)}</b></td><td class="muted">${new Date(i.date).toLocaleDateString('de-DE')}</td><td>${esc(i.cust)}</td><td class="muted">${esc(i.item)}</td><td><b>${eur(gross(i))}</b></td><td>${pill(i.st)}</td>
-    <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="showInvoice(${i.id})">Ansehen</button> ${i.st==='offen'||i.st==='überfällig'?`<button class="btn sm" onclick="invSet(${i.id},'bezahlt')">${ic('check',13)} Bezahlt</button> ${i.st==='offen'?`<button class="btn sm" onclick="invSet(${i.id},'überfällig')">Überfällig</button>`:''} <a class="btn sm" href="mailto:${esc(i.email)}?subject=${encodeURIComponent('Zahlungserinnerung '+i.no)}">Erinnern</a>`:''}</td></tr>`).join('')||`<tr><td colspan="7" class="empty">${D.invoices.length?'Keine Rechnungen gefunden.':'Noch keine Rechnungen. Leg oben rechts die erste an.'}</td></tr>`}
+    <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="showInvoice(${i.id})">Ansehen</button> ${i.st==='offen'||i.st==='überfällig'?`<button class="btn sm" onclick="invSet(${i.id},'bezahlt')">${ic('check',13)} Bezahlt</button> ${i.st==='offen'?`<button class="btn sm" onclick="invSet(${i.id},'überfällig')">Überfällig</button>`:''} <a class="btn sm" href="mailto:${esc(i.email)}?subject=${encodeURIComponent('Zahlungserinnerung '+i.no)}">Erinnern</a>`:''} <button class="btn sm red" title="Rechnung löschen" onclick="invDel(${i.id})">${ic('trash',13)}</button></td></tr>`).join('')||`<tr><td colspan="7" class="empty">${D.invoices.length?'Keine Rechnungen gefunden.':'Noch keine Rechnungen. Leg oben rechts die erste an.'}</td></tr>`}
   </tbody></table></div>`;
 }
+async function invDel(id){ const i=D.invoices.find(x=>x.id===id); if(!i) return; if(!confirm(`Rechnung ${i.no} (${i.cust}, ${eur(gross(i))}) endgültig löschen?\n\nDas kann nicht rückgängig gemacht werden.`)) return; await q(`invoices?id=eq.${id}`,{method:'DELETE'}); D.invoices=D.invoices.filter(x=>x.id!==id); render(); toast('Rechnung gelöscht'); }
 async function invSet(id,st){ await q(`invoices?id=eq.${id}`,{method:'PATCH',body:{status:st}}); D.invoices.find(i=>i.id===id).st=st; render(); toast('Gespeichert'); }
 function nextNo(){ const y=new Date().getFullYear(); const n=Math.max(0,...D.invoices.filter(i=>i.no.startsWith('CH-'+y)).map(i=>+i.no.split('-')[2]||0))+1; return `CH-${y}-${String(n).padStart(4,'0')}`; }
 function newInvoice(cid){
@@ -685,7 +680,7 @@ function laufband(){
     <p class="muted" style="font-size:12px;margin-top:8px">${on.length} aktiv · Umsatz Laufband: <b class="gold">${eur(on.reduce((a,t)=>a+(+t.price||0),0))} / Monat</b></p></div>
   <div class="card tw"><table><thead><tr><th></th><th>Angebot</th><th>Partner</th><th>Preis/Monat</th><th>Läuft bis</th><th>Aktiv</th><th></th></tr></thead><tbody>
   ${D.ticker.map((t,i)=>`<tr><td style="white-space:nowrap"><button class="btn sm" ${i?'':'disabled'} onclick="moveTick(${i},-1)">${ic('up',13)}</button> <button class="btn sm" ${i<D.ticker.length-1?'':'disabled'} onclick="moveTick(${i},1)">${ic('down',13)}</button></td>
-    <td><b>${esc(t.title)}</b><div class="gold" style="font-size:12px">${esc(t.offer)}</div></td><td class="muted">${esc(t.partner)||'–'}</td><td>${eur(t.price||0)}</td>
+    <td><b>${esc(t.title)}</b><div class="gold" style="font-size:12px">${esc(t.offer)}</div>${t.link?`<a class="muted" style="font-size:12px" href="${esc(t.link)}" target="_blank" rel="noopener">↗ ${esc(t.link.replace(/^https?:\/\//,'').slice(0,40))}</a>`:'<span class="muted" style="font-size:12px">kein Link</span>'}</td><td class="muted">${esc(t.partner)||'–'}</td><td>${eur(t.price||0)}</td>
     <td class="${t.until&&new Date(t.until)<new Date(Date.now()+864e6)?'down':'muted'}">${t.until?new Date(t.until).toLocaleDateString('de-DE'):'unbegrenzt'}</td>
     <td><label class="switch"><input type="checkbox" ${t.on?'checked':''} onchange="tickActive(${t.id},this.checked)"><span></span></label></td>
     <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="editTick(${t.id})">${ic('pen',13)}</button> <button class="btn sm red" onclick="delTick(${t.id})">${ic('trash',13)}</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Noch keine Angebote.</td></tr>'}
@@ -699,22 +694,26 @@ async function moveTick(i,d){
 }
 async function delTick(id){ const t=D.ticker.find(x=>x.id===id); if(!confirm(`„${t.title}“ wirklich löschen?`)) return; await q(`ticker?id=eq.${id}`,{method:'DELETE'}); D.ticker=D.ticker.filter(x=>x.id!==id); render(); toast('Gelöscht'); }
 function editTick(id){
-  const t=D.ticker.find(x=>x.id===id)||{title:'',offer:'',partner:'',price:149,until:'',on:true};
+  const t=D.ticker.find(x=>x.id===id)||{title:'',offer:'',partner:'',price:149,until:'',on:true,link:''};
   openModal(`<h3 style="font-size:18px">${id?'Angebot bearbeiten':'Neues Angebot'}</h3>
   <div class="grid" style="gap:12px;margin-top:12px">
     <label class="f">Titel<input class="in" id="tT" value="${esc(t.title)}" placeholder="z. B. Profi-Headset"></label>
     <label class="f">Angebot (gold)<input class="in" id="tO" value="${esc(t.offer)}" placeholder="z. B. −25 % für Member"></label>
+    <label class="f">Link zum Produkt (wird in der App beim Antippen geöffnet)<input class="in" id="tL" type="url" value="${esc(t.link||'')}" placeholder="https://…"></label>
     <label class="f">Partner (nur für dich sichtbar)<input class="in" id="tP" value="${esc(t.partner)}"></label>
     <div class="grid g2" style="gap:12px"><label class="f">Preis / Monat (€)<input class="in" id="tPr" type="number" value="${t.price}"></label><label class="f">Läuft bis (leer = unbegrenzt)<input class="in" id="tU" type="date" value="${t.until}"></label></div>
     <div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="saveTick(${id||0},this)">Speichern</button></div></div>`);
 }
 async function saveTick(id,b){
   const v={title:$('tT').value.trim(),offer:$('tO').value.trim(),partner:$('tP').value.trim(),price:+$('tPr').value||0,until:$('tU').value||null};
+  let L=$('tL').value.trim(); if(L && !/^https?:\/\//i.test(L)) L='https://'+L;
+  if(L && !/^https?:\/\/[^\s"<>]+\.[^\s"<>]+$/i.test(L)) return toast('Der Link sieht nicht richtig aus');
+  v.link = L||null;
   if(!v.title||!v.offer) return toast('Titel und Angebot ausfüllen');
   b.disabled=true;
   try{
-    if(id){ await q(`ticker?id=eq.${id}`,{method:'PATCH',body:v}); Object.assign(D.ticker.find(x=>x.id===id),{...v,until:v.until||''}); }
-    else { const [r]=await q('ticker',{method:'POST',prefer:'return=representation',body:{...v,active:true,sort:D.ticker.length+1}}); D.ticker.push({id:r.id,title:r.title,offer:r.offer,partner:r.partner||'',price:+r.price,until:r.until||'',on:r.active,sort:r.sort}); }
+    if(id){ await q(`ticker?id=eq.${id}`,{method:'PATCH',body:v}); Object.assign(D.ticker.find(x=>x.id===id),{...v,until:v.until||'',link:v.link||''}); }
+    else { const [r]=await q('ticker',{method:'POST',prefer:'return=representation',body:{...v,active:true,sort:D.ticker.length+1}}); D.ticker.push({id:r.id,title:r.title,offer:r.offer,partner:r.partner||'',price:+r.price,until:r.until||'',on:r.active,sort:r.sort,link:r.link||''}); }
     closeModal(); render(); toast('Gespeichert – ist live');
   }catch(e){ b.disabled=false; }
 }
@@ -895,7 +894,7 @@ $('q').addEventListener('keydown',e=>{
 });
 
 /* ===== Render ===== */
-const PAGES={auftraggeber,stellen,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
+const PAGES={auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
 async function reload(){ LOADED=false; await render(); toast('Aktualisiert'); }
 async function render(){
   const logged=!!SESSION;

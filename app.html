@@ -169,7 +169,7 @@ tailwind.config = { theme: { extend: {
 
 <script>
 const S = { region:'Bayern', country:'Deutschland', wide:false, mcat:'Alle', user:false, mode:'consumer', liked:{}, job:1, sent:false, chat:1, badgesShown:null, player:null, ptimer:null };
-try{ const s=JSON.parse(localStorage.getItem('ch_prev')||'{}'); Object.assign(S,{user:!!s.user,mode:s.mode||'consumer'}); }catch(e){}
+try{ const s=JSON.parse(localStorage.getItem('ch_prev')||'{}'); Object.assign(S,{user:!!s.user,mode:'consumer'}); }catch(e){}
 const save=()=>{ try{localStorage.setItem('ch_prev',JSON.stringify({user:S.user,mode:S.mode}))}catch(e){} };
 
 const ME = { name:'Elias', rank:'Elite', role:'Closer', years:5, country:'Spanien', langs:'DE, EN', bio:'High-Ticket Closer · B2B & Coaching', followers:312, following:180, rating:4.8,
@@ -248,9 +248,11 @@ fetch(`https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/jobs_public?select=*`,{h
   }).catch(()=>{});
 // Laufband live aus der Zentrale (Supabase)
 const SB_URL='https://bzcnqggwyfocpbkwqhsy.supabase.co', SB_KEY='sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D';
-fetch(`${SB_URL}/rest/v1/ticker_public?select=title,offer&order=sort.asc`,{headers:{apikey:SB_KEY}})
-  .then(r=>r.ok?r.json():null).then(rows=>{ if(Array.isArray(rows)&&rows.length){ PERKS.splice(0,PERKS.length,...rows.map(r=>[r.title,r.offer,'Anzeige'])); } }).catch(()=>{});
-function adItem(i,cls){ const p=PERKS[i%PERKS.length]; return `<a id="adcur" href="#vorteile" class="absolute inset-0 flex items-center justify-center gap-2 whitespace-nowrap ${cls}"><span class="pointer-events-auto flex items-center gap-2"><span class="text-[10px] uppercase tracking-wide text-muted border border-line rounded px-1.5">Anzeige</span><span>${p[0]}</span><span class="text-gold">· ${p[1]}</span></span></a>`; }
+const adLink = u => /^https?:\/\//i.test(u||'') ? String(u).replace(/"/g,'%22').replace(/</g,'%3C') : '';
+const tickGet = cols => fetch(`${SB_URL}/rest/v1/ticker_public?select=${cols}&order=sort.asc`,{headers:{apikey:SB_KEY}}).then(r=>r.ok?r.json():null);
+tickGet('title,offer,link').then(rows=>rows||tickGet('title,offer'))
+  .then(rows=>{ if(Array.isArray(rows)&&rows.length){ PERKS.splice(0,PERKS.length,...rows.map(r=>[r.title,r.offer,'Anzeige',adLink(r.link)])); const c=document.getElementById('adcur'); if(c&&c.parentElement) c.parentElement.innerHTML=adItem(S.adIdx||0,''); if(typeof route==='function' && route()==='vorteile') render(); } }).catch(()=>{});
+function adItem(i,cls){ const p=PERKS[i%PERKS.length]; return `<a id="adcur" ${p[3]?`href="${p[3]}" target="_blank" rel="noopener sponsored"`:'href="#vorteile"'} class=""absolute inset-0 flex items-center justify-center gap-2 whitespace-nowrap ${cls}"><span class="pointer-events-auto flex items-center gap-2"><span class="text-[10px] uppercase tracking-wide text-muted border border-line rounded px-1.5">Anzeige</span><span>${p[0]}</span><span class="text-gold">· ${p[1]}</span></span></a>`; }
 // Laufband: alle 20 s fährt die Anzeige raus (1,5 s beschleunigen) und die nächste rein (1,5 s abbremsen)
 S.adIdx = 0;
 setInterval(()=>{
@@ -287,6 +289,7 @@ const OFFERS = [
 ];
 const NEARBY = [['Felix','Pro','München · 4 km'],['Hannah','Rising','Augsburg · 31 km'],['Tobias','Elite','München · 7 km'],['Mia','Rookie','Freising · 22 km'],['David','Pro','Rosenheim · 48 km']];
 const BADGE_IC = {'Founding Member':'b_found','Ausweis verifiziert':'b_id','Verified 50k':'b_money','High-Ticket':'b_diamond','Platform-verified':'b_shield'};
+function badgeIcon(b){ return `<span title="${b}" aria-label="${b}" class="w-11 h-11 rounded-full flex items-center justify-center" style="border:1px solid #D4A843;color:#D4A843;background:rgb(var(--panel));box-shadow:0 0 14px rgba(212,168,67,.18)">${svg(BADGE_IC[b]||'b_shield',20)}</span>`; }
 function badgePill(b){ return `<span class="inline-flex items-center gap-2 pl-1 pr-3.5 py-1 rounded-full border text-sm" style="border-color:#3a3020;background:rgb(var(--chip))"><span class="w-7 h-7 rounded-full flex items-center justify-center" style="border:1px solid #D4A843;color:#D4A843;background:rgb(var(--panel))">${svg(BADGE_IC[b]||'b_shield',15)}</span>${b}</span>`; }
 const RKC = {Rookie:'color:#8A8A93;border-color:#232327',Rising:'color:#7dd3fc;border-color:#0c4a6e',Pro:'color:#6ee7b7;border-color:#064e3b',Elite:'color:#D4A843;border-color:#A97C22',Legend:'color:#F3D58A;border-color:#D4A843;background:#2a2210'};
 
@@ -367,7 +370,6 @@ function shell(content){
       <nav class="flex flex-col gap-1 flex-1">${side}</nav>
       <div class="flex flex-col gap-1 border-t border-line pt-4">
         <button onclick="toggleTheme()" class="nav-a text-left">${ic(isLight()?'moon':'sun')}<span class="hidden xl:inline text-sm">${isLight()?'Nacht-Modus':'Tag-Modus'}</span></button>
-        <button onclick="toggleMode()" class="nav-a text-left">${ic('swap')}<span class="hidden xl:inline text-sm">${S.mode==='consumer'?'Zu Auftraggeber wechseln':'Zu Member wechseln'}</span></button>
         <a href="#${S.user?'einstellungen':'login'}" class="nav-a ${S.user?'':'opacity-40'}">${ic('gear')}<span class="hidden xl:inline">Einstellungen</span></a>
       </div>
     </aside>
@@ -431,14 +433,14 @@ function feed(){
 }
 function spotlightBanner(){
   return `<div class="card p-4 lg:hidden"><p class="text-xs uppercase tracking-wider text-muted mb-2">Spotlight des Monats</p>
-  <div class="flex justify-between text-sm"><div>👑 ${nameRank('Lena','Elite')}</div><div>🚀 ${nameRank('Marco','Rising')}</div></div></div>`;
+  <div class="flex justify-between text-sm"><div><p class="text-xs text-muted">👑 Top-Profi</p>${nameRank('Lena','Elite')}</div><div><p class="text-xs text-muted">🚀 Top-Rookie</p>${nameRank('Marco','Rising')}</div></div></div>`;
 }
 function rightRail(){
   return `<aside class="hidden lg:block w-80 shrink-0 space-y-5 pt-6">
     ${S.user?`<div class="flex items-center gap-3"><div class="w-12 h-12 rounded-full gold-bg p-[2px]"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(ME.name)}</div></div>${nameRank(ME.name,ME.rank,ME.medals)}</div>`:`<a href="#login" class="btn-gold block">Kostenlos anmelden</a>`}
     <div class="card p-4"><p class="text-xs uppercase tracking-wider text-muted mb-3">Spotlight des Monats</p>
-      <p class="text-sm">👑 Top Closer/Setter</p>${nameRank('Lena','Elite')}<p class="text-xs text-muted mb-3">6 Hires · Ø 4,9</p>
-      <p class="text-sm">🚀 Rookie des Monats</p>${nameRank('Marco','Rising')}<p class="text-xs text-muted">Neu seit 5 Wochen · 2 Hires</p></div>
+      <p class="text-sm">👑 Top-Profi</p>${nameRank('Lena','Elite')}<p class="text-xs text-muted mb-3">2.480 Punkte · meiste Punkte ab Rang 4 (Elite, Legend)</p>
+      <p class="text-sm">🚀 Top-Rookie</p>${nameRank('Marco','Rising')}<p class="text-xs text-muted">1.120 Punkte · meiste Punkte bis Rang 2 (Rookie, Rising)</p></div>
     <div class="card p-4"><div class="flex justify-between mb-2"><p class="text-xs uppercase tracking-wider text-muted">Neueste Jobs</p><a href="#jobs" class="text-xs text-gold">Alle</a></div>
       ${JOBS.slice(0,3).map(j=>`<a href="#jobs" onclick="S.job=${j.id}" class="block py-2 border-t border-line first:border-0"><p class="text-sm font-medium">${j.t}</p><p class="text-xs text-gold">${j.pay}</p></a>`).join('')}</div>
     <div class="card p-4"><p class="text-xs uppercase tracking-wider text-muted mb-3">Member in deiner Nähe · ${S.region}</p>
@@ -459,7 +461,7 @@ function startBreath(){
   S.breath={left:30};
   const o=document.createElement('div'); o.id='breath'; o.className='breath-ov';
   o.innerHTML=`<p class="text-xs uppercase tracking-[.4em] text-muted">Kurze Pause</p>
-    <div class="breath-wrap"><div class="breath-c"></div><p id="bphase" class="breath-t">Einatmen</p></div>
+    <div class="breath-wrap"><div class="breath-c"></div></div><p id="bphase" class="breath-t">Einatmen</p>
     <p class="text-sm text-muted">Atme mit dem Kreis – 30 Sekunden nur für dich.</p>
     <p id="bleft" class="font-serif text-gold text-2xl">30</p>`;
   document.body.appendChild(o);
@@ -576,26 +578,29 @@ function labelContrast(el){
   }catch(e){ set(false); } };
   img.complete?run():img.onload=run;
 }
+const JROLES = ['Closer','Setter','Coach','Sonstiges'];
+const jobFits = x => { const r=S.jrole; if(!r) return true; const s=(x.roles||'')+' '+(x.t||''); if(r==='Sonstiges') return !/closer|setter|coach/i.test(s); return new RegExp(r,'i').test(s); };
 function jobs(){
   const j = JOBS.find(x=>x.id===S.job)||JOBS[0];
-  const list = JOBS.map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4 ${x.id===j.id?'!border-gold':''}" style="${x.id===j.id?'border-color:#D4A843':''}">
+  const list = JOBS.filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4 ${x.id===j.id?'!border-gold':''}" style="${x.id===j.id?'border-color:#D4A843':''}">
     <p class="font-semibold">${x.t}</p><p class="text-sm text-muted">${x.ind} · ${x.reg}</p><p class="text-sm text-gold mt-1">${x.pay}</p><p class="text-xs text-muted mt-1">${x.d===0?'Heute':'vor '+x.d+' Tagen'}</p></button>`).join('');
   const action = !S.user ? `<a href="#login" class="btn-gold">🔒 Anmelden zum Bewerben</a>`
     : S.sent ? `<p class="text-emerald-400">✓ Bewerbung gesendet. Der Auftraggeber sieht dein anonymes Profil und kann den Kontakt für 25 € freischalten.</p>`
     : `<div class="space-y-3">
         <p class="text-sm text-muted">Fragen des Auftraggebers:</p>
-        ${(j.fragen&&j.fragen.length?j.fragen:['Wie viele High-Ticket-Abschlüsse hattest du 2026?']).map((f,i)=>`<input class="input" placeholder="${i+1}. ${esc(f)}">`).join('')}
-        <textarea id="amsg" maxlength="300" oninput="document.getElementById('cnt').textContent=this.value.length" class="input h-24" placeholder="Kurze Nachricht an den Auftraggeber (max. 300 Zeichen)"></textarea>
-        <div class="flex justify-between items-center gap-3"><span class="text-xs text-muted"><span id="cnt">0</span>/300 · Kontaktdaten werden automatisch gefiltert</span><button onclick="applyJob()" class="btn-gold">Anonym bewerben</button></div></div>`;
+        ${(j.fragen&&j.fragen.length?j.fragen:['Wie viele High-Ticket-Abschlüsse hattest du 2026?']).map((f,i)=>`<input class="input text-sm placeholder:text-xs" placeholder="${i+1}. ${esc(f)}">`).join('')}
+        <textarea id="amsg" maxlength="300" oninput="document.getElementById('cnt').textContent=this.value.length" class="input h-24 text-sm placeholder:text-xs" placeholder="Kurze Nachricht an den Auftraggeber (max. 300 Zeichen)"></textarea>
+        <div class="flex justify-between items-center gap-3"><span class="text-xs text-muted"><span id="cnt">0</span>/300 · Kontaktdaten werden automatisch gefiltert</span><button onclick="applyJob()" class="btn-gold text-sm whitespace-nowrap" style="padding:9px 14px">One-Klick-Bewerbung</button></div></div>`;
   return `<div class="px-4 py-6 max-w-6xl mx-auto">
     <div class="flex gap-2 mb-5"><span class="btn-gold">Jobs</span><a href="#forum" class="btn-ghost">Forum</a><a href="#markt" class="btn-ghost">Marktplatz</a></div>
     <div class="grid md:grid-cols-[340px_1fr] gap-5">
       <div class="space-y-3">
+        <div class="flex gap-2 flex-wrap pb-1">${JROLES.map(r=>`<button onclick="S.jrole=S.jrole==='${r}'?null:'${r}';render()" class="px-3.5 py-1.5 rounded-full border text-sm ${S.jrole===r?'text-black font-semibold':'text-muted'}" style="${S.jrole===r?'background:linear-gradient(135deg,#F3D58A,#D4A843 50%,#A97C22);border-color:#D4A843':'border-color:rgb(var(--line))'}">${r}</button>`).join('')}</div>
         <p class="text-xs uppercase tracking-wider text-gold">★ Top-Jobs</p>
-        ${JOBS.filter(x=>x.top).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4" style="border-color:#D4A843;box-shadow:0 0 0 1px #A97C22 inset"><span class="text-[10px] uppercase text-gold">Top-Job · Anzeige</span><p class="font-semibold">${x.t}</p><p class="text-sm text-gold">${x.pay}</p></button>`).join('')}
+        ${JOBS.filter(x=>x.top).filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4" style="border-color:#D4A843;box-shadow:0 0 0 1px #A97C22 inset"><span class="text-[10px] uppercase text-gold">Top-Job · Anzeige</span><p class="font-semibold">${x.t}</p><p class="text-sm text-gold">${x.pay}</p></button>`).join('')}
         ${Array.from({length:3-JOBS.filter(x=>x.top).length}).map(()=>`<div class="card p-4 text-sm text-muted border-dashed" style="border-style:dashed">Freier Top-Platz · <span class="text-gold">19 €</span> – für Auftraggeber</div>`).join('')}
         <p class="text-xs uppercase tracking-wider text-muted pt-2">Alle Jobs</p>
-        ${list}</div>
+        ${list||'<p class="text-sm text-muted">Gerade keine Jobs in dieser Kategorie.</p>'}</div>
       <div class="card p-6 h-fit md:sticky md:top-6">
         <p class="text-xs text-muted mb-2">🛡️ Anonymer, geprüfter Auftraggeber</p>
         <h1 class="font-serif text-3xl mb-1">${j.t}</h1>
@@ -727,19 +732,21 @@ function ctype(el,t){ [...document.getElementById('ctype').children].forEach(b=>
 function profile(){
   return `<div class="max-w-3xl mx-auto px-4 py-8">
     ${S.user?'':`<div class="card p-3 mb-6 text-sm text-center">👀 Beispielprofil – <a href="#login" class="text-gold">melde dich an</a>, um dein eigenes zu erstellen.</div>`}
-    <div class="flex items-start gap-6">
+    <div class="flex items-center gap-5">
       <div class="w-24 h-24 md:w-36 md:h-36 rounded-full gold-bg p-[3px] shrink-0"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(ME.name)}</div></div>
-      <div class="flex-1 space-y-3 min-w-0">
-        <div class="flex items-center gap-3 flex-wrap text-xl">${nameRank(ME.name,ME.rank,ME.medals)} ${S.user?'<a href="#einstellungen" class="text-lg">⚙️</a>':''}</div>
-        <div class="flex gap-5 text-sm flex-wrap"><span><b>${ME.followers}</b> Follower</span><span><b>${ME.following}</b> gefolgt</span><span>⭐ <b>${ME.rating}</b></span></div>
-        <p class="text-sm">${ME.role} ⭐ · ${ME.years} Jahre Erfahrung · ${ME.country} · ${ME.langs}</p>
-        <p class="text-sm text-muted">${ME.bio}</p>
-        <p class="text-xs text-muted">Tipp: Klick auf die kleine goldene Zahl hinter dem Rang → Medaillen-Tabelle</p>
+      <div class="flex-1 space-y-2 min-w-0">
+        <div class="flex items-center gap-3 flex-wrap text-xl">${nameRank(ME.name,ME.rank,ME.medals)} <span class="text-base whitespace-nowrap">⭐ <b>${ME.rating}</b></span></div>
+        <div class="flex gap-5 text-sm flex-wrap"><span><b>${ME.followers}</b> Follower</span><span><b>${ME.following}</b> gefolgt</span></div>
       </div></div>
-    <div class="mt-8"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen</p>
-      <div class="flex flex-wrap gap-2">${S.badgesShown.map(badgePill).join('')}</div></div>
+    <div class="mt-5 space-y-2 text-left">
+      <p class="text-sm">${ME.role} ⭐ · ${ME.years} Jahre Erfahrung · ${ME.country} · ${ME.langs}</p>
+      <p class="text-sm text-muted">${ME.bio}</p>
+      <p class="text-xs text-muted">Tipp: Klick auf die kleine goldene Zahl hinter dem Rang → Medaillen-Tabelle</p>
+    </div>
+    <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen</p>
+      <div class="flex flex-wrap gap-3">${S.badgesShown.map(badgeIcon).join('')}</div></div>
     <div class="mt-8 grid grid-cols-3 gap-1">${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
-    ${S.user?`<div class="mt-8 flex flex-wrap gap-3"><button onclick="toggleMode()" class="btn-ghost">${S.mode==='consumer'?'Auftraggeber werden / wechseln':'Zu Member wechseln'}</button><button onclick="S.user=false;save();go('feed')" class="btn-ghost">Abmelden</button></div>`:''}
+    ${S.user?`<div class="mt-8 flex flex-wrap gap-3"><button onclick="S.user=false;save();go('feed')" class="btn-ghost">Abmelden</button></div>`:''}
   </div>`;
 }
 
@@ -991,7 +998,7 @@ function designs(){
 }
 function vorteile(){
   return `<div class="max-w-3xl mx-auto px-4 py-8"><h1 class="font-serif text-2xl mb-1">Member-Vorteile</h1><div class="flex justify-between items-start gap-3 mb-6"><p class="text-muted text-sm">Exklusive Deals – für alle Member, manche erst ab Rang Pro/Elite. Alle Angebote sind Anzeigen.</p><a href="#werbung" class="btn-ghost text-sm whitespace-nowrap">Werbung schalten</a></div>
-  <div class="grid sm:grid-cols-2 gap-4">${PERKS.map(p=>`<div class="card p-5"><span class="text-[10px] uppercase tracking-wide ${p[2]==='Anzeige'?'text-muted':'text-gold'}">${p[2]}</span><p class="font-semibold mt-1">${p[0]}</p><p class="text-gold text-sm">${p[1]}</p><button class="btn-ghost text-sm mt-3">${S.user?'Deal holen':'Anmelden zum Freischalten'}</button></div>`).join('')}</div></div>`;
+  <div class="grid sm:grid-cols-2 gap-4">${PERKS.map(p=>`<div class="card p-5"><span class="text-[10px] uppercase tracking-wide ${p[2]==='Anzeige'?'text-muted':'text-gold'}">${p[2]}</span><p class="font-semibold mt-1">${p[0]}</p><p class="text-gold text-sm">${p[1]}</p>${p[3]&&S.user?`<a class="btn-ghost text-sm mt-3 inline-block" href="${p[3]}" target="_blank" rel="noopener sponsored">Deal holen ↗</a>`:`<button class="btn-ghost text-sm mt-3">${S.user?'Deal holen':'Anmelden zum Freischalten'}</button>`}</div>`).join('')}</div></div>`;
 }
 function search(){ return `<div class="max-w-lg mx-auto px-4 py-8"><input class="input" placeholder="Member, Jobs, Marktplatz durchsuchen…"></div>`; }
 
@@ -999,7 +1006,6 @@ function login(){
   return `<div class="min-h-screen flex items-center justify-center px-4"><div class="card w-full max-w-sm p-8 space-y-5">
     <h1 class="text-4xl text-center"><span class="chlogo ${LP()}"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></span></h1>
     <p class="text-center text-muted text-sm">Die Plattform für Closer, Setter & Auftraggeber</p>
-    <div class="grid grid-cols-2 gap-2"><button id="r1" class="btn-gold" onclick="S.mode='consumer';r1.className='btn-gold';r2.className='btn-ghost'">Closer / Setter</button><button id="r2" class="btn-ghost" onclick="S.mode='auftraggeber';r2.className='btn-gold';r1.className='btn-ghost'">Auftraggeber</button></div>
     <button class="btn-ghost w-full" onclick="doLogin()">Weiter mit Google</button>
     <div class="flex items-center gap-3 text-xs text-muted"><div class="flex-1 h-px bg-line"></div>oder<div class="flex-1 h-px bg-line"></div></div>
     <input class="input" type="email" placeholder="E-Mail"><input class="input" type="password" placeholder="Passwort">
