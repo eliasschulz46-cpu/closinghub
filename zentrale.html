@@ -136,6 +136,10 @@
   .light .lgi .lg-c{opacity:1;filter:brightness(.12)}
   .light .lgi canvas{display:none}
   .light .lgi .lg-hub{opacity:1!important;filter:none!important}
+  details.rt{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;background:var(--bg2)}
+  details.rt summary{cursor:pointer;list-style:none;display:flex;align-items:center}
+  details.rt summary::before{content:'▸';color:var(--gold);margin-right:10px;transition:transform .2s}
+  details.rt[open] summary::before{transform:rotate(90deg)}
 </style>
 </head>
 <body>
@@ -249,7 +253,7 @@ async function loadAll(){
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
-  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{};
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{};
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
@@ -614,7 +618,12 @@ function anfragen(){
     <p style="margin-top:8px;white-space:pre-wrap">${esc(r.text)||'<span class="muted">Keine Nachricht</span>'}</p>
     <div class="row" style="margin-top:12px"><a class="btn sm gold-b" href="mailto:${esc(r.email)}?subject=${encodeURIComponent('Deine Anfrage bei ClosingHub')}" onclick="reqDone(${r.id})">Antworten</a>${r.type==='Werbung'?`<button class="btn sm" onclick="location.hash='laufband';setTimeout(editTick,50)">Als Laufband-Angebot anlegen</button>`:`<button class="btn sm" onclick="location.hash='rechnungen?neu'">Rechnung schreiben</button>`}${r.st!=='beantwortet'?`<button class="btn sm" onclick="reqDone(${r.id})">Als erledigt markieren</button>`:''}</div></div>`).join('')||'<div class="card empty">Noch keine Anfragen.</div>'}</div>`
   :`<div class="row between" style="margin-bottom:12px"><span class="muted">${D.waitlist.length} Einträge</span><button class="btn" onclick="csv('warteliste')">CSV-Export</button></div>
-    <div class="card tw"><table><thead><tr><th>Name</th><th>E-Mail</th><th>Abo</th><th>Eingetragen</th></tr></thead><tbody>${D.waitlist.map(w=>`<tr><td><b>${esc(w.name)}</b></td><td class="muted">${esc(w.email)}</td><td><span class="pill ${w.abo==='dayone'?'p-gold':''}">${abo[w.abo]||esc(w.abo)}</span></td><td class="muted">${fmtAt(w.at)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">Noch keine Einträge.</td></tr>'}</tbody></table></div>`}`;
+    <div class="card tw"><table><thead><tr><th>Name</th><th>E-Mail</th><th>Abo</th><th>Eingetragen</th><th></th></tr></thead><tbody>${D.waitlist.map(w=>`<tr><td><b>${esc(w.name)}</b></td><td class="muted">${esc(w.email)}</td><td><span class="pill ${w.abo==='dayone'?'p-gold':''}">${abo[w.abo]||esc(w.abo)}</span></td><td class="muted">${fmtAt(w.at)}</td><td style="text-align:right"><button class="btn sm red" onclick="delWait(${w.id})">${ic('trash',13)} Entfernen</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Noch keine Einträge.</td></tr>'}</tbody></table></div>`}`;
+}
+async function delWait(id){
+  const w=D.waitlist.find(x=>x.id===id); if(!w) return;
+  if(!confirm(`${w.name} (${w.email}) wirklich von der Warteliste entfernen? Das kann nicht rückgängig gemacht werden.`)) return;
+  await q(`waitlist?id=eq.${id}`,{method:'DELETE'}); D.waitlist=D.waitlist.filter(x=>x.id!==id); render(); toast('Von der Warteliste entfernt');
 }
 async function reqDone(id){ await q(`contact_requests?id=eq.${id}`,{method:'PATCH',body:{status:'beantwortet'}}); D.requests.find(r=>r.id===id).st='beantwortet'; setTimeout(render,200); }
 
@@ -721,7 +730,28 @@ function einstellungen(){
     <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('marketFee','Marktplatz-Gebühr','0.1','%')}${n('topJob','Top-Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
     <div class="card"><h3>Verbindung</h3><div class="row" style="margin-bottom:8px"><span class="pill p-ok">Supabase verbunden</span></div><p class="muted" style="font-size:13px">Angemeldet als ${esc(SESSION&&SESSION.email)}</p><button class="btn" style="margin-top:12px" onclick="logout()">Abmelden</button></div>
   </div>
-  <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn gold-b" onclick="saveSettings(this)">Alles speichern</button></div>`;
+  <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn gold-b" onclick="saveSettings(this)">Alles speichern</button></div>
+  <div class="card" style="margin-top:22px"><div class="row between"><h3 style="margin:0">Rechtstexte</h3><span class="muted" style="font-size:12px">Werden auf der Website im Footer angezeigt</span></div>
+    <p class="muted" style="font-size:12.5px;margin:6px 0 12px">Formatierung: Zeile mit <b>## </b> am Anfang = Zwischenüberschrift · Leerzeile = neuer Absatz. Leeres Feld = Text ist auf der Website ausgeblendet (Impressum/Datenschutz: dann gilt der Standardtext).</p>
+    ${RECHT.map(([k,l])=>`<details class="rt" ${k==='impressum'?'':''}><summary><b>${l}</b><span class="muted" style="font-size:12px;margin-left:8px">${(D.recht[k]||'').trim()?'eigener Text':'Standard / leer'}</span></summary>
+      <textarea class="in" id="rt-${k}" rows="14" style="margin-top:10px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55">${esc(D.recht[k]||'')}</textarea>
+      <div class="row" style="justify-content:space-between;margin-top:8px"><button class="btn sm" onclick="loadSiteText('${k}')">Aktuellen Website-Text laden</button><button class="btn gold-b sm" onclick="saveRecht('${k}',this)">${l} speichern</button></div></details>`).join('')}
+  </div>`;
+}
+const RECHT=[['impressum','Impressum'],['datenschutz','Datenschutz'],['agb','AGB'],['widerruf','Widerrufsbelehrung']];
+async function saveRecht(k,b){
+  D.recht={...(D.recht||{}),[k]:$('rt-'+k).value.trim()}; b.disabled=true;
+  try{ await setKey('recht',D.recht); toast('Gespeichert – ist live auf der Website'); }finally{ b.disabled=false; }
+}
+async function loadSiteText(k){
+  const id={impressum:'m-imp',datenschutz:'m-ds',agb:'m-agb',widerruf:'m-wid'}[k];
+  try{
+    const html=await fetch('index.html',{cache:'no-store'}).then(r=>r.text());
+    const box=new DOMParser().parseFromString(html,'text/html').querySelector('#'+id+' .box');
+    if(!box) return toast('Auf der Website gibt es dafür noch keinen Text');
+    const out=[]; [...box.children].forEach(el=>{ if(el.matches('h3,button,[data-rt]')) return; if(el.matches('h4')) out.push('## '+el.textContent.trim()); else out.push(el.innerHTML.replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').trim()); });
+    const v=out.filter(Boolean).join('\n\n'); if(!v) return toast('Kein Text gefunden'); $('rt-'+k).value=v; toast('Website-Text geladen – jetzt anpassen und speichern');
+  }catch(e){ toast('Konnte den Website-Text nicht laden'); }
 }
 async function saveSettings(b){
   document.querySelectorAll('[data-k]').forEach(i=>{ D.settings[i.dataset.k]=parseFloat(i.value)||0; });

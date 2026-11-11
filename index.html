@@ -848,7 +848,7 @@
 <footer>
   <div class="wrap">
     <span><span class="logo play" style="font-size:20px"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></span> &nbsp;© 2026</span>
-    <span><button data-open="imp">Impressum</button><button data-open="ds">Datenschutz</button></span>
+    <span><button data-open="imp">Impressum</button><button data-open="ds">Datenschutz</button><button data-open="agb" id="ft-agb" style="display:none">AGB</button><button data-open="wid" id="ft-wid" style="display:none">Widerruf</button></span>
   </div>
 </footer>
 
@@ -877,6 +877,8 @@
   <h4>Verantwortlich für den Inhalt</h4><p>Elias Schulz, Anschrift wie oben</p>
 </div></div>
 
+<div class="modal" id="m-agb"><div class="card box"><button class="x" data-close>×</button><h3>AGB</h3><div data-rt></div></div></div>
+<div class="modal" id="m-wid"><div class="card box"><button class="x" data-close>×</button><h3>Widerrufsbelehrung</h3><div data-rt></div></div></div>
 <div class="modal" id="m-ds"><div class="card box"><button class="x" data-close>×</button>
   <h3>Datenschutz</h3>
   <h4>Wer ist verantwortlich?</h4><p>Elias Schulz, Carrer de Julio Cortázar 18, 07181 Calvià, Spanien · info@getclosinghub.com</p>
@@ -1011,10 +1013,20 @@ function applyPrices(){
 new MutationObserver(()=>applyPrices()).observe(document.body,{childList:true,subtree:true});
 async function loadSettings(){
   try{
-    const r=await sb('settings?select=key,value&key=in.(hero,dayone,features,preise)'); if(!r.ok) return;
+    const r=await sb('settings?select=key,value&key=in.(hero,dayone,features,preise,recht)'); if(!r.ok) return;
     const S=Object.fromEntries((await r.json()).map(x=>[x.key,x.value]));
     if(S.hero){ const set=(id,v)=>{ const el=document.getElementById(id); if(v&&el) el.textContent=v; }; set('heroTop',S.hero.top==='Mehr closen –'?'':S.hero.top); set('heroGold',S.hero.gold==='mehr verdienen.'?'':S.hero.gold); set('heroSub',S.hero.sub); set('heroLead',S.hero.lead); }
     if(S.dayone && S.dayone.total){ SPOTS_TOTAL=S.dayone.total; drawLive(); drawMeter(); }
+    if(S.recht){
+      const esc=t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      const toHtml=t=>esc(t).split(/\n\s*\n/).map(b=>b.startsWith('## ')?`<h4>${b.slice(3)}</h4>`:`<p>${b.replace(/\n/g,'<br>').replace(/([\w.+-]+@[\w-]+\.[\w.]+)/g,'<a href="mailto:$1">$1</a>')}</p>`).join('');
+      [['impressum','m-imp',''],['datenschutz','m-ds',''],['agb','m-agb','ft-agb'],['widerruf','m-wid','ft-wid']].forEach(([k,id,ft])=>{
+        const t=(S.recht[k]||'').trim(); if(!t) return;
+        const box=document.querySelector('#'+id+' .box'); [...box.children].forEach(el=>{ if(!el.matches('h3,.x')) el.remove(); });
+        const d=document.createElement('div'); d.setAttribute('data-rt',''); d.innerHTML=toHtml(t); box.appendChild(d);
+        if(ft) document.getElementById(ft).style.display='';
+      });
+    }
     if(S.preise){ ['plus','premiumM','premiumY','unlock'].forEach(k=>{ if(+S.preise[k]>0) PRICES[k]=+S.preise[k]; }); }
     if(S.dayone && S.dayone.premiumMonths) PRICES.pm=+S.dayone.premiumMonths;
     applyPrices();
