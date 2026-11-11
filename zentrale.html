@@ -239,6 +239,9 @@ const save = () => {}; // Beispielbereiche werden nicht gespeichert
 
 const fmtAt = iso => { const d=new Date(iso), now=new Date(); const same=d.toDateString()===now.toDateString(); return same ? 'heute ' + d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('de-DE'); };
 
+const LOADERR={jobs:'',clients:''};
+const loadNote=k=>LOADERR[k]?`<div class="card" style="border-color:#b4543c;margin-bottom:14px"><b>⚠️ Daten konnten nicht geladen werden:</b> ${esc(LOADERR[k])}</div>`:'';
+async function refreshData(b){ if(b) b.disabled=true; try{ await loadAll(); drawNav(); $('main').innerHTML=(PAGES[route()]||dashboard)(); toast('Aktualisiert'); }catch(e){ toast('⚠️ '+e.message); if(b) b.disabled=false; } }
 async function loadAll(){
   const [wl, cr, st, tk, inv, tix, ai, jb, cl] = await Promise.all([
     q('waitlist?select=*&order=created_at.desc'),
@@ -248,8 +251,8 @@ async function loadAll(){
     q('invoices?select=*&order=created_at.desc'),
     q('tickets?select=*&order=created_at.desc'),
     q('ai_suggestions?select=*&order=created_at.desc'),
-    api('jobs?select=*&order=created_at.desc').catch(()=>[]),
-    api('clients?select=*&order=created_at.desc').catch(()=>[])
+    api('jobs?select=*&order=created_at.desc').then(r=>{LOADERR.jobs='';return r;}).catch(e=>{LOADERR.jobs=e.message;return [];}),
+    api('clients?select=*&order=created_at.desc').then(r=>{LOADERR.clients='';return r;}).catch(e=>{LOADERR.clients=e.message;return [];})
   ]);
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
@@ -345,7 +348,7 @@ function stellen(){
   const by=s=>D.jobs.filter(j=>j.status===s);
   const tabs=[['anfrage','Anfragen'],['entwurf','Entwürfe'],['live','Live'],['beendet','Beendet']];
   const list=by(jobTab);
-  const card=j=>`<div class="card"><div class="row between"><div class="row"><span class="pill ${j.top?'p-gold':''}">${j.top?'★ Top-Job':esc(j.rolle||'Anfrage')}</span><b>${esc(j.titel||j.firma||'Neue Anfrage')}</b></div>
+  const card=j=>`<div class="card"><div class="row between"><div class="row"><span class="pill ${j.top?'p-gold':''}">${j.top?'★ Top-Job':esc(j.rolle||'Anfrage')}</span><b>${esc(j.titel||j.firma||'Neue Anfrage')}</b>${j.top_wunsch&&!j.top?'<span class="pill p-gold">★ Top-Job gewünscht</span>':''}${j.client_id?'<span class="pill">Portal</span>':''}</div>
       <span class="muted" style="font-size:12px">${fmtAt(j.created_at)}</span></div>
     <div class="muted" style="font-size:12px;margin-top:4px">${esc(j.firma||'–')} · ${esc(j.kontakt_name||'')} ${j.kontakt_email?'· '+esc(j.kontakt_email):''}</div>
     ${j.status==='anfrage'?`<p style="margin-top:10px;white-space:pre-wrap;background:var(--bg2);border-radius:10px;padding:10px 12px;max-height:160px;overflow:auto">${esc(j.anfrage_text)||'<span class="muted">Kein Text</span>'}</p>`
@@ -358,7 +361,7 @@ function stellen(){
       ${j.status==='beendet'?`<button class="btn sm" onclick="editJob(${j.id})">Wieder veröffentlichen</button>`:''}
       ${j.kontakt_email?`<a class="btn sm" href="mailto:${esc(j.kontakt_email)}?subject=${encodeURIComponent('Dein Stellenangebot bei ClosingHub')}">Mail</a>`:''}
     </div></div>`;
-  return `<div class="row between"><div><h1 class="h1">Stellenangebote</h1><p class="sub">Anfragen von Auftraggebern prüfen, mit KI aufbereiten und in der App veröffentlichen.</p></div><button class="btn gold-b" onclick="editJob()">+ Stelle anlegen</button></div>
+  return `<div class="row between"><div><h1 class="h1">Stellenangebote</h1><p class="sub">Anfragen von Auftraggebern prüfen, mit KI aufbereiten und in der App veröffentlichen.</p></div><div class="row"><button class="btn" onclick="refreshData(this)">↻ Aktualisieren</button><button class="btn gold-b" onclick="editJob()">+ Stelle anlegen</button></div></div>${loadNote('jobs')}
   <div class="tabs">${tabs.map(([k,l])=>`<button class="${jobTab===k?'on':''}" onclick="jobTab='${k}';render()">${l} <span class="muted">${by(k).length}</span></button>`).join('')}</div>
   <div class="grid">${list.map(card).join('')||`<div class="card empty">${jobTab==='anfrage'?'Noch keine Anfragen. Auftraggeber reichen Stellen über die Website ein („Stellenangebot einreichen“).':'Hier ist noch nichts.'}</div>`}</div>`;
 }
@@ -395,6 +398,7 @@ function editJob(id, pre={}){
   Object.entries(pre).forEach(([k,v])=>{ if(v!==null&&v!==undefined&&v!=='') j[k]=v; });
   const jc = j.client_id ? clById(j.client_id) : null;
   if(jc && (!j.status || j.status==='anfrage')){ j.kosten_freischaltung=feeOf(jc,'fee_unlock'); j.kosten_top=feeOf(jc,'fee_top'); }
+  if(j.top_wunsch && (!j.status || j.status==='anfrage')) j.top=true;
   const fr=[0,1,2].map(i=>(j.fragen||[])[i]||'');
   const fld=([k,l,t,o])=>`<label class="f">${l}${t==='select'?`<select class="in" data-j="${k}">${o.map(x=>`<option ${x===j[k]?'selected':''}>${x}</option>`).join('')}</select>`:`<input class="in" data-j="${k}" value="${esc(j[k]||'')}" placeholder="${o}">`}</label>`;
   openModal(`<h3 style="font-size:18px">${id?'Stellenangebot prüfen':'Neue Stelle'}</h3>
@@ -406,6 +410,7 @@ function editJob(id, pre={}){
     <label class="f">Fragen an Bewerber (bis zu 3)${fr.map((x,i)=>`<input class="in" data-f="${i}" value="${esc(x)}" placeholder="Frage ${i+1}" style="margin-top:4px">`).join('')}</label>
   </div>
   <h3 style="margin:16px 0 8px">Veröffentlichung & Kosten</h3>
+  ${j.top_wunsch?'<p class="gold" style="font-size:13px;margin-bottom:8px">★ Der Auftraggeber hat Top-Job gebucht (Aufpreis wird mit abgerechnet).</p>':''}
   <div class="grid g2" style="gap:12px">
     <label class="f">Anzeigedauer (Tage)<input class="in" type="number" data-j="anzeige_tage" value="${j.anzeige_tage||30}"></label>
     <label class="f">Top-Job (oben, gold markiert)<select class="in" data-j="top"><option value="false" ${!j.top?'selected':''}>Nein</option><option value="true" ${j.top?'selected':''}>Ja</option></select></label>
@@ -456,7 +461,7 @@ function auftraggeber(){
   const paid=D.invoices.filter(i=>i.client_id&&(i.st==='bezahlt'||i.st==='einbehalten')).reduce((a,i)=>a+gross(i),0);
   const open=D.invoices.filter(i=>i.client_id&&(i.st==='offen'||i.st==='überfällig')).reduce((a,i)=>a+gross(i),0);
   return `<div class="row between"><div><h1 class="h1">Auftraggeber</h1><p class="sub">Alle registrierten Auftraggeber, ihre Umsätze, Gebühren und Jobs. Registrierung läuft über das <a href="portal.html" target="_blank" class="gold">Auftraggeber-Portal ↗</a>.</p></div>
-    <input class="in" style="max-width:260px" placeholder="Auftraggeber suchen …" value="${esc(clQ)}" onchange="clQ=this.value;render()"></div>
+    <div class="row"><input class="in" style="max-width:260px" placeholder="Auftraggeber suchen …" value="${esc(clQ)}" onchange="clQ=this.value;render()"><button class="btn" onclick="refreshData(this)">↻ Aktualisieren</button></div></div>${loadNote('clients')}${loadNote('jobs')}
   <div class="grid g4" style="margin-bottom:16px">
     ${kpi('Auftraggeber', D.clients.filter(c=>c.status==='aktiv').length, D.clients.length+' gesamt')}
     ${kpi('Jobs online', live.length, D.jobs.filter(j=>j.status==='anfrage').length+' warten auf Prüfung')}

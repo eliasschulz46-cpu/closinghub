@@ -327,7 +327,7 @@ const FIELDS=[
 function jobsPage(){
   return `<div class="row between"><div><h1 class="h1">Stellenangebote</h1><p class="sub">Reiche Jobs ein und verfolge ihren Status. Jedes Angebot wird vor der Veröffentlichung von uns geprüft.</p></div>
     ${ME.status==='aktiv'?`<button class="btn gold-b" onclick="jobForm()">${ic('plus',15)} Neues Stellenangebot</button>`:''}</div>${closedNote()}
-  <div class="grid">${JOBS.map(j=>`<div class="card"><div class="row between"><div class="row"><b style="font-size:16px">${esc(j.titel||'Neue Anfrage')}</b>${j.top?pill('★ Top-Job','p-gold'):''}</div>${pill(...ST[j.status])}</div>
+  <div class="grid">${JOBS.map(j=>`<div class="card"><div class="row between"><div class="row"><b style="font-size:16px">${esc(j.titel||'Neue Anfrage')}</b>${j.top?pill('★ Top-Job','p-gold'):j.top_wunsch?pill('★ Top-Job gebucht','p-gold'):''}</div>${pill(...ST[j.status])}</div>
     <div class="row" style="margin-top:8px;gap:6px">${[j.rolle,j.provision,j.region,j.modell,j.umfang].filter(Boolean).map(x=>pill(x)).join('')}</div>
     ${j.beschreibung||j.anfrage_text?`<p class="muted" style="margin-top:10px;white-space:pre-wrap;max-height:90px;overflow:hidden">${esc(j.beschreibung||j.anfrage_text)}</p>`:''}
     <div class="row between" style="margin-top:12px"><span class="muted" style="font-size:12px">Eingereicht am ${dt(j.created_at)}${j.status==='live'?` · online seit ${dt(j.published_at)}${days(j)!==null?` · noch ${days(j)} Tage`:''}`:''}${j.status==='abgelehnt'?' · Bei Fragen melde dich gern bei uns.':''}</span>
@@ -337,7 +337,7 @@ function jobsPage(){
 function jobForm(id, copyId){
   const src = JOBS.find(x=>x.id===(id||copyId)) || { rolle:'Closer', modell:'Remote' };
   const fld=([k,l,t,o])=>`<label class="f">${l}${t==='select'?`<select class="in" data-j="${k}">${o.map(x=>`<option ${x===src[k]?'selected':''}>${x}</option>`).join('')}</select>`:`<input class="in" data-j="${k}" value="${esc(src[k]||'')}" placeholder="${o}">`}</label>`;
-  const f=fee('fee_job');
+  const f=fee('fee_job'), ft=fee('fee_top');
   openModal(`<h3 style="font-size:18px">${id?'Stellenangebot bearbeiten':'Stellenangebot einreichen'}</h3>
   <p class="muted" style="font-size:13px;margin:4px 0 12px">Je genauer deine Angaben, desto schneller geht dein Job online. Dein Firmenname bleibt für Bewerber anonym.</p>
   <label class="f">Titel (optional)<input class="in" data-j="titel" value="${esc(id?src.titel||'':'')}" placeholder="z. B. High-Ticket Closer für Coaching-Angebot"></label>
@@ -346,22 +346,34 @@ function jobForm(id, copyId){
     <label class="f">Beschreibung des Jobs<textarea class="in" data-j="anfrage_text" rows="5" placeholder="Was ist die Aufgabe? Woher kommen die Leads? Was macht dein Angebot besonders?">${esc(src.anfrage_text||src.beschreibung||'')}</textarea></label>
     <label class="f">Das sollte die Person mitbringen<textarea class="in" data-j="anforderungen" rows="3" placeholder="z. B. 1 Jahr Erfahrung im High-Ticket-Closing">${esc(src.anforderungen||'')}</textarea></label>
   </div>
-  <p class="muted" style="font-size:12.5px;margin-top:12px">Kosten bei Veröffentlichung: <b class="gold">${f>0?eur(f)+' netto':'kostenlos'}</b> · Freischaltung pro Kandidat: <b class="gold">${eur(fee('fee_unlock'))} netto</b></p>
+  <label class="card" style="display:flex;gap:12px;align-items:flex-start;margin-top:14px;padding:14px;cursor:pointer;border-color:var(--gold,#c9a24a)">
+    <input type="checkbox" id="jTop" ${src.top_wunsch||src.top?'checked':''} onchange="jobCost()" style="width:20px;height:20px;margin-top:2px;flex:none;accent-color:#c9a24a">
+    <span><b>★ Als Top-Job buchen <span class="gold">+ ${eur(ft)} netto</span></b><br><span class="muted" style="font-size:12.5px">Dein Job steht ganz oben in der Jobbörse und ist gold markiert. So sehen ihn die meisten Closer und Setter zuerst.</span></span></label>
+  <p class="muted" style="font-size:12.5px;margin-top:12px">Kosten bei Veröffentlichung: <b class="gold" id="jCost" data-f="${f}" data-t="${ft}"></b> · Freischaltung pro Kandidat: <b class="gold">${eur(fee('fee_unlock'))} netto</b></p>
   <p id="jErr" class="down" style="display:none;font-size:13px;margin-top:8px"></p>
   <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="saveJob(${id||0},this)">${id?'Änderungen speichern':'Zur Prüfung einreichen'}</button></div>`);
+  jobCost();
 }
+function jobCost(){ const e=$('jCost'); if(!e) return; const s=(+e.dataset.f)+($('jTop')&&$('jTop').checked?(+e.dataset.t):0); e.textContent = s>0 ? eur(s)+' netto' : 'kostenlos'; }
 async function saveJob(id,b){
   const v={}; document.querySelectorAll('#mbox [data-j]').forEach(el=>{ const x=el.value.trim(); v[el.dataset.j]= x===''?null:x; });
+  v.top_wunsch = !!($('jTop') && $('jTop').checked);
   const err=$('jErr'), fail=m=>{ err.textContent=m; err.style.display='block'; };
   if(!v.provision) return fail('Bitte gib die Provision an.');
   if(!v.anfrage_text || v.anfrage_text.length<30) return fail('Bitte beschreib den Job in ein paar Sätzen.');
   if(v.anfrage_text.length>4800) return fail('Die Beschreibung ist zu lang (max. 4.800 Zeichen).');
   b.disabled=true;
   try{
-    if(id){ const [r]=await q(`jobs?id=eq.${id}`,{method:'PATCH',prefer:'return=representation',body:v}); Object.assign(JOBS.find(x=>x.id===id),r||v); }
-    else { const [r]=await q('jobs',{method:'POST',prefer:'return=representation',body:{...v,status:'anfrage',client_id:ME.id,firma:ME.firma,kontakt_name:ME.kontakt_name,kontakt_email:ME.email}}); JOBS.unshift(r); }
+    const send = body => id ? api(`jobs?id=eq.${id}`,{method:'PATCH',prefer:'return=representation',body})
+                            : api('jobs',{method:'POST',prefer:'return=representation',body:{...body,status:'anfrage',client_id:ME.id,firma:ME.firma,kontakt_name:ME.kontakt_name,kontakt_email:ME.email}});
+    let res;
+    try{ res = await send(v); }
+    catch(e){ if(!/top_wunsch/.test(e.message)) throw e; const w={...v}; delete w.top_wunsch; if(v.top_wunsch) w.anfrage_text=(w.anfrage_text+'\n\n[Top-Job gewünscht]').slice(0,4990); res = await send(w); }
+    const r=(res||[])[0];
+    if(!r) throw new Error('Das Angebot konnte nicht gespeichert werden. Bitte lade die Seite neu und versuch es noch einmal.');
+    if(id) Object.assign(JOBS.find(x=>x.id===id),r); else JOBS.unshift(r);
     closeModal(); location.hash='jobs'; render(); toast(id?'Gespeichert':'Eingereicht – wir prüfen dein Angebot');
-  }catch(e){ b.disabled=false; }
+  }catch(e){ b.disabled=false; fail('Fehler: '+e.message); }
 }
 
 /* ===== Rechnungen ===== */
