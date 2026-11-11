@@ -206,7 +206,7 @@ function openModal(html){ $('mbox').innerHTML=html; $('modal').classList.add('op
 function closeModal(){ $('modal').classList.remove('open'); }
 $('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
-const ST = { anfrage:['In Prüfung','p-gold'], entwurf:['In Prüfung','p-gold'], live:['Online','p-ok'], beendet:['Beendet',''], abgelehnt:['Abgelehnt','p-bad'] };
+const ST = { anfrage:['In Prüfung','p-gold'], entwurf:['In Prüfung','p-gold'], freigabe:['Bitte prüfen & veröffentlichen','p-gold'], live:['Online','p-ok'], beendet:['Beendet',''], abgelehnt:['Abgelehnt','p-bad'] };
 const INV = { bezahlt:'p-ok', offen:'p-warn', 'überfällig':'p-bad', einbehalten:'p-gold' };
 const pill = (t,c='') => `<span class="pill ${c}">${esc(t)}</span>`;
 const gross = i => (+i.net)*(1+(+i.vat)/100);
@@ -284,7 +284,7 @@ const closedNote = () => ME.status!=='aktiv' ? `<div class="demo" style="color:v
 
 /* ===== Dashboard ===== */
 function dashboard(){
-  const live=JOBS.filter(j=>j.status==='live'), pend=JOBS.filter(j=>j.status==='anfrage'||j.status==='entwurf');
+  const live=JOBS.filter(j=>j.status==='live'), pend=JOBS.filter(j=>j.status==='anfrage'||j.status==='entwurf'||j.status==='freigabe');
   const open=INVS.filter(i=>i.status==='offen'||i.status==='überfällig'), paid=INVS.filter(i=>i.status==='bezahlt');
   const kpi=(l,v,s='',c='')=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s ${c}">${s}</div></div>`;
   const soon=live.filter(j=>days(j)!==null&&days(j)<=7);
@@ -292,9 +292,10 @@ function dashboard(){
   return `<div class="row between"><div><h1 class="h1">${greet}${ME.kontakt_name?', '+esc(ME.kontakt_name.split(' ')[0]):''}</h1><p class="sub">${esc(ME.firma)} · Kunde seit ${dt(ME.created_at)}</p></div>
     ${ME.status==='aktiv'?`<button class="btn gold-b" onclick="jobForm()">${ic('plus',15)} Stellenangebot einreichen</button>`:''}</div>
   ${closedNote()}
+  ${ME.status==='aktiv'?JOBS.filter(j=>j.status==='freigabe').map(j=>`<div class="card" style="border-color:var(--gold);margin-bottom:14px"><div class="row between"><div><b class="gold">Deine Anzeige ist bereit</b><div style="margin-top:2px">${esc(j.titel||'Stellenangebot')}</div><div class="muted" style="font-size:12.5px">Bitte kurz prüfen. Danach kannst du sie mit einem Klick veröffentlichen.</div></div><button class="btn gold-b" onclick="reviewJob(${j.id})">Anzeige prüfen & veröffentlichen</button></div></div>`).join(''):''}
   <div class="grid g4">
     ${kpi('Jobs online', live.length, soon.length?soon.length+' laufen bald aus':'alles im grünen Bereich', soon.length?'down':'')}
-    ${kpi('In Prüfung', pend.length, 'wir melden uns per E-Mail')}
+    ${kpi('In Prüfung', pend.length, JOBS.some(j=>j.status==='freigabe')?JOBS.filter(j=>j.status==='freigabe').length+' warten auf deine Freigabe':'wir melden uns per E-Mail', JOBS.some(j=>j.status==='freigabe')?'gold':'')}
     ${kpi('Offene Rechnungen', eur(open.reduce((a,i)=>a+gross(i),0)), open.length+' offen', open.length?'down':'')}
     ${kpi('Bisher bezahlt', eur(paid.reduce((a,i)=>a+gross(i),0)), paid.length+' Rechnungen')}
   </div>
@@ -325,14 +326,49 @@ const FIELDS=[
   ['auftragsdauer','Wie lange?','text','z. B. 3 Monate oder unbefristet'],
 ];
 function jobsPage(){
-  return `<div class="row between"><div><h1 class="h1">Stellenangebote</h1><p class="sub">Reiche Jobs ein und verfolge ihren Status. Jedes Angebot wird vor der Veröffentlichung von uns geprüft.</p></div>
+  return `<div class="row between"><div><h1 class="h1">Stellenangebote</h1><p class="sub">Reiche Jobs ein und verfolge ihren Status. Wir bereiten jede Anzeige auf, du prüfst sie und veröffentlichst sie selbst.</p></div>
     ${ME.status==='aktiv'?`<button class="btn gold-b" onclick="jobForm()">${ic('plus',15)} Neues Stellenangebot</button>`:''}</div>${closedNote()}
   <div class="grid">${JOBS.map(j=>`<div class="card"><div class="row between"><div class="row"><b style="font-size:16px">${esc(j.titel||'Neue Anfrage')}</b>${j.top?pill('★ Top-Job','p-gold'):j.top_wunsch?pill('★ Top-Job gebucht','p-gold'):''}</div>${pill(...ST[j.status])}</div>
     <div class="row" style="margin-top:8px;gap:6px">${[j.rolle,j.provision,j.region,j.modell,j.umfang].filter(Boolean).map(x=>pill(x)).join('')}</div>
     ${j.beschreibung||j.anfrage_text?`<p class="muted" style="margin-top:10px;white-space:pre-wrap;max-height:90px;overflow:hidden">${esc(j.beschreibung||j.anfrage_text)}</p>`:''}
     <div class="row between" style="margin-top:12px"><span class="muted" style="font-size:12px">Eingereicht am ${dt(j.created_at)}${j.status==='live'?` · online seit ${dt(j.published_at)}${days(j)!==null?` · noch ${days(j)} Tage`:''}`:''}${j.status==='abgelehnt'?' · Bei Fragen melde dich gern bei uns.':''}</span>
-      ${j.status==='anfrage'&&ME.status==='aktiv'?`<button class="btn sm" onclick="jobForm(${j.id})">${ic('pen',13)} Bearbeiten</button>`:j.status==='live'||j.status==='beendet'?`<button class="btn sm" onclick="jobForm(0,${j.id})">Als Vorlage nutzen</button>`:''}</div></div>`).join('')
+      ${j.status==='freigabe'&&ME.status==='aktiv'?`<button class="btn gold-b sm" onclick="reviewJob(${j.id})">Prüfen & veröffentlichen</button>`:j.status==='anfrage'&&ME.status==='aktiv'?`<button class="btn sm" onclick="jobForm(${j.id})">${ic('pen',13)} Bearbeiten</button>`:j.status==='live'||j.status==='beendet'?`<button class="btn sm" onclick="jobForm(0,${j.id})">Als Vorlage nutzen</button>`:''}</div></div>`).join('')
     ||`<div class="card empty">Noch keine Stellenangebote. Klick oben rechts auf „Neues Stellenangebot“.</div>`}</div>`;
+}
+function reviewJob(id){
+  const j=JOBS.find(x=>x.id===id); if(!j) return;
+  const cost=fee('fee_job') + (j.top ? (j.kosten_top!==null&&j.kosten_top!==undefined ? +j.kosten_top : fee('fee_top')) : 0);
+  const unl=(j.kosten_freischaltung!==null&&j.kosten_freischaltung!==undefined)?+j.kosten_freischaltung:fee('fee_unlock');
+  const rows=[['Gesucht',j.rolle],['Branche',j.branche],['Produkt',j.produkt],['Preis des Produkts',j.ticket],['Provision',j.provision],['Fixum',j.fixum],['Arbeitsmodell',j.modell],['Region',j.region],['Umfang',j.umfang],['Start',j.start_text],['Dauer',j.auftragsdauer]].filter(r=>r[1]);
+  openModal(`<h3 style="font-size:18px">Anzeige prüfen</h3>
+  <p class="muted" style="font-size:13px;margin:4px 0 14px">So erscheint dein Stellenangebot in der Jobbörse. Dein Firmenname bleibt für Bewerber anonym.</p>
+  <div style="border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--bg2)">
+    <div class="row" style="gap:8px">${j.top?pill('★ Top-Job','p-gold'):''}${pill(j.rolle||'Closer')}</div>
+    <div style="font-size:18px;font-weight:700;margin-top:8px">${esc(j.titel||'Stellenangebot')}</div>
+    <p style="margin-top:8px;white-space:pre-wrap">${esc(j.beschreibung||'')}</p>
+    <div class="grid g2" style="gap:6px 16px;margin-top:12px;font-size:13.5px">${rows.map(([l,v])=>`<div><span class="muted">${l}:</span> ${esc(v)}</div>`).join('')}</div>
+    ${j.anforderungen?`<div style="margin-top:12px"><b style="font-size:13px">Das solltest du mitbringen</b><p class="muted" style="white-space:pre-wrap;margin-top:4px;font-size:13.5px">${esc(j.anforderungen)}</p></div>`:''}
+    ${(j.fragen||[]).length?`<div style="margin-top:12px"><b style="font-size:13px">Fragen an Bewerber</b><ol class="muted" style="margin:4px 0 0 18px;font-size:13.5px">${j.fragen.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`:''}
+  </div>
+  <p class="muted" style="font-size:12.5px;margin-top:12px">Laufzeit: <b>${j.anzeige_tage||30} Tage</b> · Kosten bei Veröffentlichung: <b class="gold">${cost>0?eur(cost)+' netto':'kostenlos'}</b>${j.top?' (inkl. Top-Job)':''} · Freischaltung pro Kandidat: <b class="gold">${eur(unl)} netto</b></p>
+  <label class="row" style="gap:10px;margin-top:12px;cursor:pointer;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="rvOk" style="width:18px;height:18px;margin-top:2px;flex:none;accent-color:#c9a24a"><span style="font-size:13.5px">Ich habe die Anzeige geprüft. Alle Angaben stimmen.</span></label>
+  <div id="rvChg" style="display:none;margin-top:12px"><label class="f">Was soll geändert werden?<textarea class="in" id="rvNote" rows="3" maxlength="1000" placeholder="z. B. Provision ist 12 % statt 10 %"></textarea></label>
+    <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn" onclick="$('rvChg').style.display='none';$('rvBtns').style.display=''">Zurück</button><button class="btn gold-b" onclick="changeJob(${j.id},this)">Änderung senden</button></div></div>
+  <p id="rvErr" class="down" style="display:none;font-size:13px;margin-top:8px"></p>
+  <div class="row" id="rvBtns" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Später</button><button class="btn" onclick="$('rvChg').style.display='';$('rvBtns').style.display='none';$('rvNote').focus()">Änderung anfragen</button><button class="btn gold-b" onclick="publishJob(${j.id},this)">Jetzt veröffentlichen</button></div>`);
+}
+const rvFail = m => { const e=$('rvErr'); e.textContent=m; e.style.display='block'; };
+async function publishJob(id,b){
+  if(!$('rvOk').checked) return rvFail('Bitte bestätige zuerst mit dem Häkchen, dass du die Anzeige geprüft hast.');
+  b.disabled=true;
+  try{ const r=await api('rpc/client_publish_job',{method:'POST',body:{p_id:id}}); Object.assign(JOBS.find(x=>x.id===id), r||{status:'live',published_at:new Date().toISOString()}); closeModal(); location.hash='jobs'; render(); toast('Veröffentlicht – dein Job ist jetzt online'); }
+  catch(e){ b.disabled=false; rvFail('Fehler: '+e.message); }
+}
+async function changeJob(id,b){
+  const n=$('rvNote').value.trim(); if(n.length<3) return rvFail('Bitte beschreib kurz, was geändert werden soll.');
+  b.disabled=true;
+  try{ const r=await api('rpc/client_job_change',{method:'POST',body:{p_id:id,p_note:n}}); Object.assign(JOBS.find(x=>x.id===id), r||{status:'entwurf'}); closeModal(); render(); toast('Danke – wir passen die Anzeige an und melden uns'); }
+  catch(e){ b.disabled=false; rvFail('Fehler: '+e.message); }
 }
 function jobForm(id, copyId){
   const src = JOBS.find(x=>x.id===(id||copyId)) || { rolle:'Closer', modell:'Remote' };

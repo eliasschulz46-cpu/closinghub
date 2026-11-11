@@ -266,7 +266,7 @@ async function loadAll(){
   D.invoices = inv.map(i=>({ id:i.id, no:i.no, date:i.created_at.slice(0,10), cust:i.customer, email:i.email||'', item:i.item, net:+i.net, vat:+i.vat, st:i.status, client_id:i.client_id??null }));
   D.tickets = tix.map(t=>({ id:t.id, from:t.from_name, email:t.email, topic:t.topic, prio:t.prio, st:t.status, msgs:t.messages||[] }));
   D.ai = ai.map(a=>({ id:a.id, area:a.area||'Allgemein', title:a.title, text:a.text||'', why:a.why||'', impact:a.impact||'', st:a.status, t:fmtAt(a.created_at) }));
-  D.jobs = jb||[]; D.clients = cl||[];
+  D.jobs = jb||[]; D.clients = cl||[]; setTimeout(autoPrep,50);
   LOADED = true;
 }
 
@@ -289,7 +289,7 @@ const NAV = [
   ['dashboard','Dashboard','dash'],
   ['mitteilungen','KI-Mitteilungen','spark', ()=>D.ai.filter(a=>a.st==='neu').length],
   ['Geschäft'],
-  ['auftraggeber','Auftraggeber','users', ()=>D.jobs.filter(j=>j.status==='anfrage').length],
+  ['auftraggeber','Auftraggeber','users', ()=>D.jobs.filter(j=>j.status==='anfrage'||(j.status==='entwurf'&&j.client_note)||(j.status==='live'&&j.rechnung_offen)).length],
   ['rechnungen','Rechnungen','invoice', ()=>D.invoices.filter(i=>i.st==='überfällig').length],
   ['laufband','Laufband & Angebote','ticker'],
   ['anfragen','Anfragen & Warteliste','inbox', ()=>D.requests.filter(r=>r.st==='neu').length],
@@ -346,52 +346,88 @@ const JOB_FIELDS=[
 const jobDays = j => j.expires_at ? Math.max(0, Math.ceil((new Date(j.expires_at)-Date.now())/864e5)) : null;
 function stellenBlock(){
   const by=s=>D.jobs.filter(j=>j.status===s);
-  const tabs=[['anfrage','Anfragen'],['entwurf','Entwürfe'],['live','Live'],['beendet','Beendet']];
+  const tabs=[['anfrage','Anfragen'],['entwurf','Entwürfe'],['freigabe','Beim Auftraggeber'],['live','Live'],['beendet','Beendet']];
   const list=by(jobTab);
   const card=j=>`<div class="card"><div class="row between"><div class="row"><span class="pill ${j.top?'p-gold':''}">${j.top?'★ Top-Job':esc(j.rolle||'Anfrage')}</span><b>${esc(j.titel||j.firma||'Neue Anfrage')}</b>${j.top_wunsch&&!j.top?'<span class="pill p-gold">★ Top-Job gewünscht</span>':''}${j.client_id?'<span class="pill">Portal</span>':''}</div>
       <span class="muted" style="font-size:12px">${fmtAt(j.created_at)}</span></div>
     <div class="muted" style="font-size:12px;margin-top:4px">${esc(j.firma||'–')} · ${esc(j.kontakt_name||'')} ${j.kontakt_email?'· '+esc(j.kontakt_email):''}</div>
-    ${j.status==='anfrage'?`<p style="margin-top:10px;white-space:pre-wrap;background:var(--bg2);border-radius:10px;padding:10px 12px;max-height:160px;overflow:auto">${esc(j.anfrage_text)||'<span class="muted">Kein Text</span>'}</p>`
+    ${j.client_note&&j.status==='entwurf'?`<p style="margin-top:10px;border:1px solid var(--gold);border-radius:10px;padding:10px 12px"><b class="gold">Änderungswunsch vom Auftraggeber:</b><br><span style="white-space:pre-wrap">${esc(j.client_note)}</span></p>`:''}
+    ${j.status==='freigabe'?`<p class="gold" style="font-size:12.5px;margin-top:8px">Wartet darauf, dass der Auftraggeber die Anzeige im Portal prüft und veröffentlicht.</p>`:''}
+    ${j.rechnung_offen&&j.status==='live'?`<p class="gold" style="font-size:12.5px;margin-top:8px">Vom Auftraggeber selbst veröffentlicht · Rechnung noch offen</p>`:''}
+    ${j.status==='anfrage'?`${j.beschreibung?`<p style="margin-top:10px"><span class="pill p-gold" style="margin-right:6px">automatisch zusammengefasst</span>${esc(j.beschreibung)}</p><div class="row" style="margin-top:8px;gap:6px">${[j.provision,j.region,j.modell,j.umfang,j.auftragsdauer].filter(Boolean).map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div>`:''}
+      <details style="margin-top:10px"><summary class="muted" style="cursor:pointer;font-size:13px">Original-Anfrage</summary><p style="margin-top:6px;white-space:pre-wrap;background:var(--bg2);border-radius:10px;padding:10px 12px;max-height:160px;overflow:auto">${esc(j.anfrage_text)||'<span class="muted">Kein Text</span>'}</p></details>`
       :`<p style="margin-top:10px">${esc(j.beschreibung)}</p><div class="row" style="margin-top:8px;gap:6px">${[j.provision,j.region,j.modell,j.umfang,j.auftragsdauer].filter(Boolean).map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div>`}
     ${j.status==='live'?`<p class="muted" style="font-size:12px;margin-top:8px">Online seit ${fmtAt(j.published_at)} · noch ${jobDays(j)} Tage</p>`:''}
     <div class="row" style="margin-top:12px">
-      ${j.status==='anfrage'?`<button class="btn gold-b sm" onclick="kiJob(${j.id},this)">${ic('spark',14)} Mit KI zusammenfassen</button><button class="btn sm" onclick="editJob(${j.id})">Selbst ausfüllen</button><button class="btn sm red" onclick="setJob(${j.id},{status:'abgelehnt'},'Abgelehnt')">Ablehnen</button>`:''}
-      ${j.status==='entwurf'?`<button class="btn gold-b sm" onclick="editJob(${j.id})">${ic('pen',13)} Prüfen & veröffentlichen</button>`:''}
+      ${j.status==='anfrage'?`<button class="btn gold-b sm" onclick="editJob(${j.id})">${ic('pen',13)} Prüfen ${j.client_id?'& an Auftraggeber senden':'& veröffentlichen'}</button><button class="btn sm" onclick="kiJob(${j.id},this)">${ic('spark',14)} Neu zusammenfassen</button><button class="btn sm red" onclick="setJob(${j.id},{status:'abgelehnt'},'Abgelehnt')">Ablehnen</button>`:''}
+      ${j.status==='freigabe'?`<button class="btn sm" onclick="editJob(${j.id})">${ic('pen',13)} Bearbeiten</button><button class="btn sm" onclick="setJob(${j.id},{status:'entwurf'},'Zurückgeholt – liegt bei den Entwürfen')">Zurückholen</button>`:''}
+      ${j.rechnung_offen&&j.status==='live'?`<button class="btn gold-b sm" onclick="jobInvoice(${j.id})">Rechnung erstellen</button><button class="btn sm" onclick="setJob(${j.id},{rechnung_offen:false},'Erledigt')">Keine Rechnung</button>`:''}
+      ${j.status==='entwurf'?`<button class="btn gold-b sm" onclick="editJob(${j.id})">${ic('pen',13)} Prüfen ${j.client_id?'& an Auftraggeber senden':'& veröffentlichen'}</button>`:''}
       ${j.status==='live'?`<button class="btn sm" onclick="editJob(${j.id})">${ic('pen',13)} Bearbeiten</button><button class="btn sm" onclick="extendJob(${j.id})">+ 30 Tage</button><button class="btn sm red" onclick="setJob(${j.id},{status:'beendet'},'Beendet')">Beenden</button>`:''}
       ${j.status==='beendet'?`<button class="btn sm" onclick="editJob(${j.id})">Wieder veröffentlichen</button>`:''}
-      ${j.kontakt_email?`<a class="btn sm" href="mailto:${esc(j.kontakt_email)}?subject=${encodeURIComponent('Dein Stellenangebot bei ClosingHub')}">Mail</a>`:''}
+      ${j.kontakt_email?`<a class="btn sm" href="mailto:${esc(j.kontakt_email)}?subject=${encodeURIComponent(j.status==='freigabe'?'Deine Anzeige ist bereit – bitte prüfen und veröffentlichen':'Dein Stellenangebot bei ClosingHub')}${j.status==='freigabe'?'&body='+encodeURIComponent('Hallo'+(j.kontakt_name?' '+j.kontakt_name.split(' ')[0]:'')+',\n\nwir haben dein Stellenangebot aufbereitet. Bitte prüf die Anzeige kurz im Auftraggeber-Portal und veröffentliche sie mit einem Klick:\nhttps://www.getclosinghub.com/portal.html\n\nWenn etwas nicht passt, kannst du dort direkt eine Änderung anfragen.\n\nViele Grüße\nElias von ClosingHub'):''}">${j.status==='freigabe'?'Auftraggeber informieren':'Mail'}</a>`:''}
     </div></div>`;
   return `<div class="row between" id="jobsec" style="margin:30px 0 10px"><div><h3 style="font-size:18px">Stellenangebote</h3><p class="muted" style="font-size:13px;margin-top:2px">Anfragen prüfen, mit KI aufbereiten und in der App veröffentlichen.</p></div><button class="btn gold-b" onclick="editJob()">+ Stelle anlegen</button></div>${loadNote('jobs')}
   <div class="tabs">${tabs.map(([k,l])=>`<button class="${jobTab===k?'on':''}" onclick="jobTab='${k}';render()">${l} <span class="muted">${by(k).length}</span></button>`).join('')}</div>
-  <div class="grid">${list.map(card).join('')||`<div class="card empty">${jobTab==='anfrage'?'Noch keine Anfragen. Auftraggeber reichen Stellen über das Portal oder die Website ein.':'Hier ist noch nichts.'}</div>`}</div>`;
+  <div class="grid">${list.map(card).join('')||`<div class="card empty">${jobTab==='anfrage'?'Noch keine Anfragen. Neue Anfragen werden automatisch zusammengefasst und erscheinen hier.':'Hier ist noch nichts.'}</div>`}</div>`;
 }
 async function setJob(id,patch,msg){ await q(`jobs?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(D.jobs.find(j=>j.id===id),patch); render(); if(msg) toast(msg); }
 async function extendJob(id){ const j=D.jobs.find(x=>x.id===id); const base=Math.max(Date.now(), new Date(j.expires_at||Date.now()).getTime()); await setJob(id,{expires_at:new Date(base+30*864e5).toISOString()},'Um 30 Tage verlängert'); }
 
 // Schnell-Vorschlag ohne KI (falls die KI-Funktion noch nicht eingerichtet ist)
-function quickParse(t){
-  t=t||''; const low=t.toLowerCase(), f={};
-  f.rolle = /closer/.test(low)&&/setter/.test(low) ? 'Closer & Setter' : /setter/.test(low) ? 'Setter' : 'Closer';
-  f.modell = /remote|home.?office|online/.test(low) ? 'Remote' : /vor ort|außendienst|aussendienst/.test(low) ? 'Vor Ort' : null;
+function quickParse(t, j={}){
+  t=t||''; const low=(t+' '+(j.rolle||'')).toLowerCase(), f={};
+  f.rolle = j.rolle || (/closer/.test(low)&&/setter/.test(low) ? 'Closer & Setter' : /setter/.test(low) ? 'Setter' : 'Closer');
+  f.modell = j.modell || (/remote|home.?office|online/.test(low) ? 'Remote' : /vor ort|außendienst|aussendienst/.test(low) ? 'Vor Ort' : null);
   const prov=t.match(/(\d{1,2}(?:[.,]\d)?\s?%[^.,;\n]{0,30})/); if(prov) f.provision=prov[1].trim();
-  const eur=t.match(/(\d[\d.]*\s?(?:–|-|bis)?\s?\d*[\d.]*\s?(?:€|eur))/i); if(eur) f.ticket=eur[1].trim();
-  f.beschreibung=t.replace(/\S+@\S+|\+?\d[\d\s\/-]{7,}\d|https?:\/\/\S+|www\.\S+/g,'').trim().slice(0,280);
-  f.titel=`${f.rolle} ${f.modell==='Remote'?'(Remote)':''}`.trim();
+  const eur=t.match(/(\d[\d.]*\s?(?:–|-|bis)?\s?\d*[\d.]*\s?(?:€|eur))(\s*(?:pro|je)\s+(?:termin|abschluss|deal|lead)[^.,;\n]{0,20})?/i);
+  if(eur){ if(eur[2]){ if(!f.provision) f.provision=(eur[1]+eur[2]).trim(); } else f.ticket=eur[1].trim(); }
+  const CONTACT=/\S+@\S+|\+?\d[\d\s\/-]{7,}\d|https?:\/\/\S+|www\.\S+/;
+  const clean=t.replace(/\s+/g,' ').trim();
+  let d=''; for(const s of (clean.match(/[^.!?]+[.!?]+(?=\s|$)|[^.!?]+$/g)||[])){ if(CONTACT.test(s)) continue; if((d+s).length>320) break; d+=s; }
+  f.beschreibung=(d||clean.replace(new RegExp(CONTACT.source,'g'),'').slice(0,300)).trim();
+  const br=j.branche||j.produkt||'';
+  f.titel=`${f.rolle}${br?' für '+br:''}${f.modell==='Remote'?' (Remote)':''}`.slice(0,70);
   return f;
 }
-async function kiJob(id,b){
-  const j=D.jobs.find(x=>x.id===id); b.disabled=true; b.textContent='KI arbeitet …';
-  let r=null;
-  try{
-    const res=await fetch(`${SB_URL}/functions/v1/ki-job`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SESSION.access_token,'Content-Type':'application/json'},body:JSON.stringify({text:j.anfrage_text||''})});
-    const out=await res.json().catch(()=>({}));
-    if(res.ok && out && !out.error) r=out; else throw new Error(out.error||('Status '+res.status));
-  }catch(e){
-    r=quickParse(j.anfrage_text); toast('KI noch nicht verbunden – Schnell-Vorschlag ohne KI eingefügt');
+const jobText = j => [j.rolle&&'Gesucht: '+j.rolle, j.branche&&'Branche: '+j.branche, j.produkt&&'Produkt: '+j.produkt, j.ticket&&'Preis des Produkts: '+j.ticket, j.provision&&'Provision: '+j.provision, j.fixum&&'Fixum: '+j.fixum, j.modell&&'Arbeitsmodell: '+j.modell, j.region&&'Region: '+j.region, j.umfang&&'Umfang: '+j.umfang, j.start_text&&'Start: '+j.start_text, j.auftragsdauer&&'Dauer: '+j.auftragsdauer, j.anforderungen&&'Anforderungen: '+j.anforderungen, j.anfrage_text&&'Beschreibung des Auftraggebers: '+j.anfrage_text].filter(Boolean).join('\n').slice(0,5800);
+let KI_OFF=false;
+async function summarize(j){
+  let r=null, ki=false;
+  if(!KI_OFF){
+    try{
+      const res=await fetch(`${SB_URL}/functions/v1/ki-job`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SESSION.access_token,'Content-Type':'application/json'},body:JSON.stringify({text:jobText(j)})});
+      const out=await res.json().catch(()=>({}));
+      if(res.ok && out && !out.error){ r=out; ki=true; } else { if(res.status===404||res.status===401||res.status===403) KI_OFF=true; }
+    }catch(e){ KI_OFF=true; }
   }
+  if(!r) r=quickParse(j.anfrage_text, j);
   if(Array.isArray(r.anforderungen)) r.anforderungen=r.anforderungen.map(x=>'• '+String(x).replace(/^•\s*/,'')).join('\n');
+  return {r,ki};
+}
+const SUM_KEYS=['titel','rolle','branche','produkt','ticket','provision','fixum','modell','region','umfang','start_text','auftragsdauer','anforderungen','beschreibung'];
+let AUTO_BUSY=false;
+/* Neue Anfragen automatisch in die Felder übernehmen (Angaben des Auftraggebers bleiben, nur Leeres wird ergänzt) */
+async function autoPrep(){
+  if(AUTO_BUSY||!SESSION) return; AUTO_BUSY=true; let done=0;
+  try{
+    for(const j of D.jobs.filter(x=>x.status==='anfrage' && !x.beschreibung && (x.anfrage_text||'').trim()).slice(0,8)){
+      const {r}=await summarize(j); const patch={};
+      SUM_KEYS.forEach(k=>{ if((j[k]===null||j[k]===undefined||j[k]==='') && r[k]) patch[k]=String(r[k]).slice(0,k==='beschreibung'||k==='anforderungen'?1500:160); });
+      if(!patch.beschreibung){ const q2=quickParse(j.anfrage_text,j); patch.beschreibung=q2.beschreibung; if(!j.titel&&!patch.titel) patch.titel=q2.titel; }
+      if((!j.fragen||!j.fragen.length) && Array.isArray(r.fragen) && r.fragen.length) patch.fragen=r.fragen.slice(0,3).map(x=>String(x).slice(0,160));
+      if(!patch.beschreibung) continue;
+      try{ await api(`jobs?id=eq.${j.id}`,{method:'PATCH',body:patch}); Object.assign(j,patch); done++; }catch(e){}
+    }
+  } finally { AUTO_BUSY=false; }
+  if(done && !document.querySelector('.modal.open')){ drawNav(); $('main').innerHTML=(PAGES[route()]||dashboard)(); toast(done+(done===1?' Anfrage':' Anfragen')+' automatisch zusammengefasst'); }
+}
+async function kiJob(id,b){
+  const j=D.jobs.find(x=>x.id===id); b.disabled=true; b.textContent='Fasse zusammen …';
+  KI_OFF=false; const {r,ki}=await summarize(j);
+  if(!ki) toast('KI noch nicht verbunden – Schnell-Vorschlag ohne KI eingefügt');
   editJob(id, r);
-  b.disabled=false; b.innerHTML=`${ic('spark',14)} Mit KI zusammenfassen`;
+  b.disabled=false; b.innerHTML=`${ic('spark',14)} Neu zusammenfassen`;
 }
 function editJob(id, pre={}){
   const j={ rolle:'Closer', modell:'Remote', anzeige_tage:30, top:false, fragen:[], kosten_freischaltung:D.settings.unlock, kosten_top:D.settings.topJob, ...(D.jobs.find(x=>x.id===id)||{}) };
@@ -420,7 +456,8 @@ function editJob(id, pre={}){
   <details style="margin-top:12px"><summary class="muted" style="cursor:pointer;font-size:13px">Interne Angaben (nicht öffentlich)</summary><div class="grid g2" style="gap:12px;margin-top:8px">
     <label class="f">Firma<input class="in" data-j="firma" value="${esc(j.firma||'')}"></label><label class="f">Kontakt<input class="in" data-j="kontakt_name" value="${esc(j.kontakt_name||'')}"></label>
     <label class="f">E-Mail<input class="in" data-j="kontakt_email" value="${esc(j.kontakt_email||'')}"></label></div></details>
-  <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn" onclick="saveJob(${id||0},'entwurf',this)">Als Entwurf speichern</button><button class="btn gold-b" onclick="saveJob(${id||0},'live',this)">Veröffentlichen</button></div>`);
+  <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn" onclick="saveJob(${id||0},'entwurf',this)">Als Entwurf speichern</button>${j.client_id&&j.status!=='live'?`<button class="btn" onclick="saveJob(${id||0},'live',this)">Selbst veröffentlichen</button><button class="btn gold-b" onclick="saveJob(${id||0},'freigabe',this)">An Auftraggeber zur Freigabe</button>`:`<button class="btn gold-b" onclick="saveJob(${id||0},'live',this)">${j.status==='live'?'Speichern':'Veröffentlichen'}</button>`}</div>
+  ${j.client_id&&j.status!=='live'?'<p class="muted" style="font-size:12px;text-align:right;margin-top:8px">Der Auftraggeber prüft die Anzeige im Portal und veröffentlicht sie selbst.</p>':''}`);
 }
 async function saveJob(id,status,b){
   const v={};
@@ -429,9 +466,11 @@ async function saveJob(id,status,b){
     v[k]=x; });
   v.fragen=[...document.querySelectorAll('#mbox [data-f]')].map(el=>el.value.trim()).filter(Boolean).slice(0,3);
   if(!v.titel) return toast('Bitte einen Titel eingeben');
-  if(status==='live' && !v.provision) return toast('Bitte die Provision angeben');
-  if(status==='live' && /\S+@\S+|\+?\d[\d\s\/-]{8,}\d|https?:\/\//.test((v.beschreibung||'')+(v.anforderungen||''))) return toast('Bitte keine Kontaktdaten oder Links in Beschreibung/Anforderungen');
-  v.status=status;
+  const pub = status==='live' || status==='freigabe';
+  if(pub && !v.provision) return toast('Bitte die Provision angeben');
+  if(pub && !v.beschreibung) return toast('Bitte eine Beschreibung eintragen');
+  if(pub && /\S+@\S+|\+?\d[\d\s\/-]{8,}\d|https?:\/\//.test((v.beschreibung||'')+(v.anforderungen||''))) return toast('Bitte keine Kontaktdaten oder Links in Beschreibung/Anforderungen');
+  v.status=status; if(status==='freigabe') v.client_note=null;
   const old=D.jobs.find(x=>x.id===id);
   if(status==='live' && (!old || old.status!=='live')){ v.published_at=new Date().toISOString(); v.expires_at=new Date(Date.now()+v.anzeige_tage*864e5).toISOString(); }
   b.disabled=true;
@@ -439,7 +478,7 @@ async function saveJob(id,status,b){
     if(id){ await q(`jobs?id=eq.${id}`,{method:'PATCH',body:v}); Object.assign(old,v); }
     else { const [r]=await q('jobs',{method:'POST',prefer:'return=representation',body:v}); D.jobs.unshift(r); }
     const wasLive = !!(v.published_at);
-    closeModal(); jobTab=status; render(); toast(status==='live'?'Veröffentlicht – ist jetzt in der App':'Entwurf gespeichert');
+    closeModal(); jobTab=status; render(); toast(status==='live'?'Veröffentlicht – ist jetzt in der App':status==='freigabe'?'Liegt jetzt beim Auftraggeber zur Freigabe':'Entwurf gespeichert');
     if(status==='live' && wasLive && id && old && old.client_id){ await offerJobInvoice(old); render(); }
   }catch(e){ b.disabled=false; }
 }
@@ -463,6 +502,8 @@ function auftraggeber(){
   return `<div class="row between"><div><h1 class="h1">Auftraggeber</h1><p class="sub">Alle registrierten Auftraggeber, ihre Umsätze, Gebühren und Jobs. Registrierung läuft über das <a href="portal.html" target="_blank" class="gold">Auftraggeber-Portal ↗</a>.</p></div>
     <div class="row"><input class="in" style="max-width:260px" placeholder="Auftraggeber suchen …" value="${esc(clQ)}" onchange="clQ=this.value;render()"><button class="btn" onclick="refreshData(this)">↻ Aktualisieren</button></div></div>${loadNote('clients')}
   ${D.jobs.some(j=>j.status==='anfrage')?`<div class="card" style="border-color:var(--gold);margin-bottom:14px;cursor:pointer" onclick="jobTab='anfrage';render();document.getElementById('jobsec').scrollIntoView({behavior:'smooth'})"><b class="gold">${D.jobs.filter(j=>j.status==='anfrage').length} Stellenangebot(e) warten auf deine Prüfung</b> <span class="muted">· hier klicken ↓</span></div>`:''}
+  ${D.jobs.some(j=>j.status==='entwurf'&&j.client_note)?`<div class="card" style="border-color:var(--gold);margin-bottom:14px;cursor:pointer" onclick="jobTab='entwurf';render();document.getElementById('jobsec').scrollIntoView({behavior:'smooth'})"><b class="gold">${D.jobs.filter(j=>j.status==='entwurf'&&j.client_note).length} Änderungswunsch/-wünsche von Auftraggebern</b> <span class="muted">· hier klicken ↓</span></div>`:''}
+  ${D.jobs.some(j=>j.status==='live'&&j.rechnung_offen)?`<div class="card" style="border-color:var(--gold);margin-bottom:14px;cursor:pointer" onclick="jobTab='live';render();document.getElementById('jobsec').scrollIntoView({behavior:'smooth'})"><b class="gold">${D.jobs.filter(j=>j.status==='live'&&j.rechnung_offen).length} Job(s) vom Auftraggeber veröffentlicht</b> <span class="muted">· Rechnung erstellen ↓</span></div>`:''}
   <div class="grid g4" style="margin-bottom:16px">
     ${kpi('Auftraggeber', D.clients.filter(c=>c.status==='aktiv').length, D.clients.length+' gesamt')}
     ${kpi('Jobs online', live.length, D.jobs.filter(j=>j.status==='anfrage').length+' warten auf Prüfung')}
@@ -529,6 +570,7 @@ async function clReactivate(id){
   const patch={status:'aktiv',gekuendigt_am:null}; await q(`clients?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(clById(id),patch); render(); toast('Wieder aktiv');
 }
 // Beim Veröffentlichen: Gebühr als Rechnung anbieten
+async function jobInvoice(id){ const j=D.jobs.find(x=>x.id===id); if(!j) return; const n=D.invoices.length; await offerJobInvoice(j); if(D.invoices.length>n){ await setJob(id,{rechnung_offen:false}); } else render(); }
 async function offerJobInvoice(job){
   const c=clById(job.client_id); if(!c) return;
   const fee=feeOf(c,'fee_job') + (job.top ? feeOf(c,'fee_top') : 0); if(!(fee>0)) return;
