@@ -392,6 +392,24 @@ function nameRank(n, r, medals){
   if(n==='ClosingHub') return `<span class="inline-flex items-baseline gap-[.3em]"><span class="font-semibold">${n}</span><sup class="text-white font-semibold" style="font-size:max(10px,.6em);letter-spacing:.03em">Present</sup></span>`;
   return `<span class="inline-flex items-center gap-[.4em]"><span class="font-semibold">${n}</span><span class="rk" style="${RKC[r]}">${r}</span>${total?`<sup><button onclick="openMedals();event.stopPropagation()" class="text-gold font-bold hover:underline" style="font-size:max(11px,.6em)">${total}</button></sup>`:''}</span>`;
 }
+// Bewertungen aus drei Quellen (Beispieldaten)
+const REVIEWS = [
+  {t:'Auftraggeber',ic:'💼',avg:'4,9',n:9,list:[['Solar GmbH','Sehr strukturiert, 4 Abschlüsse in der ersten Woche.',5],['Coaching-Agentur','Zuverlässig und stark in der Einwandbehandlung.',5]]},
+  {t:'Marktplatz',ic:'🛍️',avg:'4,7',n:11,list:[['Hannah · Käuferin','Die Call-Analyse hat mir sofort geholfen.',5],['Tobias · Anbieter','Faire und schnelle Zusammenarbeit.',4]]},
+  {t:'Closer Arena',ic:'⚔️',avg:'4,8',n:3,list:[['Lena · Gegnerin','Starker Konter auf „zu teuer“, fairer Gegner.',5]]},
+];
+function openReviews(){
+  const stars=n=>'★'.repeat(n)+'☆'.repeat(5-n);
+  document.getElementById('modal').innerHTML = `
+  <div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()">
+    <div class="card w-full max-w-md p-5 relative max-h-[86vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <button onclick="closeModal()" class="absolute top-3 right-4 text-muted hover:text-white text-xl">✕</button>
+      <h3 class="font-serif text-xl mb-1">Bewertungen von ${ME.name}</h3>
+      <p class="text-sm text-muted mb-3">⭐ <b class="text-white">${String(ME.rating).replace('.',',')}</b> aus ${REVIEWS.reduce((s,g)=>s+g.n,0)} Bewertungen</p>
+      ${REVIEWS.map(g=>`<div class="border-t border-line pt-3 mt-3"><div class="flex justify-between items-center mb-2"><span class="text-xs uppercase tracking-wider text-gold">${g.ic} ${g.t}</span><span class="text-sm"><b>${g.avg}</b> <span class="text-muted">· ${g.n}</span></span></div>
+        ${g.list.map(([n,q,s])=>`<div class="mb-2"><div class="flex justify-between gap-2 text-sm"><b>${n}</b><span class="text-gold tracking-tight">${stars(s)}</span></div><p class="text-sm text-muted">„${q}“</p></div>`).join('')}</div>`).join('')}
+    </div></div>`;
+}
 function openMedals(){
   document.getElementById('modal').innerHTML = `
   <div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()">
@@ -792,6 +810,11 @@ function profile(){
     </div>
     <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen</p>
       <div class="flex flex-wrap gap-3">${S.badgesShown.map(badgeIcon).join('')}</div></div>
+    <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Bewertungen</p>
+      <button id="revCard" onclick="openReviews()" class="card w-full text-left p-4">
+        <div class="flex items-center justify-between gap-3"><span class="text-base">⭐ <b>${String(ME.rating).replace('.',',')}</b> <span class="text-muted text-sm">· ${REVIEWS.reduce((s,g)=>s+g.n,0)} Bewertungen</span></span><span class="text-gold text-sm whitespace-nowrap">Alle ansehen →</span></div>
+        <div class="mt-3 space-y-1.5 text-sm">${REVIEWS.map(g=>`<div class="flex justify-between gap-3"><span class="text-muted">${g.ic} ${g.t}</span><span><b>${g.avg}</b> <span class="text-muted">· ${g.n}</span></span></div>`).join('')}</div>
+      </button></div>
     <div class="mt-8 grid grid-cols-3 gap-1">${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
     ${S.user?`<div class="mt-8 flex flex-wrap gap-3"><button onclick="S.user=false;save();go('feed')" class="btn-ghost">Abmelden</button></div>`:''}
   </div>`;
