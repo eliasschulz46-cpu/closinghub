@@ -210,7 +210,7 @@ function logout(){ keepSession(null); render(); }
 
 /* ===== Daten ===== */
 const DEFAULT_SETTINGS = {
-  plus:3.33, premiumM:9.99, premiumY:89, unlock:25, marketFee:9.9, topJob:19, vat:21,
+  plus:3.33, premiumM:9.99, premiumY:89, unlock:25, marketFee:9.9, topJob:19, jobFee:0, vat:21,
   dayoneTotal:250, dayoneFreeMonths:12, dayonePremiumMonths:3, maxPerCountry:1000, perCategory:10,
   heroTop:'Mehr closen –', heroGold:'mehr verdienen.', heroSub:'Die Plattform für Closer & Setter, die mehr wollen.', heroLead:'Attraktive Jobs, motivierender Feed, Kontakte auch in deiner Nähe und mehr besondere Member-Vorteile, die dich jeden Tag besser machen – für maximale Abschlüsse.',
   features:{arena:false, marketplace:true, stories:true, breathing:true, forum:true, topjobs:true, waitlistOpen:true}
@@ -233,14 +233,14 @@ const DEMO = {
     {id:2,title:'Bewerbung von max_sales',why:'Telefonnummer im Text (Mahnung 2/3)'}
   ]
 };
-let D = { settings:structuredClone(DEFAULT_SETTINGS), jobs:[], waitlist:[], requests:[], ticker:[], invoices:[], tickets:[], ai:[], ...structuredClone(DEMO) };
+let D = { settings:structuredClone(DEFAULT_SETTINGS), jobs:[], clients:[], waitlist:[], requests:[], ticker:[], invoices:[], tickets:[], ai:[], ...structuredClone(DEMO) };
 let LOADED = false;
 const save = () => {}; // Beispielbereiche werden nicht gespeichert
 
 const fmtAt = iso => { const d=new Date(iso), now=new Date(); const same=d.toDateString()===now.toDateString(); return same ? 'heute ' + d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('de-DE'); };
 
 async function loadAll(){
-  const [wl, cr, st, tk, inv, tix, ai, jb] = await Promise.all([
+  const [wl, cr, st, tk, inv, tix, ai, jb, cl] = await Promise.all([
     q('waitlist?select=*&order=created_at.desc'),
     q('contact_requests?select=*&order=created_at.desc'),
     q('settings?select=key,value'),
@@ -248,7 +248,8 @@ async function loadAll(){
     q('invoices?select=*&order=created_at.desc'),
     q('tickets?select=*&order=created_at.desc'),
     q('ai_suggestions?select=*&order=created_at.desc'),
-    api('jobs?select=*&order=created_at.desc').catch(()=>[])
+    api('jobs?select=*&order=created_at.desc').catch(()=>[]),
+    api('clients?select=*&order=created_at.desc').catch(()=>[])
   ]);
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
@@ -258,10 +259,10 @@ async function loadAll(){
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
   D.ticker = tk.map(t=>({ id:t.id, title:t.title, offer:t.offer, partner:t.partner||'', price:+t.price||0, until:t.until||'', on:t.active, sort:t.sort }));
-  D.invoices = inv.map(i=>({ id:i.id, no:i.no, date:i.created_at.slice(0,10), cust:i.customer, email:i.email||'', item:i.item, net:+i.net, vat:+i.vat, st:i.status }));
+  D.invoices = inv.map(i=>({ id:i.id, no:i.no, date:i.created_at.slice(0,10), cust:i.customer, email:i.email||'', item:i.item, net:+i.net, vat:+i.vat, st:i.status, client_id:i.client_id??null }));
   D.tickets = tix.map(t=>({ id:t.id, from:t.from_name, email:t.email, topic:t.topic, prio:t.prio, st:t.status, msgs:t.messages||[] }));
   D.ai = ai.map(a=>({ id:a.id, area:a.area||'Allgemein', title:a.title, text:a.text||'', why:a.why||'', impact:a.impact||'', st:a.status, t:fmtAt(a.created_at) }));
-  D.jobs = jb||[];
+  D.jobs = jb||[]; D.clients = cl||[];
   LOADED = true;
 }
 
@@ -274,7 +275,7 @@ function openModal(html){ $('mbox').innerHTML=html; $('modal').classList.add('op
 function closeModal(){ $('modal').classList.remove('open'); }
 $('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
-const pill = st => { const m={bezahlt:'p-ok',gelöst:'p-ok',aktiv:'p-ok',übernommen:'p-ok',beantwortet:'p-ok',offen:'p-warn',neu:'p-gold',wartet:'p-warn',einbehalten:'p-gold',überfällig:'p-bad',gesperrt:'p-bad',abgelehnt:'p-bad',später:'p-warn',hoch:'p-bad',normal:'',niedrig:''}; return `<span class="pill ${m[st]||''}">${esc(st)}</span>`; };
+const pill = st => { const m={bezahlt:'p-ok',gelöst:'p-ok',aktiv:'p-ok',übernommen:'p-ok',beantwortet:'p-ok',offen:'p-warn',neu:'p-gold',wartet:'p-warn',einbehalten:'p-gold',überfällig:'p-bad',gesperrt:'p-bad','gekündigt':'p-bad',online:'p-ok','wartet auf Prüfung':'p-gold',abgelehnt:'p-bad',später:'p-warn',hoch:'p-bad',normal:'',niedrig:''}; return `<span class="pill ${m[st]||''}">${esc(st)}</span>`; };
 const gross = inv => inv.net*(1+(inv.vat ?? D.settings.vat)/100);
 const demoNote = t => `<div class="demo">${t}</div>`;
 
@@ -284,7 +285,8 @@ const NAV = [
   ['dashboard','Dashboard','dash'],
   ['mitteilungen','KI-Mitteilungen','spark', ()=>D.ai.filter(a=>a.st==='neu').length],
   ['Geschäft'],
-  ['stellen','Stellenangebote','users', ()=>D.jobs.filter(j=>j.status==='anfrage').length],
+  ['stellen','Stellenangebote','inbox', ()=>D.jobs.filter(j=>j.status==='anfrage').length],
+  ['auftraggeber','Auftraggeber','users', ()=>D.jobs.filter(j=>j.client_id&&j.status==='anfrage').length],
   ['rechnungen','Rechnungen','invoice', ()=>D.invoices.filter(i=>i.st==='überfällig').length],
   ['laufband','Laufband & Angebote','ticker'],
   ['anfragen','Anfragen & Warteliste','inbox', ()=>D.requests.filter(r=>r.st==='neu').length],
@@ -391,6 +393,8 @@ async function kiJob(id,b){
 function editJob(id, pre={}){
   const j={ rolle:'Closer', modell:'Remote', anzeige_tage:30, top:false, fragen:[], kosten_freischaltung:D.settings.unlock, kosten_top:D.settings.topJob, ...(D.jobs.find(x=>x.id===id)||{}) };
   Object.entries(pre).forEach(([k,v])=>{ if(v!==null&&v!==undefined&&v!=='') j[k]=v; });
+  const jc = j.client_id ? clById(j.client_id) : null;
+  if(jc && (!j.status || j.status==='anfrage')){ j.kosten_freischaltung=feeOf(jc,'fee_unlock'); j.kosten_top=feeOf(jc,'fee_top'); }
   const fr=[0,1,2].map(i=>(j.fragen||[])[i]||'');
   const fld=([k,l,t,o])=>`<label class="f">${l}${t==='select'?`<select class="in" data-j="${k}">${o.map(x=>`<option ${x===j[k]?'selected':''}>${x}</option>`).join('')}</select>`:`<input class="in" data-j="${k}" value="${esc(j[k]||'')}" placeholder="${o}">`}</label>`;
   openModal(`<h3 style="font-size:18px">${id?'Stellenangebot prüfen':'Neue Stelle'}</h3>
@@ -429,8 +433,109 @@ async function saveJob(id,status,b){
   try{
     if(id){ await q(`jobs?id=eq.${id}`,{method:'PATCH',body:v}); Object.assign(old,v); }
     else { const [r]=await q('jobs',{method:'POST',prefer:'return=representation',body:v}); D.jobs.unshift(r); }
+    const wasLive = !!(v.published_at);
     closeModal(); jobTab=status; render(); toast(status==='live'?'Veröffentlicht – ist jetzt in der App':'Entwurf gespeichert');
+    if(status==='live' && wasLive && id && old && old.client_id){ await offerJobInvoice(old); render(); }
   }catch(e){ b.disabled=false; }
+}
+
+
+/* ===== Auftraggeber ===== */
+let clSel=null, clQ='';
+const clById = id => D.clients.find(c=>c.id===id);
+const clJobs = id => D.jobs.filter(j=>j.client_id===id);
+const clInv  = id => D.invoices.filter(i=>i.client_id===id);
+const clSum  = (id,sts) => clInv(id).filter(i=>sts.includes(i.st)).reduce((a,i)=>a+gross(i),0);
+const feeOf  = (c,k) => { const m={fee_job:'jobFee',fee_top:'topJob',fee_unlock:'unlock'}; return (c && c[k]!==null && c[k]!==undefined && c[k]!=='') ? +c[k] : +D.settings[m[k]]||0; };
+const clStatus = s => ({aktiv:'aktiv',gekuendigt:'gekündigt',gesperrt:'gesperrt'}[s]||s);
+function auftraggeber(){
+  if(clSel && clById(clSel)) return clProfile(clById(clSel));
+  const list=D.clients.filter(c=>!clQ||(c.firma+' '+(c.kontakt_name||'')+' '+(c.email||'')).toLowerCase().includes(clQ.toLowerCase()));
+  const live=D.jobs.filter(j=>j.status==='live');
+  const kpi=(l,v,s='')=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  const paid=D.invoices.filter(i=>i.client_id&&(i.st==='bezahlt'||i.st==='einbehalten')).reduce((a,i)=>a+gross(i),0);
+  const open=D.invoices.filter(i=>i.client_id&&(i.st==='offen'||i.st==='überfällig')).reduce((a,i)=>a+gross(i),0);
+  return `<div class="row between"><div><h1 class="h1">Auftraggeber</h1><p class="sub">Alle registrierten Auftraggeber, ihre Umsätze, Gebühren und Jobs. Registrierung läuft über das <a href="portal.html" target="_blank" class="gold">Auftraggeber-Portal ↗</a>.</p></div>
+    <input class="in" style="max-width:260px" placeholder="Auftraggeber suchen …" value="${esc(clQ)}" onchange="clQ=this.value;render()"></div>
+  <div class="grid g4" style="margin-bottom:16px">
+    ${kpi('Auftraggeber', D.clients.filter(c=>c.status==='aktiv').length, D.clients.length+' gesamt')}
+    ${kpi('Jobs online', live.length, D.jobs.filter(j=>j.status==='anfrage').length+' warten auf Prüfung')}
+    ${kpi('Umsatz (bezahlt)', eur(paid))}
+    ${kpi('Offene Rechnungen', eur(open))}
+  </div>
+  <div class="card tw"><table><thead><tr><th>Firma</th><th>Kontakt</th><th>Registriert</th><th>Jobs online</th><th>Umsatz</th><th>Gebühr / Job</th><th>Status</th><th></th></tr></thead><tbody>
+  ${list.map(c=>`<tr style="cursor:pointer" onclick="clSel=${c.id};render()"><td><b>${esc(c.firma)}</b>${c.land?`<div class="muted" style="font-size:12px">${esc(c.land)}</div>`:''}</td>
+    <td>${esc(c.kontakt_name||'–')}<div class="muted" style="font-size:12px">${esc(c.email||'')}</div></td>
+    <td class="muted">${new Date(c.created_at).toLocaleDateString('de-DE')}</td>
+    <td>${clJobs(c.id).filter(j=>j.status==='live').length}</td><td><b>${eur(clSum(c.id,['bezahlt','einbehalten']))}</b></td>
+    <td>${eur(feeOf(c,'fee_job'))}${c.fee_job!==null&&c.fee_job!==undefined?' <span class="pill p-gold">individuell</span>':''}</td>
+    <td>${pill(clStatus(c.status))}</td><td style="text-align:right"><button class="btn sm">Profil</button></td></tr>`).join('')||`<tr><td colspan="8" class="empty">${D.clients.length?'Niemand gefunden.':'Noch keine registrierten Auftraggeber. Sie registrieren sich im Auftraggeber-Portal (portal.html).'}</td></tr>`}
+  </tbody></table></div>
+  <h3 style="margin:26px 0 10px;font-size:16px">Veröffentlichte Jobs (${live.length})</h3>
+  <div class="card tw"><table><thead><tr><th>Job</th><th>Auftraggeber</th><th>Provision</th><th>Online seit</th><th>Läuft noch</th><th></th></tr></thead><tbody>
+  ${live.map(j=>`<tr><td><b>${esc(j.titel||'–')}</b> ${j.top?'<span class="pill p-gold">★ Top</span>':''}<div class="muted" style="font-size:12px">${esc([j.rolle,j.region,j.modell].filter(Boolean).join(' · '))}</div></td>
+    <td>${j.client_id&&clById(j.client_id)?`<a class="gold" href="#auftraggeber" onclick="clSel=${j.client_id};render()">${esc(clById(j.client_id).firma)}</a>`:esc(j.firma||'–')}</td>
+    <td>${esc(j.provision||'–')}</td><td class="muted">${j.published_at?fmtAt(j.published_at):'–'}</td><td>${jobDays(j)??'–'} Tage</td>
+    <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="editJob(${j.id})">${ic('pen',13)} Bearbeiten</button> <button class="btn sm" onclick="extendJob(${j.id})">+ 30 Tage</button> <button class="btn sm red" onclick="setJob(${j.id},{status:'beendet'},'Beendet')">Beenden</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine veröffentlichten Jobs.</td></tr>'}
+  </tbody></table></div>`;
+}
+function clProfile(c){
+  const jobs=clJobs(c.id), inv=clInv(c.id);
+  const kpi=(l,v,s='')=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  const row=(l,v)=>`<div class="row between" style="padding:8px 0;border-top:1px solid var(--line)"><span class="muted">${l}</span><span style="text-align:right">${v||'–'}</span></div>`;
+  const fee=(k,l,std)=>`<label class="f">${l}<div class="row" style="flex-wrap:nowrap"><input class="in" type="number" step="0.01" id="cf-${k}" value="${c[k]??''}" placeholder="Standard: ${std.toLocaleString('de-DE',{minimumFractionDigits:2})}"><span class="muted">€</span></div></label>`;
+  const stLabel={anfrage:'wartet auf Prüfung',entwurf:'Entwurf',live:'online',beendet:'beendet',abgelehnt:'abgelehnt'};
+  return `<a href="#auftraggeber" class="muted" onclick="clSel=null;render()">← Alle Auftraggeber</a>
+  <div class="row between" style="margin-top:8px"><div><h1 class="h1">${esc(c.firma)} ${pill(clStatus(c.status))}</h1><p class="sub">Registriert am ${new Date(c.created_at).toLocaleDateString('de-DE')}${c.gekuendigt_am?` · gekündigt am ${new Date(c.gekuendigt_am).toLocaleDateString('de-DE')}`:''}</p></div>
+    <div class="row">${c.email?`<a class="btn" href="mailto:${esc(c.email)}">Mail</a>`:''}<button class="btn" onclick="newInvoice(${c.id})">+ Rechnung</button>
+      ${c.status==='aktiv'?`<button class="btn red" onclick="clCancel(${c.id})">Kündigen</button>`:`<button class="btn" onclick="clReactivate(${c.id})">Wieder aktivieren</button>`}</div></div>
+  <div class="grid g4" style="margin-bottom:16px">
+    ${kpi('Umsatz (bezahlt)', eur(clSum(c.id,['bezahlt','einbehalten'])), inv.length+' Rechnungen')}
+    ${kpi('Offen', eur(clSum(c.id,['offen','überfällig'])), inv.filter(i=>i.st==='überfällig').length+' überfällig')}
+    ${kpi('Jobs online', jobs.filter(j=>j.status==='live').length, jobs.length+' Jobs gesamt')}
+    ${kpi('Warten auf Prüfung', jobs.filter(j=>j.status==='anfrage').length)}
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3>Stammdaten</h3>
+      ${row('Firma',esc(c.firma))}${row('Ansprechpartner',esc(c.kontakt_name))}${row('E-Mail',esc(c.email))}${row('Telefon',esc(c.telefon))}${row('Website',esc(c.website))}${row('Land',esc(c.land))}${row('Branche',esc(c.branche))}${row('USt-ID',esc(c.ust_id))}${row('Rechnungsadresse',esc(c.rechnungsadresse).replace(/\n/g,'<br>'))}</div>
+    <div class="card"><h3>Individuelle Gebühren</h3><p class="muted" style="font-size:12.5px;margin-bottom:12px">Leer lassen = es gilt der Standard aus „Preise & Einstellungen“.</p>
+      <div class="grid" style="gap:12px">${fee('fee_job','Gebühr pro veröffentlichtem Job',+D.settings.jobFee||0)}${fee('fee_top','Aufpreis Top-Job',+D.settings.topJob||0)}${fee('fee_unlock','Freischaltung pro Kandidat',+D.settings.unlock||0)}
+      <button class="btn gold-b" onclick="clSaveFees(${c.id},this)">Gebühren speichern</button></div></div>
+  </div>
+  <h3 style="margin:24px 0 10px;font-size:16px">Jobs (${jobs.length})</h3>
+  <div class="card tw"><table><thead><tr><th>Job</th><th>Status</th><th>Eingereicht</th><th>Läuft noch</th><th></th></tr></thead><tbody>
+  ${jobs.map(j=>`<tr><td><b>${esc(j.titel||'Neue Anfrage')}</b><div class="muted" style="font-size:12px">${esc([j.rolle,j.provision,j.region].filter(Boolean).join(' · '))}</div></td><td>${pill(stLabel[j.status]||j.status)}</td><td class="muted">${fmtAt(j.created_at)}</td><td>${j.status==='live'?(jobDays(j)??'–')+' Tage':'–'}</td>
+    <td style="text-align:right;white-space:nowrap">${j.status==='anfrage'?`<button class="btn sm gold-b" onclick="kiJob(${j.id},this)">${ic('spark',13)} Prüfen</button>`:`<button class="btn sm" onclick="editJob(${j.id})">${ic('pen',13)} Bearbeiten</button>`}${j.status==='live'?` <button class="btn sm red" onclick="setJob(${j.id},{status:'beendet'},'Beendet')">Beenden</button>`:''}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Noch keine Jobs eingereicht.</td></tr>'}
+  </tbody></table></div>
+  <h3 style="margin:24px 0 10px;font-size:16px">Rechnungen (${inv.length})</h3>
+  <div class="card tw"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Leistung</th><th>Brutto</th><th>Status</th><th></th></tr></thead><tbody>
+  ${inv.map(i=>`<tr><td><b>${esc(i.no)}</b></td><td class="muted">${new Date(i.date).toLocaleDateString('de-DE')}</td><td class="muted">${esc(i.item)}</td><td><b>${eur(gross(i))}</b></td><td>${pill(i.st)}</td>
+    <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="showInvoice(${i.id})">Ansehen</button>${i.st==='offen'||i.st==='überfällig'?` <button class="btn sm" onclick="invSet(${i.id},'bezahlt')">${ic('check',13)} Bezahlt</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine Rechnungen.</td></tr>'}
+  </tbody></table></div>`;
+}
+async function clSaveFees(id,b){
+  const v={}; ['fee_job','fee_top','fee_unlock'].forEach(k=>{ const x=$('cf-'+k).value.trim(); v[k]= x==='' ? null : Math.max(0,parseFloat(x)||0); });
+  b.disabled=true; try{ await q(`clients?id=eq.${id}`,{method:'PATCH',body:v}); Object.assign(clById(id),v); render(); toast('Gebühren gespeichert'); }catch(e){ b.disabled=false; }
+}
+async function clCancel(id){
+  const c=clById(id), live=clJobs(id).filter(j=>j.status==='live');
+  if(!confirm(`${c.firma} wirklich kündigen?\n\n• Der Auftraggeber kann keine Jobs mehr einreichen.\n• ${live.length} laufende Jobs werden beendet.\n• Rechnungen und Daten bleiben erhalten.`)) return;
+  const patch={status:'gekuendigt',gekuendigt_am:new Date().toISOString()};
+  await q(`clients?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(c,patch);
+  if(live.length){ await q(`jobs?client_id=eq.${id}&status=eq.live`,{method:'PATCH',body:{status:'beendet'}}); live.forEach(j=>j.status='beendet'); }
+  render(); toast('Auftraggeber gekündigt');
+}
+async function clReactivate(id){
+  const patch={status:'aktiv',gekuendigt_am:null}; await q(`clients?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(clById(id),patch); render(); toast('Wieder aktiv');
+}
+// Beim Veröffentlichen: Gebühr als Rechnung anbieten
+async function offerJobInvoice(job){
+  const c=clById(job.client_id); if(!c) return;
+  const fee=feeOf(c,'fee_job') + (job.top ? feeOf(c,'fee_top') : 0); if(!(fee>0)) return;
+  if(!confirm(`Rechnung über ${eur(fee)} netto an ${c.firma} für diesen Job erstellen?`)) return;
+  const [r]=await q('invoices',{method:'POST',prefer:'return=representation',body:{no:nextNo(),customer:c.firma,email:c.email||null,item:`Stellenanzeige „${job.titel}“${job.top?' (Top-Job)':''}`,net:fee,vat:D.settings.vat,status:'offen',client_id:c.id}});
+  D.invoices.unshift({id:r.id,no:r.no,date:r.created_at.slice(0,10),cust:r.customer,email:r.email||'',item:r.item,net:+r.net,vat:+r.vat,st:r.status,client_id:r.client_id});
+  toast('Rechnung '+r.no+' erstellt');
 }
 
 /* ===== Dashboard ===== */
@@ -524,14 +629,15 @@ function rechnungen(){
 }
 async function invSet(id,st){ await q(`invoices?id=eq.${id}`,{method:'PATCH',body:{status:st}}); D.invoices.find(i=>i.id===id).st=st; render(); toast('Gespeichert'); }
 function nextNo(){ const y=new Date().getFullYear(); const n=Math.max(0,...D.invoices.filter(i=>i.no.startsWith('CH-'+y)).map(i=>+i.no.split('-')[2]||0))+1; return `CH-${y}-${String(n).padStart(4,'0')}`; }
-function newInvoice(){
+function newInvoice(cid){
+  const cl = cid ? clById(cid) : null;
   if(location.hash.includes('?neu')) history.replaceState(null,'','#rechnungen');
-  openModal(`<h3 style="font-size:18px">Neue Rechnung · ${nextNo()}</h3>
+  openModal(`<h3 style="font-size:18px">Neue Rechnung · ${nextNo()}</h3><input type="hidden" id="iClient" value="${cl?cl.id:''}">
   <div class="grid" style="gap:12px;margin-top:12px">
-    <label class="f">Kunde<input class="in" id="iCust" placeholder="Firma oder Name"></label>
-    <label class="f">E-Mail<input class="in" id="iMail" type="email" placeholder="rechnung@firma.de"></label>
+    <label class="f">Kunde<input class="in" id="iCust" placeholder="Firma oder Name" value="${cl?esc(cl.firma):''}"></label>
+    <label class="f">E-Mail<input class="in" id="iMail" type="email" placeholder="rechnung@firma.de" value="${cl?esc(cl.email||''):''}"></label>
     <label class="f">Leistung<select class="in" id="iItem" onchange="iNet.value=this.selectedOptions[0].dataset.p||iNet.value">
-      <option data-p="${D.settings.unlock}">Freischaltung Kandidat</option><option data-p="${D.settings.topJob}">Top-Job (30 Tage)</option><option data-p="149">Laufband-Anzeige (1 Monat)</option><option data-p="">Sonstiges</option></select></label>
+      <option data-p="${cl?feeOf(cl,'fee_unlock'):D.settings.unlock}">Freischaltung Kandidat</option><option data-p="${cl?feeOf(cl,'fee_job'):D.settings.jobFee}">Stellenanzeige</option><option data-p="${D.settings.topJob}">Top-Job (30 Tage)</option><option data-p="149">Laufband-Anzeige (1 Monat)</option><option data-p="">Sonstiges</option></select></label>
     <div class="grid g2" style="gap:12px"><label class="f">Netto (€)<input class="in" id="iNet" type="number" step="0.01" value="${D.settings.unlock}"></label><label class="f">MwSt / IVA<input class="in" value="${D.settings.vat} %" disabled></label></div>
     <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="saveInvoice(this)">Rechnung erstellen</button></div>
   </div>`);
@@ -541,15 +647,15 @@ async function saveInvoice(b){
   if(!c||!(n>0)) return toast('Bitte Kunde und Betrag ausfüllen');
   b.disabled=true;
   try{
-    const [r]=await q('invoices',{method:'POST',prefer:'return=representation',body:{no:nextNo(),customer:c,email:$('iMail').value.trim()||null,item:$('iItem').value,net:n,vat:D.settings.vat,status:'offen'}});
-    D.invoices.unshift({id:r.id,no:r.no,date:r.created_at.slice(0,10),cust:r.customer,email:r.email||'',item:r.item,net:+r.net,vat:+r.vat,st:r.status});
+    const [r]=await q('invoices',{method:'POST',prefer:'return=representation',body:{no:nextNo(),customer:c,email:$('iMail').value.trim()||null,item:$('iItem').value,net:n,vat:D.settings.vat,status:'offen',...( $('iClient').value ? {client_id:+$('iClient').value} : {} )}});
+    D.invoices.unshift({id:r.id,no:r.no,date:r.created_at.slice(0,10),cust:r.customer,email:r.email||'',item:r.item,net:+r.net,vat:+r.vat,st:r.status,client_id:r.client_id??null});
     closeModal(); render(); toast('Rechnung erstellt');
   }catch(e){ b.disabled=false; }
 }
 function showInvoice(id){
   const i=D.invoices.find(x=>x.id===id), v=i.vat;
   openModal(`<div id="invdoc" style="background:#fff;color:#111;border-radius:10px;padding:28px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start"><span class="logo" style="font-size:26px"><span class="l1" style="color:#111">closing</span><span class="l2">HUB</span></span><div style="text-align:right;font-size:12px">Elias Schulz<br>Carrer de Julio Cortázar 18<br>Calvià, Mallorca<br>NIF: [NIF]</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start"><span class="logo" style="font-size:26px"><span class="l1" style="color:#111">closing</span><span class="l2">HUB</span></span><div style="text-align:right;font-size:12px">Elias Schulz<br>Carrer de Julio Cortázar 18<br>Calvià, Mallorca<br>NIF: X1847033P</div></div>
     <h2 style="margin:24px 0 4px;font-size:20px">Rechnung ${esc(i.no)}</h2><div style="font-size:12px;color:#666">Datum: ${new Date(i.date).toLocaleDateString('de-DE')}</div>
     <div style="margin:18px 0;font-size:13px"><b>An:</b> ${esc(i.cust)}<br>${esc(i.email)}</div>
     <table style="font-size:13px"><tr><th style="color:#666">Leistung</th><th style="color:#666;text-align:right">Betrag</th></tr>
@@ -727,7 +833,7 @@ function einstellungen(){
   <div class="grid g2">
     <div class="card"><h3>Abos</h3><div class="grid g2" style="gap:12px">${n('plus','Plus / Monat','0.01','€')}${n('premiumM','Premium / Monat','0.01','€')}${n('premiumY','Premium / Jahr','1','€')}${n('vat','MwSt / IVA','1','%')}</div></div>
     <div class="card"><h3>Day Ones</h3><div class="grid g2" style="gap:12px">${n('dayoneTotal','Anzahl Plätze (live)','1')}${n('dayoneFreeMonths','Gratis-Monate','1')}${n('dayonePremiumMonths','Premium-Monate gratis','1')}${n('maxPerCountry','Max. Member je Land','1')}</div></div>
-    <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('marketFee','Marktplatz-Gebühr','0.1','%')}${n('topJob','Top-Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
+    <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('marketFee','Marktplatz-Gebühr','0.1','%')}${n('topJob','Top-Job','0.01','€')}${n('jobFee','Gebühr pro veröffentlichtem Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
     <div class="card"><h3>Verbindung</h3><div class="row" style="margin-bottom:8px"><span class="pill p-ok">Supabase verbunden</span></div><p class="muted" style="font-size:13px">Angemeldet als ${esc(SESSION&&SESSION.email)}</p><button class="btn" style="margin-top:12px" onclick="logout()">Abmelden</button></div>
   </div>
   <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn gold-b" onclick="saveSettings(this)">Alles speichern</button></div>
@@ -758,7 +864,7 @@ async function saveSettings(b){
   const s=D.settings; b.disabled=true;
   try{
     await Promise.all([
-      setKey('preise',{plus:s.plus,premiumM:s.premiumM,premiumY:s.premiumY,unlock:s.unlock,marketFee:s.marketFee,topJob:s.topJob,vat:s.vat}),
+      setKey('preise',{plus:s.plus,premiumM:s.premiumM,premiumY:s.premiumY,unlock:s.unlock,marketFee:s.marketFee,topJob:s.topJob,jobFee:s.jobFee,vat:s.vat}),
       setKey('dayone',{total:s.dayoneTotal,freeMonths:s.dayoneFreeMonths,premiumMonths:s.dayonePremiumMonths}),
       setKey('limits',{maxPerCountry:s.maxPerCountry,perCategory:s.perCategory})
     ]);
@@ -784,7 +890,7 @@ $('q').addEventListener('keydown',e=>{
 });
 
 /* ===== Render ===== */
-const PAGES={stellen,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
+const PAGES={auftraggeber,stellen,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
 async function reload(){ LOADED=false; await render(); toast('Aktualisiert'); }
 async function render(){
   const logged=!!SESSION;
