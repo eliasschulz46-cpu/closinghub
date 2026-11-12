@@ -204,6 +204,10 @@
   .abos label{align-items:flex-start}
   .abos input{margin-top:3px!important}
   .roles label:has(input:checked){border-color:var(--gold);background:#1a1710}
+  .kf-vt{list-style:none;margin:0 0 16px;padding:14px 16px;border:1px solid rgba(212,168,67,.28);border-radius:12px;background:rgba(212,168,67,.06);display:grid;gap:8px;font-size:14px;line-height:1.45;color:var(--muted)}
+  .kf-vt li{position:relative;padding-left:24px}
+  .kf-vt li::before{content:"✓";position:absolute;left:0;top:0;color:var(--gold);font-weight:700}
+  .kf-vt b{color:var(--gold-l);font-weight:600}
   .consent{display:flex;gap:10px;font-size:13px;color:var(--muted);margin:6px 0 20px;align-items:flex-start}
   .consent input{margin-top:3px;accent-color:var(--gold)}
   .consent a{color:var(--gold);text-decoration:underline;cursor:pointer}
@@ -889,13 +893,19 @@
 
 <div class="modal" id="m-kontakt"><div class="card box"><button class="x" data-close>×</button>
   <h3>Stellenangebot einreichen</h3>
-  <p style="margin-bottom:18px">Du suchst Closer oder Setter? Beschreib kurz deinen Job. Wir bereiten ihn auf, veröffentlichen ihn anonym und melden uns bei dir. Kein Abo, du zahlst nur <span data-p="unlock">25 €</span> pro freigeschaltetem Kandidaten.</p>
+  <p style="margin-bottom:12px">Du suchst Closer oder Setter? Beschreib kurz deinen Job, wir melden uns bei dir.</p>
+  <ul class="kf-vt">
+    <li><b>Nur Vertriebler.</b> Dein Job erreicht ausschließlich Closer und Setter.</li>
+    <li><b>Anonym veröffentlicht.</b> Deine Firma wird in der Anzeige nicht genannt.</li>
+    <li><b>Kein Abo, kein Risiko.</b> Du zahlst nur <span data-p="unlock">25 €</span> pro freigeschaltetem Kandidaten.</li>
+    <li><b>Wir bereiten deine Anzeige auf.</b> Jede Anzeige wird persönlich geprüft.</li>
+  </ul>
   <p style="margin:-6px 0 18px;font-size:14px"><a href="portal.html" style="color:var(--gold);font-weight:600">Zum Auftraggeber-Portal →</a> <span style="color:var(--muted)">Konto anlegen, Jobs einreichen, Status und Rechnungen im Blick.</span></p>
   <form id="kf" novalidate>
     <div class="row"><div class="field"><label for="kf-firma">Firma</label><input id="kf-firma" name="firma" autocomplete="organization"></div>
     <div class="field"><label for="kf-name">Name</label><input id="kf-name" name="name" autocomplete="name" required></div></div>
     <div class="row"><div class="field"><label for="kf-mail">E-Mail</label><input id="kf-mail" name="email" type="email" autocomplete="email" required></div>
-    <div class="field"><label for="kf-tel">Telefon (optional)</label><input id="kf-tel" name="telefon" type="tel" autocomplete="tel" placeholder="+49 …"></div></div>
+    <div class="field"><label for="kf-tel">Telefon</label><input id="kf-tel" name="telefon" type="tel" autocomplete="tel" placeholder="+49 …" required></div></div>
     <div class="field"><label for="kf-rolle">Wen suchst du?</label><select id="kf-rolle" name="rolle"><option>Closer</option><option>Setter</option><option>Closer &amp; Setter</option></select></div>
     <div class="field"><label for="kf-msg">Beschreib den Job</label><textarea id="kf-msg" name="nachricht" rows="6" required placeholder="Was verkaufst du, zu welchem Preis? Wie hoch ist die Provision (und gibt es ein Fixum)? Remote oder vor Ort, welche Region? Umfang, Start und wie lange? Was muss die Person mitbringen?"></textarea></div>
     <input name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px">
@@ -1131,7 +1141,8 @@ document.getElementById('kf').addEventListener('submit', async e=>{
   if(!d.name||!d.name.trim()) return fail('Bitte gib deinen Namen ein.');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email||'')) return fail('Bitte gib eine gültige E-Mail-Adresse ein.');
   if(!d.nachricht || d.nachricht.trim().length<20) return fail('Bitte beschreib den Job in ein paar Sätzen.');
-  if(d.telefon && !/^[+0-9][0-9 ()\/\-]{5,}$/.test(d.telefon.trim())) return fail('Bitte prüf die Telefonnummer.');
+  if(!d.telefon||!d.telefon.trim()) return fail('Bitte gib deine Telefonnummer an.');
+  if(!/^[+0-9][0-9 ()\/\-]{5,}$/.test(d.telefon.trim())) return fail('Bitte prüf die Telefonnummer.');
   if(!document.getElementById('kf-ok2').checked) return fail('Bitte bestätige die Bedingungen für Auftraggeber.');
   const b=document.getElementById('kf-btn'); b.disabled=true; b.textContent='Wird gesendet …';
   try{
