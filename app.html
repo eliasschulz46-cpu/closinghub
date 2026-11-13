@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ClosingHub – Vorschau</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=Lora:ital,wght@0,400;0,600;1,500&family=Parisienne&family=Bebas+Neue&display=swap">
-<script>try{if(localStorage.getItem('ch_theme')!=='dark')document.documentElement.classList.add('light')}catch(e){document.documentElement.classList.add('light')}</script>
+<script>document.documentElement.classList.add('js');try{if(localStorage.getItem('ch_farbe')!=='dark')document.documentElement.classList.add('light')}catch(e){document.documentElement.classList.add('light')}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 
@@ -164,12 +164,14 @@ tailwind.config = { theme: { extend: {
 </style>
 <style id="vertrag-theme">
   /* ClosingHub Vertragsdesign: Papier, Tinte, Abschluss-Grün */
-  :root,.dark-zone,.breath-ov,.mode-ov,#psheet{--bg:14 26 43;--panel:22 37 60;--line:38 56 84;--muted:157 170 190;--fg:242 244 241;--ic:226 232 240;--icl:58 76 104;--chip:22 37 60;--sheet1:22 37 60;--sheet2:14 26 43}
+  :root,#psheet{--bg:255 255 255;--panel:255 255 255;--line:221 226 233;--muted:91 101 118;--fg:14 26 43;--ic:14 26 43;--icl:205 211 202;--chip:227 241 234;--sheet1:255 255 255;--sheet2:247 248 246}
+  .dark-zone,.breath-ov,.mode-ov{--bg:14 26 43;--panel:22 37 60;--line:38 56 84;--muted:157 170 190;--fg:242 244 241;--ic:226 232 240;--icl:58 76 104;--chip:22 37 60;--sheet1:22 37 60;--sheet2:14 26 43}
+  html.js:not(.light),html.js:not(.light) #psheet{--bg:14 26 43;--panel:22 37 60;--line:38 56 84;--muted:157 170 190;--fg:242 244 241;--ic:226 232 240;--icl:58 76 104;--chip:22 37 60;--sheet1:22 37 60;--sheet2:14 26 43}
   html.light{--bg:255 255 255;--panel:255 255 255;--line:221 226 233;--muted:91 101 118;--fg:14 26 43;--ic:14 26 43;--icl:205 211 202;--chip:227 241 234;--sheet1:255 255 255;--sheet2:247 248 246}
   html.light #psheet{--bg:255 255 255;--panel:255 255 255;--line:221 226 233;--muted:91 101 118;--fg:14 26 43;--ic:14 26 43;--icl:205 211 202;--sheet1:255 255 255;--sheet2:247 248 246}
   html,body{font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
   .gold-text{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#087A4B}
-  html:not(.light) .gold-text{color:#7FD1A8}
+  html.js:not(.light) .gold-text{color:#7FD1A8}
   .dark-zone .gold-text{color:#7FD1A8}
   .gold-bg{background:#087A4B;color:#fff}
   .btn-gold{background:#087A4B;color:#fff;font-weight:700;border-radius:6px}
@@ -499,7 +501,7 @@ function shell(content){
   </div>`;
 }
 function isLight(){ return document.documentElement.classList.contains('light'); }
-function toggleTheme(){ const on=!isLight(); document.documentElement.classList.toggle('light',on); try{localStorage.setItem('ch_theme',on?'light':'dark')}catch(e){} render(); }
+function toggleTheme(){ const on=!isLight(); document.documentElement.classList.toggle('light',on); try{localStorage.setItem('ch_farbe',on?'light':'dark')}catch(e){} render(); }
 function toggleMode(){
   S.mode = S.mode==='consumer'?'auftraggeber':'consumer'; save();
   const o=document.createElement('div'); o.className='mode-ov';
