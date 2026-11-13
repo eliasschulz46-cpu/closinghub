@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ClosingHub – Vorschau</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,500&family=Cinzel:wght@400;500;600&family=Parisienne&family=Bebas+Neue&family=Plus+Jakarta+Sans:ital,wght@1,600;1,700&family=Inter:wght@400;500;600;700&display=swap">
-<script>try{if(localStorage.getItem('ch_theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=Lora:ital,wght@0,400;0,600;1,500&family=Parisienne&family=Bebas+Neue&display=swap">
+<script>try{if(localStorage.getItem('ch_theme')!=='dark')document.documentElement.classList.add('light')}catch(e){document.documentElement.classList.add('light')}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 
@@ -55,8 +55,8 @@
 const _lp0=Date.now(); const LP=()=> Date.now()-_lp0<3000 ? 'play' : '';
 
 tailwind.config = { theme: { extend: {
-  colors: { bg:'rgb(var(--bg) / <alpha-value>)', panel:'rgb(var(--panel) / <alpha-value>)', line:'rgb(var(--line) / <alpha-value>)', muted:'rgb(var(--muted) / <alpha-value>)', gold:{ DEFAULT:'#D4A843', light:'#F3D58A', dark:'#A97C22' } },
-  fontFamily: { serif:['Lora','serif'], sans:['Inter','sans-serif'] } } } };
+  colors: { bg:'rgb(var(--bg) / <alpha-value>)', panel:'rgb(var(--panel) / <alpha-value>)', line:'rgb(var(--line) / <alpha-value>)', muted:'rgb(var(--muted) / <alpha-value>)', gold:{ DEFAULT:'#087A4B', light:'#3FA877', dark:'#06603B' }, ink:'#0E1A2B', pen:'#1F3FBF' },
+  fontFamily: { serif:['Lora','serif'], sans:['Archivo','system-ui','sans-serif'] } } } };
 </script>
 <style>
   :root,.dark-zone,.breath-ov,.mode-ov,#psheet{--bg:10 10 11;--panel:18 18 20;--line:35 35 39;--muted:138 138 147;--fg:237 237 237;--ic:217 217 222;--icl:58 58 64;--chip:20 18 16;--sheet1:22 22 26;--sheet2:13 13 15}
@@ -66,14 +66,14 @@ tailwind.config = { theme: { extend: {
   .dark-zone,.breath-ov,.mode-ov{color:rgb(var(--fg))}
   html.light .text-white\/90{color:rgb(var(--fg) / .9)}
   html.light .dark-zone .text-white\/90{color:rgba(255,255,255,.9)}
-  .gold-text{background:linear-gradient(90deg,#F3D58A,#D4A843,#A97C22);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .gold-bg{background:linear-gradient(135deg,#F3D58A,#D4A843,#A97C22)}
+  .gold-text{background:linear-gradient(90deg,#7FD1A8,#087A4B,#06603B);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .gold-bg{background:linear-gradient(135deg,#7FD1A8,#087A4B,#06603B)}
   .card{background:rgb(var(--panel));border:1px solid rgb(var(--line));border-radius:1rem}
-  .btn-gold{background:linear-gradient(135deg,#F3D58A,#D4A843,#A97C22);color:#000;font-weight:600;border-radius:.75rem;padding:.55rem 1rem;display:inline-block;text-align:center}
+  .btn-gold{background:linear-gradient(135deg,#7FD1A8,#087A4B,#06603B);color:#000;font-weight:600;border-radius:.75rem;padding:.55rem 1rem;display:inline-block;text-align:center}
   .btn-ghost{border:1px solid rgb(var(--line));border-radius:.75rem;padding:.55rem 1rem;display:inline-block;text-align:center}
-  .btn-ghost:hover{border-color:#D4A843}
+  .btn-ghost:hover{border-color:#087A4B}
   .input{width:100%;background:rgb(var(--bg));border:1px solid rgb(var(--line));border-radius:.75rem;padding:.55rem .75rem;outline:none;color:rgb(var(--fg))}
-  .input:focus{border-color:#D4A843}
+  .input:focus{border-color:#087A4B}
   .nav-a{display:flex;align-items:center;gap:1rem;padding:.75rem;border-radius:.75rem}
   .nav-a:hover,.nav-a.on{background:rgb(var(--panel))}
   .nav-a.on{font-weight:600}
@@ -81,31 +81,31 @@ tailwind.config = { theme: { extend: {
   .noscroll::-webkit-scrollbar{display:none}
   .icbox{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:rgb(var(--ic));background:transparent;border:1px solid rgb(var(--icl));transition:border-color .5s ease,box-shadow .5s ease}
   .icbox svg{stroke-width:1.25}
-  a:hover .icbox,button:hover .icbox,.icbox:hover{border-color:#D4A843;box-shadow:0 0 8px rgba(212,168,67,.25)}
-  .icon-on .icbox,.nav-a.on .icbox{border-color:#A97C22}
+  a:hover .icbox,button:hover .icbox,.icbox:hover{border-color:#087A4B;box-shadow:0 0 8px rgba(8,122,75,.25)}
+  .icon-on .icbox,.nav-a.on .icbox{border-color:#06603B}
   .mode-ov{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(8,8,9,.78);backdrop-filter:blur(10px) grayscale(.4);-webkit-backdrop-filter:blur(10px);animation:ovIn .45s ease forwards}
   .mode-ov.out{animation:ovOut .55s ease forwards}
   .mode-inner{display:flex;flex-direction:column;align-items:center;gap:18px}
-  .mode-txt{font-family:Cinzel,serif;font-weight:500;font-size:clamp(28px,6.5vw,68px);line-height:1.2;padding:0 .3em;text-align:center;max-width:94vw;background:linear-gradient(90deg,#A97C22,#F3D58A 45%,#D4A843 55%,#A97C22);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:txtIn .9s cubic-bezier(.2,.8,.2,1) forwards, shine 1.6s ease .3s forwards;opacity:0}
-  .mode-line{height:1px;width:0;background:linear-gradient(90deg,transparent,#D4A843,transparent);animation:lineIn .9s cubic-bezier(.2,.8,.2,1) .15s forwards}
+  .mode-txt{font-family:Archivo,sans-serif;font-weight:500;font-size:clamp(28px,6.5vw,68px);line-height:1.2;padding:0 .3em;text-align:center;max-width:94vw;background:linear-gradient(90deg,#06603B,#7FD1A8 45%,#087A4B 55%,#06603B);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:txtIn .9s cubic-bezier(.2,.8,.2,1) forwards, shine 1.6s ease .3s forwards;opacity:0}
+  .mode-line{height:1px;width:0;background:linear-gradient(90deg,transparent,#087A4B,transparent);animation:lineIn .9s cubic-bezier(.2,.8,.2,1) .15s forwards}
   @keyframes ovIn{from{opacity:0}to{opacity:1}}
   @keyframes ovOut{to{opacity:0}}
   @keyframes txtIn{from{opacity:0;letter-spacing:.4em;transform:translateY(10px);filter:blur(6px)}to{opacity:1;letter-spacing:.1em;transform:none;filter:none}}
-  .mode-sub{font-family:Cinzel,serif;font-size:clamp(11px,1.6vw,15px);letter-spacing:.6em;color:#A97C22;opacity:0;animation:ovIn .6s ease .55s forwards;margin-top:-6px;padding-left:.6em}
+  .mode-sub{font-family:Archivo,sans-serif;font-size:clamp(11px,1.6vw,15px);letter-spacing:.6em;color:#06603B;opacity:0;animation:ovIn .6s ease .55s forwards;margin-top:-6px;padding-left:.6em}
   .mode-ov{overflow:hidden}
   @keyframes lineIn{to{width:min(60vw,420px)}}
   @keyframes shine{from{background-position:100% 0}to{background-position:0 0}}
   .breath-ov{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:rgba(8,8,9,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:ovIn .6s ease}
   .breath-wrap{position:relative;width:240px;height:240px;display:flex;align-items:center;justify-content:center}
-  .breath-c{position:absolute;width:110px;height:110px;border-radius:50%;border:1px solid #D4A843;box-shadow:0 0 40px rgba(212,168,67,.25),inset 0 0 30px rgba(212,168,67,.15);animation:breathe 10s ease-in-out infinite}
-  .breath-t{font-family:Cinzel,serif;letter-spacing:.2em;color:#F3D58A;font-size:18px;position:relative}
+  .breath-c{position:absolute;width:110px;height:110px;border-radius:50%;border:1px solid #087A4B;box-shadow:0 0 40px rgba(8,122,75,.25),inset 0 0 30px rgba(8,122,75,.15);animation:breathe 10s ease-in-out infinite}
+  .breath-t{font-family:Archivo,sans-serif;letter-spacing:.2em;color:#7FD1A8;font-size:18px;position:relative}
   @keyframes breathe{0%{transform:scale(1)}40%{transform:scale(2)}50%{transform:scale(2)}100%{transform:scale(1)}}
   @keyframes kb{from{transform:scale(1.04)}to{transform:scale(1.14) translateY(-2%)}}
   .kb{animation:kb 9s ease-in-out infinite alternate}
-  @keyframes drawGold{0%{stroke-dashoffset:100;stroke:#F3D58A;filter:drop-shadow(0 0 0 rgba(212,168,67,0))}60%{filter:drop-shadow(0 0 3px rgba(243,213,138,.9))}100%{stroke-dashoffset:0;stroke:#D4A843;filter:drop-shadow(0 0 1px rgba(212,168,67,.5))}}
+  @keyframes drawGold{0%{stroke-dashoffset:100;stroke:#7FD1A8;filter:drop-shadow(0 0 0 rgba(8,122,75,0))}60%{filter:drop-shadow(0 0 3px rgba(127,209,168,.9))}100%{stroke-dashoffset:0;stroke:#087A4B;filter:drop-shadow(0 0 1px rgba(8,122,75,.5))}}
   a:hover .icbox svg *,button:hover .icbox svg *,.icbox:hover svg *,button:hover>svg *,a:hover>svg *{stroke-dasharray:100;animation:drawGold .65s cubic-bezier(.6,.05,.3,1) forwards}
-  .icon-on .icbox svg *,.nav-a.on .icbox svg *{stroke:#D4A843}
-  .icon-on .icbox svg path{fill:rgba(212,168,67,.35)}
+  .icon-on .icbox svg *,.nav-a.on .icbox svg *{stroke:#087A4B}
+  .icon-on .icbox svg path{fill:rgba(8,122,75,.35)}
   @keyframes adOut{from{transform:translateX(0)}to{transform:translateX(-110%)}}
   @keyframes adIn{from{transform:translateX(110%)}to{transform:translateX(0)}}
   .ad-out{animation:adOut 1.5s cubic-bezier(.6,0,1,.6) forwards}
@@ -123,7 +123,7 @@ tailwind.config = { theme: { extend: {
   #chatwrap.open .chat-sheet{transform:translateY(0)}
   .chlogo{line-height:1;white-space:nowrap;color:rgb(var(--fg));display:inline-flex;align-items:baseline}
   .chlogo .l1{font-family:Parisienne,cursive;font-weight:400;margin-right:.08em}
-  .chlogo .l2{font-family:'Bebas Neue',sans-serif;font-size:1.12em;letter-spacing:.01em;background:linear-gradient(120deg,#FFF1C2,#E8C35A 35%,#C8962E 70%,#8C6418);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .chlogo .l2{font-family:'Bebas Neue',sans-serif;font-size:1.12em;letter-spacing:.01em;background:linear-gradient(120deg,#E3F1EA,#087A4B 35%,#06603B 70%,#06603B);-webkit-background-clip:text;background-clip:text;color:transparent}
   .rk{font-size:max(11px,.7em);line-height:1.25;padding:.12em .5em;border-radius:.4em;border:1px solid;font-weight:500}
 
   /* Logo-Animation: Linien von „closing“ leuchten nach und nach auf wie ein LED-Band (≈6 s) */
@@ -162,6 +162,45 @@ tailwind.config = { theme: { extend: {
   .light .lgi canvas{display:none}
   .light .lgi .lg-hub{opacity:1!important;filter:none!important}
 </style>
+<style id="vertrag-theme">
+  /* ClosingHub Vertragsdesign: Papier, Tinte, Abschluss-Grün */
+  :root,.dark-zone,.breath-ov,.mode-ov,#psheet{--bg:14 26 43;--panel:22 37 60;--line:38 56 84;--muted:157 170 190;--fg:242 244 241;--ic:226 232 240;--icl:58 76 104;--chip:22 37 60;--sheet1:22 37 60;--sheet2:14 26 43}
+  html.light{--bg:242 244 241;--panel:255 255 255;--line:225 229 223;--muted:91 101 118;--fg:14 26 43;--ic:14 26 43;--icl:205 211 202;--chip:227 241 234;--sheet1:255 255 255;--sheet2:247 248 246}
+  html.light #psheet{--bg:242 244 241;--panel:255 255 255;--line:225 229 223;--muted:91 101 118;--fg:14 26 43;--ic:14 26 43;--icl:205 211 202;--sheet1:255 255 255;--sheet2:247 248 246}
+  html,body{font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .gold-text{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#087A4B}
+  html:not(.light) .gold-text{color:#7FD1A8}
+  .dark-zone .gold-text{color:#7FD1A8}
+  .gold-bg{background:#087A4B;color:#fff}
+  .btn-gold{background:#087A4B;color:#fff;font-weight:700;border-radius:6px}
+  .btn-gold:hover{background:#06603B}
+  .btn-ghost{border-radius:6px}
+  .btn-ghost:hover{border-color:rgb(var(--fg))}
+  .input{border-radius:6px}
+  .input:focus{border-color:#1F3FBF;box-shadow:0 0 0 3px rgba(31,63,191,.12)}
+  .card{border-radius:12px}
+  html.light .card{border-color:#E3E7E1;box-shadow:0 1px 2px rgba(14,26,43,.04),0 8px 22px -14px rgba(14,26,43,.14)}
+  .nav-a{border-radius:8px}
+  html.light .nav-a:hover{background:#E8ECE6}
+  html.light .nav-a.on{background:#0E1A2B;color:#fff}
+  html.light .nav-a.on .icbox{border-color:rgba(255,255,255,.35);color:#fff}
+  html.light .nav-a.on .icbox svg *{stroke:#7FD1A8}
+  .font-serif{font-family:Lora,serif}
+  .chlogo{color:rgb(var(--fg))}
+  .chlogo .l2{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:rgb(var(--fg))}
+  .chlogo .l1 .glow{display:none}
+  .chlogo .l1 .ink{opacity:1}
+  .mode-ov{background:rgba(14,26,43,.86)}
+  .breath-ov{background:rgba(14,26,43,.92)}
+  .mode-txt{font-family:Archivo,sans-serif;font-weight:900;font-variation-settings:"wdth" 75;letter-spacing:.02em;background:none;color:#fff;-webkit-background-clip:border-box;background-clip:border-box}
+  .mode-sub{font-family:Archivo,sans-serif;font-weight:700;color:#7FD1A8;letter-spacing:.3em}
+  .mode-line{background:linear-gradient(90deg,transparent,#087A4B,transparent)}
+  .breath-t{font-family:Archivo,sans-serif;font-weight:700;color:#fff;letter-spacing:.12em}
+  .breath-c{border-color:#7FD1A8;box-shadow:0 0 40px rgba(8,122,75,.3),inset 0 0 30px rgba(8,122,75,.18)}
+  html.light .text-gold{color:#087A4B}
+  :focus-visible{outline:2px solid #1F3FBF;outline-offset:2px}
+</style>
+
 </head>
 <body>
 <div id="app"></div>
@@ -209,7 +248,7 @@ const BG = {
   muenzen:{th:'Geld',n:'Münzstapel',d:'<ellipse cx="140" cy="300" rx="55" ry="16"/><path d="M85 300v-20M195 300v-20"/><ellipse cx="140" cy="280" rx="55" ry="16"/><path d="M85 280v-20M195 280v-20"/><ellipse cx="140" cy="260" rx="55" ry="16"/><ellipse cx="260" cy="300" rx="55" ry="16"/><path d="M205 300v-60M315 300v-60"/><ellipse cx="260" cy="240" rx="55" ry="16"/><circle cx="300" cy="120" r="40"/><path d="M300 100v40M288 108h20a8 8 0 0 1 0 12h-16a8 8 0 0 0 0 12h20"/>'},
   skyline:{th:'Geld',n:'Skyline',d:'<path d="M20 340h360"/><path d="M50 340V220h50v120M110 340V150h60v190M180 340V90l35-30 35 30v250M260 340V180h55v160M325 340V240h40v100"/><path d="M125 175h30M125 200h30M125 225h30M195 120h40M195 150h40M195 180h40M275 205h25M275 230h25" opacity=".6"/>'},
 };
-function bgSvg(k){ const b=BG[k]; if(!b) return ''; return `<svg class="absolute inset-0 w-full h-full" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#D4A843" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.22">${b.d}</svg>`; }
+function bgSvg(k){ const b=BG[k]; if(!b) return ''; return `<svg class="absolute inset-0 w-full h-full" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#087A4B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.22">${b.d}</svg>`; }
 
 const STORIES = [
   {n:'Marco',r:'Rising',e:'🔥',t:'Erster Abschluss über 4.200 € heute! Danke ans Forum für die Einwand-Tipps.'},
@@ -319,7 +358,7 @@ function personModal(n){
         <div class="w-20 h-20 rounded-full gold-bg p-[3px] shrink-0"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(n)}</div></div>
         <div class="min-w-0"><div class="text-lg">${nameRank(n,r)}</div>
           ${rt?`<p class="text-sm mt-0.5">⭐ <b>${rt.replace('.',',')}</b> <span class="text-muted">· ${offers.reduce((s,o)=>s+o.n,0)} Bewertungen</span></p>`:''}
-          ${p?`<span class="inline-block mt-1.5 text-[11px] px-2.5 py-0.5 rounded-full border" style="border-color:#D4A843;color:#F3D58A">Partner für ${p.s}</span>`:''}</div></div>
+          ${p?`<span class="inline-block mt-1.5 text-[11px] px-2.5 py-0.5 rounded-full border" style="border-color:#087A4B;color:#7FD1A8">Partner für ${p.s}</span>`:''}</div></div>
       ${p?`<p class="text-sm text-muted mt-4">${p.bio}</p>`:''}
       ${offers.length?`<p class="text-xs uppercase tracking-wide text-muted mt-5 mb-2">Angebote im Marktplatz</p><div class="space-y-2">${offers.map(o=>`<div class="flex items-center justify-between gap-3 border border-line rounded-xl px-3 py-2"><span class="min-w-0"><span class="block text-[10px] uppercase tracking-wide text-gold">${o.cat}</span><span class="block text-sm truncate">${o.t}</span></span><span class="font-serif text-lg text-gold whitespace-nowrap">${o.pr} €</span></div>`).join('')}</div>`:''}
       <div id="pmsg" class="mt-5">${S.user?`<textarea id="pmtxt" maxlength="500" class="input h-24 text-sm" placeholder="Schreib ${n} eine Nachricht …"></textarea>
@@ -336,9 +375,9 @@ fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/settings?select=value&ke
   .then(r=>r.ok?r.json():null).then(rows=>{ const l=rows&&rows[0]&&rows[0].value&&rows[0].value.services; if(Array.isArray(l)&&l.length){ MCATS.splice(0,MCATS.length,...l.map(x=>String(x).replace(/[<>"'`]/g,'').trim()).filter(Boolean).slice(0,40)); if(S.mcat!=='Alle'&&!MCATS.includes(S.mcat)) S.mcat='Alle'; if(typeof route==='function' && route()==='markt') render(); } }).catch(()=>{});
 const NEARBY = [['Felix','Pro','München · 4 km'],['Hannah','Rising','Augsburg · 31 km'],['Tobias','Elite','München · 7 km'],['Mia','Rookie','Freising · 22 km'],['David','Pro','Rosenheim · 48 km']];
 const BADGE_IC = {'Founding Member':'b_found','Ausweis verifiziert':'b_id','Verified 50k':'b_money','High-Ticket':'b_diamond','Platform-verified':'b_shield'};
-function badgeIcon(b){ return `<span title="${b}" aria-label="${b}" class="w-11 h-11 rounded-full flex items-center justify-center" style="border:1px solid #D4A843;color:#D4A843;background:rgb(var(--panel));box-shadow:0 0 14px rgba(212,168,67,.18)">${svg(BADGE_IC[b]||'b_shield',20)}</span>`; }
-function badgePill(b){ return `<span class="inline-flex items-center gap-2 pl-1 pr-3.5 py-1 rounded-full border text-sm" style="border-color:#3a3020;background:rgb(var(--chip))"><span class="w-7 h-7 rounded-full flex items-center justify-center" style="border:1px solid #D4A843;color:#D4A843;background:rgb(var(--panel))">${svg(BADGE_IC[b]||'b_shield',15)}</span>${b}</span>`; }
-const RKC = {Rookie:'color:#8A8A93;border-color:#232327',Rising:'color:#7dd3fc;border-color:#0c4a6e',Pro:'color:#6ee7b7;border-color:#064e3b',Elite:'color:#D4A843;border-color:#A97C22',Legend:'color:#F3D58A;border-color:#D4A843;background:#2a2210'};
+function badgeIcon(b){ return `<span title="${b}" aria-label="${b}" class="w-11 h-11 rounded-full flex items-center justify-center" style="border:1px solid #087A4B;color:#087A4B;background:rgb(var(--panel));box-shadow:0 0 14px rgba(8,122,75,.18)">${svg(BADGE_IC[b]||'b_shield',20)}</span>`; }
+function badgePill(b){ return `<span class="inline-flex items-center gap-2 pl-1 pr-3.5 py-1 rounded-full border text-sm" style="border-color:#3a3020;background:rgb(var(--chip))"><span class="w-7 h-7 rounded-full flex items-center justify-center" style="border:1px solid #087A4B;color:#087A4B;background:rgb(var(--panel))">${svg(BADGE_IC[b]||'b_shield',15)}</span>${b}</span>`; }
+const RKC = {Rookie:'color:#8A8A93;border-color:#232327',Rising:'color:#7dd3fc;border-color:#0c4a6e',Pro:'color:#6ee7b7;border-color:#064e3b',Elite:'color:#087A4B;border-color:#06603B',Legend:'color:#7FD1A8;border-color:#087A4B;background:#E3F1EA'};
 
 
 const IC = {
@@ -430,7 +469,7 @@ function shell(content){
   return `
   <div class="min-h-screen flex">
     <aside class="hidden md:flex flex-col fixed inset-y-0 left-0 w-20 xl:w-64 border-r border-line px-3 py-6 bg-bg z-30">
-      <a href="#feed" class="px-3 mb-8 text-3xl hidden xl:block"><span class="chlogo ${LP()}"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></span></a>
+      <a href="#feed" class="px-3 mb-8 text-3xl hidden xl:block"><span class="chlogo ${LP()}"><span class="l1">closing</span><span class="l2">HUB</span></span></a>
       <a href="#feed" class="px-3 mb-8 xl:hidden"><span class="chlogo"><span class="l2" style="font-size:30px">HUB</span></span></a>
       <nav class="flex flex-col gap-1 flex-1">${side}</nav>
       <div class="flex flex-col gap-1 border-t border-line pt-4">
@@ -440,7 +479,7 @@ function shell(content){
     </aside>
     <div class="flex-1 md:ml-20 xl:ml-64 pb-24 md:pb-0 min-w-0">
       <header class="md:hidden sticky top-0 z-30 bg-bg/95 backdrop-blur border-b border-line flex items-center justify-between px-4 h-14">
-        <a href="#feed" class="text-2xl"><span class="chlogo ${LP()}"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></span></a>
+        <a href="#feed" class="text-2xl"><span class="chlogo ${LP()}"><span class="l1">closing</span><span class="l2">HUB</span></span></a>
         <div class="flex gap-2"><button onclick="toggleTheme()" aria-label="Tag/Nacht">${ic(isLight()?'moon':'sun')}</button><a href="#notifications">${ic('bell')}</a><a href="#search">${ic('search')}</a></div>
       </header>
       <div class="relative border-b border-line bg-panel/60 px-4 pt-1.5 pb-1 md:py-2 text-sm flex flex-col md:flex-row items-center gap-0.5 md:gap-3 md:h-11 overflow-hidden">
@@ -570,7 +609,7 @@ function commentsP(id){
 function shareP(id){
   const friends=['Lena','Jonas','Sofia','Felix','Hannah','Tobias'];
   sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Teilen mit Freunden</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
-    <div class="grid grid-cols-3 gap-3">${friends.map(n=>`<label class="flex flex-col items-center gap-1 cursor-pointer"><input type="checkbox" class="peer hidden" value="${n}"><span class="w-14 h-14 rounded-full overflow-hidden ring-2 ring-transparent peer-checked:ring-[#D4A843]">${avatar(n)}</span><span class="text-xs">${n}</span></label>`).join('')}</div>
+    <div class="grid grid-cols-3 gap-3">${friends.map(n=>`<label class="flex flex-col items-center gap-1 cursor-pointer"><input type="checkbox" class="peer hidden" value="${n}"><span class="w-14 h-14 rounded-full overflow-hidden ring-2 ring-transparent peer-checked:ring-[#087A4B]">${avatar(n)}</span><span class="text-xs">${n}</span></label>`).join('')}</div>
     <div class="flex gap-2"><button class="btn-gold flex-1" onclick="const n=[...document.querySelectorAll('#psheet input:checked')].map(x=>x.value);this.parentElement.innerHTML=n.length?'<p class=\'text-emerald-400 text-sm\'>✓ Gesendet an '+n.join(', ')+'</p>':'<p class=\'text-muted text-sm\'>Bitte mindestens einen Freund auswählen</p>'">Senden</button>
     <button class="btn-ghost" onclick="try{navigator.clipboard.writeText('https://getclosinghub.com/p/${id}');this.textContent='✓ Kopiert'}catch(e){this.textContent='getclosinghub.com/p/${id}'}">Link kopieren</button></div>`);
 }
@@ -647,7 +686,7 @@ const JROLES = ['Closer','Setter','Coach','Sonstiges'];
 const jobFits = x => { const r=S.jrole; if(!r) return true; const s=(x.roles||'')+' '+(x.t||''); if(r==='Sonstiges') return !/closer|setter|coach/i.test(s); return new RegExp(r,'i').test(s); };
 function jobs(){
   const j = JOBS.find(x=>x.id===S.job)||JOBS[0];
-  const list = JOBS.filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4 ${x.id===j.id?'!border-gold':''}" style="${x.id===j.id?'border-color:#D4A843':''}">
+  const list = JOBS.filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4 ${x.id===j.id?'!border-gold':''}" style="${x.id===j.id?'border-color:#087A4B':''}">
     <p class="font-semibold">${x.t}</p><p class="text-sm text-muted">${x.ind} · ${x.reg}</p><p class="text-sm text-gold mt-1">${x.pay}</p><p class="text-xs text-muted mt-1">${x.d===0?'Heute':'vor '+x.d+' Tagen'}</p></button>`).join('');
   const action = !S.user ? `<a href="#login" class="btn-gold">🔒 Anmelden zum Bewerben</a>`
     : S.sent ? `<p class="text-emerald-400">✓ Bewerbung gesendet. Der Auftraggeber sieht dein anonymes Profil und kann den Kontakt für 25 € freischalten.</p>`
@@ -660,9 +699,9 @@ function jobs(){
     <div class="flex gap-2 mb-5"><span class="btn-gold">Jobs</span><a href="#forum" class="btn-ghost">Forum</a><a href="#markt" class="btn-ghost">Marktplatz</a></div>
     <div class="grid md:grid-cols-[340px_1fr] gap-5">
       <div class="space-y-3">
-        <div class="flex gap-2 flex-wrap pb-1">${JROLES.map(r=>`<button onclick="S.jrole=S.jrole==='${r}'?null:'${r}';render()" class="px-3.5 py-1.5 rounded-full border text-sm ${S.jrole===r?'text-black font-semibold':'text-muted'}" style="${S.jrole===r?'background:linear-gradient(135deg,#F3D58A,#D4A843 50%,#A97C22);border-color:#D4A843':'border-color:rgb(var(--line))'}">${r}</button>`).join('')}</div>
+        <div class="flex gap-2 flex-wrap pb-1">${JROLES.map(r=>`<button onclick="S.jrole=S.jrole==='${r}'?null:'${r}';render()" class="px-3.5 py-1.5 rounded-full border text-sm ${S.jrole===r?'text-black font-semibold':'text-muted'}" style="${S.jrole===r?'background:linear-gradient(135deg,#7FD1A8,#087A4B 50%,#06603B);border-color:#087A4B':'border-color:rgb(var(--line))'}">${r}</button>`).join('')}</div>
         <p class="text-xs uppercase tracking-wider text-gold">★ Top-Jobs</p>
-        ${JOBS.filter(x=>x.top).filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4" style="border-color:#D4A843;box-shadow:0 0 0 1px #A97C22 inset"><span class="text-[10px] uppercase text-gold">Top-Job · Anzeige</span><p class="font-semibold">${x.t}</p><p class="text-sm text-gold">${x.pay}</p></button>`).join('')}
+        ${JOBS.filter(x=>x.top).filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4" style="border-color:#087A4B;box-shadow:0 0 0 1px #06603B inset"><span class="text-[10px] uppercase text-gold">Top-Job · Anzeige</span><p class="font-semibold">${x.t}</p><p class="text-sm text-gold">${x.pay}</p></button>`).join('')}
         ${Array.from({length:3-JOBS.filter(x=>x.top).length}).map(()=>`<div class="card p-4 text-sm text-muted border-dashed" style="border-style:dashed">Freier Top-Platz · <span class="text-gold">19 €</span> – für Auftraggeber</div>`).join('')}
         <p class="text-xs uppercase tracking-wider text-muted pt-2">Alle Jobs</p>
         ${list||'<p class="text-sm text-muted">Gerade keine Jobs in dieser Kategorie.</p>'}</div>
@@ -689,7 +728,7 @@ function applyJob(){
     CONTACT_RE.lastIndex=0;
     const masked=txt.replace(CONTACT_RE,'***'); el.value=masked;
     S.warns++;
-    const box=document.createElement('div'); box.className='card p-4 text-sm mt-3'; box.style.borderColor='#A97C22';
+    const box=document.createElement('div'); box.className='card p-4 text-sm mt-3'; box.style.borderColor='#06603B';
     box.innerHTML = S.warns>=3
       ? `<p class="text-red-400 font-semibold">⛔ 3. Mahnung – dein Account ist für 1 Woche gesperrt.</p><p class="text-muted mt-1">Kontaktdaten dürfen erst nach der Freischaltung geteilt werden (AGB).</p>`
       : `<p class="text-gold font-semibold">⚠️ Mahnung ${S.warns} von 3</p><p class="text-muted mt-1">Kontaktdaten sind vor der Freischaltung nicht erlaubt und wurden durch *** ersetzt. Nach 3 Mahnungen wird dein Account 1 Woche gesperrt.</p><button class="btn-gold text-xs mt-3" onclick="S.sent=true;render()">So absenden</button>`;
@@ -759,7 +798,7 @@ function thread(){
       <h1 class="font-serif text-2xl mb-2">Wie reagiert ihr auf „Das ist mir zu teuer“?</h1><p class="text-sm text-muted">Bekomme den Einwand fast in jedem zweiten Call bei 3.000 €-Angeboten. Was funktioniert bei euch?</p>
       <div class="mt-4 border-t border-line pt-4"><p class="text-sm font-semibold mb-2">📊 Umfrage: Was ist euer häufigster Einwand?</p>
         ${[['Zu teuer',58],['Keine Zeit',22],['Muss mit Partner sprechen',20]].map(([o,v])=>`<div class="mb-2"><div class="flex justify-between text-xs mb-1"><span>${o}</span><span class="text-gold">${v} %</span></div><div class="h-2 bg-line rounded"><div class="h-2 rounded gold-bg" style="width:${v}%"></div></div></div>`).join('')}</div></div>
-    ${ans.map((a,i)=>`<div class="card p-4 mb-3" style="${a.best?'border-color:#D4A843':''}">
+    ${ans.map((a,i)=>`<div class="card p-4 mb-3" style="${a.best?'border-color:#087A4B':''}">
       ${a.best?'<p class="text-[11px] uppercase tracking-wider text-gold mb-2">✓ Beste Antwort</p>':''}
       <div class="flex items-center gap-2 mb-2"><span class="w-7 h-7 rounded-full overflow-hidden inline-block">${avatar(a.n)}</span>${nameRank(a.n,a.r)}</div>
       <p class="text-sm">${a.t}</p>
@@ -829,7 +868,7 @@ function settings(){
     <div class="card p-4"><p class="font-semibold mb-1">Was willst du im Feed sehen?</p><p class="text-xs text-muted mb-3">Die KI ordnet jeden Beitrag einem Thema zu – du entscheidest, welche Themen bei dir erscheinen.</p>
       <div class="flex flex-wrap gap-2">${FTOPICS.map(t=>`<button onclick="toggleTopic('${t}')" class="${(!S.topics||S.topics.includes(t))?'btn-gold':'btn-ghost'} text-sm">${t}</button>`).join('')}</div></div>
     <div class="card p-4"><p class="font-semibold mb-3">Welche Abzeichen sollen im Profil angezeigt werden?</p>
-      ${ME.badges.map(b=>`<label class="flex items-center gap-3 py-2 cursor-pointer"><input type="checkbox" ${S.badgesShown.includes(b)?'checked':''} onchange="toggleBadge('${b}')" style="accent-color:#D4A843;width:16px;height:16px"> ${badgePill(b)}</label>`).join('')}</div>
+      ${ME.badges.map(b=>`<label class="flex items-center gap-3 py-2 cursor-pointer"><input type="checkbox" ${S.badgesShown.includes(b)?'checked':''} onchange="toggleBadge('${b}')" style="accent-color:#087A4B;width:16px;height:16px"> ${badgePill(b)}</label>`).join('')}</div>
     <div class="card p-4 text-sm space-y-1"><p class="font-semibold">Konto</p><p class="text-muted">Sprache · Benachrichtigungen · Datenschutz · Lieblingsrolle</p></div></div>`;
 }
 const FTOPICS=['Zitat','Mindset','Intelligenz','Achtsamkeit','Seminar-Ausschnitt','Film-Ausschnitt','Member-Video'];
@@ -848,7 +887,7 @@ function notifications(){
 
 
 function storiesRow(){
-  const own = S.user?`<a href="#create" class="flex flex-col items-center gap-1 shrink-0 w-[72px]"><div class="w-16 h-16 rounded-full border border-dashed flex items-center justify-center text-gold text-2xl" style="border-color:#A97C22">＋</div><span class="text-[11px] text-muted">Dein Erfolg</span></a>`:'';
+  const own = S.user?`<a href="#create" class="flex flex-col items-center gap-1 shrink-0 w-[72px]"><div class="w-16 h-16 rounded-full border border-dashed flex items-center justify-center text-gold text-2xl" style="border-color:#06603B">＋</div><span class="text-[11px] text-muted">Dein Erfolg</span></a>`:'';
   return `<div class="flex gap-3 overflow-x-auto noscroll pb-1">${own}${STORIES.map((st,i)=>st.ad?'':`
     <button onclick="openStory(${i})" class="flex flex-col items-center gap-1 shrink-0 w-[72px]">
       <div class="w-16 h-16 rounded-full p-[2px] ${st.ad?'':'gold-bg'}" style="${st.ad?'background:#3a3a40':''}"><div class="w-full h-full rounded-full bg-panel border-2 border-bg overflow-hidden flex items-center justify-center text-2xl">${st.ad?st.e:avatar(st.n)}</div></div>
@@ -863,7 +902,7 @@ function drawStory(){
   const st=STORIES[S.story.i];
   document.getElementById('modal').innerHTML=`
   <div class="dark-zone fixed inset-0 z-50 bg-black flex items-center justify-center">
-    <div class="relative w-full h-full md:max-w-sm md:h-[88vh] md:rounded-2xl overflow-hidden" style="background:${st.ad?'linear-gradient(160deg,#1a1a1d,#0A0A0B)':'linear-gradient(160deg,#2a2210,#0A0A0B 60%)'}">
+    <div class="relative w-full h-full md:max-w-sm md:h-[88vh] md:rounded-2xl overflow-hidden" style="background:${st.ad?'linear-gradient(160deg,#1a1a1d,#0A0A0B)':'linear-gradient(160deg,#E3F1EA,#0A0A0B 60%)'}">
       <div class="absolute top-2 inset-x-2 flex gap-1 z-10">${STORIES.map((_,j)=>`<div class="h-[3px] flex-1 bg-white/20 rounded"><div id="sb${j}" class="h-full rounded gold-bg" style="width:${j<S.story.i?100:0}%"></div></div>`).join('')}</div>
       <div class="absolute top-6 left-4 right-12 z-10 flex items-center gap-2 text-sm">${st.ad?'<span class="text-[10px] uppercase tracking-wider border border-line rounded px-1.5 py-0.5 text-muted">Anzeige</span> <b>'+st.n+'</b>':'<span class="w-8 h-8 rounded-full overflow-hidden inline-block">'+avatar(st.n)+'</span>'+nameRank(st.n,st.r)}</div>
       <button onclick="closeStory()" class="absolute top-5 right-4 z-10 text-xl">✕</button>
@@ -916,11 +955,11 @@ function playerMenu(){
     <div class="w-full md:max-w-md p-6 space-y-6 relative rounded-t-3xl md:rounded-3xl" style="background:linear-gradient(180deg,rgb(var(--sheet1)),rgb(var(--sheet2)));border:1px solid rgb(var(--line));box-shadow:0 -10px 40px rgba(0,0,0,.6)" onclick="event.stopPropagation()">
       <div class="w-10 h-1 rounded-full bg-line mx-auto md:hidden -mt-2"></div>
       <button onclick="closeModal()" class="absolute top-4 right-5 text-muted hover:text-white text-xl">✕</button>
-      <div class="flex items-center gap-3">${ic('gearplay')}<div><p style="font-family:Cinzel,serif;letter-spacing:.18em" class="text-gold text-sm">FEED & PLAYER</p><p class="text-xs text-muted">Passt Feed und Player an · gilt nur für diese Sitzung</p></div></div>
+      <div class="flex items-center gap-3">${ic('gearplay')}<div><p style="font-family:Archivo,sans-serif;letter-spacing:.18em" class="text-gold text-sm">FEED & PLAYER</p><p class="text-xs text-muted">Passt Feed und Player an · gilt nur für diese Sitzung</p></div></div>
       <div><p class="text-xs uppercase tracking-[.25em] text-muted mb-3">Was willst du sehen?</p>
-        <div class="grid grid-cols-2 gap-2">${FTOPICS.map(t=>`<button onclick="toggleP('${t}')" class="flex items-center gap-2 text-left text-sm px-3 py-2.5 rounded-xl border transition" style="${sel.includes(t)?'border-color:#A97C22;background:rgb(var(--chip))':'border-color:rgb(var(--line))'}"><span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px]" style="${sel.includes(t)?'background:#D4A843;color:#000':'border:1px solid #55575d'}">${sel.includes(t)?'✓':''}</span>${t}</button>`).join('')}</div></div>
+        <div class="grid grid-cols-2 gap-2">${FTOPICS.map(t=>`<button onclick="toggleP('${t}')" class="flex items-center gap-2 text-left text-sm px-3 py-2.5 rounded-xl border transition" style="${sel.includes(t)?'border-color:#06603B;background:rgb(var(--chip))':'border-color:rgb(var(--line))'}"><span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px]" style="${sel.includes(t)?'background:#087A4B;color:#000':'border:1px solid #55575d'}">${sel.includes(t)?'✓':''}</span>${t}</button>`).join('')}</div></div>
       <div><p class="text-xs uppercase tracking-[.25em] text-muted mb-3">App schließen nach</p>
-        <div class="grid grid-cols-4 gap-2">${[0,5,10,15].map(m=>`<button onclick="S.timerMin=${m};playerMenu()" class="py-2.5 rounded-xl border text-sm" style="${(S.timerMin||0)===m?'border-color:#D4A843;color:#F3D58A;background:rgb(var(--chip))':'border-color:rgb(var(--line));color:#8A8A93'}">${m?m+' Min.':'Aus'}</button>`).join('')}</div></div>
+        <div class="grid grid-cols-4 gap-2">${[0,5,10,15].map(m=>`<button onclick="S.timerMin=${m};playerMenu()" class="py-2.5 rounded-xl border text-sm" style="${(S.timerMin||0)===m?'border-color:#087A4B;color:#7FD1A8;background:rgb(var(--chip))':'border-color:rgb(var(--line));color:#8A8A93'}">${m?m+' Min.':'Aus'}</button>`).join('')}</div></div>
       <div class="grid grid-cols-2 gap-2"><button class="btn-ghost !py-3" onclick="closeModal();render()">Feed anpassen</button><button class="btn-gold !py-3" onclick="startFromMenu()">▶︎ Player starten</button></div>
     </div></div>`;
 }
@@ -932,7 +971,7 @@ function startFromMenu(){
 }
 setInterval(()=>{ if(S.timerEnd && Date.now()>=S.timerEnd){ S.timerEnd=null; S.timerMin=0; stopPlayer();
   document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-[130] flex flex-col items-center justify-center gap-5 text-center p-8" style="background:rgba(8,8,9,.92);backdrop-filter:blur(12px)">
-    <p style="font-family:Cinzel,serif;letter-spacing:.2em" class="text-gold text-2xl">ZEIT UM</p><p class="text-muted">Dein Timer ist abgelaufen – ClosingHub schließt sich jetzt.<br>Zeit, das Gelernte umzusetzen. 💪</p>
+    <p style="font-family:Archivo,sans-serif;letter-spacing:.2em" class="text-gold text-2xl">ZEIT UM</p><p class="text-muted">Dein Timer ist abgelaufen – ClosingHub schließt sich jetzt.<br>Zeit, das Gelernte umzusetzen. 💪</p>
     <button class="btn-gold" onclick="closeModal();go('feed')">Okay</button></div>`; } },1000);
 
 function nearbyStrip(){
@@ -945,7 +984,7 @@ function regionSelect(){
     <span class="text-muted text-sm inline-flex items-center gap-1">${svg('pin',16)} Region</span>
     <select class="input !w-auto" style="width:auto" onchange="S.country=this.value;S.region=REGIONS[this.value][0];render()">${Object.keys(REGIONS).map(c=>`<option ${c===S.country?'selected':''}>${c}</option>`).join('')}</select>
     <select class="input" style="width:auto" ${S.wide?'disabled':''} onchange="S.region=this.value;render()">${REGIONS[S.country].map(r=>`<option ${r===S.region?'selected':''}>${r}</option>`).join('')}</select>
-    <label class="inline-flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" ${S.wide?'checked':''} onchange="S.wide=this.checked;render()" style="accent-color:#D4A843;width:16px;height:16px"> Ganzes Land durchsuchen</label>
+    <label class="inline-flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" ${S.wide?'checked':''} onchange="S.wide=this.checked;render()" style="accent-color:#087A4B;width:16px;height:16px"> Ganzes Land durchsuchen</label>
   </div>`;
 }
 function markt(){
@@ -966,7 +1005,7 @@ function markt(){
     <div class="flex gap-2 overflow-x-auto noscroll mb-5">${cats.map(c=>`<button onclick="S.mcat='${c}';render()" class="${S.mcat===c?'btn-gold':'btn-ghost'} text-sm whitespace-nowrap">${c}${c!=='Alle'&&!S.wide?` <span class="opacity-70">${slots(c)}/10</span>${10-slots(c)<=3&&10-slots(c)>0?' <span class="text-[10px] font-bold" style="color:#ff8a5c">🔥</span>':''}`:''}</button>`).join('')}</div>
     ${!S.wide?scarcity(slots):''}
     ${!S.wide&&S.mcat!=='Alle'?`<p class="text-xs text-muted mb-4">${slots(S.mcat)} von 10 Plätzen in ${S.region} belegt${slots(S.mcat)>=10?' – <span class="text-gold">Kategorie voll, Warteliste</span>':''}</p>`:''}
-    ${pt?`<button onclick="personModal('${pt.n}')" class="card w-full text-left p-4 mb-4 flex items-center gap-4" style="border-color:#D4A843;box-shadow:0 0 0 1px #A97C22 inset">
+    ${pt?`<button onclick="personModal('${pt.n}')" class="card w-full text-left p-4 mb-4 flex items-center gap-4" style="border-color:#087A4B;box-shadow:0 0 0 1px #06603B inset">
       <span class="w-14 h-14 rounded-full gold-bg p-[2px] shrink-0"><span class="block w-full h-full rounded-full overflow-hidden bg-panel">${avatar(pt.n)}</span></span>
       <span class="flex-1 min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">Partner für ${pt.s}</span><span class="block mt-0.5">${nameRank(pt.n,pt.r)}</span><span class="block text-xs text-muted truncate">${pt.bio}</span></span>
       <span class="btn-ghost text-sm whitespace-nowrap">Profil ansehen</span></button>`:''}
@@ -986,8 +1025,8 @@ function scarcity(slots){
   const hot = MCATS.map(c=>[c,10-slots(c)]).filter(([c,f])=>f>0&&f<=3);
   const full = MCATS.filter(c=>slots(c)>=10);
   if(!hot.length&&!full.length) return '';
-  return `<div class="card p-4 mb-5 flex flex-wrap gap-2 items-center" style="border-color:#A97C22"><span class="text-gold font-semibold text-sm">Plätze werden knapp in ${S.region}:</span>
-    ${hot.map(([c,f])=>`<button onclick="S.mcat='${c}';render()" class="text-xs px-3 py-1 rounded-full border" style="border-color:#D4A843;color:#F3D58A">🔥 ${c}: nur noch ${f} ${f===1?'Platz':'Plätze'}</button>`).join('')}
+  return `<div class="card p-4 mb-5 flex flex-wrap gap-2 items-center" style="border-color:#06603B"><span class="text-gold font-semibold text-sm">Plätze werden knapp in ${S.region}:</span>
+    ${hot.map(([c,f])=>`<button onclick="S.mcat='${c}';render()" class="text-xs px-3 py-1 rounded-full border" style="border-color:#087A4B;color:#7FD1A8">🔥 ${c}: nur noch ${f} ${f===1?'Platz':'Plätze'}</button>`).join('')}
     ${full.map(c=>`<span class="text-xs px-3 py-1 rounded-full border border-line text-muted">${c}: voll · Warteliste</span>`).join('')}</div>`;
 }
 function sellModal(){
@@ -1026,15 +1065,15 @@ function werbung(){
     <h1 class="font-serif text-3xl">Werbung schalten</h1>
     <p class="text-muted text-sm">Erreiche Closer, Setter & Vertriebsprofis in ganz Europa. Alle Werbeplätze sind als „Anzeige“ gekennzeichnet.</p>
     <div class="grid grid-cols-2 gap-3 text-sm">
-      <label class="card p-4 cursor-pointer"><input type="radio" name="pk" checked style="accent-color:#D4A843"> <b>Vorteils-Leiste oben</b><br><span class="text-gold">149 € / Monat</span></label>
-      <label class="card p-4 cursor-pointer"><input type="radio" name="pk" style="accent-color:#D4A843"> <b>Beitrag im Feed</b><br><span class="text-gold">99 € / Woche</span></label>
+      <label class="card p-4 cursor-pointer"><input type="radio" name="pk" checked style="accent-color:#087A4B"> <b>Vorteils-Leiste oben</b><br><span class="text-gold">149 € / Monat</span></label>
+      <label class="card p-4 cursor-pointer"><input type="radio" name="pk" style="accent-color:#087A4B"> <b>Beitrag im Feed</b><br><span class="text-gold">99 € / Woche</span></label>
     </div>
     <form onsubmit="event.preventDefault();this.outerHTML='<div class=\\'card p-5 text-center\\'><p class=\\'text-emerald-400\\'>✓ Anfrage eingegangen</p><p class=\\'text-sm text-muted mt-1\\'>Wir melden uns innerhalb von 24 h. (Vorschau: wird noch nicht wirklich versendet)</p></div>'" class="space-y-3">
       <input required class="input" placeholder="Firma"><input required class="input" placeholder="Ansprechpartner">
       <input required type="email" class="input" placeholder="E-Mail"><input class="input" placeholder="Website">
       <div class="grid grid-cols-2 gap-3"><input type="date" class="input"><input type="date" class="input"></div>
       <textarea class="input h-24" placeholder="Was möchtest du bewerben?"></textarea>
-      <label class="flex gap-2 text-xs text-muted"><input required type="checkbox" style="accent-color:#D4A843"> Kein MLM/Schneeballsystem, legales Produkt</label>
+      <label class="flex gap-2 text-xs text-muted"><input required type="checkbox" style="accent-color:#087A4B"> Kein MLM/Schneeballsystem, legales Produkt</label>
       <button class="btn-gold w-full">Anfrage senden</button>
     </form></div>`;
 }
@@ -1080,7 +1119,7 @@ function search(){ return `<div class="max-w-lg mx-auto px-4 py-8"><input class=
 
 function login(){
   return `<div class="min-h-screen flex items-center justify-center px-4"><div class="card w-full max-w-sm p-8 space-y-5">
-    <h1 class="text-4xl text-center"><span class="chlogo ${LP()}"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i><canvas class="lg-lit"></canvas><canvas class="lg-head"></canvas></span></span></h1>
+    <h1 class="text-4xl text-center"><span class="chlogo ${LP()}"><span class="l1">closing</span><span class="l2">HUB</span></span></h1>
     <p class="text-center text-muted text-sm">Die Plattform für Closer, Setter & Auftraggeber</p>
     <button class="btn-ghost w-full" onclick="doLogin()">Weiter mit Google</button>
     <div class="flex items-center gap-3 text-xs text-muted"><div class="flex-1 h-px bg-line"></div>oder<div class="flex-1 h-px bg-line"></div></div>

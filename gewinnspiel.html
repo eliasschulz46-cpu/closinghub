@@ -5,26 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Teilnahmebedingungen Gewinnspiel – ClosingHub</title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@600&family=Inter:wght@400;600;700&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Lora:wght@500;600&family=Parisienne&family=Bebas+Neue&display=swap">
 <style>
-  :root{--bg:#0A0A0B;--panel:#121214;--line:#232327;--fg:#EDEDED;--muted:#8A8A93;--gold:#D4A843}
+  :root{--paper:#F2F4F1;--sheet:#fff;--ink:#0E1A2B;--ink-2:#4A5568;--ink-3:#6B7584;--rule:#D5DAD3;--deal:#087A4B;--deal-soft:#E3F1EA;--seal:#B8860B}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--fg);font:16px/1.7 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-  main{max-width:760px;margin:0 auto;padding:64px 20px 96px}
-  .eb{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold)}
-  h1{font:600 clamp(34px,6vw,52px)/1.05 Lora,serif;letter-spacing:-.03em;margin:12px 0 10px}
-  .muted{color:var(--muted)}
-  h2{font:600 22px/1.3 Lora,serif;margin:40px 0 10px;color:var(--fg)}
-  p,li{color:#C9C9CF}
-  ol,ul{padding-left:22px;display:grid;gap:6px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px 24px;margin-top:28px}
-  .todo{background:rgba(212,168,67,.12);color:#F3D58A;padding:0 4px;border-radius:4px}
-  a{color:var(--gold)}
+  body{background:var(--paper);color:var(--ink);font:17px/1.65 Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .top{max-width:840px;margin:0 auto;padding:22px 20px;display:flex;justify-content:space-between;align-items:center}
+  .logo{display:inline-flex;align-items:baseline;text-decoration:none;color:var(--ink);line-height:1}
+  .logo .l1{font-family:Parisienne,cursive;font-size:28px;margin-right:2px}
+  .logo .l2{font-family:"Bebas Neue",sans-serif;font-size:29px}
+  .top a.cta{background:var(--deal);color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:10px 16px;border-radius:6px}
+  .top a.cta:hover{background:#06603B}
+  main{max-width:840px;margin:0 auto 80px;padding:0 20px}
+  .doc{background:var(--sheet);border:1px solid #E3E7E1;border-radius:12px;padding:56px clamp(22px,6vw,64px) 64px;box-shadow:0 1px 2px rgba(14,26,43,.06),0 14px 34px -10px rgba(14,26,43,.18);position:relative}
+  .seal{position:absolute;top:36px;right:clamp(18px,5vw,48px);width:92px;height:92px;border:1.5px solid var(--seal);border-radius:50%;display:grid;place-items:center;text-align:center;color:var(--seal);font-weight:900;font-size:11.5px;line-height:1.2;font-variation-settings:"wdth" 80;transform:rotate(8deg)}
+  .seal::after{content:"";position:absolute;inset:5px;border:1px dashed var(--seal);border-radius:50%}
+  .eb{font-size:15px;font-weight:700;color:var(--ink-3)}
+  h1{font-weight:900;font-variation-settings:"wdth" 75;font-size:clamp(40px,7vw,64px);line-height:.98;margin:10px 0 14px;max-width:calc(100% - 100px)}
+  .muted{color:var(--ink-2)}
+  h2{font-weight:800;font-variation-settings:"wdth" 85;font-size:22px;line-height:1.3;margin:40px 0 10px;padding-top:18px;border-top:1px solid #EEF0EC}
+  p,li{color:var(--ink-2)}
+  p+p{margin-top:10px}
+  b{color:var(--ink)}
+  ol,ul{padding-left:22px;display:grid;gap:6px;margin:10px 0}
+  li::marker{color:var(--deal);font-weight:800}
+  .card{background:var(--deal-soft);border-left:3px solid var(--deal);border-radius:6px;padding:18px 22px;margin-top:28px}
+  .card p{color:var(--ink)}
+  a{color:#1F3FBF}
+  @media(max-width:560px){.seal{width:70px;height:70px;font-size:9px;top:24px}h1{max-width:calc(100% - 70px)}}
 </style>
 </head>
 <body>
-<main>
-  <p class="eb">ClosingHub · Gewinnspiel</p>
+<header class="top"><a class="logo" href="https://getclosinghub.com" aria-label="ClosingHub Startseite"><span class="l1">closing</span><span class="l2">HUB</span></a><a class="cta" href="https://getclosinghub.com/#vertrag">Auf die Warteliste</a></header>
+<main><article class="doc">
+  <div class="seal" aria-hidden="true">COMMUNITY<br>FREITAG</div>
+  <p class="eb">Gewinnspiel zum Community-Freitag</p>
   <h1>Teilnahmebedingungen</h1>
   <p class="muted">Community-Freitag, 13.11.2026 bis 15.11.2026, 10:00 Uhr</p>
 
@@ -65,6 +82,6 @@
 
   <h2>7. Sonstiges</h2>
   <p>Der Veranstalter behält sich vor, das Gewinnspiel aus wichtigem Grund vorzeitig zu beenden oder zu ändern, etwa bei Manipulationsverdacht. Der Rechtsweg ist hinsichtlich der Gewinnermittlung ausgeschlossen. Es gilt das Recht am Sitz des Veranstalters (Spanien), soweit zwingende Verbraucherschutzvorschriften des Wohnsitzlandes der Teilnehmenden nicht entgegenstehen.</p>
-</main>
+</article></main>
 </body>
 </html>

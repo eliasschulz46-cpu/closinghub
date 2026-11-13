@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Auftraggeber-Portal · ClosingHub</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%230A0A0B%22/%3E%3Ctext x=%2232%22 y=%2248%22 text-anchor=%22middle%22 font-family=%22Arial Black,Arial%22 font-weight=%22900%22 font-size=%2246%22 fill=%22%23D4A843%22%3EH%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%230E1A2B%22/%3E%3Ctext x=%2232%22 y=%2248%22 text-anchor=%22middle%22 font-family=%22Arial Black,Arial%22 font-weight=%22900%22 font-size=%2246%22 fill=%22%23ffffff%22%3EH%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Parisienne&family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Parisienne&family=Bebas+Neue&display=swap">
 <style>
   :root{--bg:#0A0A0B;--bg2:#111113;--card:#141416;--line:#232327;--fg:#F5F5F5;--muted:#8B8B93;--gold:#D4A843;--grad:linear-gradient(135deg,#F3D58A,#D4A843 50%,#A97C22);--ok:#5FBF7A;--warn:#E0A84A;--bad:#E06A6A}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -58,7 +58,7 @@
   tbody tr:hover{background:#17171a}
   .tw{overflow-x:auto;padding:0}
   .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
-  .p-ok{color:var(--ok);border-color:#2c4a34} .p-warn{color:var(--warn);border-color:#4d3d22} .p-bad{color:var(--bad);border-color:#4d2a2a} .p-gold{color:var(--gold);border-color:#4a3c1c}
+  .p-ok{color:var(--ok);border-color:#2c4a34} .p-warn{color:var(--warn);border-color:#4d3d22} .p-bad{color:var(--bad);border-color:#F3C9C4} .p-gold{color:var(--gold);border-color:#4a3c1c}
   .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
   .tabs button{border:1px solid var(--line);background:none;border-radius:99px;padding:6px 14px;cursor:pointer;color:var(--muted);font-weight:500}
   .tabs button.on{border-color:var(--gold);color:var(--fg);background:#1a1710}
@@ -143,10 +143,71 @@
   .lgi .lg-c,.lgi .lg-hub{opacity:1 !important}
   .lgi .lg-hub{filter:brightness(1.15) saturate(1.15)}
 </style>
+<style id="vertrag-theme">
+  /* ClosingHub Vertragsdesign: Papier, Tinte, Abschluss-Grün */
+  :root{--bg:#F2F4F1;--bg2:#F7F8F6;--card:#FFFFFF;--line:#E1E5DF;--fg:#0E1A2B;--muted:#5B6576;--gold:#087A4B;--grad:#087A4B;--ok:#087A4B;--warn:#A15C07;--bad:#B42318;
+    --ink:#0E1A2B;--deal:#087A4B;--deal-press:#06603B;--deal-soft:#E3F1EA;--pen:#1F3FBF;--seal:#B8860B;--navy-line:#22324A;--navy-text:#C9D3E3}
+  html,body{font-family:Archivo,system-ui,sans-serif;font-size:14.5px;-webkit-font-smoothing:antialiased}
+  .gold{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--deal)}
+  .logo{color:var(--ink)}
+  .logo .l1{font-family:Parisienne,cursive}
+  .logo .l2{font-family:"Bebas Neue",sans-serif;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--ink)}
+  .top{background:rgba(255,255,255,.92);border-bottom:1px solid var(--line)}
+  .top .tag{color:var(--muted);letter-spacing:.04em;text-transform:none;font-size:13px;font-weight:600}
+  .side{background:var(--bg)}
+  .side a{color:#3B4657;font-weight:600}
+  .side a:hover{background:#E8ECE6;color:var(--ink)}
+  .side a.on{background:var(--ink);color:#fff}
+  .side a.on svg{color:#7FD1A8}
+  .side .grp{color:#7A8494;letter-spacing:.04em;text-transform:none;font-size:12px;font-weight:700}
+  .side .bdg{background:var(--deal);color:#fff}
+  .side a.on .bdg{background:#fff;color:var(--ink)}
+  .h1{font-weight:900;font-variation-settings:"wdth" 80;font-size:30px;letter-spacing:-.005em;line-height:1.05}
+  .card{border-color:#E3E7E1;border-radius:12px;box-shadow:0 1px 2px rgba(14,26,43,.05),0 10px 26px -14px rgba(14,26,43,.16)}
+  .card h3{font-weight:800;font-size:15px}
+  .kpi .v{font-weight:900;font-variation-settings:"wdth" 78;font-size:32px}
+  .btn{border-radius:6px;background:#fff;border-color:#D5DAD3;color:var(--ink)}
+  .btn:hover{border-color:var(--ink)}
+  .btn.gold-b{background:var(--deal);color:#fff}
+  .btn.gold-b:hover{background:var(--deal-press)}
+  .in,select.in,textarea.in{background:#fff;border-color:#D5DAD3;border-radius:6px;color:var(--ink)}
+  .in:focus{border-color:var(--pen);box-shadow:0 0 0 3px rgba(31,63,191,.12)}
+  label.f{color:#4A5568;font-weight:600}
+  th{color:#6B7584;letter-spacing:.03em;text-transform:none;font-size:12px;font-weight:700;background:#FAFBF9}
+  tbody tr:hover{background:#F7F8F6}
+  .pill{border-color:#D5DAD3}
+  .p-ok{color:var(--deal);border-color:#BFE0CF;background:var(--deal-soft)}
+  .p-warn{color:var(--warn);border-color:#F1D6AE;background:#FFF6E8}
+  .p-bad{color:var(--bad);border-color:#F3C9C4;background:#FDF0EE}
+  .p-gold{color:var(--pen);border-color:#C9D2F3;background:#EEF1FC}
+  .tabs button{background:#fff;border-color:#D5DAD3;color:#4A5568;font-weight:600}
+  .tabs button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .bar{background:#E4E8E2}
+  .bar i{background:var(--deal)}
+  .ico{border-color:#D5DAD3;color:var(--deal);background:#fff}
+  .demo{color:var(--warn);border-color:#F1D6AE;background:#FFF9EF}
+  .switch span{background:#CBD2C8}
+  .switch input:checked+span{background:var(--deal)}
+  .ticker{background:#fff}
+  .ticker .lab{background:var(--ink);color:#fff;border-right:0}
+  .ticker .track b{color:var(--deal)}
+  .msg{background:#fff}
+  .msg.me{background:var(--deal-soft);border-color:#BFE0CF}
+  .list-sel:hover{background:#F2F4F1}
+  .list-sel.on{border-color:var(--ink);background:#fff}
+  .modal{background:rgba(14,26,43,.45)}
+  .toast{background:var(--ink);color:#fff;border-color:var(--ink)}
+  details.rt{background:#fff}
+  details.rt summary::before{color:var(--deal)}
+  .chart text{fill:#6B7584}
+  :focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+  @media(max-width:820px){.side{background:var(--bg)}}
+</style>
+
 </head>
 <body>
 <div class="top">
-  <a href="#dashboard" class="logo" style="font-size:24px"><span class="lgi" role="img" aria-label="ClosingHub"><i class="lg-hub"></i><i class="lg-c"></i></span></a>
+  <a href="#dashboard" class="logo" style="font-size:24px"><span class="l1">closing</span><span class="l2">HUB</span></a>
   <span class="tag">Auftraggeber-Portal</span>
   <span class="sp"></span>
   <span class="muted" id="who" style="font-size:13px"></span>
@@ -236,7 +297,7 @@ let authMode='login';
 function authView(){
   const reg = authMode==='register';
   return `<div style="max-width:420px;margin:6vh auto" class="card">
-    <div style="text-align:center;margin-bottom:16px"><span class="logo" style="font-size:36px"><span class="lgi"><i class="lg-hub"></i><i class="lg-c"></i></span></span>
+    <div style="text-align:center;margin-bottom:16px"><span class="logo" style="font-size:36px"><span class="l1">closing</span><span class="l2">HUB</span></span>
       <div class="muted" style="font-size:11px;letter-spacing:.25em;text-transform:uppercase;margin-top:6px">Auftraggeber-Portal</div></div>
     <div class="tabs" style="justify-content:center"><button class="${reg?'':'on'}" onclick="authMode='login';render()">Anmelden</button><button class="${reg?'on':''}" onclick="authMode='register';render()">Registrieren</button></div>
     <form id="af" class="grid" style="gap:12px" novalidate>
@@ -280,7 +341,7 @@ document.addEventListener('submit', async e=>{
 const NAV=[['dashboard','Dashboard','dash'],['jobs','Stellenangebote','jobs'],['rechnungen','Rechnungen','invoice'],['profil','Firmenprofil','user']];
 const route = () => (location.hash.slice(1)||'dashboard').split('?')[0];
 function drawNav(){ const r=route(); $('side').innerHTML = NAV.map(n=>`<a href="#${n[0]}" class="${r===n[0]?'on':''}">${ic(n[2])}<span>${n[1]}</span>${n[0]==='rechnungen'&&INVS.some(i=>i.status==='offen'||i.status==='überfällig')?`<span class="bdg">${INVS.filter(i=>i.status==='offen'||i.status==='überfällig').length}</span>`:''}</a>`).join(''); }
-const closedNote = () => ME.status!=='aktiv' ? `<div class="demo" style="color:var(--bad);border-color:#4d2a2a">Dein Konto ist ${ME.status==='gesperrt'?'gesperrt':'gekündigt'}. Du kannst deine Daten und Rechnungen weiter einsehen, aber keine neuen Jobs einreichen. Bei Fragen: info@getclosinghub.com</div>` : '';
+const closedNote = () => ME.status!=='aktiv' ? `<div class="demo" style="color:var(--bad);border-color:#F3C9C4">Dein Konto ist ${ME.status==='gesperrt'?'gesperrt':'gekündigt'}. Du kannst deine Daten und Rechnungen weiter einsehen, aber keine neuen Jobs einreichen. Bei Fragen: info@getclosinghub.com</div>` : '';
 
 /* ===== Dashboard ===== */
 function dashboard(){
@@ -351,7 +412,7 @@ function reviewJob(id){
     ${(j.fragen||[]).length?`<div style="margin-top:12px"><b style="font-size:13px">Fragen an Bewerber</b><ol class="muted" style="margin:4px 0 0 18px;font-size:13.5px">${j.fragen.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`:''}
   </div>
   <p class="muted" style="font-size:12.5px;margin-top:12px">Laufzeit: <b>${j.anzeige_tage||30} Tage</b> · Kosten bei Veröffentlichung: <b class="gold">${cost>0?eur(cost)+' netto':'kostenlos'}</b>${j.top?' (inkl. Top-Job)':''} · Freischaltung pro Kandidat: <b class="gold">${eur(unl)} netto</b></p>
-  <label class="row" style="gap:10px;margin-top:12px;cursor:pointer;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="rvOk" style="width:18px;height:18px;margin-top:2px;flex:none;accent-color:#c9a24a"><span style="font-size:13.5px">Ich habe die Anzeige geprüft. Alle Angaben stimmen.</span></label>
+  <label class="row" style="gap:10px;margin-top:12px;cursor:pointer;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="rvOk" style="width:18px;height:18px;margin-top:2px;flex:none;accent-color:#087A4B"><span style="font-size:13.5px">Ich habe die Anzeige geprüft. Alle Angaben stimmen.</span></label>
   <div id="rvChg" style="display:none;margin-top:12px"><label class="f">Was soll geändert werden?<textarea class="in" id="rvNote" rows="3" maxlength="1000" placeholder="z. B. Provision ist 12 % statt 10 %"></textarea></label>
     <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn" onclick="$('rvChg').style.display='none';$('rvBtns').style.display=''">Zurück</button><button class="btn gold-b" onclick="changeJob(${j.id},this)">Änderung senden</button></div></div>
   <p id="rvErr" class="down" style="display:none;font-size:13px;margin-top:8px"></p>
@@ -382,8 +443,8 @@ function jobForm(id, copyId){
     <label class="f">Beschreibung des Jobs<textarea class="in" data-j="anfrage_text" rows="5" placeholder="Was ist die Aufgabe? Woher kommen die Leads? Was macht dein Angebot besonders?">${esc(src.anfrage_text||src.beschreibung||'')}</textarea></label>
     <label class="f">Das sollte die Person mitbringen<textarea class="in" data-j="anforderungen" rows="3" placeholder="z. B. 1 Jahr Erfahrung im High-Ticket-Closing">${esc(src.anforderungen||'')}</textarea></label>
   </div>
-  <label class="card" style="display:flex;gap:12px;align-items:flex-start;margin-top:14px;padding:14px;cursor:pointer;border-color:var(--gold,#c9a24a)">
-    <input type="checkbox" id="jTop" ${src.top_wunsch||src.top?'checked':''} onchange="jobCost()" style="width:20px;height:20px;margin-top:2px;flex:none;accent-color:#c9a24a">
+  <label class="card" style="display:flex;gap:12px;align-items:flex-start;margin-top:14px;padding:14px;cursor:pointer;border-color:var(--gold,#087A4B)">
+    <input type="checkbox" id="jTop" ${src.top_wunsch||src.top?'checked':''} onchange="jobCost()" style="width:20px;height:20px;margin-top:2px;flex:none;accent-color:#087A4B">
     <span><b>★ Als Top-Job buchen <span class="gold">+ ${eur(ft)} netto</span></b><br><span class="muted" style="font-size:12.5px">Dein Job steht ganz oben in der Jobbörse und ist gold markiert. So sehen ihn die meisten Closer und Setter zuerst.</span></span></label>
   <p class="muted" style="font-size:12.5px;margin-top:12px">Kosten bei Veröffentlichung: <b class="gold" id="jCost" data-f="${f}" data-t="${ft}"></b> · Freischaltung pro Kandidat: <b class="gold">${eur(fee('fee_unlock'))} netto</b></p>
   <p id="jErr" class="down" style="display:none;font-size:13px;margin-top:8px"></p>
