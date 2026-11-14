@@ -348,6 +348,7 @@ h1 span{display:block}
 .spec-row.open .ico,.spec-row:hover .ico,.spec-row:focus-within .ico{background:var(--ink);color:#fff}
 .spec-row{transition:background-color .25s}
 .spec-row:hover,.spec-row:focus-within,.spec-row.open{background:var(--sheet)}
+.spec-row h3 .sp-inl{font-size:15px;font-weight:500;color:var(--ink-2);font-variation-settings:"wdth" 100;margin-left:12px}
 .spec-d{padding:0 20px 12px 82px;font-size:17px;color:var(--ink);max-width:70ch}
 .spec-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
 .spec-row.open .spec-body,.spec-row:hover .spec-body,.spec-row:focus-within .spec-body{grid-template-rows:1fr}
@@ -385,6 +386,7 @@ h1 span{display:block}
 .m-feat{display:grid;grid-template-columns:40px 1fr;gap:14px;align-items:center;padding:16px 20px}
 .m-feat b{display:block;font-size:17px;line-height:1.3}
 .m-feat span{display:block;font-size:14.5px;color:var(--ink-2)}
+.m-feat .ico{display:grid;place-items:center}
 .m-head .m-feat{font-size:14px;font-weight:700;color:var(--navy-text);grid-template-columns:1fr}
 .m-col{display:grid;place-items:center;transition:background-color .2s}
 .m-head .m-col button{background:none;border:0;color:#fff;font-weight:800;font-size:16px;cursor:pointer;padding:16px 8px;width:100%;height:100%}
@@ -590,30 +592,61 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
   .contract.done .stamp{opacity:.92}
 }
 
-/* ---------- Demo-Handy v2: ruhige Übergänge, alles antippbar ---------- */
-.view{translate:none;transition:opacity .22s ease-out;will-change:opacity}
+/* ---------- Demo-Handy v3 ---------- */
+.view{translate:none;transition:opacity .22s ease-out}
 .view.on{translate:none;transition:opacity .28s ease-out}
 .scroll{scroll-behavior:auto}
 .pane.on{animation:paneIn .24s ease-out}
 @keyframes paneIn{from{opacity:0}}
 .screen button{font-family:inherit}
-.eli{background:#C9CFC6 url(assets/app/elias_portraet_eng.jpg) 50% 18%/cover no-repeat}
+img.av{object-fit:cover;padding:0}
 .av.ini{background:var(--pen);font-size:9.5px}
-.cats{display:flex;align-items:center;gap:6px;border:0;background:none;cursor:pointer;padding:0;font-size:11px;color:var(--ink-2);font-weight:600}
-.cats em{font-style:normal}
+.av.ch{background:var(--ink)}
+/* Feed-Leiste und Einstellungen */
+.fbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.fset-btn{display:flex;align-items:center;gap:6px;border:1px solid var(--rule);background:var(--sheet);border-radius:99px;padding:5px 10px;cursor:pointer;font-size:10.5px;font-weight:700;color:var(--ink)}
+.fset-btn .chev{width:6px;height:6px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;rotate:45deg;margin:-3px 0 0 2px;transition:rotate .25s var(--ease)}
+.fset-btn[aria-expanded="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.fset-btn[aria-expanded="true"] .chev{rotate:225deg;margin-top:3px}
+.fset{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s var(--ease)}
+.fset.open{grid-template-rows:1fr}
+.fset-in{overflow:hidden}
+.fset.open .fset-in{margin-bottom:10px}
+.fset-in{background:var(--sheet);border:1px solid #E3E7E1;border-radius:12px;padding:0 11px}
+.fset.open .fset-in{padding:4px 11px}
+.fs-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #EEF0EC}
+.fs-row:first-child{border-top:0}
+.fs-row.col{display:grid;gap:6px}
+.fs-row b{font-size:11.5px;display:block}
+.fs-row span{font-size:10px;color:var(--ink-3)}
+.sw{width:34px;height:20px;border-radius:99px;border:0;background:#CBD2C8;position:relative;cursor:pointer;flex:none;transition:background-color .2s}
+.sw i{position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:translate .2s var(--ease)}
+.sw.on{background:var(--deal)}
+.sw.on i{translate:14px 0}
+.seg3{display:grid;grid-template-columns:repeat(3,1fr);background:var(--paper);border-radius:9px;padding:3px;gap:3px}
+.seg3 button{border:0;background:none;border-radius:7px;padding:5px 0;font-size:10.5px;font-weight:700;color:var(--ink-2);cursor:pointer}
+.seg3 button.on{background:var(--ink);color:#fff}
+.chips{display:flex;gap:5px;margin-bottom:9px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips.cw{flex-wrap:wrap;margin:0;padding:0;max-width:none}
+.chips button{padding:4px 9px;border-radius:99px;border:1px solid var(--rule);font-weight:600;font-size:10.5px;color:var(--ink-2);background:var(--sheet);white-space:nowrap;cursor:pointer;flex:none}
+.chips button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+/* Beiträge */
 .acts button{display:flex;align-items:center;gap:5px;border:0;background:none;padding:0;cursor:pointer;font-weight:700;font-size:11.5px;color:var(--ink)}
 .acts button em{font-style:normal}
 .acts .like.liked{color:var(--deal)}
 .acts .like.liked svg{fill:currentColor}
 .acts .sh{margin-left:auto}
 .acts .congrats{background:var(--deal-soft);color:var(--deal);border-radius:99px;padding:5px 10px;font-size:10.5px}
-.acts .congrats em{font-weight:800}
 .acts .congrats.done{background:var(--deal);color:#fff}
-.post.win .win-b{display:flex;gap:10px;align-items:flex-start;padding:2px 12px 4px}
+.video video,.video .vimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%}
+.video .live{position:absolute;left:9px;top:9px;z-index:1;background:rgba(14,26,43,.6);color:#fff;font-size:9.5px;font-weight:700;border-radius:6px;padding:2px 6px;display:flex;align-items:center;gap:4px}
+.video .live::before{content:"";width:6px;height:6px;border-radius:50%;background:#7FD1A8}
+.win-b{display:flex;gap:10px;align-items:flex-start;padding:2px 12px 4px}
 .win-i{width:34px;height:34px;border-radius:10px;background:var(--deal-soft);color:var(--deal);display:grid;place-items:center;flex:none}
 .win-b p{font-size:12px;line-height:1.4;color:var(--ink-2)}
 .win-b p b{color:var(--ink)}
-.fq-b,.jc-b{display:block;width:100%;text-align:left;border:0;background:none;padding:0 12px 12px;cursor:pointer}
+.fq-b,.jc-b{display:block;width:100%;text-align:left;border:0;background:none;padding:0 12px 12px;cursor:pointer;color:var(--ink)}
 .fq-b b{display:block;font-size:13px;line-height:1.3;font-weight:800}
 .fq-b>span{display:block;margin-top:5px;font-size:10.5px;color:var(--ink-3)}
 .jc-b{display:grid;grid-template-columns:1fr auto;align-items:center;row-gap:2px}
@@ -621,97 +654,169 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
 .jc-b .pv{grid-column:1;color:var(--deal);font-weight:700;font-size:11.5px}
 .jc-go{grid-column:2;grid-row:1/3;background:var(--ink);color:#fff;border-radius:8px;padding:6px 10px;font-size:10.5px;font-weight:700}
 .feed-end{text-align:center;color:var(--ink-3);font-size:10.5px;padding:6px 0 10px}
-.chips button{padding:4px 9px;border-radius:99px;border:1px solid var(--rule);font-weight:600;font-size:10.5px;color:var(--ink-2);background:var(--sheet);white-space:nowrap;cursor:pointer}
-.chips button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.post.fresh{animation:fresh .5s var(--ease)}
+@keyframes fresh{from{opacity:0;translate:0 -8px}}
+/* Suche, Kontingent, Listen */
+.search{display:flex;align-items:center;gap:7px;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:0 10px;margin-bottom:8px;color:var(--ink-3)}
+.search input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:11.5px;padding:7px 0;color:var(--ink)}
+.search input:focus{outline:none}
+.search:focus-within{border-color:var(--pen)}
+.quota{display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;font-size:10.5px;color:var(--ink-2);margin-bottom:9px}
+.quota b{font-size:11px;color:var(--ink)}
+.qbar{grid-column:1/-1;height:4px;border-radius:99px;background:var(--tint);overflow:hidden}
+.qbar i{display:block;height:100%;background:var(--deal);transition:width .4s var(--ease)}
+.job{position:relative;color:var(--ink)}
+.job .mark{position:absolute;right:8px;top:8px;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--ink-3)}
+.job .mark.on{color:var(--deal)}
+.job .mark.on svg{fill:currentColor}
+.job b{padding-right:24px}
 .nores{color:var(--ink-3);font-size:11px;text-align:center;padding:14px 0}
-button.topic{width:100%;text-align:left;cursor:pointer}
-button.offer-c{display:block;width:100%;text-align:left;cursor:pointer}
-.badges button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--sheet);border:1px solid var(--rule);color:var(--ink);cursor:pointer}
-.badges button:hover,.badges button:focus-visible{border-color:var(--ink)}
-.pgrid button{aspect-ratio:1;background:var(--sheet);border:1px solid #E3E7E1;border-radius:6px;padding:6px;font-size:8.5px;line-height:1.3;color:var(--ink);overflow:hidden;font-weight:600;text-align:left;cursor:pointer}
-.pgrid button.ph-img{padding:0;background-size:cover;background-position:50% 18%;background-color:#C9CFC6}
+.fcat{display:flex;align-items:center;gap:9px;width:100%;text-align:left;cursor:pointer;background:var(--sheet);border:1px solid #E3E7E1;border-radius:11px;padding:9px 11px;margin-bottom:6px;color:var(--ink)}
+.fcat i{width:24px;height:24px;border-radius:7px;background:var(--tint);display:grid;place-items:center;color:var(--ink);flex:none}
+.fcat b{font-size:12px;flex:1}
+.fcat span{color:var(--ink-3);font-size:10.5px}
+.offer{display:block;width:100%;text-align:left;cursor:pointer;background:var(--sheet);border:1px solid #E3E7E1;border-radius:12px;padding:10px 11px;margin-bottom:7px;color:var(--ink)}
+.offer small{font-size:9px;font-weight:800;color:var(--ink-3);letter-spacing:.03em}
+.offer b{display:block;font-size:12.5px;margin:2px 0 5px}
+.offer .who{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--ink-2)}
+.offer .pr{margin-left:auto;font-weight:800;color:var(--ink);font-size:12px}
+.stars{color:var(--ink);letter-spacing:.5px}
+/* Unterseite */
+.page{position:absolute;inset:0;z-index:11;background:var(--paper);display:flex;flex-direction:column;translate:100% 0;transition:translate .32s var(--ease);visibility:hidden}
+.page.on{translate:0 0;visibility:visible}
+.pg-h{display:flex;align-items:center;gap:8px;padding:2px 10px 8px;border-bottom:1px solid var(--rule);flex:none}
+.pg-h button{width:28px;height:28px;border-radius:50%;border:1px solid var(--rule);background:var(--sheet);display:grid;place-items:center;cursor:pointer;color:var(--ink);flex:none}
+.pg-h b{font-size:12.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pg-b{flex:1;overflow-y:auto;scrollbar-width:none;padding:10px 12px 14px}
+.pg-b::-webkit-scrollbar{display:none}
+.pg-b h4{font-size:15px;font-weight:850;font-variation-settings:"wdth" 82;line-height:1.2}
+.pg-meta{font-size:10.5px;color:var(--ink-3);margin:3px 0 9px}
+.pg-sec{font-size:10.5px;font-weight:800;color:var(--ink-2);margin:12px 0 5px}
+.pg-p{font-size:11.5px;line-height:1.45;color:var(--ink-2)}
+.ticks{list-style:none;display:grid;gap:4px;font-size:11.5px;color:var(--ink-2);padding:0}
+.ticks li{position:relative;padding-left:16px}
+.ticks li::before{content:"";position:absolute;left:1px;top:5px;width:8px;height:4px;border-left:1.8px solid var(--deal);border-bottom:1.8px solid var(--deal);rotate:-45deg}
+.pg-cta{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(242,244,241,0),var(--paper) 30%);padding-top:14px;margin-top:6px}
+.btn-app{width:100%;border:0;border-radius:9px;background:var(--deal);color:#fff;font-weight:700;font-size:12px;padding:10px;cursor:pointer;transition:background-color .2s}
+.btn-app.ghost{background:var(--sheet);color:var(--ink);box-shadow:inset 0 0 0 1px var(--rule)}
+.btn-app.done{background:var(--deal-soft);color:var(--deal)}
+.btn-app:disabled{background:var(--tint);color:var(--ink-3);cursor:default}
+.hint-s{font-size:10px;color:var(--ink-3);text-align:center;margin-top:5px}
+.thread-q{background:var(--sheet);border:1px solid #E3E7E1;border-radius:12px;padding:10px 11px}
+.thread-q b.t{display:block;font-size:13px;line-height:1.3;margin-top:6px}
+.who2{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--ink-2)}
+.who2 b{color:var(--ink);font-size:11.5px}
+.ans{border-bottom:1px solid #EEF0EC;padding:9px 0}
+.ans p{font-size:11.5px;line-height:1.45;color:var(--ink);margin:4px 0 6px}
+.help{border:1px solid var(--rule);background:var(--sheet);border-radius:99px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--ink-2);cursor:pointer}
+.help.on{background:var(--deal-soft);border-color:#BFE0CF;color:var(--deal)}
+.best{font-size:9px;font-weight:800;color:var(--deal);background:var(--deal-soft);border-radius:99px;padding:1px 6px;margin-left:auto}
+.trow{display:block;width:100%;text-align:left;cursor:pointer;background:var(--sheet);border:1px solid #E3E7E1;border-radius:11px;padding:9px 11px;margin-bottom:6px;color:var(--ink)}
+.trow b{display:block;font-size:12px;line-height:1.3}
+.trow span{display:block;font-size:10px;color:var(--ink-3);margin-top:3px}
+.g-in{display:flex;gap:6px;margin-top:10px}
+.g-in input,.g-in textarea,.g-in select{flex:1;min-width:0;border:1px solid var(--rule);border-radius:9px;padding:8px 10px;font:inherit;font-size:11.5px;background:var(--sheet);color:var(--ink);resize:none}
+.g-in input:focus,.g-in textarea:focus,.g-in select:focus{outline:2px solid var(--pen);outline-offset:0;border-color:transparent}
+.g-btn{border:0;border-radius:9px;background:var(--deal);color:#fff;font-weight:700;font-size:11.5px;padding:0 12px;cursor:pointer}
+.facts2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.facts2 div{background:var(--sheet);border:1px solid #E3E7E1;border-radius:8px;padding:6px 8px;font-size:10px;color:var(--ink-3)}
+.facts2 b{display:block;color:var(--ink);font-size:11.5px}
+.rv{border-bottom:1px solid #EEF0EC;padding:8px 0}
+.rv .top{display:flex;justify-content:space-between;align-items:baseline;font-size:11px}
+.rv .top b{font-size:11.5px}
+.rv p{font-size:11.5px;color:var(--ink-2);line-height:1.4;margin-top:3px}
+.rv small{font-size:9.5px;color:var(--ink-3)}
+.rsum{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;background:var(--sheet);border:1px solid #E3E7E1;border-radius:12px;padding:10px 11px;margin-bottom:4px}
+.rsum .big{font-size:28px;font-weight:850;font-variation-settings:"wdth" 78;line-height:1;text-align:center}
+.rsum .big small{display:block;font-size:9.5px;font-weight:600;color:var(--ink-3);margin-top:3px}
+.rbars{display:grid;gap:3px}
+.rbars div{display:grid;grid-template-columns:10px 1fr;gap:6px;align-items:center;font-size:9.5px;color:var(--ink-3)}
+.rbars i{height:4px;border-radius:99px;background:var(--tint);overflow:hidden;display:block}
+.rbars i b{display:block;height:100%;background:var(--ink)}
+/* Profil */
+.ph .pav{width:64px;height:64px;border-radius:50%;flex:none;object-fit:cover;object-position:50% 18%;box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--ink);background:#C9CFC6}
 .ph .fol button{border:0;background:none;padding:0;cursor:pointer;color:var(--ink-2);font-size:11px}
+.ph .fol{flex-wrap:wrap;row-gap:2px}
+.ph .fol>*{white-space:nowrap}
 .ph .fol button b{color:var(--ink)}
-.share-opts button{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--rule);border-radius:10px;font-weight:700;font-size:12px;background:var(--sheet);cursor:pointer;text-align:left}
-.share-opts button:hover{border-color:var(--ink)}
-.share-opts i{width:24px;height:24px;border-radius:7px;background:var(--tint);display:grid;place-items:center}
-
-/* Reels: fahren aus dem Video heraus auf, Wechsel per Verschieben statt Scroll-Einrasten */
-.reels{opacity:0;transform:scale(.94);transform-origin:50% 40%;transition:opacity .22s ease-out,transform .32s var(--ease);visibility:hidden}
+.badges{display:flex;gap:7px;margin-top:10px}
+.badges button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--sheet);border:1px solid var(--rule);color:var(--ink);cursor:pointer}
+.ptabs{display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;border-bottom:1px solid var(--rule)}
+.ptabs button{border:0;background:none;padding:7px 0;font-size:11px;font-weight:700;color:var(--ink-3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.ptabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
+.ppane{display:none;padding-top:8px}
+.ppane.on{display:block;animation:paneIn .24s ease-out}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:0}
+.pgrid button{aspect-ratio:1;background:var(--sheet);border:1px solid #E3E7E1;border-radius:6px;padding:6px;font-size:8.5px;line-height:1.3;color:var(--ink);overflow:hidden;font-weight:600;text-align:left;cursor:pointer}
+.pgrid button.img{padding:0;background-size:cover;background-position:50% 18%;background-color:#C9CFC6}
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.vgrid button{position:relative;aspect-ratio:9/16;border:0;border-radius:6px;overflow:hidden;cursor:pointer;padding:0;background:#C9CFC6}
+.vgrid video{width:100%;height:100%;object-fit:cover}
+.vgrid span{position:absolute;left:5px;bottom:4px;color:#fff;font-size:9px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+/* Reels */
+.reels{opacity:0;transform:scale(.94);transform-origin:50% 40%;transition:opacity .22s ease-out,transform .32s var(--ease);visibility:hidden;overflow:hidden;background:#0E1A2B}
 .reels.on{opacity:1;transform:none;visibility:visible}
-.reels{overflow:hidden}
-.reels .r-hint{bottom:118px}
-.reel-track{overflow:visible;scroll-snap-type:none;transition:transform .42s var(--ease);touch-action:none}
-.reel{height:100%}
-.reel .bg.img{background-size:cover;background-position:50% 22%}
-.reels .r-side{position:absolute;right:10px;bottom:70px;z-index:3;display:grid;gap:12px;justify-items:center;color:#fff}
+.reel-track{position:absolute;inset:0;overflow:visible;transition:transform .42s var(--ease);touch-action:none}
+.reel{position:relative;height:100%}
+.reel video,.reel .still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.reel .still{animation:kb 8s ease-in-out infinite alternate}
+@keyframes kb{from{transform:scale(1.02)}to{transform:scale(1.12) translateY(-2%)}}
+.reel.q .bg{position:absolute;inset:0;background:var(--ink);display:grid;place-items:center;padding:28px;color:#fff;font-family:Lora,Georgia,serif;font-size:19px;line-height:1.45;text-align:center}
+.r-bot .rk,.st-head .rk{background:rgba(255,255,255,.92);color:var(--ink);border-color:transparent}
+.reels .r-side{position:absolute;right:8px;bottom:62px;z-index:3;display:grid;gap:12px;justify-items:center;color:#fff}
 .reels .r-side button{display:grid;justify-items:center;gap:2px;border:0;background:none;color:#fff;cursor:pointer;font-size:10px;font-weight:700}
 .reels .r-side em{font-style:normal}
 .reels .r-side .liked svg{fill:#fff}
-.r-nav{position:absolute;left:10px;bottom:70px;z-index:3;display:grid;gap:6px}
-.r-nav button{width:26px;height:26px;border-radius:50%;border:0;background:rgba(5,8,13,.55);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
+.r-prog{position:absolute;left:12px;right:12px;bottom:8px;height:2px;border-radius:99px;background:rgba(255,255,255,.25);z-index:3;overflow:hidden}
+.r-prog i{display:block;height:100%;width:0;background:#fff}
+.reels .r-hint{bottom:118px}
 .r-dots i{display:block}
-
-/* Story-Ansicht */
+/* Story */
 .storyv{position:absolute;inset:0;z-index:13;background:linear-gradient(160deg,#0B5A3A,#0E1A2B 62%);color:#fff;opacity:0;visibility:hidden;transform:scale(.94);transition:opacity .22s ease-out,transform .32s var(--ease),visibility 0s .32s}
 .storyv.on{opacity:1;visibility:visible;transform:none;transition:opacity .22s ease-out,transform .32s var(--ease)}
 .st-bars{position:absolute;top:42px;left:10px;right:10px;display:flex;gap:4px;z-index:3}
 .st-bars i{flex:1;height:3px;border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden}
 .st-bars i b{display:block;height:100%;width:0;background:#fff}
 .st-bars i.done b{width:100%}
-.st-bars i.run b{animation:stRun var(--st,3.4s) linear forwards}
+.st-bars i.run b{animation:stRun 3.4s linear forwards}
 @keyframes stRun{to{width:100%}}
 .st-head{position:absolute;top:52px;left:12px;right:12px;display:flex;align-items:center;gap:8px;z-index:3;font-size:12px}
-.st-head .rk,.r-bot .rk{background:rgba(255,255,255,.92);color:var(--ink);border-color:transparent}
 .st-head .r-x{margin-left:auto}
-.st-prev,.st-next{position:absolute;top:90px;bottom:70px;width:40%;z-index:2;border:0;background:none;cursor:pointer}
-.st-prev{left:0}.st-next{right:0;width:60%}
+.st-prev,.st-next{position:absolute;top:90px;bottom:70px;z-index:2;border:0;background:none;cursor:pointer}
+.st-prev{left:0;width:40%}.st-next{right:0;width:60%}
 .st-t{position:absolute;left:22px;right:22px;top:50%;translate:0 -50%;text-align:center;font-family:Lora,Georgia,serif;font-size:17px;line-height:1.45;pointer-events:none}
 .st-reply{position:absolute;left:10px;right:10px;bottom:14px;display:flex;gap:6px;z-index:3}
 .st-reply input{flex:1;min-width:0;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;border-radius:99px;padding:7px 11px;font:inherit;font-size:11px}
 .st-reply input::placeholder{color:rgba(255,255,255,.7)}
 .st-reply button{border:0;border-radius:99px;background:#fff;color:var(--ink);font-weight:700;font-size:11px;padding:0 11px;cursor:pointer}
-
-/* Inhalte im Blatt */
+/* Blätter */
+.views .sheet{z-index:15}
+.views .shade{z-index:14}
 #gen h5{margin-bottom:2px}
 .g-sub{color:var(--ink-2);font-size:11px;margin:2px 0 9px}
 .g-list{display:grid;gap:6px;max-height:210px;overflow-y:auto;scrollbar-width:none}
 .g-item{display:flex;gap:8px;align-items:flex-start;font-size:11.5px;line-height:1.35}
-.g-item b{font-size:11.5px}
 .g-item p{color:var(--ink-2)}
-.g-row{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;padding:8px 10px;border:1px solid var(--rule);border-radius:10px;background:var(--sheet);cursor:pointer;font-weight:700;font-size:11.5px;text-align:left}
-.g-row span{color:var(--ink-3);font-weight:600;font-size:10.5px;white-space:nowrap}
-.g-row.on{border-color:var(--ink);background:var(--ink);color:#fff}
-.g-row.on span{color:var(--navy-text)}
-.g-in{display:flex;gap:6px;margin-top:10px}
-.g-in input,.g-in textarea{flex:1;min-width:0;border:1px solid var(--rule);border-radius:9px;padding:8px 10px;font:inherit;font-size:11.5px;background:var(--paper);color:var(--ink);resize:none}
-.g-in input:focus,.g-in textarea:focus{outline:2px solid var(--pen);outline-offset:0;border-color:transparent}
-.g-btn{border:0;border-radius:9px;background:var(--deal);color:#fff;font-weight:700;font-size:11.5px;padding:0 12px;cursor:pointer}
-.g-btn.full{width:100%;padding:10px;margin-top:8px}
-.g-btn.done{background:var(--deal-soft);color:var(--deal)}
-.g-price{display:flex;justify-content:space-between;align-items:baseline;margin:8px 0 2px;font-size:11px;color:var(--ink-2)}
-.g-price b{font-size:20px;color:var(--ink);font-weight:850;font-variation-settings:"wdth" 80}
-.views .sheet{z-index:15}
-.views .shade{z-index:14}
+.share-opts{display:grid;gap:6px;margin-top:4px}
+.share-opts button{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--rule);border-radius:10px;font-weight:700;font-size:12px;background:var(--sheet);cursor:pointer;text-align:left;color:var(--ink)}
+.share-opts i{width:24px;height:24px;border-radius:7px;background:var(--tint);display:grid;place-items:center}
 .ptoast{position:absolute;left:50%;top:44px;translate:-50% -8px;z-index:40;background:var(--ink);color:#fff;font-weight:700;font-size:11px;border-radius:99px;padding:6px 12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s,translate .25s var(--ease)}
 .ptoast.on{opacity:1;translate:-50% 0}
-.post.fresh{animation:fresh .5s var(--ease)}
-@keyframes fresh{from{opacity:0;translate:0 -8px}}
-
-/* Hinweis neben dem Handy: immer nur einer, passend zum Bildschirm */
+.tabs{grid-template-columns:repeat(3,1fr)}
+/* Erklär-Blase neben dem Handy */
 .toast{display:none}
 .stage{z-index:0}
 .phone{z-index:1}
-.ntoast{position:absolute;z-index:5;display:flex;gap:10px;align-items:center;width:212px;background:var(--sheet);border:1px solid #DDE2DA;border-radius:12px;padding:10px 13px;box-shadow:0 2px 4px rgba(14,26,43,.06),0 18px 40px -12px rgba(14,26,43,.32);font-size:13.5px;line-height:1.3;opacity:0;translate:0 8px;pointer-events:none;transition:opacity .25s ease-out,translate .35s var(--ease)}
+.ntoast{position:absolute;z-index:5;width:224px;background:var(--sheet);border:1px solid #DDE2DA;border-radius:12px;padding:11px 14px 12px;box-shadow:0 2px 4px rgba(14,26,43,.06),0 18px 40px -12px rgba(14,26,43,.32);opacity:0;translate:0 6px;pointer-events:none;transition:opacity .25s ease-out,translate .35s var(--ease),top .35s var(--ease)}
 .ntoast.in{opacity:1;translate:0 0}
-.ntoast b{display:block}
-.ntoast small{display:block;color:var(--ink-2);font-size:12.5px;margin-top:1px}
-.ntoast i{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--deal-soft);color:var(--deal);flex:none}
-.ntoast::after{content:"";position:absolute;top:50%;width:10px;height:10px;background:inherit;border:inherit;border-width:0 1px 1px 0;translate:0 -50%;rotate:-45deg}
+.ntoast small{display:block;font-size:11.5px;font-weight:800;color:var(--deal);margin-bottom:3px}
+.ntoast b{display:block;font-size:14.5px;line-height:1.25}
+.ntoast p{font-size:13px;line-height:1.4;color:var(--ink-2);margin-top:4px}
+.ntoast::after{content:"";position:absolute;top:var(--ay,50%);width:10px;height:10px;background:inherit;border:1px solid #DDE2DA;border-width:0 1px 1px 0;translate:0 -50%;rotate:-45deg}
 .ntoast.left::after{right:-6px}
 .ntoast.right::after{left:-6px;rotate:135deg}
 @media (max-width:760px){.ntoast{display:none}}
-@media (prefers-reduced-motion:reduce){.reels,.storyv,.reel-track,.ntoast,.view{transition:none}}
+@media (prefers-reduced-motion:reduce){.reels,.storyv,.reel-track,.ntoast,.view,.page,.fset{transition:none}.reel .still{animation:none}}
 </style>
 </head>
 <body>
@@ -772,62 +877,20 @@ button.offer-c{display:block;width:100%;text-align:left;cursor:pointer}
 
               <!-- FEED -->
               <div class="view scroll on" data-view="0" id="feed" role="tabpanel" aria-label="Feed">
-                <div class="stories">
-                  <button class="story add" type="button" data-share><i aria-hidden="true">+</i>Dein Erfolg</button>
-                  <button class="story" type="button" data-story="0"><i class="crop" data-crop="feed,148,98,80,80"></i>Marco</button>
-                  <button class="story" type="button" data-story="1"><i class="crop" data-crop="player,150,90,240,240"></i>Sofia</button>
-                  <button class="story" type="button" data-story="2" id="st-lena"><i class="crop" data-crop="feed,264,98,80,80"></i>Lena</button>
-                  <button class="story" type="button" data-story="3"><i class="crop" data-crop="feed,380,98,80,80"></i>Amira</button>
-                </div>
-                <div class="feed-bar">
-                  <button class="cats" type="button" id="cats-btn"><span aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg></span><em id="cat-l">Alle Kategorien</em></button>
+                <div class="stories" id="stories"></div>
+                <div class="fbar">
+                  <button class="fset-btn" type="button" id="fset-btn" aria-expanded="false" aria-controls="fset"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Feed-Einstellungen<i class="chev" aria-hidden="true"></i></button>
                   <button class="share-btn" type="button" data-share><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Teilen</button>
                 </div>
-                <div id="feedlist">
-                  <div class="post" data-cat="erfolge" data-pid="marco">
-                    <div class="post-h"><span class="av crop" data-crop="feed,46,362,44,44"></span><b>Marco <span class="rk">Rising</span></b><span class="tag">MEMBER-VIDEO</span></div>
-                    <button class="video crop" type="button" id="video" data-reel="0" data-crop="feed,24,430,492,370" aria-label="Video abspielen: Mein erster 4.000-€-Deal">
-                      <span class="play" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
-                      <span class="cap">Mein erster 4.000-€-Deal, so lief der Call.</span><span class="dur num">0:44</span>
-                    </button>
-                    <div class="acts num"><button type="button" class="like"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><em data-n="152">152</em></button><button type="button" class="cmt" data-comments="marco"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/></svg><em>24</em></button><button type="button" class="sh" data-send aria-label="Weiterleiten"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg></button></div>
-                    <div class="tags">#Closing #HighTicket</div>
-                  </div>
-
-                  <div class="post win" data-cat="erfolge" data-pid="lena">
-                    <div class="post-h"><span class="av crop" data-crop="feed,264,98,80,80"></span><b>Lena <span class="rk elite">Elite</span></b><span class="tag">ERFOLG</span></div>
-                    <div class="win-b"><span class="win-i" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg></span><p><b>6. Hire über ClosingHub.</b> Rang Elite gehalten, danke an alle, die mir im Forum geholfen haben.</p></div>
-                    <div class="acts num"><button type="button" class="congrats" data-n="31">Glückwunsch senden <em>31</em></button><button type="button" class="cmt" data-comments="lena"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/></svg><em>9</em></button></div>
-                  </div>
-
-                  <div class="post" data-cat="setting" data-pid="sofia">
-                    <div class="post-h"><span class="av crop" data-crop="player,150,90,240,240"></span><b>Sofia <span class="rk pro">Pro</span></b><span class="tag">MEMBER-VIDEO</span></div>
-                    <button class="video crop" type="button" data-reel="1" data-crop="player,0,110,540,390" aria-label="Video abspielen: 3 Sätze, mit denen ich jeden Termin bestätige">
-                      <span class="play" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
-                      <span class="cap">3 Sätze, mit denen ich jeden Termin bestätige.</span><span class="dur num">0:39</span>
-                    </button>
-                    <div class="acts num"><button type="button" class="like"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><em data-n="118">118</em></button><button type="button" class="cmt" data-comments="sofia"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/></svg><em>13</em></button><button type="button" class="sh" data-send aria-label="Weiterleiten"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg></button></div>
-                    <div class="tags">#Setting #Termin</div>
-                  </div>
-
-                  <div class="post fq" data-cat="einwaende">
-                    <div class="post-h"><span class="av ini">JK</span><b>Jonas <span class="rk">Rookie</span></b><span class="tag">FORUM</span></div>
-                    <button type="button" class="fq-b" data-thread="Einwandbehandlung"><b>Wie reagiert ihr auf „Ich muss da nochmal drüber schlafen“?</b><span>12 Antworten, zuletzt von Felix <span class="rk pro">Pro</span></span></button>
-                  </div>
-
-                  <div class="post" data-cat="einwaende" data-pid="zitat">
-                    <div class="post-h"><span class="av">CH</span><b>ClosingHub</b><span class="tag">ZITAT</span></div>
-                    <button class="quote" type="button" data-reel="2">„Ein Einwand ist kein Nein. Er ist eine Bitte um mehr Sicherheit.“</button>
-                    <div class="acts num"><button type="button" class="like"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><em data-n="128">128</em></button><button type="button" class="cmt" data-comments="zitat"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/></svg><em>14</em></button></div>
-                    <div class="tags">#Einwände</div>
-                  </div>
-
-                  <div class="post jobcard" data-cat="setting">
-                    <div class="post-h"><span class="av">CH</span><b>Jobbörse</b><span class="tag">NEUER JOB</span></div>
-                    <button type="button" class="jc-b" data-jobsheet data-t="Setter Outbound B2B" data-p="80 € pro gehaltenem Termin" data-m="Software, Deutschland, Auftraggeber anonym" data-k="SaaS 2.400 €" data-u="Vollzeit"><b>Setter Outbound B2B</b><span class="pv">80 € pro gehaltenem Termin</span><span class="jc-go">Ansehen</span></button>
+                <div class="fset" id="fset">
+                  <div class="fset-in">
+                    <div class="fs-row"><div><b>Atempause</b><span>Nach 5 Minuten Reels kurz durchatmen</span></div><button type="button" class="sw on" id="sw-breath" role="switch" aria-checked="true" aria-label="Atempause"><i></i></button></div>
+                    <div class="fs-row col"><b>Reels ausschalten nach</b><div class="seg3" id="rtimer" role="group" aria-label="Reel-Timer"><button type="button" data-min="5">5 Min.</button><button type="button" data-min="10" class="on">10 Min.</button><button type="button" data-min="15">15 Min.</button></div></div>
+                    <div class="fs-row col"><b>Diese Beiträge zeigen</b><div class="chips cw" id="ptypes"><button type="button" class="on" data-pt="video">Videos</button><button type="button" class="on" data-pt="erfolg">Erfolge</button><button type="button" class="on" data-pt="frage">Fragen</button><button type="button" class="on" data-pt="zitat">Zitate</button><button type="button" class="on" data-pt="job">Jobs</button></div></div>
                   </div>
                 </div>
-                <p class="feed-end">Du bist auf dem neuesten Stand.</p>
+                <div id="feedlist"></div>
+                <p class="feed-end" id="feed-end">Du bist auf dem neuesten Stand.</p>
               </div>
 
               <!-- ENTDECKEN -->
@@ -837,84 +900,55 @@ button.offer-c{display:block;width:100%;text-align:left;cursor:pointer}
                   <button type="button" aria-pressed="false" data-seg="forum">Forum</button>
                   <button type="button" aria-pressed="false" data-seg="markt">Marktplatz</button>
                 </div>
-                <!-- Jobs -->
                 <div class="pane on" data-pane="jobs">
-                  <div class="chips" data-filter="job"><button type="button" class="on" data-f="alle">Alle</button><button type="button" data-f="closer">Closer</button><button type="button" data-f="setter">Setter</button><button type="button" data-f="coach">Coach</button></div>
-                  <p class="lbl top">★ Top-Jobs</p>
-                  <button class="job top" type="button" id="topjob" data-cat="closer" data-jobsheet data-t="High-Ticket Closer (Remote)" data-p="10 % pro Abschluss" data-m="Coaching, DACH, Auftraggeber anonym" data-k="4.000 €" data-u="Teilzeit"><small>TOP-JOB</small><b>High-Ticket Closer (Remote)</b><span class="pv">10 % Provision pro Abschluss</span></button>
-                  <button class="job top" type="button" data-cat="closer setter" data-jobsheet data-t="Setter &amp; Closer Agentur" data-p="15 % vom ersten Monatsumsatz" data-m="Agentur, Remote, Auftraggeber anonym" data-k="6.500 €" data-u="Vollzeit"><small>TOP-JOB</small><b>Setter &amp; Closer Agentur</b><span class="pv">15 % vom ersten Monatsumsatz</span></button>
-                  <p class="lbl">Alle Jobs</p>
-                  <button class="job" type="button" data-cat="setter" data-jobsheet data-t="Setter Outbound B2B" data-p="80 € pro gehaltenem Termin" data-m="Software, Deutschland, Auftraggeber anonym" data-k="SaaS 2.400 €" data-u="Vollzeit"><b>Setter Outbound B2B</b><em>Software, Deutschland</em><span class="pv">80 € pro gehaltenem Termin</span><span class="ago">Heute</span></button>
-                  <button class="job" type="button" data-cat="closer" data-jobsheet data-t="Closer Solar B2C" data-p="8 % pro Abschluss" data-m="Energie, Remote, Auftraggeber anonym" data-k="18.000 €" data-u="Teilzeit"><b>Closer Solar B2C</b><em>Energie, Remote</em><span class="pv">8 % Provision pro Abschluss</span><span class="ago">vor 2 Tagen</span></button>
-                  <button class="job" type="button" data-cat="coach" data-jobsheet data-t="Sales-Coach für Closer-Team" data-p="1.200 € Fixum + Bonus" data-m="Coaching, Remote, Auftraggeber anonym" data-k="Team mit 8 Closern" data-u="Teilzeit"><b>Sales-Coach für Closer-Team</b><em>Coaching, Remote</em><span class="pv">1.200 € Fixum + Bonus</span><span class="ago">vor 3 Tagen</span></button>
-                  <p class="nores" hidden>Gerade keine Jobs in dieser Kategorie.</p>
+                  <label class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="job-q" type="search" placeholder="Jobs durchsuchen" aria-label="Jobs durchsuchen"></label>
+                  <div class="chips" id="job-chips"><button type="button" class="on" data-jf="alle">Alle</button><button type="button" data-jf="closer">Closer</button><button type="button" data-jf="setter">Setter</button><button type="button" data-jf="coach">Coach</button><button type="button" data-jf="saved">Gemerkt</button></div>
+                  <div class="quota"><span>Bewerbungen diesen Monat</span><b class="num" id="quota-t">2 von 5</b><div class="qbar"><i id="quota-b"></i></div></div>
+                  <div id="joblist"></div>
                 </div>
-                <!-- Forum -->
                 <div class="pane" data-pane="forum">
-                  <div class="p-head"><h5>Forum</h5><button class="mini-btn" type="button" id="new-topic">+ Neues Thema</button></div>
-                  <p class="lbl">Vertrieb-Basics</p>
-                  <button type="button" class="topic" data-thread="Einwandbehandlung" id="topic1"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/></svg></i><b>Einwandbehandlung</b><span class="num">128 Themen</span></button>
-                  <button type="button" class="topic" data-thread="Setting und Terminierung"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></i><b>Setting und Terminierung</b><span class="num">94 Themen</span></button>
-                  <button type="button" class="topic" data-thread="High-Ticket Closing"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></i><b>High-Ticket Closing</b><span class="num">76 Themen</span></button>
-                  <p class="lbl">Mindset und Routinen</p>
-                  <button type="button" class="topic" data-thread="Motivation und Absagen"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></i><b>Motivation und Absagen</b><span class="num">61 Themen</span></button>
-                  <button type="button" class="topic" data-thread="Tagesplanung"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></i><b>Tagesplanung</b><span class="num">38 Themen</span></button>
-                  <p class="lbl">Tools und Erfolge</p>
-                  <button type="button" class="topic" data-thread="CRM und Dialer"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></i><b>CRM und Dialer</b><span class="num">40 Themen</span></button>
-                  <button type="button" class="topic" data-thread="Erfolge feiern"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/></svg></i><b>Erfolge feiern</b><span class="num">152 Themen</span></button>
+                  <div class="p-head"><h5>Forum</h5><button class="mini-btn" type="button" id="ask-btn">+ Frage stellen</button></div>
+                  <label class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="forum-q" type="search" placeholder="Forum durchsuchen" aria-label="Forum durchsuchen"></label>
+                  <div id="forumcats"></div>
                 </div>
-                <!-- Marktplatz -->
                 <div class="pane" data-pane="markt">
                   <div class="p-head"><h5>Marktplatz</h5></div>
-                  <p class="p-sub">Member verkaufen Skripte, Call-Analysen und Coachings. Verdiene passiv mit deinem Wissen.</p>
-                  <div class="chips" data-filter="offer"><button type="button" class="on" data-f="alle">Alle</button><button type="button" data-f="skripte">Skripte</button><button type="button" data-f="analyse">Call-Analysen</button><button type="button" data-f="coaching">Coaching</button></div>
-                  <button type="button" class="offer-c" data-cat="skripte" data-offer="Follow-up-Skript nach No-Show|Felix|19 €|4,6 (12)|Drei Nachrichten, die einen geplatzten Termin in 48 Stunden zurückholen. Mit Vorlage für WhatsApp und E-Mail."><small>SKRIPTE</small><b>Follow-up-Skript nach No-Show</b><div class="who num"><span class="av ini" style="width:20px;height:20px;font-size:8px">FB</span>Felix <span class="rk pro">Pro</span><span>★ 4,6 (12)</span><span class="pr">19 €</span></div></button>
-                  <button type="button" class="offer-c" data-cat="analyse" data-offer="Dein Closing-Call, Satz für Satz analysiert|Sofia|49 €|4,9 (31)|Du schickst die Aufnahme, Sofia markiert jede Stelle, an der der Abschluss gekippt ist, und schreibt dir bessere Sätze dazu."><small>CALL-ANALYSE</small><b>Dein Closing-Call, Satz für Satz analysiert</b><div class="who num"><span class="av crop" data-crop="player,150,90,240,240" style="width:20px;height:20px"></span>Sofia <span class="rk pro">Pro</span><span>★ 4,9 (31)</span><span class="pr">49 €</span></div></button>
-                  <button type="button" class="offer-c" data-cat="coaching" data-offer="1:1 Einwand-Training (60 Min.)|Lena|89 €|5,0 (18)|Rollenspiel mit den zehn häufigsten Einwänden aus deiner Branche. Danach bekommst du deine persönliche Antwortliste."><small>COACHING</small><b>1:1 Einwand-Training (60 Min.)</b><div class="who num"><span class="av crop" data-crop="feed,264,98,80,80" style="width:20px;height:20px"></span>Lena <span class="rk elite">Elite</span><span>★ 5,0 (18)</span><span class="pr">89 €</span></div></button>
+                  <p class="p-sub">Member verkaufen Skripte, Call-Analysen und Coachings.</p>
+                  <div class="chips" id="mk-chips"><button type="button" class="on" data-mf="alle">Alle</button><button type="button" data-mf="skripte">Skripte</button><button type="button" data-mf="analyse">Call-Analysen</button><button type="button" data-mf="coaching">Coaching</button></div>
+                  <div id="offerlist"></div>
                   <div class="note"><b>Eigenes Angebot?</b> Reich es per Mail oder telefonisch bei uns ein. Wir prüfen jedes Angebot persönlich.</div>
                 </div>
               </div>
 
               <!-- PROFIL -->
-              <div class="view scroll" data-view="2" role="tabpanel" aria-label="Profil">
+              <div class="view scroll" data-view="2" id="prof" role="tabpanel" aria-label="Profil">
                 <div class="ph">
-                  <span class="pav eli" role="img" aria-label="Profilbild von Elias"></span>
+                  <img class="pav" src="assets/app/elias_portraet_eng.jpg" alt="Profilbild von Elias" width="64" height="64">
                   <div>
-                    <div><b>Elias</b><span class="rk elite">Elite</span><button type="button" class="medal-n num" id="medal-n" aria-label="12 Medaillen anzeigen">12 Medaillen</button></div>
-                    <div class="fol num"><span>★ <b>4,8</b></span><button type="button" id="fol-btn"><b>312</b> Follower</button><span><b>180</b> gefolgt</span></div>
+                    <div><b>Elias</b><span class="rk elite">Elite</span><button type="button" class="medal-n num" id="medal-n">12 Medaillen</button></div>
+                    <div class="fol num"><button type="button" data-ptab="reviews">★ <b>4,8</b> (27)</button><button type="button" id="fol-btn"><b>312</b> Follower</button><span><b>180</b> gefolgt</span></div>
                   </div>
                 </div>
                 <p class="pinfo"><strong>Closer</strong>, 5 Jahre Erfahrung, Spanien, DE und EN<br>High-Ticket Closer, B2B und Coaching</p>
-                <p class="blabel">Abzeichen</p>
-                <div class="badges" aria-label="Abzeichen">
-                  <button type="button" data-badge="Day One|Einer der ersten 250 Member. Bleibt für immer im Profil."><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8.2 7 10 4-1.8 7-5.5 7-10V6z"/></svg></button>
-                  <button type="button" data-badge="Verifiziert|Identität und Erfahrung von ClosingHub geprüft."><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 16h6"/></svg></button>
-                  <button type="button" data-badge="100k Umsatz|Mehr als 100.000 € Umsatz über ClosingHub-Jobs abgeschlossen."><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6.5V8M12 16v1.5"/></svg></button>
-                  <button type="button" data-badge="High-Ticket|Zehn Abschlüsse mit einem Ticket über 3.000 €."><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/></svg></button>
-                </div>
-                <div class="pgrid">
-                  <button type="button" class="ph-img" data-reel="3" style="background-image:url(assets/app/elias_praesentieren.jpg)" aria-label="Video: Angebot in 60 Sekunden"></button>
-                  <button type="button" data-post="Die 3-Sekunden-Pause nach dem Preis. Wer zuerst redet, verhandelt gegen sich selbst.">Die 3-Sekunden-Pause nach dem Preis.</button>
-                  <button type="button" class="ph-img" data-reel="4" style="background-image:url(assets/app/elias_handy_tippen.jpg)" aria-label="Video: So plane ich meinen Tag"></button>
-                  <button type="button" data-post="Vor jedem Call drei Fragen notieren: Was will er erreichen, was hält ihn ab, was kostet ihn das Warten?">Drei Fragen vor jedem Call.</button>
-                  <button type="button" class="ph-img" data-reel="5" style="background-image:url(assets/app/elias_portraet_eng.jpg)" aria-label="Video: Warum ich ClosingHub gebaut habe"></button>
-                  <button type="button" data-post="Absagen sind Daten, keine Urteile. Schreib nach jedem Nein auf, an welcher Stelle es gekippt ist.">Absagen sind Daten.</button>
-                </div>
+                <div class="badges" id="badges"></div>
+                <div class="ptabs" role="tablist" aria-label="Profilbereiche"><button type="button" class="on" data-ptab="posts">Beiträge</button><button type="button" data-ptab="videos">Videos</button><button type="button" data-ptab="reviews">Bewertungen</button></div>
+                <div class="ppane on" data-ppane="posts"><div class="pgrid" id="pgrid"></div></div>
+                <div class="ppane" data-ppane="videos"><div class="vgrid" id="vgrid"></div></div>
+                <div class="ppane" data-ppane="reviews"><div id="reviews"></div></div>
+              </div>
+
+              <!-- Unterseite (Job, Thema, Angebot) -->
+              <div class="page" id="page" aria-hidden="true">
+                <div class="pg-h"><button type="button" id="pg-back" aria-label="Zurück"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><b id="pg-t"></b></div>
+                <div class="pg-b" id="pg-b"></div>
               </div>
 
               <!-- Reels -->
               <div class="reels" id="reels" aria-hidden="true">
-                <div class="reel-track" id="reel-track">
-                  <div class="reel"><div class="bg crop" data-crop="feed,152,430,236,410"></div><div class="r-bot"><b>Marco <span class="rk">Rising</span></b><p>Mein erster 4.000-€-Deal, so lief der Call.</p></div></div>
-                  <div class="reel"><div class="bg crop" data-crop="player,22,120,496,880"></div><div class="r-bot"><b>Sofia <span class="rk pro">Pro</span></b><p>3 Sätze, mit denen ich jeden Termin bestätige.</p></div></div>
-                  <div class="reel q"><div class="bg">„Ein Einwand ist kein Nein. Er ist eine Bitte um mehr Sicherheit.“</div><div class="r-bot"><b>ClosingHub</b><p>Zitat des Tages</p></div></div>
-                  <div class="reel"><div class="bg img" style="background-image:url(assets/app/elias_praesentieren.jpg)"></div><div class="r-bot"><b>Elias <span class="rk elite">Elite</span></b><p>So präsentierst du ein Angebot in 60 Sekunden.</p></div></div>
-                  <div class="reel"><div class="bg img" style="background-image:url(assets/app/elias_handy_tippen.jpg)"></div><div class="r-bot"><b>Elias <span class="rk elite">Elite</span></b><p>So plane ich meinen Tag mit der Jobbörse.</p></div></div>
-                  <div class="reel"><div class="bg img" style="background-image:url(assets/app/elias_portraet_eng.jpg);background-position:50% 20%"></div><div class="r-bot"><b>Elias <span class="rk elite">Elite</span></b><p>Warum ich ClosingHub gebaut habe.</p></div></div>
-                </div>
-                <div class="r-side num"><button type="button" class="like" id="r-like"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><em id="r-ln">152</em></button><button type="button" id="r-cmt"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/></svg><em id="r-cn">24</em></button></div>
-                <div class="r-top"><b>Member-Videos</b><span class="timer num">Atempause in 5 Min.</span><button type="button" class="r-x" id="r-x" aria-label="Videos schließen">✕</button></div>
-                <div class="r-nav"><button type="button" id="r-up" aria-label="Vorheriges Video"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button type="button" id="r-down" aria-label="Nächstes Video"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+                <div class="reel-track" id="reel-track"></div>
+                <div class="r-top"><b>Member-Videos</b><span class="timer num" id="r-timer">Atempause in 5 Min.</span><button type="button" class="r-x" id="r-x" aria-label="Videos schließen">✕</button></div>
+                <div class="r-side num"><button type="button" class="like" id="r-like"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><em id="r-ln">0</em></button><button type="button" id="r-cmt"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/></svg><em id="r-cn">0</em></button><button type="button" id="r-up" aria-label="Vorheriges Video"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button type="button" id="r-down" aria-label="Nächstes Video"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+                <div class="r-prog"><i id="r-prog"></i></div>
                 <div class="r-dots" id="r-dots" aria-hidden="true"></div>
                 <div class="r-hint" id="r-hint">Nach oben wischen für mehr</div>
               </div>
@@ -922,53 +956,28 @@ button.offer-c{display:block;width:100%;text-align:left;cursor:pointer}
               <!-- Stories -->
               <div class="storyv" id="storyv" aria-hidden="true">
                 <div class="st-bars" id="st-bars"></div>
-                <div class="st-head"><span class="av crop" id="st-av"></span><b id="st-n"></b><span class="rk" id="st-r"></span><button type="button" class="r-x" id="st-x" aria-label="Story schließen">✕</button></div>
+                <div class="st-head"><span class="av" id="st-av"></span><b id="st-n"></b><span class="rk" id="st-r"></span><button type="button" class="r-x" id="st-x" aria-label="Story schließen">✕</button></div>
                 <button type="button" class="st-prev" id="st-prev" aria-label="Vorherige Story"></button>
                 <button type="button" class="st-next" id="st-next" aria-label="Nächste Story"></button>
                 <p class="st-t" id="st-t"></p>
                 <div class="st-reply"><input id="st-in" type="text" placeholder="Glückwunsch senden …" aria-label="Antwort auf die Story"><button type="button" id="st-send">Senden</button></div>
               </div>
 
-              <!-- Sheets -->
               <div class="shade" id="shade"></div>
-              <div class="sheet" id="sh-job" aria-hidden="true">
-                <h5 id="sj-t">High-Ticket Closer (Remote)</h5>
-                <p class="meta" id="sj-m">Coaching, DACH, Auftraggeber anonym</p>
-                <div class="facts2 num"><div>Provision<b id="sj-p">10 % pro Abschluss</b></div><div>Ticket<b id="sj-k">4.000 €</b></div><div>Umfang<b id="sj-u">Teilzeit</b></div><div>Start<b>ab sofort</b></div></div>
-                <button class="apply" id="apply" type="button">Mit einem Klick bewerben</button>
-              </div>
-              <div class="sheet" id="sh-medal" aria-hidden="true">
-                <h5>Medaillen von Elias</h5>
-                <table class="mtab num">
-                  <tr><th>Medaille</th><th>Anzahl</th></tr>
-                  <tr><td>Hired via ClosingHub</td><td>3×</td></tr>
-                  <tr><td>Starke Bewertung</td><td>6×</td></tr>
-                  <tr><td>Kommentator</td><td>2×</td></tr>
-                  <tr><td>Lernstunde</td><td>1×</td></tr>
-                </table>
-              </div>
-              <div class="sheet" id="sh-add" aria-hidden="true">
-                <h5>Was möchtest du teilen?</h5>
-                <div class="share-opts">
-                  <button type="button" data-compose="erfolg"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/></svg></i>Erfolg als Story</button>
-                  <button type="button" data-compose="video"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></i>Video für den Feed</button>
-                  <button type="button" data-compose="frage"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/></svg></i>Frage im Forum</button>
-                </div>
-              </div>
               <div class="sheet" id="sh-gen" aria-hidden="true"><div id="gen"></div></div>
               <div class="ptoast" id="ptoast" role="status"></div>
               <span class="tap" id="tap" aria-hidden="true"></span>
             </div>
 
             <div class="tabs" role="tablist" aria-label="App-Bereiche">
+              <button type="button" role="tab" aria-selected="false" data-tab="1" aria-label="Entdecken: Jobs, Forum und Marktplatz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></button>
               <button type="button" role="tab" aria-selected="true" data-tab="0" aria-label="Feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M10 8.5v7l6-3.5z"/></svg></button>
-              <button type="button" role="tab" aria-selected="false" data-tab="1" aria-label="Jobs, Forum und Marktplatz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></button>
               <button type="button" role="tab" aria-selected="false" data-tab="2" aria-label="Profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></button>
             </div>
           </div>
         </div>
       </div>
-      <p class="phone-cap">So sieht die App aus. Tipp unten auf die Bereiche.</p>
+      <p class="phone-cap">App-Demo mit begrenzten Funktionen. Probier sie gern aus.</p>
     </div>
   </div>
 </section>
@@ -1030,7 +1039,7 @@ button.offer-c{display:block;width:100%;text-align:left;cursor:pointer}
         <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
         <label class="consent"><input type="checkbox" id="ok" required><span>Ich bin einverstanden, dass ClosingHub mich zum Start per E-Mail informiert. Abmeldung jederzeit möglich. Mehr in der <button type="button" class="link" data-open="ds">Datenschutzerklärung</button>.</span></label>
         <div class="c-foot">
-          <button class="btn btn-l" type="submit" id="sendBtn">Platz sichern</button>
+          <button class="btn btn-l" type="submit" id="sendBtn">Auf die Warteliste</button>
           <p class="err" id="err" role="alert"></p>
           <p class="num">Noch <span data-left-n>250</span> von <span data-total>250</span> Plätzen frei. Verlängert sich nicht automatisch.</p>
         </div>
@@ -1388,7 +1397,7 @@ const FEATURES=[
   ['shield','Bewertungen','Vertrauen','Gegenseitige Bewertungen nach jeder Zusammenarbeit.',['5 Sterne und kurzer Text','Du entscheidest, was im Profil steht','Mehr Vertrauen, bessere Jobs']],
   ['gift','Member-Vorteile','Deals','Exklusive Angebote von Partnern nur für Member.',['Rabatte auf Tools und Equipment','Mehr Deals mit Premium','Monatlich neue Angebote']],
 ];
-$('#spec').innerHTML=FEATURES.map(([ic,t,tag,d,li],i)=>`<div class="spec-row"><button type="button" aria-expanded="false" aria-controls="sp${i}"><span class="ico">${svg(IC[ic])}</span><h3>${t}</h3><span class="tag">${tag}</span><span class="pm">${svg('<path d="M12 5v14M5 12h14"/>',20,2)}</span></button><div class="spec-body" id="sp${i}"><div><p class="spec-d">${d}</p><ul>${li.map(x=>`<li>${x}</li>`).join('')}</ul></div></div></div>`).join('');
+$('#spec').innerHTML=FEATURES.map(([ic,t,tag,d,li],i)=>`<div class="spec-row"><button type="button" aria-expanded="false" aria-controls="sp${i}"><span class="ico">${svg(IC[ic])}</span><h3>${t}<span class="sp-inl">${d}</span></h3><span class="tag">${tag}</span><span class="pm">${svg('<path d="M12 5v14M5 12h14"/>',20,2)}</span></button><div class="spec-body" id="sp${i}"><div><ul>${li.map(x=>`<li>${x}</li>`).join('')}</ul></div></div></div>`).join('');
 $$('.spec-row>button').forEach(b=>b.addEventListener('click',()=>{const r=b.parentElement,o=!r.classList.contains('open');r.classList.toggle('open',o);b.setAttribute('aria-expanded',o)}));
 const TICK=['Jobbörse','Marktplatz','Forum','Feed','Stories','Nachrichten','Ränge und Abzeichen','Closer Arena','Bewertungen','Member-Vorteile'];
 $('#ticker').innerHTML=[...TICK,...TICK].map((t,i)=>`<span${i>=TICK.length?' aria-hidden="true"':''}>${t}</span>`).join('');
@@ -1475,7 +1484,7 @@ form.addEventListener('submit',async e=>{
     form.querySelectorAll('.blank input').forEach(i=>i.style.width=(i.value.length+1)+'ch');
     form.querySelectorAll('input').forEach(i=>{i.readOnly=true});$('#f-rolle').disabled=true;
     form.classList.add('done');updDock();
-  }catch(x){btn.disabled=false;btn.textContent='Platz sichern';showErr('Das hat nicht geklappt. Prüf deine Verbindung und versuch es gleich nochmal.')}
+  }catch(x){btn.disabled=false;btn.textContent='Auf die Warteliste';showErr('Das hat nicht geklappt. Prüf deine Verbindung und versuch es gleich nochmal.')}
 });
 $('#shareBtn').addEventListener('click',async function(){
   const url=location.origin&&location.origin.startsWith('http')?location.origin:'https://getclosinghub.com';
@@ -1535,8 +1544,9 @@ $$('[data-col]').forEach(b=>b.addEventListener('click',()=>{
 }));
 
 /* =====================================================================
-   App im Handy: Nachbau der echten App (Feed, Reels, Stories, Entdecken, Profil)
-   Führt sich selbst vor, jede sichtbare Funktion ist bedienbar.
+   App im Handy: Demo der echten App mit begrenzten Funktionen.
+   Feed, Reels, Stories, Jobs, Forum, Marktplatz, Profil mit Bewertungen.
+   Führt sich selbst vor; eine Erklär-Blase beschreibt, was gerade zu sehen ist.
    ===================================================================== */
 const IMGSZ={feed:[540,1169],player:[540,1169],profile:[540,1169]};
 function applyCrops(root=document){
@@ -1549,57 +1559,90 @@ function applyCrops(root=document){
     el.style.backgroundPosition=`${-(x*s-(ew-w*s)/2)}px ${-(y*s-(eh-h*s)/2)}px`;
   });
 }
-const phone=$('#phone'),tabs=$$('.tabs button'),views=$$('.view'),tap=$('#tap'),reels=$('#reels'),track=$('#reel-track'),shade=$('#shade'),feed=$('#feed'),disc=$('#disc'),storyv=$('#storyv');
+const phone=$('#phone'),tabs=$$('.tabs button'),views=$$('.view'),tap=$('#tap'),reels=$('#reels'),track=$('#reel-track'),shade=$('#shade'),feed=$('#feed'),disc=$('#disc'),prof=$('#prof'),storyv=$('#storyv'),page=$('#page');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SVG=(p,s=15,f='none')=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${f}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const P={
+  heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/>',
+  chat:'<path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/>',
+  send:'<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>',
+  trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/>',
+  play:'<path d="M8 5v14l11-7z"/>',
+  mark:'<path d="M6 3h12v18l-6-4-6 4z"/>',
+  forum:'<path d="M4 5h16v10H9l-5 4z"/>',
+  phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  bolt:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  tool:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  shield:'<path d="M12 3 5 6v5c0 4.5 3 8.2 7 10 4-1.8 7-5.5 7-10V6z"/>',
+  id:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 16h6"/>',
+  coin:'<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6.5V8M12 16v1.5"/>',
+  gem:'<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/>'
+};
+const ELI='assets/app/elias_portraet_eng.jpg';
+const PEOPLE={
+  Elias:{av:`<img class="av" src="${ELI}" alt="" style="object-position:50% 18%">`,r:'Elite'},
+  Marco:{c:'feed,148,98,80,80',r:'Rising'},Sofia:{c:'player,150,90,240,240',r:'Pro'},Lena:{c:'feed,264,98,80,80',r:'Elite'},
+  Amira:{c:'feed,380,98,80,80',r:'Rookie'},Jonas:{i:'JK',r:'Rookie'},Felix:{i:'FB',r:'Pro'},Tobias:{i:'TW',r:'Elite'},ClosingHub:{i:'CH',r:''}
+};
+const rkCls=r=>r==='Pro'?' pro':r==='Elite'?' elite':'';
+const rk=r=>r?`<span class="rk${rkCls(r)}">${r}</span>`:'';
+function av(n,s=28){const p=PEOPLE[n]||{i:n.slice(0,2).toUpperCase()};const st=`width:${s}px;height:${s}px`;
+  if(n==='Elias')return `<img class="av" src="${ELI}" alt="" style="${st};object-position:50% 18%">`;
+  if(p.c)return `<span class="av crop" data-crop="${p.c}" style="${st}"></span>`;
+  return `<span class="av ${n==='ClosingHub'?'ch':'ini'}" style="${st}">${p.i}</span>`}
 let cur=0,segNow='jobs',paused=false,visible=false,userHold=0,step=0;
 
-/* ---------- Hinweis neben dem Handy: einer, passend zum Bildschirm ---------- */
-const NI={
-  trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/>',
-  job:'<path d="M3 8h18v11H3zM8 8V5h8v3"/>',
-  chat:'<path d="M4 5h16v10H9l-5 4z"/>',
-  play:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/>',
-  tag:'<path d="M20 12 12 20l-8-8V4h8z"/><circle cx="8" cy="8" r="1.5"/>',
-  medal:'<circle cx="12" cy="9" r="5"/><path d="M8.5 13 7 21l5-3 5 3-1.5-8"/>'
+/* ---------- Erklär-Blase: beschreibt immer, was gerade gezeigt wird ---------- */
+const EX={
+  feed:['Feed','Erfolge, Videos und Fragen der Community','Hier siehst du, was andere Closer und Setter gerade schaffen.'],
+  fset:['Feed-Einstellungen','Du bestimmst, was du siehst','Atempause an oder aus, Reel-Timer auf 5, 10 oder 15 Minuten und die Beitragsarten wählen.'],
+  reels:['Member-Videos','Kurze Tipps aus dem Vertriebsalltag','Nach oben wischen für das nächste Video. Der Timer schaltet die Reels nach deiner Zeit aus.'],
+  story:['Stories','Erfolge des Tages','Members teilen ihre Abschlüsse. Du gratulierst direkt in der Story.'],
+  share:['Teilen','Erfolg, Video oder Frage posten','Was du teilst, erscheint sofort oben im Feed.'],
+  comments:['Kommentare','Direkt austauschen','Frag nach, gratuliere oder gib einen Tipp. Dein Kommentar erscheint sofort.'],
+  jobs:['Jobbörse','Geprüfte Jobs mit klarer Provision','Suchen, nach Rolle filtern und Jobs merken. Plus: 5 Bewerbungen im Monat, Premium: 10.'],
+  job:['Job-Details','Alles auf einen Blick','Provision, Ticket und Umfang. Bewerben mit einem Klick, der Auftraggeber bleibt bis zur Freischaltung anonym.'],
+  forum:['Forum','Fragen stellen, Profis antworten','Themen nach Bereich sortiert. Durchsuch das Forum oder stell deine eigene Frage.'],
+  fcat:['Themen','Alle Fragen zu diesem Bereich','Die aktivsten Themen stehen oben. Tipp auf ein Thema für die Antworten.'],
+  thread:['Antworten','Die hilfreichste Antwort steht oben','Markier Antworten als hilfreich oder antworte selbst.'],
+  ask:['Frage stellen','Bereich wählen, Frage schreiben','Deine Frage erscheint im Forum und im Feed.'],
+  markt:['Marktplatz','Wissen von Membern kaufen','Skripte, Call-Analysen und Coachings. Eigene Angebote reichst du bei uns ein.'],
+  offer:['Angebot','Bewertungen helfen bei der Wahl','Lies, was andere Käufer sagen, bevor du kaufst.'],
+  buy:['Kauf','In der Demo wird nichts berechnet','Nach dem Kauf findest du das Angebot in deinem Profil.'],
+  profil:['Profil','Dein Ruf im Vertrieb','Rang, Abzeichen und Medaillen zeigen Auftraggebern, was du kannst.'],
+  posts:['Beiträge','Deine Tipps und Erfolge','Alles, was du im Feed geteilt hast.'],
+  videos:['Videos','Deine Member-Videos','Kurze Videos, die andere im Feed und in den Reels sehen.'],
+  reviews:['Bewertungen','Auftraggeber bewerten dich','Nach jeder Zusammenarbeit gibt es Sterne und ein kurzes Feedback.'],
+  medals:['Medaillen','Für besondere Leistungen','Zum Beispiel für Abschlüsse über ClosingHub oder starke Bewertungen.'],
+  badge:['Abzeichen','Sichtbar für alle','Abzeichen bekommst du für Erfahrung, Umsatz und Treue.']
 };
-const CTX={
-  feed:['trophy','Marco feiert seinen 4.000-€-Deal','23 Glückwünsche',.30],
-  reels:['play','Neues Member-Video','Sofia hat gerade gepostet',.22],
-  story:['trophy','Lena hat Rang Elite gehalten','6. Hire über ClosingHub',.30],
-  jobs:['job','Neuer Top-Job','10 % Provision pro Abschluss',.26],
-  forum:['chat','Neue Antwort von Felix','auf die Frage zu Einwänden',.34],
-  markt:['tag','Neues Angebot','Call-Analyse von Sofia, ★ 4,9',.40],
-  profil:['medal','Neues Abzeichen','10 Abschlüsse geschafft',.42]
-};
-const nt=$('#ntoast');let ctxNow='',ntT=0;
-function hideToast(){clearTimeout(ntT);nt.classList.remove('in')}
-function placeToast(f){
-  const st=$('.stage').getBoundingClientRect(),pr=phone.getBoundingClientRect(),w=nt.offsetWidth||212,gap=16;
+const nt=$('#ntoast');let exNow='',exT=0;
+function hideEx(){clearTimeout(exT);nt.classList.remove('in')}
+function placeEx(el){
+  const st=$('.stage').getBoundingClientRect(),pr=phone.getBoundingClientRect(),w=nt.offsetWidth||224,h=nt.offsetHeight||90,gap=16;
   const txt=$('.hero .wrap>div:first-child').getBoundingClientRect();
-  const leftRoom=pr.left-gap-w>=txt.right+8, rightRoom=innerWidth-pr.right-gap-w>=8;
   nt.classList.remove('left','right');
   let x;
-  if(leftRoom){x=pr.left-st.left-gap-w;nt.classList.add('left')}
-  else if(rightRoom){x=pr.right-st.left+gap;nt.classList.add('right')}
-  else{x=pr.left-st.left-w+22;nt.classList.add('left')}
-  nt.style.left=x+'px';nt.style.top=(pr.top-st.top+pr.height*f)+'px';
+  if(pr.left-gap-w>=txt.right+8){x=pr.left-st.left-gap-w;nt.classList.add('left')}
+  else if(innerWidth-pr.right-gap-w>=8){x=pr.right-st.left+gap;nt.classList.add('right')}
+  else{x=pr.left-st.left-w+26;nt.classList.add('left')}
+  let cy=pr.top+pr.height*.32;
+  if(el){const r=el.getBoundingClientRect();if(r.height&&r.bottom>pr.top&&r.top<pr.bottom)cy=Math.min(Math.max(r.top+r.height/2,pr.top+60),pr.bottom-70)}
+  let top=cy-h/2;top=Math.min(Math.max(top,pr.top+10),pr.bottom-h-10);
+  nt.style.setProperty('--ay',(cy-top)+'px');
+  nt.style.left=x+'px';nt.style.top=(top-st.top)+'px';
 }
-function setCtx(k){
-  if(k===ctxNow)return;ctxNow=k;hideToast();
-  const c=CTX[k];if(!c||innerWidth<=760)return;
-  ntT=setTimeout(()=>{
-    if(ctxNow!==k)return;
-    $('#nt-i').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NI[c[0]]}</svg>`;
-    $('#nt-b').textContent=c[1];$('#nt-s').textContent=c[2];
-    placeToast(c[3]);nt.classList.add('in');
-  },reduce?0:420);
+function explain(k,el){
+  exNow=k;clearTimeout(exT);nt.classList.remove('in');
+  const e=EX[k];if(!e||innerWidth<=760)return;
+  exT=setTimeout(()=>{
+    if(exNow!==k)return;
+    nt.innerHTML=`<small>${e[0]}</small><b>${e[1]}</b><p>${e[2]}</p>`;
+    placeEx(typeof el==='string'?$(el):el);nt.classList.add('in');
+  },reduce?0:380);
 }
-function ctxFromState(){
-  if(storyv.classList.contains('on'))return 'story';
-  if(reels.classList.contains('on'))return 'reels';
-  return cur===0?'feed':cur===2?'profil':segNow;
-}
-const refreshCtx=()=>setCtx(ctxFromState());
 
 /* ---------- Grundfunktionen ---------- */
 function tapAt(el){
@@ -1608,218 +1651,331 @@ function tapAt(el){
   tap.style.left=(r.left+r.width/2-vr.left)+'px';tap.style.top=(r.top+r.height/2-vr.top)+'px';
   tap.classList.remove('go');void tap.offsetWidth;tap.classList.add('go');
 }
-function ptoast(t){const p=$('#ptoast');p.textContent=t;p.classList.add('on');clearTimeout(ptoast.t);ptoast.t=setTimeout(()=>p.classList.remove('on'),1700)}
-function closeSheets(){$$('.sheet').forEach(s=>{s.classList.remove('on');s.setAttribute('aria-hidden','true')});shade.classList.remove('on')}
-function openSheet(id){closeSheets();const s=$('#'+id);s.classList.add('on');s.setAttribute('aria-hidden','false');shade.classList.add('on')}
-function gen(html){$('#gen').innerHTML=html;openSheet('sh-gen');applyCrops($('#gen'))}
+function ptoast(t){const p=$('#ptoast');p.textContent=t;p.classList.add('on');clearTimeout(ptoast.t);ptoast.t=setTimeout(()=>p.classList.remove('on'),1800)}
+function closeSheets(){$('#sh-gen').classList.remove('on');$('#sh-gen').setAttribute('aria-hidden','true');shade.classList.remove('on')}
+function gen(html,k){$('#gen').innerHTML=html;const s=$('#sh-gen');s.classList.add('on');s.setAttribute('aria-hidden','false');shade.classList.add('on');applyCrops(s);if(k)explain(k,s)}
+
+/* ---------- Unterseiten mit Zurück ---------- */
+let stack=[];
+function openPage(t,html,k,keep){
+  if(!keep)stack=[];
+  stack.push({t,html,k});renderPage();
+}
+function renderPage(){
+  const p=stack[stack.length-1];
+  $('#pg-t').textContent=p.t;$('#pg-b').innerHTML=p.html;$('#pg-b').scrollTop=0;
+  page.classList.add('on');page.setAttribute('aria-hidden','false');applyCrops(page);explain(p.k,page.querySelector('.pg-b>*'));
+}
+function back(){stack.pop();if(stack.length)renderPage();else{closePage();explainView()}}
+function closePage(){stack=[];page.classList.remove('on');page.setAttribute('aria-hidden','true')}
+
+/* ---------- Feed ---------- */
+let breath=true,rMin=10;const ptypes=new Set(['video','erfolg','frage','zitat','job']);
+const POSTS=[
+  {id:'sofia',type:'video',n:'Sofia',clip:'clip_sofia',reel:0,cap:'3 Sätze, mit denen ich jeden Termin bestätige.',dur:'0:08',likes:118,tags:'#Setting #Termin'},
+  {id:'lena',type:'erfolg',n:'Lena',text:'<b>6. Hire über ClosingHub.</b> Rang Elite gehalten, danke an alle, die mir im Forum geholfen haben.',cong:31},
+  {id:'elias1',type:'video',n:'Elias',clip:'clip_elias1',reel:1,cap:'Angebot in 60 Sekunden: so baue ich es auf.',dur:'0:08',likes:96,tags:'#Closing #Pitch'},
+  {id:'jonas',type:'frage',n:'Jonas',thread:'t1'},
+  {id:'marco',type:'video',n:'Marco',crop:'feed,24,430,492,370',reel:3,cap:'Mein erster 4.000-€-Deal, so lief der Call.',dur:'0:44',likes:152,tags:'#Closing #HighTicket'},
+  {id:'zitat',type:'zitat',n:'ClosingHub',text:'„Ein Einwand ist kein Nein. Er ist eine Bitte um mehr Sicherheit.“',reel:4,likes:128},
+  {id:'job2',type:'job',n:'ClosingHub',job:'j3'},
+  {id:'elias2',type:'video',n:'Elias',clip:'clip_elias2',reel:2,cap:'So plane ich meinen Tag mit der Jobbörse.',dur:'0:08',likes:74,tags:'#Routine'}
+];
+const CMT={
+  sofia:[['Jonas','Satz zwei nutze ich ab morgen.'],['Lena','Genau so, kurz und verbindlich.']],
+  lena:[['Marco','Verdient! Danke für deinen Forum-Beitrag letzte Woche.'],['Amira','Ziel für dieses Jahr: so wie du.']],
+  elias1:[['Sofia','Die Pause nach dem Preis ist Gold wert.']],
+  marco:[['Lena','Stark! Welchen Einwand hattest du am Ende?'],['Felix','Glückwunsch, der Erste ist der wichtigste.']],
+  zitat:[['Marco','Hängt jetzt neben meinem Bildschirm.']],
+  elias2:[['Tobias','Calls am Vormittag, genau mein Rhythmus.']]
+};
+const head=(n,tag)=>`<div class="post-h">${av(n)}<b>${n} ${rk(PEOPLE[n]?.r)}</b><span class="tag">${tag}</span></div>`;
+const likeBtn=(n)=>`<button type="button" class="like">${SVG(P.heart)}<em data-n="${n}">${n}</em></button>`;
+const cmtBtn=id=>`<button type="button" class="cmt" data-comments="${id}">${SVG(P.chat)}<em>${(CMT[id]||[]).length+[10,7,3,0,22,13,0,5][POSTS.findIndex(p=>p.id===id)]||0}</em></button>`;
+function postHtml(p){
+  if(p.type==='video'){
+    const media=p.clip?`<video src="assets/app/${p.clip}.mp4" muted loop playsinline autoplay preload="metadata"></video><span class="live">Video</span>`:`<span class="vimg crop" data-crop="${p.crop}"></span>`;
+    return `<div class="post" data-pt="video">${head(p.n,'MEMBER-VIDEO')}<button class="video" type="button" data-reel="${p.reel}" aria-label="Video ansehen: ${esc(p.cap)}">${media}<span class="play" aria-hidden="true">${SVG(P.play,16,'currentColor')}</span><span class="cap">${p.cap}</span><span class="dur num">${p.dur}</span></button><div class="acts num">${likeBtn(p.likes)}${cmtBtn(p.id)}<button type="button" class="sh" data-send aria-label="Weiterleiten">${SVG(P.send)}</button></div><div class="tags">${p.tags}</div></div>`}
+  if(p.type==='erfolg')return `<div class="post win" data-pt="erfolg">${head(p.n,'ERFOLG')}<div class="win-b"><span class="win-i">${SVG(P.trophy,18)}</span><p>${p.text}</p></div><div class="acts num"><button type="button" class="congrats" data-n="${p.cong}"><span>Glückwunsch senden</span> <em>${p.cong}</em></button>${cmtBtn(p.id)}</div></div>`;
+  if(p.type==='frage'){const t=THREADS[p.thread];return `<div class="post fq" data-pt="frage">${head(t.a,'FORUM')}<button type="button" class="fq-b" data-thread="${p.thread}"><b>${t.t}</b><span>${t.ans.length} Antworten, zuletzt von ${t.ans[t.ans.length-1].a}</span></button></div>`}
+  if(p.type==='zitat')return `<div class="post" data-pt="zitat">${head('ClosingHub','ZITAT')}<button class="quote" type="button" data-reel="${p.reel}">${p.text}</button><div class="acts num">${likeBtn(p.likes)}${cmtBtn(p.id)}</div></div>`;
+  if(p.type==='job'){const j=JOBS.find(x=>x.id===p.job);return `<div class="post jobcard" data-pt="job">${head('ClosingHub','NEUER JOB')}<button type="button" class="jc-b" data-job="${j.id}"><b>${j.t}</b><span class="pv">${j.p}</span><span class="jc-go">Ansehen</span></button></div>`}
+}
+function renderFeed(){
+  $('#feedlist').innerHTML=POSTS.map(postHtml).join('');filterFeed();requestAnimationFrame(()=>applyCrops(feed));
+}
+function filterFeed(){let n=0;$$('#feedlist .post').forEach(p=>{const on=ptypes.has(p.dataset.pt)||p.dataset.pt==='own';p.hidden=!on;n+=on});$('#feed-end').textContent=n?'Du bist auf dem neuesten Stand.':'Keine Beiträge. Wähle in den Feed-Einstellungen mehr Beitragsarten aus.'}
+const STORIES=[
+  {n:'Marco',t:'Erster Abschluss über 4.200 € heute! Danke ans Forum für die Einwand-Tipps.'},
+  {n:'Sofia',t:'High-Ticket-Deal über 8.000 € geclosed!'},
+  {n:'Lena',t:'6. Hire über ClosingHub, Rang Elite gehalten!'},
+  {n:'Amira',t:'Woche 1: 4 Bewerbungen, 1 Freischaltung, 1 Testgespräch.'}
+];
+$('#stories').innerHTML=`<button class="story add" type="button" data-share><i aria-hidden="true">+</i>Dein Erfolg</button>`+STORIES.map((s,i)=>`<button class="story" type="button" data-story="${i}" id="st-${s.n.toLowerCase()}"><i class="crop" data-crop="${PEOPLE[s.n].c}"></i>${s.n}</button>`).join('');
 
 /* ---------- Reels ---------- */
-const REELS=[[152,24],[118,13],[128,14],[96,11],[74,8],[210,32]];
-let ri=0,rLiked=new Set();
-const dotsEl=$('#r-dots');dotsEl.innerHTML=REELS.map(()=>'<i></i>').join('');
+const REELS=[
+  {n:'Sofia',clip:'clip_sofia',t:'3 Sätze, mit denen ich jeden Termin bestätige.',l:118,c:'sofia'},
+  {n:'Elias',clip:'clip_elias1',t:'Angebot in 60 Sekunden: so baue ich es auf.',l:96,c:'elias1'},
+  {n:'Elias',clip:'clip_elias2',t:'So plane ich meinen Tag mit der Jobbörse.',l:74,c:'elias2'},
+  {n:'Marco',crop:'feed,152,430,236,410',t:'Mein erster 4.000-€-Deal, so lief der Call.',l:152,c:'marco'},
+  {n:'ClosingHub',q:'„Ein Einwand ist kein Nein. Er ist eine Bitte um mehr Sicherheit.“',t:'Zitat des Tages',l:128,c:'zitat'}
+];
+track.innerHTML=REELS.map(r=>`<div class="reel${r.q?' q':''}">${r.clip?`<video src="assets/app/${r.clip}.mp4" muted loop playsinline preload="metadata"></video>`:r.crop?`<div class="still crop" data-crop="${r.crop}"></div>`:`<div class="bg">${r.q}</div>`}<div class="r-bot"><b>${r.n} ${rk(PEOPLE[r.n]?.r)}</b><p>${r.t}</p></div></div>`).join('');
+$('#r-dots').innerHTML=REELS.map(()=>'<i></i>').join('');
+let ri=0;const rLiked=new Set();
 function showReel(i){
   ri=Math.max(0,Math.min(REELS.length-1,i));
   track.style.transform=`translateY(${-ri*100}%)`;
   $$('#r-dots i').forEach((d,k)=>d.classList.toggle('on',k===ri));
-  const [l,c]=REELS[ri];$('#r-ln').textContent=l+(rLiked.has(ri)?1:0);$('#r-cn').textContent=c;
+  const r=REELS[ri];$('#r-ln').textContent=r.l+(rLiked.has(ri)?1:0);$('#r-cn').textContent=(CMT[r.c]||[]).length;
   $('#r-like').classList.toggle('liked',rLiked.has(ri));
+  $$('.reel video').forEach((v,k)=>{if(reels.classList.contains('on')&&v.closest('.reel')===track.children[ri]){v.currentTime=0;v.play().catch(()=>{})}else v.pause()});
   if(ri>0)$('#r-hint').style.opacity=0;
 }
+function timerLabel(){$('#r-timer').textContent=breath?`Atempause in 5 Min.`:`Reels aus in ${rMin} Min.`}
 function openReels(i=0){
-  closeSheets();closeStory(true);
-  track.style.transition='none';showReel(i);void track.offsetWidth;track.style.transition='';
-  applyCrops(reels);reels.classList.add('on');reels.setAttribute('aria-hidden','false');
-  $('#r-hint').style.opacity=i>0?0:1;refreshCtx();
+  closeSheets();closeStory(true);timerLabel();
+  track.style.transition='none';reels.classList.add('on');reels.setAttribute('aria-hidden','false');showReel(i);void track.offsetWidth;track.style.transition='';
+  applyCrops(reels);$('#r-hint').style.opacity=i>0?0:1;explain('reels','#r-side');
 }
-function closeReels(){if(!reels.classList.contains('on'))return;reels.classList.remove('on');reels.setAttribute('aria-hidden','true');closeSheets();refreshCtx()}
+function closeReels(){if(!reels.classList.contains('on'))return;reels.classList.remove('on');reels.setAttribute('aria-hidden','true');$$('.reel video').forEach(v=>v.pause());closeSheets()}
+function tick(){const v=track.children[ri]?.querySelector('video');$('#r-prog').style.width=v&&v.duration?(v.currentTime/v.duration*100)+'%':'0%';requestAnimationFrame(tick)}
 let wheelLock=0;
 reels.addEventListener('wheel',e=>{e.preventDefault();hold();if(Date.now()<wheelLock||Math.abs(e.deltaY)<8)return;wheelLock=Date.now()+600;showReel(ri+(e.deltaY>0?1:-1))},{passive:false});
-let py=null;
-track.addEventListener('pointerdown',e=>{py=e.clientY});
+let py=null;track.addEventListener('pointerdown',e=>{py=e.clientY});
 addEventListener('pointerup',e=>{if(py===null)return;const d=e.clientY-py;py=null;if(Math.abs(d)>30){hold();showReel(ri+(d<0?1:-1))}});
-$('#r-up').addEventListener('click',()=>{hold();showReel(ri-1)});
-$('#r-down').addEventListener('click',()=>{hold();showReel(ri+1)});
-$('#r-x').addEventListener('click',()=>{hold();closeReels()});
-$('#r-like').addEventListener('click',()=>{hold();rLiked.has(ri)?rLiked.delete(ri):rLiked.add(ri);showReel(ri)});
-$('#r-cmt').addEventListener('click',()=>{hold();comments(['marco','sofia','zitat','eli','eli','eli'][ri])});
 
 /* ---------- Stories ---------- */
-const STORIES=[
-  {n:'Marco',r:'Rising',c:'feed,148,98,80,80',t:'Erster Abschluss über 4.200 € heute! Danke ans Forum für die Einwand-Tipps.'},
-  {n:'Sofia',r:'Pro',c:'player,150,90,240,240',t:'High-Ticket-Deal über 8.000 € geclosed!'},
-  {n:'Lena',r:'Elite',c:'feed,264,98,80,80',t:'6. Hire über ClosingHub, Rang Elite gehalten!'},
-  {n:'Amira',r:'Rookie',c:'feed,380,98,80,80',t:'Woche 1: 4 Bewerbungen, 1 Freischaltung, 1 Testgespräch.'}
-];
 let si=0,stT=0;
 $('#st-bars').innerHTML=STORIES.map(()=>'<i><b></b></i>').join('');
 function showStory(i){
   if(i<0)i=0;if(i>=STORIES.length){closeStory();return}
-  si=i;const s=STORIES[i];
-  $('#st-n').textContent=s.n;$('#st-r').textContent=s.r;$('#st-r').className='rk'+(s.r==='Pro'?' pro':s.r==='Elite'?' elite':'');
-  const av=$('#st-av');av.dataset.crop=s.c;applyCrops(storyv);
+  si=i;const s=STORIES[i],p=PEOPLE[s.n];
+  $('#st-n').textContent=s.n;const r=$('#st-r');r.textContent=p.r;r.className='rk'+rkCls(p.r);
+  const a=$('#st-av');a.className='av crop';a.dataset.crop=p.c;applyCrops(storyv);
   $('#st-t').textContent=s.t;$('#st-in').value='';
-  $$('#st-bars i').forEach((b,k)=>{b.className=k<i?'done':'';});
+  $$('#st-bars i').forEach((b,k)=>{b.className=k<i?'done':''});
   const bar=$$('#st-bars i')[i];void bar.offsetWidth;bar.className='run';
   clearTimeout(stT);if(!reduce)stT=setTimeout(()=>{if(storyv.classList.contains('on')&&document.activeElement!==$('#st-in'))showStory(si+1)},3400);
 }
-function openStory(i){closeSheets();closeReels();storyv.classList.add('on');storyv.setAttribute('aria-hidden','false');showStory(i);refreshCtx()}
-function closeStory(silent){clearTimeout(stT);if(!storyv.classList.contains('on'))return;storyv.classList.remove('on');storyv.setAttribute('aria-hidden','true');if(!silent)refreshCtx()}
-$('#st-x').addEventListener('click',()=>{hold();closeStory()});
-$('#st-next').addEventListener('click',()=>{hold();showStory(si+1)});
-$('#st-prev').addEventListener('click',()=>{hold();showStory(si-1)});
-$('#st-in').addEventListener('focus',()=>{hold();clearTimeout(stT);$$('#st-bars i')[si].className='done'});
-function sendStory(){const v=$('#st-in').value.trim()||'Glückwunsch!';hold();$('#st-in').value='';ptoast(`An ${STORIES[si].n} gesendet: ${v.slice(0,22)}`);}
-$('#st-send').addEventListener('click',sendStory);
-$('#st-in').addEventListener('keydown',e=>{if(e.key==='Enter')sendStory()});
+function openStory(i){closeSheets();closeReels();storyv.classList.add('on');storyv.setAttribute('aria-hidden','false');showStory(i);explain('story','#st-t')}
+function closeStory(silent){clearTimeout(stT);if(!storyv.classList.contains('on'))return;storyv.classList.remove('on');storyv.setAttribute('aria-hidden','true');if(!silent)explainView()}
+function sendStory(){const v=$('#st-in').value.trim()||'Glückwunsch!';$('#st-in').value='';ptoast(`An ${STORIES[si].n} gesendet`)}
+
+/* ---------- Jobs ---------- */
+const JOBS=[
+  {id:'j1',t:'High-Ticket Closer (Remote)',cat:'closer',top:1,m:'Coaching, DACH',p:'10 % Provision pro Abschluss',k:'4.000 €',u:'Teilzeit, ab 15 Std.',ago:'Heute',d:'Ein Coaching-Anbieter sucht einen Closer für warme Leads aus Webinaren. Die Termine werden vom Setter-Team gebucht.',req:['Mindestens 1 Jahr Closing-Erfahrung','Sicher am Telefon und per Zoom','Deutsch auf Muttersprachniveau']},
+  {id:'j2',t:'Setter & Closer Agentur',cat:'closer setter',top:1,m:'Agentur, Remote',p:'15 % vom ersten Monatsumsatz',k:'6.500 €',u:'Vollzeit',ago:'Gestern',d:'Eine Marketing-Agentur baut ihr Vertriebsteam auf und sucht Setter und Closer für B2B-Kunden.',req:['Erfahrung im B2B-Vertrieb','CRM-Pflege gewohnt','Verfügbar Mo bis Fr']},
+  {id:'j3',t:'Setter Outbound B2B',cat:'setter',m:'Software, Deutschland',p:'80 € pro gehaltenem Termin',k:'SaaS 2.400 €',u:'Vollzeit',ago:'Heute',d:'Kaltakquise für eine Software für Handwerksbetriebe. Leads und Dialer werden gestellt.',req:['Keine Angst vor Kaltakquise','Strukturierte Arbeitsweise','Erste Erfahrung als Setter']},
+  {id:'j4',t:'Closer Solar B2C',cat:'closer',m:'Energie, Remote',p:'8 % Provision pro Abschluss',k:'18.000 €',u:'Teilzeit',ago:'vor 2 Tagen',d:'Beratung von Hausbesitzern zu Photovoltaik. Die Termine sind vorqualifiziert.',req:['Abschlussstark bei hohen Tickets','Grundwissen Solar ist ein Plus']},
+  {id:'j5',t:'Sales-Coach für Closer-Team',cat:'coach',m:'Coaching, Remote',p:'1.200 € Fixum + Bonus',k:'Team mit 8 Closern',u:'Teilzeit',ago:'vor 3 Tagen',d:'Du trainierst ein Team aus acht Closern, hörst Calls mit und gibst wöchentlich Feedback.',req:['3+ Jahre Closing','Erfahrung als Trainer oder Teamlead']}
+];
+let used=2;const LIMIT=5;const saved=new Set(['j4']);const applied=new Set();let jf='alle';
+function quota(){$('#quota-t').textContent=`${used} von ${LIMIT}`;$('#quota-b').style.width=used/LIMIT*100+'%'}
+function renderJobs(){
+  const q=$('#job-q').value.trim().toLowerCase();
+  const list=JOBS.filter(j=>(jf==='alle'||(jf==='saved'?saved.has(j.id):j.cat.split(' ').includes(jf)))&&(!q||(j.t+' '+j.m).toLowerCase().includes(q)));
+  const card=j=>`<button class="job${j.top?' top':''}" type="button" data-job="${j.id}">${j.top?'<small>TOP-JOB</small>':''}<b>${j.t}</b><em>${j.m}</em><span class="pv">${j.p}</span><span class="ago">${applied.has(j.id)?'Beworben':j.ago}</span><span class="mark${saved.has(j.id)?' on':''}" data-save="${j.id}" role="button" aria-label="Job merken">${SVG(P.mark,14)}</span></button>`;
+  const tops=list.filter(j=>j.top),rest=list.filter(j=>!j.top);
+  $('#joblist').innerHTML=(tops.length?`<p class="lbl top">★ Top-Jobs</p>${tops.map(card).join('')}`:'')+(rest.length?`<p class="lbl">Alle Jobs</p>${rest.map(card).join('')}`:'')+(list.length?'':'<p class="nores">Keine Jobs gefunden.</p>');
+}
+function jobPage(id,keep){
+  const j=JOBS.find(x=>x.id===id);
+  openPage('Job-Details',`<h4>${j.t}</h4><p class="pg-meta">${j.m}, Auftraggeber anonym, ${j.ago}</p><div class="facts2 num"><div>Provision<b>${j.p}</b></div><div>Ticket<b>${j.k}</b></div><div>Umfang<b>${j.u}</b></div><div>Start<b>ab sofort</b></div></div><p class="pg-sec">Über den Job</p><p class="pg-p">${j.d}</p><p class="pg-sec">Das bringst du mit</p><ul class="ticks">${j.req.map(r=>`<li>${r}</li>`).join('')}</ul><div class="pg-cta"><button type="button" class="btn-app${applied.has(id)?' done':''}" data-apply="${id}" ${!applied.has(id)&&used>=LIMIT?'disabled':''}>${applied.has(id)?'Bewerbung gesendet':used>=LIMIT?'Limit erreicht':'Mit einem Klick bewerben'}</button><p class="hint-s num">Noch ${LIMIT-used} von ${LIMIT} Bewerbungen diesen Monat. Premium: 10.</p></div>`,'job',keep);
+}
+function apply(id){if(applied.has(id)||used>=LIMIT)return;applied.add(id);used++;quota();renderJobs();ptoast('Bewerbung ist raus');const b=$(`[data-apply="${id}"]`);if(b){b.classList.add('done');b.textContent='Bewerbung gesendet';b.nextElementSibling.textContent=`Noch ${LIMIT-used} von ${LIMIT} Bewerbungen diesen Monat. Premium: 10.`}}
+
+/* ---------- Forum ---------- */
+const FCATS=[
+  {id:'einw',n:'Einwandbehandlung',ic:'forum',c:128},{id:'set',n:'Setting und Terminierung',ic:'phone',c:94},{id:'ht',n:'High-Ticket Closing',ic:'target',c:76},
+  {id:'mot',n:'Motivation und Absagen',ic:'bolt',c:61},{id:'plan',n:'Tagesplanung',ic:'cal',c:38},{id:'crm',n:'CRM und Dialer',ic:'tool',c:40},{id:'win',n:'Erfolge feiern',ic:'trophy',c:152}
+];
+const THREADS={
+  t1:{cat:'einw',a:'Jonas',t:'Wie reagiert ihr auf „Ich muss da nochmal drüber schlafen“?',q:'Passiert mir fast in jedem zweiten Call. Wie holt ihr den Kunden zurück, ohne Druck zu machen?',ago:'vor 3 Std.',ans:[{a:'Felix',t:'Frag zurück: „Was genau möchtest du überschlafen?“ Meist ist es nicht der Preis, sondern eine offene Frage.',h:14},{a:'Lena',t:'Mach den nächsten Termin direkt im Call fest. Morgen 10 Uhr, 15 Minuten, dann ist es verbindlich.',h:9},{a:'Tobias',t:'Fasse am Ende zusammen, was er gewinnt, wenn er heute startet. Ohne Rabatt.',h:4}]},
+  t2:{cat:'einw',a:'Amira',t:'„Zu teuer“ im B2B: Preis oder Wert?',q:'Wie trennt ihr echte Budgetgrenzen von einem Vorwand?',ago:'gestern',ans:[{a:'Sofia',t:'Frag nach dem Vergleich: „Zu teuer im Vergleich wozu?“ Dann weißt du, woran du bist.',h:11}]},
+  t3:{cat:'set',a:'Marco',t:'Wie viele Calls am Tag sind realistisch?',q:'Ich komme auf 60 Wählversuche. Ist das zu wenig?',ago:'vor 2 Tagen',ans:[{a:'Sofia',t:'Zähl lieber Gespräche statt Wählversuche. 20 echte Gespräche sind ein guter Tag.',h:17},{a:'Jonas',t:'Bei mir: 80 Versuche, 18 Gespräche, 4 Termine.',h:6}]},
+  t4:{cat:'ht',a:'Lena',t:'Ab welchem Ticket braucht es zwei Calls?',q:'Ab 5.000 € schließe ich selten im ersten Call. Wie macht ihr das?',ago:'vor 4 Tagen',ans:[{a:'Elias',t:'Ab etwa 3.000 € plane ich zwei Calls ein: Bedarf und Entscheidung. Beides mit klarer Agenda.',h:21}]},
+  t5:{cat:'mot',a:'Amira',t:'Nach 10 Absagen am Stück: was hilft euch?',q:'Heute lief gar nichts. Wie bleibt ihr dran?',ago:'heute',ans:[{a:'Marco',t:'Kurz raus, Wasser trinken, dann die nächsten drei Calls als Training sehen.',h:8}]},
+  t6:{cat:'plan',a:'Tobias',t:'Mein Tagesplan als Closer, 6 bis 14 Uhr',q:'So strukturiere ich meinen Tag. Was würdet ihr ändern?',ago:'vor 5 Tagen',ans:[{a:'Lena',t:'Die Mittagspause vor 12 Uhr ist clever, nachmittags sind die Abschlussquoten bei mir besser.',h:5}]},
+  t7:{cat:'crm',a:'Felix',t:'Welcher Dialer lohnt sich für Setter?',q:'Ich suche einen Power-Dialer unter 50 € im Monat.',ago:'vor 1 Woche',ans:[{a:'Jonas',t:'Achte auf die lokale Rufnummer, das bringt bei mir 30 % mehr Annahmen.',h:7}]},
+  t8:{cat:'win',a:'Sofia',t:'Erster 10k-Monat! Was ich anders gemacht habe',q:'Weniger Calls, bessere Vorbereitung. Hier meine drei Änderungen.',ago:'vor 2 Wochen',ans:[{a:'Lena',t:'Glückwunsch! Punkt zwei nehme ich direkt mit.',h:12}]}
+};
+const helped=new Set();
+function renderForum(){
+  const q=$('#forum-q').value.trim().toLowerCase();
+  if(q){const hits=Object.entries(THREADS).filter(([,t])=>(t.t+' '+t.q).toLowerCase().includes(q));
+    $('#forumcats').innerHTML=hits.length?hits.map(([id,t])=>trow(id,t)).join(''):'<p class="nores">Nichts gefunden. Stell die Frage einfach selbst.</p>';return}
+  $('#forumcats').innerHTML=FCATS.map(c=>`<button type="button" class="fcat" data-fcat="${c.id}"><i>${SVG(P[c.ic],13)}</i><b>${c.n}</b><span class="num">${c.c+Object.values(THREADS).filter(t=>t.cat===c.id&&t.own).length} Themen</span></button>`).join('');
+}
+const trow=(id,t)=>`<button type="button" class="trow" data-thread="${id}"><b>${t.t}</b><span>${t.a}, ${t.ago}, ${t.ans.length} Antworten</span></button>`;
+function catPage(id){
+  const c=FCATS.find(x=>x.id===id);const list=Object.entries(THREADS).filter(([,t])=>t.cat===id).sort((a,b)=>(b[1].own?1:0)-(a[1].own?1:0));
+  openPage(c.n,`<button type="button" class="btn-app ghost" data-ask="${id}" style="margin-bottom:9px">+ Frage in diesem Bereich stellen</button>${list.map(([i,t])=>trow(i,t)).join('')}`,'fcat');
+}
+function threadPage(id,keep){
+  const t=THREADS[id];const ans=[...t.ans].sort((a,b)=>b.h+(helped.has(id+a.a)?1:0)-(a.h+(helped.has(id+b.a)?1:0)));
+  openPage('Thema',`<div class="thread-q"><div class="who2">${av(t.a,22)}<b>${t.a}</b>${rk(PEOPLE[t.a]?.r)}<span style="margin-left:auto">${t.ago}</span></div><b class="t">${t.t}</b><p class="pg-p" style="margin-top:4px">${t.q}</p></div><p class="pg-sec num">${t.ans.length} Antworten</p><div id="ans-list">${ans.map((a,k)=>ansHtml(id,a,k===0&&a.h>0)).join('')}</div><div class="g-in"><input id="ans-in" type="text" placeholder="Antwort schreiben …" aria-label="Antwort schreiben"><button type="button" class="g-btn" data-answer="${id}">Senden</button></div>`,'thread',keep);
+}
+const ansHtml=(id,a,best)=>`<div class="ans"><div class="who2">${av(a.a,22)}<b>${a.a}</b>${rk(PEOPLE[a.a]?.r)}${best?'<span class="best">Hilfreichste Antwort</span>':''}</div><p>${esc(a.t)}</p><button type="button" class="help${helped.has(id+a.a)?' on':''}" data-help="${id}|${a.a}">Hilfreich · <span class="num">${a.h+(helped.has(id+a.a)?1:0)}</span></button></div>`;
+function askSheet(cat){
+  gen(`<h5>Frage stellen</h5><p class="g-sub">Deine Frage erscheint im Forum und im Feed.</p><div class="g-in"><select id="ask-cat" aria-label="Bereich">${FCATS.map(c=>`<option value="${c.id}"${c.id===cat?' selected':''}>${c.n}</option>`).join('')}</select></div><div class="g-in"><textarea id="ask-in" rows="3" aria-label="Deine Frage">Wie geht ihr mit Rückrufbitten um?</textarea></div><button type="button" class="btn-app" id="ask-send" style="margin-top:8px">Frage veröffentlichen</button>`,'ask');
+}
+let tn=100;
+function postQuestion(){
+  const v=$('#ask-in').value.trim();if(!v)return;const cat=$('#ask-cat').value;const id='t'+(++tn);
+  THREADS[id]={cat,a:'Elias',t:esc(v),q:'',ago:'gerade eben',ans:[],own:1};
+  POSTS.unshift({id,type:'frage',n:'Elias',thread:id});renderFeed();renderForum();closeSheets();
+  if(cur===1){threadPage(id)}else{ptoast('Frage veröffentlicht')}
+}
+
+/* ---------- Marktplatz ---------- */
+const OFFERS=[
+  {id:'o1',cat:'skripte',t:'Follow-up-Skript nach No-Show',n:'Felix',pr:'19 €',st:4.6,rc:12,d:'Drei Nachrichten, die einen geplatzten Termin in 48 Stunden zurückholen.',inc:['Vorlage für WhatsApp und E-Mail','Zeitplan für die drei Nachrichten','Beispiele aus echten Chats'],rv:[['Jonas',5,'Zwei von drei No-Shows zurückgeholt.'],['Amira',4,'Kurz und direkt einsetzbar.']]},
+  {id:'o2',cat:'analyse',t:'Dein Closing-Call, Satz für Satz analysiert',n:'Sofia',pr:'49 €',st:4.9,rc:31,d:'Du schickst die Aufnahme, Sofia markiert jede Stelle, an der der Abschluss gekippt ist.',inc:['Schriftliche Analyse in 48 Stunden','Bessere Formulierungen für jede Stelle','10 Minuten Rückfragen per Video'],rv:[['Marco',5,'Hat mir meinen größten Fehler gezeigt: zu früh den Preis.'],['Tobias',5,'Sehr genau und ehrlich.']]},
+  {id:'o3',cat:'coaching',t:'1:1 Einwand-Training (60 Min.)',n:'Lena',pr:'89 €',st:5.0,rc:18,d:'Rollenspiel mit den zehn häufigsten Einwänden aus deiner Branche.',inc:['60 Minuten per Zoom','Persönliche Antwortliste danach','Aufnahme zum Nachhören'],rv:[['Amira',5,'Danach hatte ich für jeden Einwand eine Antwort.']]},
+  {id:'o4',cat:'skripte',t:'Setter-Leitfaden B2B Kaltakquise',n:'Jonas',pr:'24 €',st:4.4,rc:9,d:'Gesprächsleitfaden für die ersten 30 Sekunden am Telefon.',inc:['Leitfaden als PDF','Einwand-Kärtchen zum Ausdrucken'],rv:[['Felix',4,'Guter Start für neue Setter.']]}
+];
+let mf='alle';const bought=new Set();
+const stars=n=>'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));
+function renderOffers(){
+  $('#offerlist').innerHTML=OFFERS.filter(o=>mf==='alle'||o.cat===mf).map(o=>`<button type="button" class="offer" data-offer="${o.id}"><small>${({skripte:'SKRIPT',analyse:'CALL-ANALYSE',coaching:'COACHING'})[o.cat]}</small><b>${o.t}</b><div class="who num">${av(o.n,20)}${o.n} ${rk(PEOPLE[o.n].r)}<span>★ ${String(o.st).replace('.',',')} (${o.rc})</span><span class="pr">${bought.has(o.id)?'Gekauft':o.pr}</span></div></button>`).join('');
+  requestAnimationFrame(()=>applyCrops($('#offerlist')));
+}
+function offerPage(id){
+  const o=OFFERS.find(x=>x.id===id);
+  openPage('Angebot',`<h4>${o.t}</h4><div class="who2" style="margin:6px 0 9px">${av(o.n,22)}<b>${o.n}</b>${rk(PEOPLE[o.n].r)}<span class="num" style="margin-left:auto">★ ${String(o.st).replace('.',',')} (${o.rc})</span></div><p class="pg-p">${o.d}</p><p class="pg-sec">Das bekommst du</p><ul class="ticks">${o.inc.map(x=>`<li>${x}</li>`).join('')}</ul><p class="pg-sec">Bewertungen</p>${o.rv.map(r=>`<div class="rv"><div class="top"><b>${r[0]}</b><span class="stars">${stars(r[1])}</span></div><p>${r[2]}</p></div>`).join('')}<div class="pg-cta"><button type="button" class="btn-app${bought.has(id)?' done':''}" data-buy="${id}">${bought.has(id)?'Gekauft, im Profil unter Käufe':'Kaufen für '+o.pr}</button></div>`,'offer');
+}
+function buySheet(id){if(bought.has(id))return;const o=OFFERS.find(x=>x.id===id);
+  gen(`<h5>Kauf bestätigen</h5><p class="g-sub">${o.t}, von ${o.n}</p><div class="facts2 num"><div>Preis<b>${o.pr}</b></div><div>Zugang<b>sofort</b></div></div><button type="button" class="btn-app" id="buy-ok" data-id="${id}" style="margin-top:10px">Jetzt kaufen</button><p class="hint-s">Demo: Es wird nichts berechnet.</p>`,'buy')}
+function buy(id){bought.add(id);closeSheets();renderOffers();ptoast('Gekauft, viel Erfolg damit');const b=$(`[data-buy="${id}"]`);if(b){b.classList.add('done');b.textContent='Gekauft, im Profil unter Käufe'}}
+
+/* ---------- Profil ---------- */
+const BADGES=[['shield','Day One','Einer der ersten 250 Member. Bleibt für immer im Profil.'],['id','Verifiziert','Identität und Erfahrung von ClosingHub geprüft.'],['coin','100k Umsatz','Mehr als 100.000 € Umsatz über ClosingHub-Jobs abgeschlossen.'],['gem','High-Ticket','Zehn Abschlüsse mit einem Ticket über 3.000 €.']];
+$('#badges').innerHTML=BADGES.map((b,i)=>`<button type="button" data-badge="${i}" aria-label="Abzeichen ${b[1]}">${SVG(P[b[0]],16)}</button>`).join('');
+const PGRID=[['img','assets/app/elias_praesentieren.jpg',1],['txt','Die 3-Sekunden-Pause nach dem Preis. Wer zuerst redet, verhandelt gegen sich selbst.'],['img','assets/app/elias_handy_tippen.jpg',2],['txt','Vor jedem Call drei Fragen notieren: Was will er erreichen, was hält ihn ab, was kostet ihn das Warten?'],['img','assets/app/elias_portraet_eng.jpg',1],['txt','Absagen sind Daten, keine Urteile. Schreib nach jedem Nein auf, an welcher Stelle es gekippt ist.']];
+$('#pgrid').innerHTML=PGRID.map(g=>g[0]==='img'?`<button type="button" class="img" data-reel="${g[2]}" style="background-image:url(${g[1]})" aria-label="Video ansehen"></button>`:`<button type="button" data-ptxt="${esc(g[1])}">${esc(g[1].split('.')[0])}.</button>`).join('');
+$('#vgrid').innerHTML=[['clip_elias1',1,'0:08'],['clip_elias2',2,'0:08']].map(v=>`<button type="button" data-reel="${v[1]}"><video src="assets/app/${v[0]}.mp4" muted loop playsinline autoplay preload="metadata"></video><span>▶ ${v[2]}</span></button>`).join('');
+const REVIEWS=[['Coaching-Anbieter, anonym',5,'Elias hat in 6 Wochen 11 Abschlüsse gemacht. Strukturiert und zuverlässig.','vor 2 Wochen'],['Software-Firma, anonym',5,'Sehr gute Vorbereitung auf jeden Call, klare Übergaben ans Team.','vor 1 Monat'],['Agentur, anonym',4,'Starker Closer, Reporting könnte noch regelmäßiger sein.','vor 2 Monaten'],['Energie-Anbieter, anonym',5,'Hohe Abschlussquote bei Solar-Terminen. Gerne wieder.','vor 3 Monaten']];
+$('#reviews').innerHTML=`<div class="rsum"><div class="big num">4,8<small>27 Bewertungen</small></div><div class="rbars num">${[[5,82],[4,14],[3,4],[2,0],[1,0]].map(r=>`<div><span>${r[0]}</span><i><b style="width:${r[1]}%"></b></i></div>`).join('')}</div></div>${REVIEWS.map(r=>`<div class="rv"><div class="top"><b>${r[0]}</b><span class="stars">${stars(r[1])}</span></div><p>${r[2]}</p><small>${r[3]}</small></div>`).join('')}`;
+function ptab(k){$$('.ptabs button').forEach(b=>b.classList.toggle('on',b.dataset.ptab===k));$$('.ppane').forEach(p=>p.classList.toggle('on',p.dataset.ppane===k));explain(k,'.ptabs')}
+
+/* ---------- Kommentare und Teilen ---------- */
+let cmtKey='';
+function comments(k){cmtKey=k;const l=CMT[k]||[];
+  gen(`<h5>Kommentare</h5><div class="g-list" id="c-list">${l.map(c=>`<div class="g-item">${av(c[0],22)}<div><b>${c[0]}</b><p>${esc(c[1])}</p></div></div>`).join('')||'<p class="g-sub">Noch keine Kommentare. Schreib den ersten.</p>'}</div><div class="g-in"><input id="c-in" type="text" placeholder="Kommentar schreiben …" aria-label="Kommentar schreiben"><button type="button" class="g-btn" id="c-send">Senden</button></div>`,'comments')}
+function sendComment(){const i=$('#c-in'),v=i.value.trim();if(!v)return;(CMT[cmtKey]=CMT[cmtKey]||[]).push(['Elias',v]);i.value='';
+  $('#c-list').insertAdjacentHTML('beforeend',`<div class="g-item">${av('Elias',22)}<div><b>Elias</b><p>${esc(v)}</p></div></div>`);$('#c-list').scrollTop=1e4;
+  $$(`[data-comments="${cmtKey}"] em`).forEach(e=>e.textContent=+e.textContent+1);if(reels.classList.contains('on'))$('#r-cn').textContent=CMT[cmtKey].length}
+function shareSheet(){gen(`<h5>Was möchtest du teilen?</h5><div class="share-opts"><button type="button" data-compose="erfolg"><i>${SVG(P.trophy,13)}</i>Erfolg teilen</button><button type="button" data-compose="video"><i>${SVG('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/>',13)}</i>Video für den Feed</button><button type="button" data-compose="frage"><i>${SVG(P.forum,13)}</i>Frage im Forum</button></div>`,'share')}
+function composer(kind){
+  if(kind==='frage')return askSheet('einw');
+  const T={erfolg:['Erfolg teilen','Was hast du heute geschafft?','Mein erster Deal über 5.000 € ist durch!'],video:['Video für den Feed','Worum geht es in deinem Video?','So halte ich die Spannung nach dem Preis.']}[kind];
+  gen(`<h5>${T[0]}</h5><p class="g-sub">${T[1]}</p><div class="g-in"><textarea id="cp-in" rows="3" aria-label="${T[1]}">${T[2]}</textarea></div><button type="button" class="btn-app" id="cp-send" data-kind="${kind}" style="margin-top:8px">Teilen</button>`,'share');
+}
+function postNew(kind){const v=($('#cp-in').value||'').trim();if(!v)return;closeSheets();
+  $('#feedlist').insertAdjacentHTML('afterbegin',`<div class="post win fresh" data-pt="own">${head('Elias',kind==='video'?'MEMBER-VIDEO':'ERFOLG')}<div class="win-b"><span class="win-i">${SVG(kind==='video'?P.play:P.trophy,18)}</span><p>${esc(v)}</p></div><div class="acts num">${likeBtn(0)}</div></div>`);
+  if(cur!==0)go(0);feed.scrollTo({top:0,behavior:reduce?'auto':'smooth'});ptoast('Geteilt')}
 
 /* ---------- Ansichten ---------- */
+function explainView(){if(cur===0)explain('feed','#feedlist .post:not([hidden])');else if(cur===2)explain('profil','.ph');else explain(segNow,'.pane.on')}
 function go(i){
-  closeSheets();closeReels();closeStory(true);cur=i;
+  closeSheets();closeReels();closeStory(true);closePage();cur=i;
   tabs.forEach(t=>t.setAttribute('aria-selected',+t.dataset.tab===i));
   views.forEach(v=>v.classList.toggle('on',+v.dataset.view===i));
-  requestAnimationFrame(()=>applyCrops());refreshCtx();
+  requestAnimationFrame(()=>{applyCrops();explainView()});
 }
-function seg(k){
-  segNow=k;closeSheets();
+function seg(k){segNow=k;closeSheets();closePage();
   $$('.segs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.seg===k));
   $$('.pane').forEach(p=>p.classList.toggle('on',p.dataset.pane===k));
-  disc.scrollTop=0;requestAnimationFrame(()=>applyCrops(disc));refreshCtx();
-}
-function jobSheet(b){
-  $('#sj-t').textContent=b.dataset.t;$('#sj-p').textContent=b.dataset.p;$('#sj-m').textContent=b.dataset.m;
-  $('#sj-k').textContent=b.dataset.k;$('#sj-u').textContent=b.dataset.u;
-  const a=$('#apply');a.classList.remove('done');a.textContent='Mit einem Klick bewerben';
-  openSheet('sh-job');
-}
-function apply(){const a=$('#apply');if(a.classList.contains('done'))return;a.classList.add('done');a.textContent='Bewerbung gesendet';ptoast('Bewerbung ist raus')}
+  disc.scrollTop=0;requestAnimationFrame(()=>{applyCrops(disc);explain(k,'.pane.on')});}
+function toggleFset(force){const f=$('#fset'),b=$('#fset-btn'),on=force??!f.classList.contains('open');f.classList.toggle('open',on);b.setAttribute('aria-expanded',on);if(on)explain('fset','#fset');else explain('feed','#fset-btn')}
 
-/* ---------- Kommentare ---------- */
-const CMT={
-  marco:[['Lena','feed,264,98,80,80','Stark! Welchen Einwand hattest du am Ende?'],['Felix','FB','Glückwunsch, der Erste ist der wichtigste.']],
-  lena:[['Marco','feed,148,98,80,80','Verdient! Danke für deinen Forum-Beitrag letzte Woche.'],['Amira','feed,380,98,80,80','Ziel für dieses Jahr: so wie du.']],
-  sofia:[['Jonas','JK','Satz zwei nutze ich ab morgen.'],['Lena','feed,264,98,80,80','Genau so, kurz und verbindlich.']],
-  zitat:[['Marco','feed,148,98,80,80','Hängt jetzt neben meinem Bildschirm.']],
-  eli:[['Sofia','player,150,90,240,240','Danke fürs Teilen, sehr hilfreich.']]
-};
-const avHtml=(c,s=22)=>/,/.test(c)?`<span class="av crop" data-crop="${c}" style="width:${s}px;height:${s}px"></span>`:c==='EL'?`<span class="av eli" style="width:${s}px;height:${s}px"></span>`:`<span class="av ini" style="width:${s}px;height:${s}px">${c}</span>`;
-let cmtKey='';
-function comments(k){
-  cmtKey=k;const list=CMT[k]||[];
-  gen(`<h5>Kommentare</h5><div class="g-list" id="c-list">${list.map(c=>`<div class="g-item">${avHtml(c[1])}<div><b>${esc(c[0])}</b><p>${esc(c[2])}</p></div></div>`).join('')}</div>
-  <div class="g-in"><input id="c-in" type="text" placeholder="Kommentar schreiben …" aria-label="Kommentar schreiben"><button type="button" class="g-btn" id="c-send">Senden</button></div>`);
-}
-function sendComment(){
-  const i=$('#c-in'),v=i.value.trim();if(!v)return;hold();
-  (CMT[cmtKey]=CMT[cmtKey]||[]).push(['Elias','EL',v]);i.value='';
-  $('#c-list').insertAdjacentHTML('beforeend',`<div class="g-item">${avHtml('EL')}<div><b>Elias</b><p>${esc(v)}</p></div></div>`);
-  $('#c-list').scrollTop=1e4;
-  const em=$(`[data-comments="${cmtKey}"] em`);if(em)em.textContent=+em.textContent+1;
-}
-
-/* ---------- Forum, Marktplatz, Profil ---------- */
-const THREADS={
-  'Einwandbehandlung':[['Wie reagiert ihr auf „Ich muss da nochmal drüber schlafen“?',12],['„Zu teuer“ im B2B: Preis oder Wert?',23],['Einwand vorwegnehmen, ja oder nein?',9]],
-  'Setting und Terminierung':[['Wie viele Calls am Tag sind realistisch?',31],['No-Show-Quote unter 15 %, so geht’s',18]],
-  'High-Ticket Closing':[['Ab welchem Ticket braucht es zwei Calls?',14],['Zahlungsplan anbieten oder nicht?',20]],
-  'Motivation und Absagen':[['Nach 10 Absagen am Stück: was hilft euch?',27]],
-  'Tagesplanung':[['Mein Tagesplan als Closer, 6 bis 14 Uhr',11]],
-  'CRM und Dialer':[['Welcher Dialer lohnt sich für Setter?',16]],
-  'Erfolge feiern':[['Erster 10k-Monat! Was ich anders gemacht habe',44]]
-};
-function thread(t){
-  const l=THREADS[t]||[];
-  gen(`<h5>${esc(t)}</h5><p class="g-sub">Beliebte Themen diese Woche</p><div class="g-list">${l.map(x=>`<button type="button" class="g-row" data-q="${esc(x[0])}">${esc(x[0])}<span class="num">${x[1]} Antworten</span></button>`).join('')}</div>`);
-}
-function composer(kind){
-  const T={erfolg:['Erfolg als Story','Was hast du heute geschafft?','Mein erster Deal über 5.000 € ist durch!'],video:['Video für den Feed','Worum geht es in deinem Video?','So halte ich die Spannung nach dem Preis.'],frage:['Frage im Forum','Was möchtest du wissen?','Wie geht ihr mit Rückrufbitten um?']}[kind];
-  gen(`<h5>${T[0]}</h5><p class="g-sub">${T[1]}</p><div class="g-in"><textarea id="cp-in" rows="3" aria-label="${T[1]}">${T[2]}</textarea></div><button type="button" class="g-btn full" id="cp-send" data-kind="${kind}">${kind==='frage'?'Frage stellen':'Teilen'}</button>`);
-}
-function postNew(kind){
-  const v=($('#cp-in').value||'').trim();if(!v)return;hold();closeSheets();
-  const tag={erfolg:'ERFOLG',video:'MEMBER-VIDEO',frage:'FORUM'}[kind];
-  const body=kind==='frage'?`<button type="button" class="fq-b" data-thread="Einwandbehandlung"><b>${esc(v)}</b><span>Noch keine Antworten</span></button>`
-    :`<div class="win-b"><span class="win-i" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${kind==='video'?NI.play:NI.trophy}</svg></span><p>${esc(v)}</p></div><div class="acts num"><button type="button" class="like"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><em data-n="0">0</em></button></div>`;
-  $('#feedlist').insertAdjacentHTML('afterbegin',`<div class="post win fresh" data-cat="alle"><div class="post-h"><span class="av eli"></span><b>Elias <span class="rk elite">Elite</span></b><span class="tag">${tag}</span></div>${body}</div>`);
-  if(cur!==0)go(0);feed.scrollTo({top:0,behavior:reduce?'auto':'smooth'});ptoast(kind==='frage'?'Frage veröffentlicht':'Geteilt');
-}
-function offer(b){
-  const [t,n,p,r,d]=b.dataset.offer.split('|');
-  gen(`<h5>${esc(t)}</h5><p class="g-sub">von ${esc(n)}, ★ ${esc(r)}</p><p style="font-size:11.5px;color:var(--ink-2);line-height:1.45">${esc(d)}</p><div class="g-price"><span>Preis</span><b class="num">${esc(p)}</b></div><button type="button" class="g-btn full" id="of-save">Auf die Merkliste</button>`);
-}
-const CATS=[['alle','Alle Kategorien'],['erfolge','Erfolge'],['einwaende','Einwände'],['setting','Setting']];
-let catNow='alle';
-function cats(){gen(`<h5>Kategorien</h5><div class="g-list" style="margin-top:8px">${CATS.map(c=>`<button type="button" class="g-row${c[0]===catNow?' on':''}" data-cat-set="${c[0]}">${c[1]}<span class="num">${c[0]==='alle'?'':$$(`#feedlist .post[data-cat~="${c[0]}"]`).length+' Beiträge'}</span></button>`).join('')}</div>`)}
-function setCat(k){catNow=k;$('#cat-l').textContent=CATS.find(c=>c[0]===k)[1];$$('#feedlist .post').forEach(p=>p.hidden=k!=='alle'&&!(p.dataset.cat||'').split(' ').includes(k));closeSheets();feed.scrollTop=0}
-function filterChips(box,b){
-  $$(`[data-filter="${box.dataset.filter}"] button`).forEach(x=>x.classList.toggle('on',x===b));
-  const f=b.dataset.f,pane=box.closest('.pane');let n=0;
-  pane.querySelectorAll('[data-cat]').forEach(el=>{const on=f==='alle'||el.dataset.cat.split(' ').includes(f);el.hidden=!on;n+=on});
-  pane.querySelectorAll('.lbl').forEach(l=>l.hidden=f!=='alle');
-  const nr=pane.querySelector('.nores');if(nr)nr.hidden=n>0;
-  requestAnimationFrame(()=>applyCrops(pane));
-}
-
-/* ---------- Bedienung durch Besucher (Ereignis-Delegation) ---------- */
+/* ---------- Bedienung (eine Stelle für alle Klicks) ---------- */
 const hold=()=>{userHold=Date.now()+15000};
 phone.addEventListener('click',e=>{
-  const b=e.target.closest('button,.g-row');if(!b||!phone.contains(b))return;
-  hold();hideToast();ctxNow='';
-  const d=b.dataset;
+  const b=e.target.closest('button,[data-save]');if(!b||!phone.contains(b))return;
+  hold();const d=b.dataset;
+  if(d.save){e.stopPropagation();saved.has(d.save)?saved.delete(d.save):saved.add(d.save);renderJobs();return ptoast(saved.has(d.save)?'Job gemerkt':'Nicht mehr gemerkt')}
   if(b.closest('.tabs'))return go(+d.tab);
+  if(b.id==='pg-back')return back();
   if(d.reel!==undefined)return openReels(+d.reel);
   if(d.story!==undefined)return openStory(+d.story);
-  if(d.share!==undefined)return openSheet('sh-add');
+  if(b.id==='st-x')return closeStory();
+  if(b.id==='st-next')return showStory(si+1);
+  if(b.id==='st-prev')return showStory(si-1);
+  if(b.id==='st-send')return sendStory();
+  if(b.id==='r-x'){closeReels();return explainView()}
+  if(b.id==='r-up')return showReel(ri-1);
+  if(b.id==='r-down')return showReel(ri+1);
+  if(b.id==='r-like'){rLiked.has(ri)?rLiked.delete(ri):rLiked.add(ri);return showReel(ri)}
+  if(b.id==='r-cmt')return comments(REELS[ri].c);
+  if(d.share!==undefined)return shareSheet();
   if(d.compose)return composer(d.compose);
   if(b.id==='cp-send')return postNew(d.kind);
+  if(b.id==='fset-btn')return toggleFset();
+  if(b.id==='sw-breath'){breath=!breath;b.classList.toggle('on',breath);b.setAttribute('aria-checked',breath);timerLabel();return ptoast(breath?'Atempause an':'Atempause aus')}
+  if(d.min){rMin=+d.min;$$('#rtimer button').forEach(x=>x.classList.toggle('on',x===b));timerLabel();return ptoast(`Reels gehen nach ${rMin} Min. aus`)}
+  if(d.pt){b.classList.toggle('on');ptypes[b.classList.contains('on')?'add':'delete'](d.pt);return filterFeed()}
   if(d.seg)return seg(d.seg);
-  if(d.jobsheet!==undefined){if(cur!==1&&b.closest('#feed')){}return jobSheet(b)}
-  if(b.id==='apply')return apply();
-  if(b.id==='medal-n')return openSheet('sh-medal');
-  if(d.thread)return thread(d.thread);
-  if(d.q)return gen(`<h5>${esc(d.q)}</h5><div class="g-list" style="margin-top:8px"><div class="g-item">${avHtml('FB')}<div><b>Felix</b><p>Frag zurück, was genau noch offen ist. Meist ist es nicht der Preis.</p></div></div><div class="g-item">${avHtml('feed,264,98,80,80')}<div><b>Lena</b><p>Termin für den nächsten Tag direkt im Call festmachen.</p></div></div></div><div class="g-in"><input id="c-in" type="text" placeholder="Antwort schreiben …" aria-label="Antwort schreiben"><button type="button" class="g-btn" id="c-send">Senden</button></div>`),cmtKey='';
-  if(b.id==='new-topic')return composer('frage');
-  if(d.offer)return offer(b);
-  if(b.id==='of-save'){b.classList.add('done');b.textContent='Gemerkt';return ptoast('Auf deiner Merkliste')}
-  if(d.badge){const [t,x]=d.badge.split('|');return gen(`<h5>${esc(t)}</h5><p class="g-sub">Abzeichen</p><p style="font-size:12px;color:var(--ink-2);line-height:1.45">${esc(x)}</p>`)}
-  if(d.post)return gen(`<h5>Beitrag von Elias</h5><p style="font-size:13px;line-height:1.5;margin-top:8px">${esc(d.post)}</p><div class="acts num" style="padding:10px 0 0">${'<button type="button" class="like"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><em data-n="64">64</em></button>'}<button type="button" class="cmt" data-comments="eli"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/></svg><em>1</em></button></div>`);
-  if(b.id==='fol-btn')return gen(`<h5>312 Follower</h5><div class="g-list" style="margin-top:8px">${[['Marco','feed,148,98,80,80','Rising'],['Sofia','player,150,90,240,240','Pro'],['Lena','feed,264,98,80,80','Elite'],['Jonas','JK','Rookie']].map(f=>`<div class="g-item" style="align-items:center">${avHtml(f[1],26)}<b style="flex:1">${f[0]}</b><span class="rk">${f[2]}</span></div>`).join('')}</div>`);
-  if(b.id==='cats-btn')return cats();
-  if(d.catSet)return setCat(d.catSet);
+  if(d.jf){jf=d.jf;$$('#job-chips button').forEach(x=>x.classList.toggle('on',x===b));return renderJobs()}
+  if(d.job)return jobPage(d.job);
+  if(d.apply)return apply(d.apply);
+  if(d.fcat)return catPage(d.fcat);
+  if(d.thread)return threadPage(d.thread,page.classList.contains('on'));
+  if(d.help){const [id,a]=d.help.split('|');helped.has(id+a)?helped.delete(id+a):helped.add(id+a);b.classList.toggle('on');b.querySelector('span').textContent=THREADS[id].ans.find(x=>x.a===a).h+(helped.has(id+a)?1:0);return}
+  if(d.answer){const i=$('#ans-in'),v=i.value.trim();if(!v)return;THREADS[d.answer].ans.push({a:'Elias',t:v,h:0});i.value='';$('#ans-list').insertAdjacentHTML('beforeend',ansHtml(d.answer,{a:'Elias',t:v,h:0}));renderFeed();return ptoast('Antwort veröffentlicht')}
+  if(b.id==='ask-btn')return askSheet('einw');
+  if(d.ask)return askSheet(d.ask);
+  if(b.id==='ask-send')return postQuestion();
+  if(d.mf){mf=d.mf;$$('#mk-chips button').forEach(x=>x.classList.toggle('on',x===b));return renderOffers()}
+  if(d.offer)return offerPage(d.offer);
+  if(d.buy)return buySheet(d.buy);
+  if(b.id==='buy-ok')return buy(d.id);
+  if(d.ptab)return ptab(d.ptab);
+  if(b.id==='medal-n')return gen(`<h5>Medaillen von Elias</h5><table class="mtab num"><tr><th>Medaille</th><th>Anzahl</th></tr><tr><td>Hired via ClosingHub</td><td>3×</td></tr><tr><td>Starke Bewertung</td><td>6×</td></tr><tr><td>Kommentator</td><td>2×</td></tr><tr><td>Lernstunde</td><td>1×</td></tr></table>`,'medals');
+  if(d.badge!==undefined){const x=BADGES[+d.badge];return gen(`<h5>${x[1]}</h5><p class="g-sub">Abzeichen</p><p class="pg-p">${x[2]}</p>`,'badge')}
+  if(d.ptxt)return gen(`<h5>Beitrag von Elias</h5><p style="font-size:13px;line-height:1.5;margin-top:8px">${d.ptxt}</p><div class="acts num" style="padding:10px 0 0">${likeBtn(64)}</div>`,'posts');
+  if(b.id==='fol-btn')return gen(`<h5>312 Follower</h5><div class="g-list" style="margin-top:8px">${['Marco','Sofia','Lena','Jonas'].map(n=>`<div class="g-item" style="align-items:center">${av(n,26)}<b style="flex:1">${n}</b>${rk(PEOPLE[n].r)}</div>`).join('')}</div>`,'profil');
   if(d.comments)return comments(d.comments);
   if(b.id==='c-send')return sendComment();
   if(d.send!==undefined)return ptoast('Link kopiert');
   if(b.classList.contains('like')){const on=b.classList.toggle('liked'),n=b.querySelector('em');n.textContent=+n.dataset.n+(on?1:0);return}
-  if(b.classList.contains('congrats')){if(b.classList.contains('done'))return;b.classList.add('done');const n=b.querySelector('em');n.textContent=+b.dataset.n+1;b.firstChild.textContent='Gratuliert ';return ptoast('Glückwunsch gesendet')}
-  if(d.f!==undefined)return filterChips(b.parentElement,b);
+  if(b.classList.contains('congrats')){if(b.classList.contains('done'))return;b.classList.add('done');b.querySelector('em').textContent=+d.n+1;b.querySelector('span').textContent='Gratuliert';return ptoast('Glückwunsch gesendet')}
 });
-phone.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='c-in')sendComment()});
+phone.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='c-in')sendComment();if(e.target.id==='st-in')sendStory();if(e.target.id==='ans-in')$('[data-answer]').click()});
+$('#job-q').addEventListener('input',()=>{hold();renderJobs()});
+$('#forum-q').addEventListener('input',()=>{hold();renderForum()});
+$('#st-in').addEventListener('focus',()=>{hold();clearTimeout(stT);$$('#st-bars i')[si].className='done'});
 shade.addEventListener('click',()=>{hold();closeSheets()});
 
 /* ---------- Selbst-Vorführung ---------- */
+const T=(sel,fn,d)=>[()=>{const el=typeof sel==='function'?sel():$(sel);tapAt(el);setTimeout(fn,220)},d];
 const STEPS=[
-  [()=>{go(0);feed.scrollTop=0},2600],
-  [()=>feed.scrollTo({top:300,behavior:'smooth'}),2000],
-  [()=>feed.scrollTo({top:0,behavior:'smooth'}),1100],
-  [()=>{tapAt($('#video'));setTimeout(()=>openReels(0),220)},2600],
-  [()=>showReel(1),2400],
-  [()=>showReel(2),2200],
-  [()=>{tapAt($('#r-x'));setTimeout(closeReels,220)},1000],
-  [()=>{tapAt($('#st-lena'));setTimeout(()=>openStory(2),220)},3000],
-  [()=>{tapAt($('#st-x'));setTimeout(()=>closeStory(),220)},900],
-  [()=>{tapAt(tabs[1]);setTimeout(()=>{go(1);seg('jobs')},220)},2400],
-  [()=>{tapAt($('#topjob'));setTimeout(()=>jobSheet($('#topjob')),220)},1600],
-  [()=>{tapAt($('#apply'));setTimeout(apply,220)},1600],
-  [()=>closeSheets(),600],
-  [()=>{const b=$('[data-seg="forum"]');tapAt(b);setTimeout(()=>seg('forum'),220)},2200],
-  [()=>{tapAt($('#topic1'));setTimeout(()=>thread('Einwandbehandlung'),220)},2200],
-  [()=>closeSheets(),600],
-  [()=>{const b=$('[data-seg="markt"]');tapAt(b);setTimeout(()=>seg('markt'),220)},2600],
-  [()=>{tapAt(tabs[2]);setTimeout(()=>go(2),220)},2600],
-  [()=>{tapAt($('#medal-n'));setTimeout(()=>openSheet('sh-medal'),220)},2200],
-  [()=>closeSheets(),600],
-  [()=>{tapAt(tabs[0]);setTimeout(()=>go(0),220)},1400],
-  [()=>{tapAt($('.share-btn'));setTimeout(()=>openSheet('sh-add'),220)},2000],
-  [()=>closeSheets(),800],
+  [()=>{go(0);feed.scrollTop=0},3200],
+  T('#fset-btn',()=>toggleFset(true),3600),
+  T('#fset-btn',()=>toggleFset(false),1400),
+  T('#feedlist .video',()=>openReels(0),3800),
+  [()=>showReel(1),3400],
+  T('#r-x',()=>{closeReels();explainView()},1200),
+  T('#st-lena',()=>openStory(2),3400),
+  T('#st-x',()=>closeStory(),1200),
+  T('.tabs [data-tab="1"]',()=>{go(1);seg('jobs')},3400),
+  T(()=>$('#joblist .job'),()=>jobPage('j1'),3600),
+  T('#page [data-apply]',()=>apply('j1'),2200),
+  T('#pg-back',back,1200),
+  T('[data-seg="forum"]',()=>seg('forum'),3000),
+  T('[data-fcat="einw"]',()=>catPage('einw'),2800),
+  T('[data-thread="t1"]',()=>threadPage('t1',true),3800),
+  [()=>closePage(),600],
+  T('[data-seg="markt"]',()=>seg('markt'),3000),
+  T('[data-offer="o2"]',()=>offerPage('o2'),3600),
+  [()=>closePage(),600],
+  T('.tabs [data-tab="2"]',()=>go(2),3200),
+  T('.ptabs [data-ptab="reviews"]',()=>ptab('reviews'),3600),
+  T('.ptabs [data-ptab="videos"]',()=>ptab('videos'),3000),
+  [()=>ptab('posts'),600],
+  T('.tabs [data-tab="0"]',()=>go(0),1600)
 ];
 function runStep(){
   let wait=600;
@@ -1830,10 +1986,10 @@ phone.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')paused=true
 phone.addEventListener('pointerleave',()=>paused=false);
 phone.addEventListener('focusin',hold);
 new IntersectionObserver(([e])=>{visible=e.isIntersecting},{threshold:.4}).observe(phone);
-applyCrops();addEventListener('resize',()=>{clearTimeout(applyCrops.t);applyCrops.t=setTimeout(()=>{applyCrops();if(nt.classList.contains('in')&&CTX[ctxNow])placeToast(CTX[ctxNow][3])},150)});
-showReel(0);
+renderFeed();renderJobs();renderForum();renderOffers();quota();timerLabel();showReel(0);applyCrops();tick();
+addEventListener('resize',()=>{clearTimeout(applyCrops.t);applyCrops.t=setTimeout(()=>{applyCrops();if(nt.classList.contains('in'))placeEx()},150)});
 if(!reduce)setTimeout(runStep,1200);
-setTimeout(()=>setCtx('feed'),reduce?0:900);
+setTimeout(()=>explain('feed','#feedlist .post'),reduce?0:900);
 
 /* ---------- Mobile-Leiste ---------- */
 const dock=$('#dock');
