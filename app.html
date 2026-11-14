@@ -412,8 +412,8 @@ function ic(k,gold){ return `<span class="icbox">${svg(k)}</span>`; }
 
 const NAV = [
   ['feed','play','Feed'],['jobs','jobs','Jobs'],['forum','globe','Forum'],['markt','shop','Marktplatz'],['search','search','Suche'],['notifications','bell','Mitteilungen'],
-  ['messages','chat','Nachrichten',1],['create','plus','Erstellen',1],['profile','user','Profil'] ];
-const MNAV = [['feed','play'],['jobs','globe'],['create','plus',1],['profile','user']];
+  ['messages','chat','Nachrichten',1],['profile','user','Profil'] ];
+const MNAV = [['jobs','globe'],['feed','play'],['profile','user']];
 
 // Eigenes Routing: funktioniert auch in Vorschau-Fenstern, die Link-Klicks blockieren
 S.route = (location.hash||'').replace('#','') || 'feed';
@@ -533,8 +533,8 @@ function feed(){
   return `<div class="flex justify-center gap-10 px-4">
     <section class="w-full max-w-[480px] py-6 space-y-6">
       ${storiesRow()}
-      <div class="flex items-center gap-3"><button onclick="playerMenu()" aria-label="Player-Einstellungen">${ic('gearplay')}</button><span class="text-xs text-muted">${S.ptopics?S.ptopics.length+' Kategorien':'Alle Kategorien'}${S.timerMin?' · Timer '+S.timerMin+' Min.':''}</span></div>
-      ${posts.split('</article>').map((x,i)=>i===2?x+'</article>'+nearbyStrip():(x?x+'</article>':'')).join('')}${guest}
+      <div class="flex items-center justify-between gap-3"><button onclick="playerMenu()" class="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-sm font-semibold" aria-label="Feed-Einstellungen">${svg('gearplay',16)}Feed-Einstellungen<span class="text-xs text-muted font-normal">${S.ptopics?S.ptopics.length+' Arten':''}${S.timerMin?' · '+S.timerMin+' Min.':''}</span></button><a href="#${S.user?'create':'login'}" class="btn-gold text-sm" style="padding:8px 14px">＋ Teilen</a></div>
+      ${posts}${guest}
     </section>${rightRail()}</div>`;
 }
 function spotlightBanner(){
@@ -549,7 +549,7 @@ function rightRail(){
       <p class="text-sm">🚀 Top-Rookie</p>${nameRank('Marco','Rising')}<p class="text-xs text-muted">1.120 Punkte · meiste Punkte bis Rang 2 (Rookie, Rising)</p></div>
     <div class="card p-4"><div class="flex justify-between mb-2"><p class="text-xs uppercase tracking-wider text-muted">Neueste Jobs</p><a href="#jobs" class="text-xs text-gold">Alle</a></div>
       ${JOBS.slice(0,3).map(j=>`<a href="#jobs" onclick="S.job=${j.id}" class="block py-2 border-t border-line first:border-0"><p class="text-sm font-medium">${j.t}</p><p class="text-xs text-gold">${j.pay}</p></a>`).join('')}</div>
-    <div class="card p-4"><p class="text-xs uppercase tracking-wider text-muted mb-3">Member in deiner Nähe · ${S.region}</p>
+    <div class="card p-4"><p class="text-xs uppercase tracking-wider text-muted mb-3">Member, die du kennen solltest</p>
       ${NEARBY.slice(0,3).map(([n,r])=>`<div class="flex items-center justify-between py-1.5">${nameRank(n,r)}<button class="text-gold text-sm font-semibold" onclick="this.textContent=this.textContent==='Folgen'?'Gefolgt ✓':'Folgen'">Folgen</button></div>`).join('')}</div>
     <p class="text-xs text-muted">Impressum · Datenschutz · AGB · <a href="#werbung" class="text-gold">Werbung schalten</a> · © 2026 ClosingHub</p></aside>`;
 }
@@ -561,7 +561,7 @@ function stopPlayer(){ clearInterval(S.ptimer); S.player=null; }
 const BREATH_AFTER = 300; // Sekunden Player-Zeit
 S.watch = 0;
 function tick(){ const p=S.player; if(!p||p.paused||S.breath) return; p.t+=0.1; S.watch+=0.1;
-  if(S.watch>=BREATH_AFTER){ S.watch=0; return startBreath(); }
+  if(S.watch>=BREATH_AFTER){ S.watch=0; if(!S.breathOff) return startBreath(); }
   if(p.t>=DUR){ p.t=0; updBar(); } else updBar(); }
 function startBreath(){
   S.breath={left:30};
@@ -696,7 +696,8 @@ function jobs(){
         <p class="text-sm text-muted">Fragen des Auftraggebers:</p>
         ${(j.fragen&&j.fragen.length?j.fragen:['Wie viele High-Ticket-Abschlüsse hattest du 2026?']).map((f,i)=>`<input class="input text-sm placeholder:text-xs" placeholder="${i+1}. ${esc(f)}">`).join('')}
         <textarea id="amsg" maxlength="300" oninput="document.getElementById('cnt').textContent=this.value.length" class="input h-24 text-sm placeholder:text-xs" placeholder="Kurze Nachricht an den Auftraggeber (max. 300 Zeichen)"></textarea>
-        <div class="flex justify-between items-center gap-3"><span class="text-xs text-muted"><span id="cnt">0</span>/300 · Kontaktdaten werden automatisch gefiltert</span><button onclick="applyJob()" class="btn-gold text-sm whitespace-nowrap" style="padding:9px 14px">One-Klick-Bewerbung</button></div></div>`;
+        <div class="flex justify-between items-center gap-3"><span class="text-xs text-muted"><span id="cnt">0</span>/300 · Kontaktdaten werden automatisch gefiltert</span><button onclick="applyJob()" class="btn-gold text-sm whitespace-nowrap" style="padding:9px 14px">One-Klick-Bewerbung</button></div>
+        <p class="text-xs text-muted">Noch <b>${5-(S.apps??2)}</b> von 5 Bewerbungen diesen Monat. Mit Premium: 10.</p></div>`;
   return `<div class="px-4 py-6 max-w-6xl mx-auto">
     <div class="flex gap-2 mb-5"><span class="btn-gold">Jobs</span><a href="#forum" class="btn-ghost">Forum</a><a href="#markt" class="btn-ghost">Marktplatz</a></div>
     <div class="grid md:grid-cols-[340px_1fr] gap-5">
@@ -821,10 +822,11 @@ function messages(){
 }
 
 function create(){
-  return `<div class="max-w-lg mx-auto px-4 py-8 space-y-4"><h1 class="font-serif text-2xl">Erstellen</h1>
+  return `<div class="max-w-lg mx-auto px-4 py-8 space-y-4"><h1 class="font-serif text-2xl">Teilen</h1><p class="text-sm text-muted -mt-2">Eigene Marktplatz-Angebote reichst du per Mail oder telefonisch bei uns ein.</p>
     <div class="grid grid-cols-2 gap-2 text-sm" id="ctype">
       <button class="btn-gold" onclick="ctype(this,'story')">🏆 Erfolg als Story</button>
-      <button class="btn-ghost" onclick="ctype(this,'feed')">▶︎ Beitrag im Feed</button></div>
+      <button class="btn-ghost" onclick="ctype(this,'feed')">▶︎ Video für den Feed</button>
+      <a class="btn-ghost col-span-2" href="#forum">💬 Frage im Forum stellen</a></div>
     <p id="chint" class="text-xs text-muted">Stories zeigen deine Fortschritte & Erfolge oben im Feed – 24 h sichtbar, danach im Profil.</p>
     <textarea class="input h-32" placeholder="Was hast du erreicht? z. B. „Erster Abschluss über 3.000 €!“"></textarea>
     <div class="grid grid-cols-2 gap-2 text-sm"><button class="btn-ghost">🖼️ Bild</button><button class="btn-ghost">🎬 Video ≤ 1 Min.</button></div>
@@ -889,8 +891,8 @@ function notifications(){
 
 
 function storiesRow(){
-  const own = S.user?`<a href="#create" class="flex flex-col items-center gap-1 shrink-0 w-[72px]"><div class="w-16 h-16 rounded-full border border-dashed flex items-center justify-center text-gold text-2xl" style="border-color:#06603B">＋</div><span class="text-[11px] text-muted">Dein Erfolg</span></a>`:'';
-  return `<div class="flex gap-3 overflow-x-auto noscroll pb-1">${own}${STORIES.map((st,i)=>st.ad?'':`
+  const own = '';
+  return `<div class="flex gap-3 overflow-x-auto noscroll pt-1 pb-1 px-0.5">${own}${STORIES.map((st,i)=>st.ad?'':`
     <button onclick="openStory(${i})" class="flex flex-col items-center gap-1 shrink-0 w-[72px]">
       <div class="w-16 h-16 rounded-full p-[2px] ${st.ad?'':'gold-bg'}" style="${st.ad?'background:#3a3a40':''}"><div class="w-full h-full rounded-full bg-panel border-2 border-bg overflow-hidden flex items-center justify-center text-2xl">${st.ad?st.e:avatar(st.n)}</div></div>
       <span class="text-[11px] truncate w-full text-center ${st.ad?'text-muted':''}">${st.ad?'Anzeige':st.n}</span></button>`).join('')}</div>`;
@@ -952,17 +954,21 @@ function avatar(n){
 // Player-Menü (gilt nur für diese Sitzung – verschwindet beim Schließen der App)
 function playerMenu(){
   const sel = S.ptopics || [...FTOPICS];
+  const breath = !S.breathOff;
   document.getElementById('modal').innerHTML = `
-  <div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4" style="background:rgba(8,8,9,.72);backdrop-filter:blur(8px)" onclick="closeModal()">
-    <div class="w-full md:max-w-md p-6 space-y-6 relative rounded-t-3xl md:rounded-3xl" style="background:linear-gradient(180deg,rgb(var(--sheet1)),rgb(var(--sheet2)));border:1px solid rgb(var(--line));box-shadow:0 -10px 40px rgba(0,0,0,.6)" onclick="event.stopPropagation()">
+  <div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4" style="background:rgba(14,26,43,.55);backdrop-filter:blur(6px)" onclick="closeModal()">
+    <div class="w-full md:max-w-md p-6 space-y-6 relative rounded-t-3xl md:rounded-3xl" style="background:rgb(var(--sheet1));border:1px solid rgb(var(--line));box-shadow:0 -10px 40px rgba(14,26,43,.25)" onclick="event.stopPropagation()">
       <div class="w-10 h-1 rounded-full bg-line mx-auto md:hidden -mt-2"></div>
-      <button onclick="closeModal()" class="absolute top-4 right-5 text-muted hover:text-white text-xl">✕</button>
-      <div class="flex items-center gap-3">${ic('gearplay')}<div><p style="font-family:Archivo,sans-serif;letter-spacing:.18em" class="text-gold text-sm">FEED & PLAYER</p><p class="text-xs text-muted">Passt Feed und Player an · gilt nur für diese Sitzung</p></div></div>
-      <div><p class="text-xs uppercase tracking-[.25em] text-muted mb-3">Was willst du sehen?</p>
-        <div class="grid grid-cols-2 gap-2">${FTOPICS.map(t=>`<button onclick="toggleP('${t}')" class="flex items-center gap-2 text-left text-sm px-3 py-2.5 rounded-xl border transition" style="${sel.includes(t)?'border-color:#06603B;background:rgb(var(--chip))':'border-color:rgb(var(--line))'}"><span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px]" style="${sel.includes(t)?'background:#087A4B;color:#000':'border:1px solid #55575d'}">${sel.includes(t)?'✓':''}</span>${t}</button>`).join('')}</div></div>
-      <div><p class="text-xs uppercase tracking-[.25em] text-muted mb-3">App schließen nach</p>
-        <div class="grid grid-cols-4 gap-2">${[0,5,10,15].map(m=>`<button onclick="S.timerMin=${m};playerMenu()" class="py-2.5 rounded-xl border text-sm" style="${(S.timerMin||0)===m?'border-color:#087A4B;color:#7FD1A8;background:rgb(var(--chip))':'border-color:rgb(var(--line));color:#8A8A93'}">${m?m+' Min.':'Aus'}</button>`).join('')}</div></div>
-      <div class="grid grid-cols-2 gap-2"><button class="btn-ghost !py-3" onclick="closeModal();render()">Feed anpassen</button><button class="btn-gold !py-3" onclick="startFromMenu()">▶︎ Player starten</button></div>
+      <button onclick="closeModal()" class="absolute top-4 right-5 text-muted text-xl" aria-label="Schließen">✕</button>
+      <div class="flex items-center gap-3">${ic('gearplay')}<div><p class="font-semibold text-lg" style="font-family:Archivo,sans-serif">Feed-Einstellungen</p><p class="text-xs text-muted">Du bestimmst, was du siehst und wie lange.</p></div></div>
+      <div class="flex items-center justify-between gap-4 border-t border-line pt-5"><div><p class="font-semibold text-sm">Atempause</p><p class="text-xs text-muted">Nach 5 Minuten Reels kurz durchatmen</p></div>
+        <button role="switch" aria-checked="${breath}" aria-label="Atempause" onclick="S.breathOff=!S.breathOff;playerMenu()" class="relative w-11 h-6 rounded-full shrink-0 transition" style="background:${breath?'#087A4B':'rgb(var(--icl))'}"><span class="absolute top-1 w-4 h-4 rounded-full bg-white transition-all" style="left:${breath?'24px':'4px'}"></span></button></div>
+      <div><p class="font-semibold text-sm mb-3">Reels ausschalten nach</p>
+        <div class="grid grid-cols-3 gap-2">${[5,10,15].map(m=>`<button onclick="S.timerMin=S.timerMin===${m}?0:${m};playerMenu()" class="py-2.5 rounded-xl border text-sm font-semibold" style="${(S.timerMin||0)===m?'border-color:#0E1A2B;background:#0E1A2B;color:#fff':'border-color:rgb(var(--line))'}">${m} Min.</button>`).join('')}</div>
+        <p class="text-xs text-muted mt-2">${S.timerMin?'Die Reels schalten sich nach '+S.timerMin+' Minuten aus.':'Kein Timer aktiv. Tipp auf eine Zeit, um ihn einzuschalten.'}</p></div>
+      <div><p class="font-semibold text-sm mb-3">Diese Beiträge zeigen</p>
+        <div class="flex flex-wrap gap-2">${FTOPICS.map(t=>`<button onclick="toggleP('${t}')" class="text-sm px-3 py-1.5 rounded-full border transition" style="${sel.includes(t)?'border-color:#0E1A2B;background:#0E1A2B;color:#fff':'border-color:rgb(var(--line))'}">${t}</button>`).join('')}</div></div>
+      <div class="grid grid-cols-2 gap-2"><button class="btn-ghost !py-3" onclick="closeModal();render()">Übernehmen</button><button class="btn-gold !py-3" onclick="startFromMenu()">▶︎ Reels starten</button></div>
     </div></div>`;
 }
 function toggleP(t){ let cur=S.ptopics||[...FTOPICS]; cur=cur.includes(t)?cur.filter(x=>x!==t):[...cur,t]; if(!cur.length) return; S.ptopics=cur.length===FTOPICS.length?null:cur; playerMenu(); render(); }
@@ -990,6 +996,7 @@ function regionSelect(){
   </div>`;
 }
 function markt(){
+  S.wide = true;
   const inRegion = o => S.wide ? true : o.reg===S.region;
   const pool = OFFERS.filter(inRegion).filter(o=>MCATS.includes(o.cat));
   const pt = S.mcat!=='Alle' ? partnerOf(S.mcat) : null;
@@ -1000,10 +1007,10 @@ function markt(){
     <div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><a href="#forum" class="btn-ghost">Forum</a><span class="btn-gold">Marktplatz</span></div>
     <div class="flex flex-wrap justify-between items-end gap-3 mb-4">
       <div><h1 class="font-serif text-3xl">Marktplatz</h1><p class="text-muted text-sm">Coaching, Training, Analysen und Skripte von Membern für Member – buche Experten oder verdiene mit deinem Wissen.</p></div>
-      ${S.user?`<button onclick="sellModal()" class="btn-gold">+ Angebot einstellen</button>`:`<a href="#login" class="btn-gold">Anmelden zum Inserieren</a>`}
+      <a href="mailto:info@getclosinghub.com?subject=Marktplatz-Angebot%20einreichen" class="btn-gold">Angebot einreichen</a>
     </div>
     ${partnersRow()}
-    ${regionSelect()}
+    <p class="text-xs text-muted mb-4">Eigenes Angebot? Reich es per Mail oder telefonisch bei uns ein. Wir prüfen jedes Angebot persönlich.</p>
     <div class="flex gap-2 overflow-x-auto noscroll mb-5">${cats.map(c=>`<button onclick="S.mcat='${c}';render()" class="${S.mcat===c?'btn-gold':'btn-ghost'} text-sm whitespace-nowrap">${c}${c!=='Alle'&&!S.wide?` <span class="opacity-70">${slots(c)}/10</span>${10-slots(c)<=3&&10-slots(c)>0?' <span class="text-[10px] font-bold" style="color:#ff8a5c">🔥</span>':''}`:''}</button>`).join('')}</div>
     ${!S.wide?scarcity(slots):''}
     ${!S.wide&&S.mcat!=='Alle'?`<p class="text-xs text-muted mb-4">${slots(S.mcat)} von 10 Plätzen in ${S.region} belegt${slots(S.mcat)>=10?' – <span class="text-gold">Kategorie voll, Warteliste</span>':''}</p>`:''}
