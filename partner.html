@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Partnerportal – ClosingHub</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Lora:wght@500;600&family=Parisienne&family=Bebas+Neue&display=swap">
+<style>
+:root{--paper:#F2F4F1;--sheet:#FFFFFF;--ink:#0E1A2B;--ink-2:#4A5568;--ink-3:#6B7584;--rule:#D5DAD3;--tint:#E4E8E2;--deal:#087A4B;--deal-press:#06603B;--deal-soft:#E3F1EA;--seal:#B8860B;--err:#B42318}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--deal)}
+.top{background:rgba(242,244,241,.94);border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:20}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:62px}
+.logo{display:inline-flex;align-items:baseline;text-decoration:none;color:var(--ink);line-height:1}
+.logo .l1{font-family:Parisienne,cursive;font-size:30px;margin-right:2px}
+.logo .l2{font-family:"Bebas Neue",sans-serif;font-size:31px;letter-spacing:.01em}
+.tag{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+main{padding:28px 0 80px}
+h1{font-family:Lora,Georgia,serif;font-weight:600;font-size:clamp(28px,5vw,38px);line-height:1.15;margin:0 0 6px;text-wrap:balance}
+h2{font-family:Lora,Georgia,serif;font-weight:600;font-size:21px;margin:0 0 4px}
+.sub{color:var(--ink-2);margin:0 0 22px}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:20px;margin-top:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+label.f{display:block;font-size:13px;color:var(--ink-2)}
+.in{display:block;width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:#fff;color:var(--ink);font:inherit;font-size:15px}
+.in:focus-visible,.btn:focus-visible,a:focus-visible{outline:2px solid var(--deal);outline-offset:2px}
+textarea.in{resize:vertical}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--rule);background:#fff;color:var(--ink);font:inherit;font-weight:700;font-size:15px;padding:10px 16px;border-radius:8px;cursor:pointer;text-decoration:none}
+.btn:hover{border-color:var(--ink-3)}
+.btn.go{background:var(--deal);border-color:var(--deal);color:#fff}
+.btn.go:hover{background:var(--deal-press)}
+.btn.sm{padding:7px 12px;font-size:14px}
+.btn[disabled]{opacity:.6;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--ink-3);font-size:13px}
+.note{border-radius:10px;padding:12px 14px;font-size:14px;margin-top:14px}
+.note.wait{background:#FBF3DC;border:1px solid #E9D69A;color:#5F4708}
+.note.ok{background:var(--deal-soft);border:1px solid #B9DFCB;color:var(--deal-press)}
+.note.bad{background:#FDECEA;border:1px solid #F3C1BB;color:var(--err)}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;border:1px solid var(--rule);white-space:nowrap}
+.pill.ok{background:var(--deal-soft);border-color:#B9DFCB;color:var(--deal-press)}
+.pill.wait{background:#FBF3DC;border-color:#E9D69A;color:#5F4708}
+.guest{border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+.photo{width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--tint)}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;max-width:92vw}
+#toast.show{opacity:1;transform:translateX(-50%)}
+.auth{max-width:420px;margin:40px auto 0}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tabs button{flex:1}
+.tabs .on{background:var(--ink);border-color:var(--ink);color:#fff}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="/" aria-label="ClosingHub Startseite"><span class="l1">closing</span><span class="l2">HUB</span></a>
+  <div class="row"><span class="tag">Partnerportal</span><button class="btn sm" id="out" style="display:none" onclick="logout()">Abmelden</button></div>
+</div></header>
+<main><div class="wrap" id="main"></div></main>
+<div id="toast" role="status"></div>
+
+<script>
+const SB_URL='https://bzcnqggwyfocpbkwqhsy.supabase.co', SB_KEY='sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D';
+const SKEY='ch_partner_session', TKEY='ch_partner_einladung';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clean=x=>String(x||'').replace(/[<>"'`]/g,'').trim();
+function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),3200); }
+const store={ get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ v===null?localStorage.removeItem(k):localStorage.setItem(k,v); }catch(e){} } };
+
+let SESSION=null; try{ SESSION=JSON.parse(store.get(SKEY)); }catch(e){}
+const keep=s=>{ SESSION=s; store.set(SKEY, s?JSON.stringify(s):null); };
+let ME=null, GUESTS=[], authMode='login', MSG='';
+
+// Einladungslink merken, bis das Konto angemeldet ist
+(function(){ const t=new URLSearchParams(location.search).get('einladung'); if(t&&/^[a-f0-9]{16,40}$/.test(t)){ store.set(TKEY,t); authMode='register'; history.replaceState(null,'',location.pathname); } })();
+
+async function authCall(path, body){
+  const r=await fetch(`${SB_URL}/auth/v1/${path}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error_description||j.msg||j.message||'Das hat nicht geklappt');
+  return j;
+}
+function takeSession(j){ if(!j||!j.access_token) return false; keep({access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||(Date.now()/1000+(j.expires_in||3600)),email:j.user&&j.user.email}); return true; }
+async function refresh(){ takeSession(await authCall('token?grant_type=refresh_token',{refresh_token:SESSION.refresh_token})); }
+async function api(path,{method='GET',body,prefer}={},retry=true){
+  if(SESSION && SESSION.expires_at-60<Date.now()/1000){ try{ await refresh(); }catch(e){ logout(); throw e; } }
+  const headers={apikey:SB_KEY,'Content-Type':'application/json'};
+  if(SESSION) headers.Authorization='Bearer '+SESSION.access_token;
+  if(prefer) headers.Prefer=prefer;
+  const r=await fetch(`${SB_URL}/rest/v1/${path}`,{method,headers,body:body!==undefined?JSON.stringify(body):undefined});
+  if(r.status===401&&retry&&SESSION){ try{ await refresh(); return api(path,{method,body,prefer},false); }catch(e){ logout(); throw e; } }
+  if(!r.ok){ const j=await r.json().catch(()=>({})); throw new Error(j.message||('Fehler '+r.status)); }
+  const t=await r.text(); return t?JSON.parse(t):null;
+}
+function logout(){ keep(null); ME=null; GUESTS=[]; render._loaded=false; render(); }
+
+/* ===== Anmelden und Registrieren ===== */
+function authView(){
+  const reg=authMode==='register', inv=!!store.get(TKEY);
+  return `<div class="auth"><h1>Partnerportal</h1>
+    <p class="sub">${inv?'Du wurdest als Partner eingeladen. Leg dir ein Konto an oder melde dich an, dann wird dein Partnerplatz freigeschaltet.':'Hier pflegst du dein Partnerprofil und lädst deine Gäste ein.'}</p>
+    <div class="card"><div class="tabs"><button class="btn sm ${reg?'':'on'}" onclick="authMode='login';MSG='';render()">Anmelden</button><button class="btn sm ${reg?'on':''}" onclick="authMode='register';MSG='';render()">Konto anlegen</button></div>
+      <form onsubmit="doAuth(event)">
+        <label class="f">E-Mail-Adresse<input class="in" id="a-mail" type="email" required autocomplete="email"></label>
+        <label class="f" style="margin-top:10px">Passwort${reg?' (mindestens 8 Zeichen)':''}<input class="in" id="a-pw" type="password" required minlength="8" autocomplete="${reg?'new-password':'current-password'}"></label>
+        <button class="btn go" id="a-btn" style="width:100%;margin-top:14px">${reg?'Konto anlegen':'Anmelden'}</button>
+      </form>
+      ${MSG?`<div class="note ${MSG[0]}">${esc(MSG[1])}</div>`:''}
+      <p class="muted" style="margin-top:12px">${inv?'':'Zugang gibt es nur über einen persönlichen Einladungslink von ClosingHub.'} Passwort vergessen? Schreib an <a href="mailto:support@getclosinghub.com">support@getclosinghub.com</a>.</p></div></div>`;
+}
+async function doAuth(ev){
+  ev.preventDefault(); const b=$('a-btn'), email=$('a-mail').value.trim().toLowerCase(), password=$('a-pw').value; b.disabled=true;
+  try{
+    if(authMode==='register'){
+      const j=await authCall('signup',{email,password});
+      if(!takeSession(j)){ MSG=['ok','Fast geschafft: Wir haben dir eine E-Mail geschickt. Bestätige den Link darin und melde dich danach hier an.']; authMode='login'; render(); return; }
+    }else{ takeSession(await authCall('token?grant_type=password',{email,password})); }
+    MSG=''; ME=null; render._loaded=false; await render();
+  }catch(e){ const m=String(e.message||'');
+    MSG=['bad',/invalid login/i.test(m)?'E-Mail oder Passwort falsch.':/not confirmed/i.test(m)?'Bitte bestätige zuerst den Link in der E-Mail, die wir dir geschickt haben.':/already registered|already been registered/i.test(m)?'Für diese E-Mail gibt es schon ein Konto. Bitte melde dich an.':m]; render();
+  }
+}
+
+/* ===== Daten ===== */
+async function load(){
+  const t=store.get(TKEY);
+  if(t){ const j=await api('rpc/partner_beitreten',{method:'POST',body:{p_token:t}}).catch(()=>null); if(j&&j.ok) store.set(TKEY,null); else if(j&&j.grund==='link'){ store.set(TKEY,null); toast('Dieser Einladungslink ist nicht mehr gültig.'); } }
+  const rows=await api('partners?select=id,status,profile,draft,draft_at&limit=1'); ME=rows&&rows[0]||null;
+  GUESTS=ME&&ME.status==='aktiv'?(await api('partner_guests?select=*&order=slot.asc').catch(()=>[]))||[]:[];
+}
+
+/* ===== Portal ===== */
+function fld(k,l,ph,v){ return `<label class="f">${l}<input class="in" data-f="${k}" value="${esc(v||'')}" placeholder="${esc(ph||'')}"></label>`; }
+function portal(){
+  if(!ME) return `<h1>Kein Partnerzugang</h1><p class="sub">Mit diesem Konto ist kein Partnerplatz verknüpft. Öffne bitte deinen persönlichen Einladungslink von ClosingHub und melde dich dann erneut an.</p>`;
+  if(ME.status==='beendet') return `<h1>Partnerschaft beendet</h1><p class="sub">Deine Partnerschaft mit ClosingHub ist beendet. Dein Partnerprofil ist nicht mehr sichtbar. Bei Fragen schreib an <a href="mailto:support@getclosinghub.com">support@getclosinghub.com</a>.</p>`;
+  const p=ME.draft||ME.profile||{}, k=p.k||[], d=p.deal||[];
+  return `<h1>Hallo ${esc((ME.profile&&ME.profile.n)||p.n||'')}</h1><p class="sub">Dein Partnerprofil bei ClosingHub. Änderungen prüft ClosingHub kurz, danach sind sie in der App sichtbar.</p>
+  ${ME.draft?`<div class="note wait">Deine letzte Änderung wartet auf Freigabe. Du kannst sie hier weiter anpassen und erneut senden.</div>`:(ME.profile&&ME.profile.s?`<div class="note ok">Dein Profil ist live in der App.</div>`:`<div class="note wait">Dein Profil ist noch nicht ausgefüllt. Trag deine Angaben ein und sende sie zur Freigabe.</div>`)}
+  <div class="card"><h2>Dein Profil</h2><p class="muted">Pflicht sind nur dein Name und wofür du Partner bist. Leere Felder erscheinen im Profil nicht.</p>
+    <div class="row" style="margin:14px 0"><img class="photo" id="p-img" src="${esc(p.img||'')}" alt="" style="${p.img?'':'visibility:hidden'}">
+      <label class="btn sm" style="cursor:pointer">Foto auswählen<input type="file" accept="image/*" style="display:none" onchange="pickPhoto(this)"></label><input type="hidden" data-f="img" value="${esc(p.img||'')}"></div>
+    <div class="grid">
+      ${fld('n','Name','Paul',p.n)}${fld('s','Wofür du Partner bist (steht groß im Profilkopf)','Morgen-Call',p.s)}
+      ${fld('role','Beruf oder Rolle','Mindset-Coach',p.role)}${fld('meta','Erfahrung und Land (optional)','8 Jahre Vertrieb, Deutschland',p.meta)}
+      ${fld('bk','Text auf dem grünen Knopf','Coaching anfragen',p.bk)}${fld('live','Hinweis auf deine Live-Termine (optional)','Mo–Do, 7:30 Uhr live in der App',p.live)}
+      ${fld('k0','Zahl, mit der du überzeugst (optional)','312',k[0])}${fld('k1','Was die Zahl bedeutet','Calls analysiert',k[1])}
+      ${fld('d0','Rabatt für Member (optional)','−20 % für Member',d[0])}${fld('d1','Worauf der Rabatt gilt','auf das erste Coaching',d[1])}
+      ${fld('d2','Rabattcode','PAUL20',d[2])}
+    </div>
+    <label class="f" style="margin-top:12px">Kurze Vorstellung in ein bis zwei Sätzen<textarea class="in" data-f="bio" rows="3" maxlength="300">${esc(p.bio||'')}</textarea></label>
+    <label class="f" style="margin-top:12px">Deine Angebote für Member, eines pro Zeile: Titel | Preis in Euro<textarea class="in" data-f="offers" rows="3" placeholder="1:1 Mindset-Coaching (60 Min.) | 89">${esc((p.offers||[]).map(o=>o.t+' | '+o.pr).join('\n'))}</textarea></label>
+    <label class="row muted" style="margin-top:12px"><input type="checkbox" data-f="fem" ${p.fem?'checked':''}> Im Profil „Partnerin“ statt „Partner“ schreiben</label>
+    <div class="row" style="margin-top:16px"><button class="btn go" onclick="sendProfile(this)">Änderung zur Freigabe senden</button></div></div>
+  <div class="card"><h2>Deine Gäste</h2><p class="muted">Du kannst bis zu drei Personen einladen. Sie bekommen die Plus-Mitgliedschaft kostenlos, solange deine Partnerschaft besteht.</p>
+    ${[1,2,3].map(guestRow).join('')}</div>`;
+}
+function readProfile(){
+  const g=k=>{ const el=document.querySelector(`[data-f="${k}"]`); return el?(el.type==='checkbox'?el.checked:clean(el.value)):''; };
+  const p={n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^(https:\/\/|data:image\/(jpeg|png|webp);base64,)/.test(g('img'))?g('img'):'',live:g('live').slice(0,90),fem:!!g('fem')};
+  if(g('k0')) p.k=[g('k0').slice(0,12),g('k1').slice(0,30)];
+  if(g('d0')) p.deal=[g('d0').slice(0,40),g('d1').slice(0,60),g('d2').slice(0,20)];
+  p.offers=g('offers').split('\n').map(z=>{ const f=z.split('|').map(clean); return {t:(f[0]||'').slice(0,70),pr:(f[1]||'').slice(0,12)}; }).filter(o=>o.t).slice(0,8);
+  return p;
+}
+function pickPhoto(inp){
+  const f=inp.files&&inp.files[0]; if(!f) return; if(!/^image\//.test(f.type)) return toast('Bitte ein Bild auswählen');
+  const img=new Image(), url=URL.createObjectURL(f);
+  img.onload=()=>{ const S=320, c=document.createElement('canvas'); c.width=c.height=S; const m=Math.min(img.width,img.height);
+    c.getContext('2d').drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S); URL.revokeObjectURL(url);
+    const d=c.toDataURL('image/jpeg',.82); document.querySelector('[data-f="img"]').value=d; const pv=$('p-img'); pv.src=d; pv.style.visibility=''; toast('Foto übernommen. Sende die Änderung, damit es gespeichert wird.'); };
+  img.onerror=()=>{ URL.revokeObjectURL(url); toast('Das Bild konnte nicht gelesen werden'); };
+  img.src=url;
+}
+async function sendProfile(b){
+  const p=readProfile(); if(!p.n||!p.s) return toast('Bitte Name und „Wofür du Partner bist“ ausfüllen');
+  b.disabled=true;
+  try{ const j=await api('rpc/partner_vorschlag',{method:'POST',body:{p}}); if(!j||!j.ok) throw new Error('Senden nicht möglich'); ME.draft=p; render(); toast('Gesendet. ClosingHub prüft deine Änderung.'); }
+  catch(e){ toast('Das hat nicht geklappt: '+e.message); b.disabled=false; }
+}
+const guestLink=t=>'https://www.getclosinghub.com/?gast='+t;
+const deDate=d=>{ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d||''); return m?`${m[3]}.${m[2]}.${m[1]}`:''; };
+function guestRow(slot){
+  const g=GUESTS.find(x=>x.slot===slot)||{}, st=g.free_until?`kostenlos bis ${deDate(g.free_until)}`:(g.status||'frei');
+  return `<div class="guest"><div class="row" style="justify-content:space-between"><b>Gast ${slot}</b><span class="pill ${g.status==='eingelöst'?'ok':g.token?'wait':''}">${esc(st)}</span></div>
+    <div class="grid" style="margin-top:8px"><label class="f">Name<input class="in" id="g-n-${slot}" value="${esc(g.name||'')}"></label><label class="f">E-Mail-Adresse<input class="in" type="email" id="g-e-${slot}" value="${esc(g.email||'')}"></label></div>
+    <div class="row" style="margin-top:10px"><button class="btn sm go" onclick="invite(${slot},'mail')">Einladung senden</button><button class="btn sm" onclick="invite(${slot},'copy')">Link kopieren</button>${g.token&&!g.free_until?`<button class="btn sm" onclick="removeGuest(${slot})">Entfernen</button>`:''}</div></div>`;
+}
+async function invite(slot,how){
+  const name=clean($('g-n-'+slot).value).slice(0,60), email=clean($('g-e-'+slot).value).slice(0,120).toLowerCase();
+  if(!name) return toast('Bitte den Namen eintragen');
+  if(how==='mail'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Bitte eine gültige E-Mail-Adresse eintragen');
+  let g;
+  try{ const rows=await api('partner_guests?on_conflict=partner_id,slot',{method:'POST',prefer:'resolution=merge-duplicates,return=representation',body:{partner_id:String(ME.id),slot,name,email:email||null}}); g=rows&&rows[0]; }
+  catch(e){ return toast('Das hat nicht geklappt: '+e.message); }
+  if(!g) return;
+  GUESTS=GUESTS.filter(x=>x.slot!==slot).concat(g); const link=guestLink(g.token), keepP=readProfile(); ME._edit=keepP; render();
+  if(how==='copy'){ try{ await navigator.clipboard.writeText(link); toast('Einladungslink kopiert'); }catch(e){ prompt('Einladungslink:',link); } return; }
+  const me=(ME.profile&&ME.profile.n)||'Ich';
+  const body=`Hallo ${name},\n\nich bin offizieller Partner von ClosingHub und lade dich als meinen Gast ein. Damit bekommst du die Plus-Mitgliedschaft kostenlos, solange meine Partnerschaft besteht.\n\nDein persönlicher Link:\n${link}\n\nÜber den Link trägst du dich mit deiner E-Mail-Adresse ein. Dein Gast-Platz ist dann für dich vorgemerkt.\n\nViele Grüße\n${me}`;
+  location.href='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent('Deine Einladung zu ClosingHub')+'&body='+encodeURIComponent(body);
+}
+async function removeGuest(slot){
+  if(!confirm('Diesen Gast wirklich entfernen? Der Einladungslink wird damit ungültig.')) return;
+  try{ await api(`partner_guests?slot=eq.${slot}`,{method:'DELETE'}); GUESTS=GUESTS.filter(x=>x.slot!==slot); render(); toast('Gast entfernt'); }catch(e){ toast('Das hat nicht geklappt: '+e.message); }
+}
+
+async function render(){
+  $('out').style.display=SESSION?'':'none';
+  if(!SESSION){ $('main').innerHTML=authView(); return; }
+  if(ME===null && !render._loaded){ $('main').innerHTML='<p class="sub" style="margin-top:30px">Lade …</p>'; try{ await load(); render._loaded=true; }catch(e){ if(!SESSION) return render(); $('main').innerHTML=`<div class="note bad">Daten konnten nicht geladen werden: ${esc(e.message)}</div><p><button class="btn" onclick="location.reload()">Nochmal versuchen</button></p>`; return; } }
+  if(ME&&ME._edit){ const keepP=ME._edit; delete ME._edit; const d=ME.draft; ME.draft=keepP; $('main').innerHTML=portal(); ME.draft=d; return; }
+  $('main').innerHTML=portal();
+}
+render();
+</script>
+</body>
+</html>

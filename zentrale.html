@@ -305,7 +305,7 @@ const LOADERR={jobs:'',clients:''};
 const loadNote=k=>LOADERR[k]?`<div class="card" style="border-color:#b4543c;margin-bottom:14px"><b>⚠️ Daten konnten nicht geladen werden:</b> ${esc(LOADERR[k])}</div>`:'';
 async function refreshData(b){ if(b) b.disabled=true; try{ await loadAll(); drawNav(); $('main').innerHTML=(PAGES[route()]||dashboard)(); toast('Aktualisiert'); }catch(e){ toast('⚠️ '+e.message); if(b) b.disabled=false; } }
 async function loadAll(){
-  D.guests = await api('partner_guests?select=*&order=slot.asc').catch(()=>null);
+  { const pr=await api('partners?select=*&order=sort.asc,id.asc').catch(()=>null); ptSet(pr); D.guests = pr===null ? null : (await api('partner_guests?select=*&order=slot.asc').catch(()=>[])); }
   const [wl, cr, st, tk, inv, tix, ai, jb, cl] = await Promise.all([
     q('waitlist?select=*&order=created_at.desc'),
     q('contact_requests?select=*&order=created_at.desc'),
@@ -320,7 +320,7 @@ async function loadAll(){
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
-  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice(); D.partners=(S.markt&&Array.isArray(S.markt.partners))?S.markt.partners:null; D.settings_partner_ids=(D.partners||[]).map(x=>x.id).filter(Boolean);
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
@@ -355,7 +355,7 @@ const NAV = [
   ['rechnungen','Rechnungen','invoice', ()=>D.invoices.filter(i=>i.st==='überfällig').length],
   ['laufband','Laufband & Angebote','ticker'],
   ['anfragen','Anfragen & Warteliste','inbox', ()=>D.requests.filter(r=>r.st==='neu').length],
-  ['partner','Partner','users'],
+  ['partner','Partner','users', ()=>(D.prow||[]).filter(r=>r.draft).length],
   ['Community'],
   ['support','Support','support', ()=>D.tickets.filter(t=>t.st==='offen').length],
   ['member','Member','users'],
@@ -936,98 +936,147 @@ function inhalte(){
   </div>`;
 }
 function partner(){
-  const n=(D.partners||[]).length;
-  return `<h1 class="h1">Partner</h1><p class="sub">Höchstens 5 Partner. Jeder bekommt das hervorgehobene Partnerprofil in der App und kann bis zu 3 Gäste mit kostenloser Plus-Mitgliedschaft mitbringen.</p>
-  <div class="card"><div class="row between"><div><h3>Partner · ${n} von 5</h3><p class="muted" style="font-size:13px;margin-top:2px">${D.partners?'Änderungen am Profil werden erst mit „Partner speichern“ live.':'Hier wurde noch nie gespeichert. Die App zeigt bis dahin die Beispiel-Partner.'}</p></div></div>
-    ${(D.partners||[]).map((p,i)=>ptCard(p,i)).join('')||'<div class="empty" style="margin-top:12px">Noch kein Partner angelegt.</div>'}
-    <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="savePartners(this)">Partner speichern</button>${n<5?`<button class="btn" onclick="ptAdd()">Partner hinzufügen</button>`:''}</div></div>`;
+  if(D.prow===null) return `<h1 class="h1">Partner</h1><p class="sub">Partner, Partnerportal und Gäste.</p><div class="card"><div class="demo">Der Partner-Bereich ist noch nicht aktiv: Führe einmal die Datei „closinghub-partner.sql“ in Supabase aus und lade die Zentrale neu.</div></div>`;
+  const act=D.partners.filter(p=>p._st!=='beendet'), old=D.partners.filter(p=>p._st==='beendet');
+  return `<h1 class="h1">Partner</h1><p class="sub">Höchstens 5 Partner. Jeder pflegt sein Profil im Partnerportal und lädt dort bis zu 3 Gäste ein. Änderungen der Partner gehen erst nach deiner Freigabe live. Du kannst alles auch selbst bearbeiten.</p>
+  <div class="card"><div class="row between"><div><h3>Partner · ${act.length} von 5</h3><p class="muted" style="font-size:13px;margin-top:2px">In der App erscheinen nur aktive Partner mit ausgefülltem Profil. Solange es keinen gibt, zeigt die App die Beispiel-Partner.</p></div>${act.length<5?`<button class="btn gold-b" onclick="ptInvite()">Partner einladen</button>`:''}</div>
+    ${act.map(p=>ptCard(p,D.partners.indexOf(p))).join('')||'<div class="empty" style="margin-top:12px">Noch kein Partner angelegt. Klick auf „Partner einladen“.</div>'}</div>
+  ${old.length?`<div class="card"><h3>Beendete Partnerschaften</h3>${old.map(p=>`<div class="row between" style="margin-top:10px"><span>${esc(p.n||'ohne Namen')} <span class="muted">· beendet am ${deDate(p._row.ended_at)}</span></span><span class="muted" style="font-size:13px">${(D.guests||[]).filter(g=>g.partner_id===p.id).map(g=>esc(g.name||'Gast')+' (kostenlos bis '+deDate(g.free_until)+')').join(', ')||'keine Gäste'}</span></div>`).join('')}</div>`:''}`;
+}
+const PT_LABEL={n:'Name',s:'Wofür Partner',role:'Beruf oder Rolle',meta:'Erfahrung und Land',bio:'Vorstellung',bk:'Knopf-Text',live:'Live-Hinweis',k:'Zahl',deal:'Rabatt',offers:'Angebote',img:'Foto',fem:'Partnerin'};
+function ptDiff(r){
+  const a=r.profile||{}, b=r.draft||{}, show=(k,v)=>k==='img'?(v?'neues Foto':'kein Foto'):k==='offers'?(v||[]).map(o=>o.t+' ('+o.pr+')').join(', ')||'–':Array.isArray(v)?v.filter(Boolean).join(' · ')||'–':v===true?'ja':v===false||v===undefined||v===''?'–':String(v);
+  return Object.keys(PT_LABEL).filter(k=>JSON.stringify(a[k]??'')!==JSON.stringify(b[k]??'')&&!(!a[k]&&!b[k])).map(k=>`<div style="font-size:13px;margin-top:4px"><b>${PT_LABEL[k]}:</b> <span class="muted">${esc(k==='img'?(a[k]?'bisheriges Foto':'kein Foto'):show(k,a[k]))}</span> → ${esc(show(k,b[k]))}</div>`).join('')||'<div class="muted" style="font-size:13px;margin-top:4px">Keine inhaltliche Änderung.</div>';
+}
+const portalLink = t => 'https://www.getclosinghub.com/partner.html?einladung='+t;
+function ptCard(p,i){
+  const r=p._row, f=(k,l,ph,v)=>`<label style="display:block;font-size:12px" class="muted">${l}<input class="in" data-pt="${i}" data-f="${k}" value="${esc(v!==undefined?v:(p[k]||''))}" placeholder="${esc(ph||'')}" style="margin-top:4px"></label>`;
+  const ng=(D.guests||[]).filter(g=>g.partner_id===p.id).length;
+  return `<details data-pid="${esc(p.id)}" style="margin-top:12px;border:1px solid var(--line,#D5DAD3);border-radius:10px;padding:10px 12px" ${D.popen&&D.popen.has(p.id)?'open':''}><summary style="cursor:pointer;font-weight:600">${esc(p.n||'Neuer Partner')} <span class="muted" style="font-weight:400">· ${esc(p.s||'Profil noch leer')}</span>
+      <span class="pill ${r.status==='aktiv'?'p-ok':'p-gold'}" style="margin-left:8px">${r.status==='aktiv'?'aktiv':'eingeladen, noch nicht angemeldet'}</span>${r.draft?`<span class="pill p-warn" style="margin-left:6px">Änderung wartet auf Freigabe</span>`:''}<span class="muted" style="font-weight:400;margin-left:8px">${ng} von 3 Gästen</span></summary>
+    ${r.draft?`<div class="demo" style="margin-top:10px"><b>${esc(p.n||'Der Partner')} möchte sein Profil ändern</b> <span class="muted">(${deDate(r.draft_at)})</span>${ptDiff(r)}
+      <div class="row" style="margin-top:10px"><button class="btn gold-b sm" onclick="ptApprove(${i},true)">Freigeben</button><button class="btn sm" onclick="ptApprove(${i},false)">Ablehnen</button></div></div>`:''}
+    ${r.status==='eingeladen'?`<div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap"><span class="muted" style="font-size:13px">Zugang zum Partnerportal:</span><button class="btn sm gold-b" onclick="ptLink(${i},'mail')">Einladung senden</button><button class="btn sm" onclick="ptLink(${i},'copy')">Link kopieren</button></div>`:''}
+    <div class="grid g2" style="gap:10px;margin-top:10px">
+      ${f('n','Name','Paul')}${f('s','Wofür er Partner ist (steht groß im Profilkopf)','Morgen-Call')}
+      ${f('role','Beruf oder Rolle','Mindset-Coach')}${f('meta','Erfahrung und Land (optional)','8 Jahre Vertrieb, Deutschland')}
+      ${f('bk','Text auf dem grünen Knopf','Coaching anfragen')}${f('live','Hinweis auf seine Live-Termine (optional)','Mo–Do, 7:30 Uhr live in der App')}
+      ${f('k0','Zahl, mit der er überzeugt (optional)','312',(p.k||[])[0]||'')}${f('k1','Was die Zahl bedeutet','Calls analysiert',(p.k||[])[1]||'')}
+      ${f('d0','Rabatt für Member (optional)','−20 % für Member',(p.deal||[])[0]||'')}${f('d1','Worauf der Rabatt gilt','auf das erste Coaching',(p.deal||[])[1]||'')}
+      ${f('d2','Rabattcode','PAUL20',(p.deal||[])[2]||'')}
+      <div style="font-size:12px" class="muted">Profilfoto
+        <div class="row" style="gap:10px;margin-top:4px;align-items:center"><img id="pt-img-${i}" src="${esc(p.img||'')}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--bg2,#E4E8E2);${p.img?'':'visibility:hidden'}">
+          <label class="btn sm" style="cursor:pointer">Foto auswählen<input type="file" accept="image/*" style="display:none" onchange="ptPhoto(this,${i})"></label>
+          <input type="hidden" data-pt="${i}" data-f="img" value="${esc(p.img||'')}"></div></div>
+    </div>
+    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Kurze Vorstellung in ein bis zwei Sätzen<textarea class="in" data-pt="${i}" data-f="bio" rows="2" style="margin-top:4px">${esc(p.bio||'')}</textarea></label>
+    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Seine Angebote für Member, eines pro Zeile: Titel | Preis in Euro<textarea class="in" data-pt="${i}" data-f="offers" rows="3" style="margin-top:4px" placeholder="1:1 Mindset-Coaching (60 Min.) | 89">${esc((p.offers||[]).map(o=>o.t+' | '+o.pr).join('\n'))}</textarea></label>
+    <div class="row" style="margin-top:10px"><label class="muted" style="font-size:13px"><input type="checkbox" data-pt="${i}" data-f="fem" ${p.fem?'checked':''}> Im Profil „Partnerin“ statt „Partner“ schreiben</label></div>
+    <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="ptSave(${i},this)">Profil speichern (sofort live)</button><button class="btn" style="margin-left:auto" onclick="partnerEnd(${i})">${r.status==='aktiv'?'Partnerschaft beenden':'Einladung zurückziehen'}</button></div>
+    ${guestBlock(p,i)}
+  </details>`;
+}
+function ptPhoto(inp,i){
+  const f=inp.files&&inp.files[0]; if(!f) return;
+  if(!/^image\//.test(f.type)) return toast('Bitte ein Bild auswählen');
+  const img=new Image(), url=URL.createObjectURL(f);
+  img.onload=()=>{ const S=320, c=document.createElement('canvas'); c.width=c.height=S; const m=Math.min(img.width,img.height);
+    c.getContext('2d').drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S); URL.revokeObjectURL(url);
+    const d=c.toDataURL('image/jpeg',.82);
+    document.querySelector(`[data-pt="${i}"][data-f="img"]`).value=d; const pv=$('pt-img-'+i); pv.src=d; pv.style.visibility='';
+    toast('Foto übernommen – mit „Profil speichern“ sichern'); };
+  img.onerror=()=>{ URL.revokeObjectURL(url); toast('Das Bild konnte nicht gelesen werden'); };
+  img.src=url;
+}
+function ptReadOne(i){
+  const c=x=>String(x||'').replace(/[<>"'`]/g,'').trim();
+  const g=k=>{ const el=document.querySelector(`[data-pt="${i}"][data-f="${k}"]`); return el?(el.type==='checkbox'?el.checked:c(el.value)):''; };
+  const p={n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^(https:\/\/|data:image\/(jpeg|png|webp);base64,)/.test(g('img'))?g('img'):'',live:g('live').slice(0,90),fem:!!g('fem')};
+  if(g('k0')) p.k=[g('k0').slice(0,12),g('k1').slice(0,30)];
+  if(g('d0')) p.deal=[g('d0').slice(0,40),g('d1').slice(0,60),g('d2').slice(0,20)];
+  p.offers=g('offers').split('\n').map(z=>{ const f=z.split('|').map(c); return {t:(f[0]||'').slice(0,70),pr:(f[1]||'').slice(0,12)}; }).filter(o=>o.t).slice(0,8);
+  return p;
+}
+// Eingaben und aufgeklappte Karten über ein Neuzeichnen hinweg behalten
+function ptKeep(){
+  D.popen=new Set([...document.querySelectorAll('details[data-pid]')].filter(d=>d.open).map(d=>d.dataset.pid));
+  D.partners.forEach((p,i)=>{ if(document.querySelector(`[data-pt="${i}"][data-f="n"]`)) Object.assign(p,{k:undefined,deal:undefined},ptReadOne(i)); });
+}
+function ptSet(rows){ D.prow=rows; D.partners=(rows||[]).map(r=>Object.assign({},r.profile||{},{id:String(r.id),_st:r.status,_row:r})); }
+async function ptReload(){ ptSet(await api('partners?select=*&order=sort.asc,id.asc')); D.guests=await api('partner_guests?select=*&order=slot.asc').catch(()=>D.guests||[]); }
+async function ptSave(i,b){
+  const p=ptReadOne(i), id=D.partners[i].id; if(!p.n) return toast('Bitte mindestens den Namen eintragen');
+  b.disabled=true; try{ ptKeep(); await q(`partners?id=eq.${id}`,{method:'PATCH',body:{profile:p}}); await ptReload(); render(); toast('Profil gespeichert – ist live in der App'); }finally{ b.disabled=false; }
+}
+async function ptInvite(){
+  const name=(prompt('Name des neuen Partners:')||'').replace(/[<>"'`]/g,'').trim().slice(0,40); if(!name) return;
+  const email=(prompt('E-Mail-Adresse des Partners (für die Einladung, kann leer bleiben):')||'').replace(/[<>"'`\s]/g,'').slice(0,120).toLowerCase();
+  ptKeep(); const rows=await q('partners',{method:'POST',prefer:'return=representation',body:{profile:{n:name},invite_email:email||null}});
+  await ptReload(); if(rows&&rows[0]) D.popen.add(String(rows[0].id)); render(); toast('Partner angelegt – jetzt Einladung senden');
+}
+async function ptLink(i,how){
+  const p=D.partners[i], link=portalLink(p._row.invite_token);
+  if(how==='copy'){ try{ await navigator.clipboard.writeText(link); toast('Einladungslink kopiert'); }catch(e){ prompt('Einladungslink:',link); } return; }
+  const body=`Hallo ${p.n||''},\n\nwillkommen als Partner bei ClosingHub. Über deinen persönlichen Link kommst du ins Partnerportal:\n${link}\n\nDort legst du dir ein Konto an, füllst dein Partnerprofil aus und lädst bis zu drei Gäste ein. Änderungen am Profil geben wir kurz frei, danach sind sie in der App sichtbar.\n\nFreundliche Grüße\nElias Schulz\nClosingHub`;
+  location.href='mailto:'+encodeURIComponent(p._row.invite_email||'')+'?subject='+encodeURIComponent('Dein Zugang zum ClosingHub-Partnerportal')+'&body='+encodeURIComponent(body);
+}
+async function ptApprove(i,ok){
+  const p=D.partners[i]; if(!ok && !confirm('Änderungswunsch von „'+(p.n||'Partner')+'“ ablehnen? Das bisherige Profil bleibt unverändert.')) return;
+  ptKeep(); await q('rpc/partner_freigeben',{method:'POST',body:{p_id:Number(p.id),p_ok:ok}}); await ptReload(); render(); toast(ok?'Freigegeben – ist live in der App':'Änderung abgelehnt');
 }
 const guestLink = t => 'https://www.getclosinghub.com/?gast='+t;
 const deDate = d => { const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d||''); return m?`${m[3]}.${m[2]}.${m[1]}`:''; };
 function guestBlock(p,i){
-  if(D.guests===null) return `<div class="demo" style="margin-top:12px">Gäste-Verwaltung ist noch nicht aktiv: Führe einmal die Datei „closinghub-partner-gaeste.sql“ in Supabase aus und lade die Zentrale neu.</div>`;
-  if(!p.id || !(D.settings_partner_ids||[]).includes(p.id)) return `<p class="muted" style="font-size:13px;margin-top:12px">Gäste kannst du eintragen, sobald dieser Partner gespeichert ist.</p>`;
+  if(D.guests===null) return '';
+  if(p._st!=='aktiv') return `<p class="muted" style="font-size:13px;margin-top:12px;border-top:1px solid var(--line,#D5DAD3);padding-top:12px">Gäste kann der Partner einladen, sobald er sich im Partnerportal angemeldet hat.</p>`;
   const row=slot=>{ const g=(D.guests||[]).find(x=>x.partner_id===p.id&&x.slot===slot)||{};
     const st=g.free_until?`kostenlos bis ${deDate(g.free_until)}`:(g.status||'frei');
     return `<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
       <input class="in" style="flex:1;min-width:130px" id="g-n-${i}-${slot}" value="${esc(g.name||'')}" placeholder="Name Gast ${slot}">
       <input class="in" style="flex:1.4;min-width:180px" type="email" id="g-e-${i}-${slot}" value="${esc(g.email||'')}" placeholder="E-Mail">
       <span class="pill ${g.status==='eingelöst'?'p-ok':g.free_until?'p-warn':g.token?'p-gold':''}">${esc(st)}</span>
-      <button class="btn sm gold-b" onclick="guestInvite(${i},${slot},'mail')">Einladung senden</button>
+      <button class="btn sm" onclick="guestInvite(${i},${slot},'mail')">Einladung senden</button>
       <button class="btn sm" onclick="guestInvite(${i},${slot},'copy')">Link kopieren</button>
       ${g.token?`<button class="btn sm" onclick="guestDel(${i},${slot})">Entfernen</button>`:''}</div>`; };
-  return `<div style="margin-top:14px;border-top:1px solid var(--line,#D5DAD3);padding-top:12px"><div class="row between"><b>Gäste dieses Partners (höchstens 3, Plus-Mitgliedschaft kostenlos)</b><button class="btn sm" onclick="partnerEnd(${i})">Partnerschaft beenden</button></div>
+  return `<div style="margin-top:14px;border-top:1px solid var(--line,#D5DAD3);padding-top:12px"><b>Gäste dieses Partners (höchstens 3, Plus-Mitgliedschaft kostenlos)</b>
     ${row(1)}${row(2)}${row(3)}
-    <p class="muted" style="font-size:12px;margin-top:8px">„Einladung senden“ speichert den Gast und öffnet dein Mailprogramm mit fertigem Text und persönlichem Link. Endet die Partnerschaft, bleiben die Gäste bis zum Monatsende kostenlos dabei und werden benachrichtigt.</p></div>`;
+    <p class="muted" style="font-size:12px;margin-top:8px">Der Partner lädt seine Gäste selbst im Partnerportal ein. Du siehst sie hier und kannst sie auch selbst eintragen, einladen oder entfernen.</p></div>`;
 }
 async function guestInvite(i,slot,how){
-  const p=(D.partners||[])[i]; if(!p||!p.id) return;
+  const p=D.partners[i]; if(!p) return;
   const c=x=>String(x||'').replace(/[<>"'`]/g,'').trim();
   const name=c($(`g-n-${i}-${slot}`).value).slice(0,60), email=c($(`g-e-${i}-${slot}`).value).slice(0,120).toLowerCase();
   if(!name) return toast('Bitte den Namen des Gastes eintragen');
   if(how==='mail' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Bitte eine gültige E-Mail-Adresse eintragen');
   const rows=await q('partner_guests?on_conflict=partner_id,slot',{method:'POST',prefer:'resolution=merge-duplicates,return=representation',body:{partner_id:p.id,partner_name:p.n,slot,name,email:email||null}});
   const g=rows&&rows[0]; if(!g) return;
-  D.guests=(D.guests||[]).filter(x=>!(x.partner_id===p.id&&x.slot===slot)).concat(g);
+  ptKeep(); D.guests=(D.guests||[]).filter(x=>!(x.partner_id===p.id&&x.slot===slot)).concat(g); render();
   const link=guestLink(g.token);
-  D.partners=ptRead(); D.partners[i]._open=true; render();
   if(how==='copy'){ try{ await navigator.clipboard.writeText(link); toast('Einladungslink kopiert'); }catch(e){ prompt('Einladungslink:',link); } return; }
   const body=`Hallo ${name},\n\n${p.n} ist offizieller Partner von ClosingHub und hat dich als Gast eingeladen. Damit bekommst du die Plus-Mitgliedschaft kostenlos, solange die Partnerschaft besteht.\n\nDein persönlicher Link:\n${link}\n\nÜber den Link trägst du dich mit deiner E-Mail-Adresse ein. Dein Gast-Platz ist dann für dich vorgemerkt.\n\nFreundliche Grüße\nElias Schulz\nClosingHub`;
   location.href='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent('Deine Einladung zu ClosingHub')+'&body='+encodeURIComponent(body);
 }
 async function guestDel(i,slot){
-  const p=(D.partners||[])[i]; if(!p) return;
+  const p=D.partners[i]; if(!p) return;
   if(!confirm('Diesen Gast wirklich entfernen? Der Einladungslink wird damit ungültig.')) return;
   await q(`partner_guests?partner_id=eq.${encodeURIComponent(p.id)}&slot=eq.${slot}`,{method:'DELETE'});
-  D.guests=(D.guests||[]).filter(x=>!(x.partner_id===p.id&&x.slot===slot)); D.partners=ptRead(); D.partners[i]._open=true; render(); toast('Gast entfernt');
+  ptKeep(); D.guests=(D.guests||[]).filter(x=>!(x.partner_id===p.id&&x.slot===slot)); render(); toast('Gast entfernt');
 }
 async function partnerEnd(i){
-  const l=ptRead(), p=l[i]; if(!p) return;
+  const p=D.partners[i]; if(!p) return;
+  if(p._st==='eingeladen'){
+    if(!confirm('Einladung für „'+(p.n||'Partner')+'“ zurückziehen? Der Einladungslink wird ungültig und der Platz wieder frei.')) return;
+    ptKeep(); await q(`partners?id=eq.${p.id}`,{method:'DELETE'}); await ptReload(); render(); return toast('Einladung zurückgezogen');
+  }
   if(!confirm('Partnerschaft mit „'+p.n+'“ beenden?\n\nDas Partnerprofil verschwindet sofort aus der App. Seine Gäste bleiben bis zum Monatsende kostenlos dabei und werden benachrichtigt.')) return;
-  const n=await q('rpc/partner_beenden',{method:'POST',body:{p_partner:p.id}});
-  l.splice(i,1); await setKey('markt',{services:D.markt,partners:l.map(({_open,...r})=>r)}); D.partners=l; D.settings_partner_ids=l.map(x=>x.id);
-  D.guests=await api('partner_guests?select=*&order=slot.asc').catch(()=>D.guests); render(); toast('Partnerschaft beendet · '+(n||0)+' Gäste benachrichtigt');
-}
-function ptCard(p,i){
-  const f=(k,l,ph,v)=>`<label style="display:block;font-size:12px" class="muted">${l}<input class="in" data-pt="${i}" data-f="${k}" value="${esc(v!==undefined?v:(p[k]||''))}" placeholder="${esc(ph||'')}" style="margin-top:4px"></label>`;
-  return `<details style="margin-top:12px;border:1px solid var(--line,#D5DAD3);border-radius:10px;padding:10px 12px" ${p._open?'open':''}><summary style="cursor:pointer;font-weight:600">${esc(p.n||'Neuer Partner')} <span class="muted" style="font-weight:400">· ${esc(p.s||'Bereich fehlt')}</span></summary>
-    <div class="grid g2" style="gap:10px;margin-top:10px">
-      ${f('n','Name','Paul')}${f('s','Bereich (steht groß im Profilkopf)','Morgen-Call')}
-      ${f('role','Rolle','Closer')}${f('meta','Zusatz hinter der Rolle','4 Jahre Erfahrung, Schweiz')}
-      ${f('bk','Text auf dem grünen Knopf','Coaching anfragen')}${f('img','Foto-Link (https)','https://…')}
-      ${f('k0','Kennzahl','312',(p.k||[])[0]||'')}${f('k1','Text unter der Kennzahl','Calls analysiert',(p.k||[])[1]||'')}
-      ${f('d0','Member-Vorteil','−20 % für Member',(p.deal||[])[0]||'')}${f('d1','Zusatz zum Vorteil','auf das erste Coaching',(p.deal||[])[1]||'')}
-      ${f('d2','Rabattcode','PAUL20',(p.deal||[])[2]||'')}${f('live','Live-Hinweis','Mo–Do, 7:30 Uhr live in der App')}
-    </div>
-    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Kurzbeschreibung<textarea class="in" data-pt="${i}" data-f="bio" rows="2" style="margin-top:4px">${esc(p.bio||'')}</textarea></label>
-    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Leistungen, eine pro Zeile: Titel | Preis<textarea class="in" data-pt="${i}" data-f="offers" rows="3" style="margin-top:4px" placeholder="1:1 Mindset-Coaching (60 Min.) | 89">${esc((p.offers||[]).map(o=>o.t+' | '+o.pr).join('\n'))}</textarea></label>
-    <div class="row" style="margin-top:10px"><label class="muted" style="font-size:13px"><input type="checkbox" data-pt="${i}" data-f="fem" ${p.fem?'checked':''}> Im Profil „Partnerin“ statt „Partner“ schreiben</label><button class="btn" style="margin-left:auto" onclick="ptDel(${i})">Partner entfernen</button></div>
-    ${guestBlock(p,i)}
-  </details>`;
-}
-function ptRead(){
-  const c=x=>String(x||'').replace(/[<>"'`]/g,'').trim();
-  return (D.partners||[]).map((old,i)=>{ const g=k=>{ const el=document.querySelector(`[data-pt="${i}"][data-f="${k}"]`); return el?(el.type==='checkbox'?el.checked:c(el.value)):''; };
-    const p={id:old.id||('p'+Math.random().toString(36).slice(2,10)),_open:!!(document.querySelector(`[data-pt="${i}"]`)||{closest:()=>null}).closest('details')?.open,n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^https:\/\//.test(g('img'))?g('img'):'',live:g('live').slice(0,90),fem:!!g('fem')};
-    if(g('k0')) p.k=[g('k0').slice(0,12),g('k1').slice(0,30)];
-    if(g('d0')) p.deal=[g('d0').slice(0,40),g('d1').slice(0,60),g('d2').slice(0,20)];
-    p.offers=g('offers').split('\n').map(z=>{ const f=z.split('|').map(c); return {t:(f[0]||'').slice(0,70),pr:(f[1]||'').slice(0,12)}; }).filter(o=>o.t).slice(0,8);
-    return p; });
-}
-function ptAdd(){ D.partners=ptRead(); if(D.partners.length>=5) return toast('Höchstens 5 Partner'); D.partners.push({id:'p'+Math.random().toString(36).slice(2,10),_open:true}); render(); }
-function ptDel(i){ const l=ptRead(); if(!confirm('Partner „'+(l[i].n||'ohne Namen')+'“ aus der Liste nehmen? Gespeichert wird erst mit „Partner speichern“.')) return; l.splice(i,1); D.partners=l; render(); }
-async function savePartners(b){
-  const ps=ptRead();
-  if(ps.length>5) return toast('Höchstens 5 Partner');
-  if(ps.some(p=>!p.n||!p.s)) return toast('Jeder Partner braucht Name und Bereich');
-  b.disabled=true; try{ await setKey('markt',{services:D.markt,partners:ps.map(({_open,...r})=>r)}); D.partners=ps; D.settings_partner_ids=ps.map(x=>x.id); render(); toast('Partner gespeichert – ist live in der App'); }finally{ b.disabled=false; }
+  ptKeep(); const n=await q('rpc/partner_beenden',{method:'POST',body:{p_partner:p.id}}); await ptReload(); render(); toast('Partnerschaft beendet · '+(n||0)+' Gäste benachrichtigt');
 }
 async function saveMarkt(b){
   const seen=new Set(), l=$('mkList').value.split('\n').map(x=>x.replace(/[<>"'`]/g,'').trim()).filter(x=>x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase()));
   if(!l.length) return toast('Mindestens eine Dienstleistung eintragen');
   if(l.length>40) return toast('Maximal 40 Dienstleistungen');
   if(l.some(x=>x.length>60)) return toast('Bitte kürzer: maximal 60 Zeichen pro Zeile');
-  b.disabled=true; try{ await setKey('markt',Object.assign({services:l},D.partners?{partners:D.partners}:{})); D.markt=l; render(); toast('Gespeichert – ist live in der App'); }finally{ b.disabled=false; }
+  b.disabled=true; try{ await setKey('markt',{services:l}); D.markt=l; render(); toast('Gespeichert – ist live in der App'); }finally{ b.disabled=false; }
 }
 async function setFeature(k,v){ D.settings.features[k]=v; await setKey('features',D.settings.features); toast('Gespeichert'); }
 async function saveHero(){ const h={top:$('h1').value.trim(),gold:$('h2').value.trim(),sub:$('h3').value.trim(),lead:$('h4').value.trim()}; await setKey('hero',h); Object.assign(D.settings,{heroTop:h.top,heroGold:h.gold,heroSub:h.sub,heroLead:h.lead}); render(); toast('Hero ist live'); }

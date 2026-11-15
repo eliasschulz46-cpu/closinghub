@@ -416,9 +416,9 @@ function sendPersonMsg(n){
 }
 // Dienstleistungen und Partner live aus der Zentrale (Supabase)
 function applyPartners(list){
-  if(!Array.isArray(list)) return;
+  if(!Array.isArray(list)||!list.length) return;
   const c=(x,m)=>String(x??'').replace(/[<>"'`]/g,'').trim().slice(0,m||80);
-  PARTNERS=list.slice(0,5).map(p=>{ const o={n:c(p.n,40),s:c(p.s,60),role:c(p.role,40),meta:c(p.meta,80),bio:c(p.bio,300),bk:c(p.bk,40)||'Jetzt anfragen',r:['Rookie','Rising','Pro','Elite','Legend'].includes(p.r)?p.r:'Pro',img:/^https:\/\/[^\s"'<>`]+$/.test(String(p.img||''))?String(p.img):'',fem:!!p.fem,live:c(p.live,90),real:true};
+  PARTNERS=list.slice(0,5).map(p=>{ const o={n:c(p.n,40),s:c(p.s,60),role:c(p.role,40),meta:c(p.meta,80),bio:c(p.bio,300),bk:c(p.bk,40)||'Jetzt anfragen',r:['Rookie','Rising','Pro','Elite','Legend'].includes(p.r)?p.r:'Pro',img:(/^https:\/\/[^\s"'<>`]+$/.test(String(p.img||''))||(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(p.img||''))&&String(p.img).length<200000))?String(p.img):'',fem:!!p.fem,live:c(p.live,90),real:true};
     if(Array.isArray(p.k)&&c(p.k[0])) o.k=[c(p.k[0],12),c(p.k[1],30)];
     if(Array.isArray(p.deal)&&c(p.deal[0])) o.deal=[c(p.deal[0],40),c(p.deal[1],60),c(p.deal[2],20)];
     o.offers=(Array.isArray(p.offers)?p.offers:[]).slice(0,8).map(x=>({t:c(x&&x.t,70),pr:c(x&&x.pr,12)})).filter(x=>x.t);
@@ -426,7 +426,10 @@ function applyPartners(list){
   if(typeof route==='function' && route()==='markt') render();
 }
 fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/settings?select=value&key=eq.markt',{headers:{apikey:'sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D'}})
-  .then(r=>r.ok?r.json():null).then(rows=>{ const v=rows&&rows[0]&&rows[0].value, l=v&&v.services; applyPartners(v&&v.partners); if(Array.isArray(l)&&l.length){ MCATS.splice(0,MCATS.length,...l.map(x=>String(x).replace(/[<>"'`]/g,'').trim()).filter(Boolean).slice(0,40)); if(S.mcat!=='Alle'&&!MCATS.includes(S.mcat)) S.mcat='Alle'; if(typeof route==='function' && route()==='markt') render(); } }).catch(()=>{});
+  .then(r=>r.ok?r.json():null).then(rows=>{ const v=rows&&rows[0]&&rows[0].value, l=v&&v.services; if(Array.isArray(l)&&l.length){ MCATS.splice(0,MCATS.length,...l.map(x=>String(x).replace(/[<>"'`]/g,'').trim()).filter(Boolean).slice(0,40)); if(S.mcat!=='Alle'&&!MCATS.includes(S.mcat)) S.mcat='Alle'; if(typeof route==='function' && route()==='markt') render(); } }).catch(()=>{});
+// Echte Partner aus der Datenbank (nur aktive mit freigegebenem Profil). Ohne Treffer bleiben die Beispiel-Partner.
+fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/rpc/partner_liste',{method:'POST',headers:{apikey:'sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D','Content-Type':'application/json'},body:'{}'})
+  .then(r=>r.ok?r.json():null).then(applyPartners).catch(()=>{});
 const NEARBY = [['Felix','Pro','München · 4 km'],['Hannah','Rising','Augsburg · 31 km'],['Tobias','Elite','München · 7 km'],['Mia','Rookie','Freising · 22 km'],['David','Pro','Rosenheim · 48 km']];
 const BADGE_IC = {'Founding Member':'b_found','Ausweis verifiziert':'b_id','Verified 50k':'b_money','High-Ticket':'b_diamond','Platform-verified':'b_shield'};
 function badgeIcon(b){ return `<span title="${b}" aria-label="${b}" class="w-11 h-11 rounded-full flex items-center justify-center" style="border:1px solid #087A4B;color:#087A4B;background:rgb(var(--panel));box-shadow:0 0 14px rgba(8,122,75,.18)">${svg(BADGE_IC[b]||'b_shield',20)}</span>`; }
