@@ -956,7 +956,7 @@ function ptCard(p,i){
       <span class="pill ${r.status==='aktiv'?'p-ok':'p-gold'}" style="margin-left:8px">${r.status==='aktiv'?'aktiv':'eingeladen, noch nicht angemeldet'}</span>${r.draft?`<span class="pill p-warn" style="margin-left:6px">Änderung wartet auf Freigabe</span>`:''}<span class="muted" style="font-weight:400;margin-left:8px">${ng} von 3 Gästen</span></summary>
     ${r.draft?`<div class="demo" style="margin-top:10px"><b>${esc(p.n||'Der Partner')} möchte sein Profil ändern</b> <span class="muted">(${deDate(r.draft_at)})</span>${ptDiff(r)}
       <div class="row" style="margin-top:10px"><button class="btn gold-b sm" onclick="ptApprove(${i},true)">Freigeben</button><button class="btn sm" onclick="ptApprove(${i},false)">Ablehnen</button></div></div>`:''}
-    ${r.status==='eingeladen'?`<div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap"><span class="muted" style="font-size:13px">Zugang zum Partnerportal:</span><button class="btn sm gold-b" onclick="ptLink(${i},'mail')">Einladung senden</button><button class="btn sm" onclick="ptLink(${i},'copy')">Link kopieren</button></div>`:''}
+    ${r.status==='eingeladen'?`<div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap"><span class="muted" style="font-size:13px">Zugang zum Partnerportal für ${esc(r.invite_email||'(E-Mail fehlt)')}:</span><button class="btn sm gold-b" onclick="ptLink(${i},'mail')">Einladung senden</button><button class="btn sm" onclick="ptLink(${i},'copy')">Link kopieren</button></div>`:''}
     <div class="grid g2" style="gap:10px;margin-top:10px">
       ${f('n','Name','Paul')}${f('s','Wofür er Partner ist (steht groß im Profilkopf)','Morgen-Call')}
       ${f('role','Beruf oder Rolle','Mindset-Coach')}${f('meta','Erfahrung und Land (optional)','8 Jahre Vertrieb, Deutschland')}
@@ -1010,14 +1010,15 @@ async function ptSave(i,b){
 }
 async function ptInvite(){
   const name=(prompt('Name des neuen Partners:')||'').replace(/[<>"'`]/g,'').trim().slice(0,40); if(!name) return;
-  const email=(prompt('E-Mail-Adresse des Partners (für die Einladung, kann leer bleiben):')||'').replace(/[<>"'`\s]/g,'').slice(0,120).toLowerCase();
-  ptKeep(); const rows=await q('partners',{method:'POST',prefer:'return=representation',body:{profile:{n:name},invite_email:email||null}});
+  const email=(prompt('E-Mail-Adresse von '+name+' (damit meldet er sich später an):')||'').replace(/[<>"'`\s]/g,'').slice(0,120).toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Bitte eine gültige E-Mail-Adresse eingeben');
+  ptKeep(); const rows=await q('partners',{method:'POST',prefer:'return=representation',body:{profile:{n:name},invite_email:email}});
   await ptReload(); if(rows&&rows[0]) D.popen.add(String(rows[0].id)); render(); toast('Partner angelegt – jetzt Einladung senden');
 }
 async function ptLink(i,how){
   const p=D.partners[i], link=portalLink(p._row.invite_token);
   if(how==='copy'){ try{ await navigator.clipboard.writeText(link); toast('Einladungslink kopiert'); }catch(e){ prompt('Einladungslink:',link); } return; }
-  const body=`Hallo ${p.n||''},\n\nwillkommen als Partner bei ClosingHub. Über deinen persönlichen Link kommst du ins Partnerportal:\n${link}\n\nDort legst du dir ein Konto an, füllst dein Partnerprofil aus und lädst bis zu drei Gäste ein. Änderungen am Profil geben wir kurz frei, danach sind sie in der App sichtbar.\n\nFreundliche Grüße\nElias Schulz\nClosingHub`;
+  const body=`Hallo ${p.n||''},\n\nwillkommen als Partner bei ClosingHub. Über deinen persönlichen Link kommst du ins Partnerportal:\n${link}\n\nDort wählst du nur noch dein Passwort und bist direkt drin. Später meldest du dich mit dieser E-Mail-Adresse und deinem Passwort an. Im Portal füllst du dein Partnerprofil aus und lädst bis zu drei Gäste ein. Änderungen am Profil geben wir kurz frei, danach sind sie in der App sichtbar.\n\nFreundliche Grüße\nElias Schulz\nClosingHub`;
   location.href='mailto:'+encodeURIComponent(p._row.invite_email||'')+'?subject='+encodeURIComponent('Dein Zugang zum ClosingHub-Partnerportal')+'&body='+encodeURIComponent(body);
 }
 async function ptApprove(i,ok){

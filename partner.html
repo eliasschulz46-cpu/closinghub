@@ -78,7 +78,7 @@ const keep=s=>{ SESSION=s; store.set(SKEY, s?JSON.stringify(s):null); };
 let ME=null, GUESTS=[], authMode='login', MSG='';
 
 // Einladungslink merken, bis das Konto angemeldet ist
-(function(){ const t=new URLSearchParams(location.search).get('einladung'); if(t&&/^[a-f0-9]{16,40}$/.test(t)){ store.set(TKEY,t); authMode='register'; history.replaceState(null,'',location.pathname); } })();
+(function(){ const t=new URLSearchParams(location.search).get('einladung'); if(t&&/^[a-f0-9]{16,40}$/.test(t)){ store.set(TKEY,t); history.replaceState(null,'',location.pathname); } })();
 
 async function authCall(path, body){
   const r=await fetch(`${SB_URL}/auth/v1/${path}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -100,37 +100,61 @@ async function api(path,{method='GET',body,prefer}={},retry=true){
 }
 function logout(){ keep(null); ME=null; GUESTS=[]; render._loaded=false; render(); }
 
-/* ===== Anmelden und Registrieren ===== */
+/* ===== Anmelden und Passwort festlegen ===== */
+let INVITE=null;   // {name,email} wenn ein gültiger Einladungslink geöffnet wurde
+async function checkInvite(){
+  const t=store.get(TKEY); if(!t||SESSION) return;
+  try{ const r=await fetch(`${SB_URL}/rest/v1/rpc/partner_einladung`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_token:t})}); const j=r.ok?await r.json():null;
+    if(j&&j.ok){ INVITE={name:j.name||'',email:String(j.email||'').toLowerCase()}; authMode='welcome'; }
+    else if(j&&!j.ok){ store.set(TKEY,null); MSG=['wait','Dieser Einladungslink wurde schon eingelöst oder ist nicht mehr gültig. Wenn du bereits ein Passwort gewählt hast, melde dich einfach an.']; authMode='login'; }
+  }catch(e){}
+}
 function authView(){
-  const reg=authMode==='register', inv=!!store.get(TKEY);
-  return `<div class="auth"><h1>Partnerportal</h1>
-    <p class="sub">${inv?'Du wurdest als Partner eingeladen. Leg dir ein Konto an oder melde dich an, dann wird dein Partnerplatz freigeschaltet.':'Hier pflegst du dein Partnerprofil und lädst deine Gäste ein.'}</p>
-    <div class="card"><div class="tabs"><button class="btn sm ${reg?'':'on'}" onclick="authMode='login';MSG='';render()">Anmelden</button><button class="btn sm ${reg?'on':''}" onclick="authMode='register';MSG='';render()">Konto anlegen</button></div>
-      <form onsubmit="doAuth(event)">
-        <label class="f">E-Mail-Adresse<input class="in" id="a-mail" type="email" required autocomplete="email"></label>
-        <label class="f" style="margin-top:10px">Passwort${reg?' (mindestens 8 Zeichen)':''}<input class="in" id="a-pw" type="password" required minlength="8" autocomplete="${reg?'new-password':'current-password'}"></label>
-        <button class="btn go" id="a-btn" style="width:100%;margin-top:14px">${reg?'Konto anlegen':'Anmelden'}</button>
+  if(authMode==='welcome'&&INVITE) return `<div class="auth"><h1>Willkommen${INVITE.name?', '+esc(INVITE.name):''}</h1>
+    <p class="sub">Du bist als Partner von ClosingHub eingeladen. Wähle jetzt ein Passwort, dann bist du direkt in deinem Partnerportal.</p>
+    <div class="card"><form onsubmit="doWelcome(event)">
+        <label class="f">Deine E-Mail-Adresse<input class="in" id="w-mail" type="email" required value="${esc(INVITE.email)}" ${INVITE.email?'readonly style="background:var(--tint);color:var(--ink-2)"':''} autocomplete="username"></label>
+        <label class="f" style="margin-top:10px">Passwort wählen (mindestens 8 Zeichen)<input class="in" id="w-pw" type="password" required minlength="8" autocomplete="new-password"></label>
+        <label class="f" style="margin-top:10px">Passwort wiederholen<input class="in" id="w-pw2" type="password" required minlength="8" autocomplete="new-password"></label>
+        <button class="btn go" id="a-btn" style="width:100%;margin-top:14px">Passwort festlegen und loslegen</button>
       </form>
       ${MSG?`<div class="note ${MSG[0]}">${esc(MSG[1])}</div>`:''}
-      <p class="muted" style="margin-top:12px">${inv?'':'Zugang gibt es nur über einen persönlichen Einladungslink von ClosingHub.'} Passwort vergessen? Schreib an <a href="mailto:support@getclosinghub.com">support@getclosinghub.com</a>.</p></div></div>`;
+      <p class="muted" style="margin-top:12px">Später meldest du dich mit dieser E-Mail-Adresse und deinem Passwort an. <a href="#" onclick="authMode='login';MSG='';render();return false">Ich habe schon ein Passwort</a></p></div></div>`;
+  return `<div class="auth"><h1>Partnerportal</h1>
+    <p class="sub">Melde dich mit deiner E-Mail-Adresse und deinem Passwort an.</p>
+    <div class="card"><form onsubmit="doLogin(event)">
+        <label class="f">E-Mail-Adresse<input class="in" id="a-mail" type="email" required autocomplete="username" value="${esc(INVITE?INVITE.email:'')}"></label>
+        <label class="f" style="margin-top:10px">Passwort<input class="in" id="a-pw" type="password" required autocomplete="current-password"></label>
+        <button class="btn go" id="a-btn" style="width:100%;margin-top:14px">Anmelden</button>
+      </form>
+      ${MSG?`<div class="note ${MSG[0]}">${esc(MSG[1])}</div>`:''}
+      <p class="muted" style="margin-top:12px">Zugang gibt es nur über eine persönliche Einladung von ClosingHub. Passwort vergessen? Schreib an <a href="mailto:support@getclosinghub.com">support@getclosinghub.com</a>.</p></div></div>`;
 }
-async function doAuth(ev){
-  ev.preventDefault(); const b=$('a-btn'), email=$('a-mail').value.trim().toLowerCase(), password=$('a-pw').value; b.disabled=true;
+function authFail(e){ const m=String(e.message||'');
+  MSG=['bad',/invalid login/i.test(m)?'E-Mail oder Passwort falsch.':/not confirmed/i.test(m)?'Bitte bestätige zuerst den Link in der E-Mail, die wir dir geschickt haben.':m]; render(); }
+async function doWelcome(ev){
+  ev.preventDefault(); const pw=$('w-pw').value; if(pw!==$('w-pw2').value){ MSG=['bad','Die beiden Passwörter stimmen nicht überein.']; return render(); }
+  $('a-btn').disabled=true;
   try{
-    if(authMode==='register'){
-      const j=await authCall('signup',{email,password});
-      if(!takeSession(j)){ MSG=['ok','Fast geschafft: Wir haben dir eine E-Mail geschickt. Bestätige den Link darin und melde dich danach hier an.']; authMode='login'; render(); return; }
-    }else{ takeSession(await authCall('token?grant_type=password',{email,password})); }
+    INVITE.email=$('w-mail').value.trim().toLowerCase();
+    const j=await authCall('signup',{email:INVITE.email,password:pw});
+    if(!takeSession(j)){ MSG=['ok','Fast geschafft: Wir haben dir zur Sicherheit eine E-Mail geschickt. Bestätige den Link darin und melde dich danach hier mit deinem Passwort an.']; authMode='login'; return render(); }
     MSG=''; ME=null; render._loaded=false; await render();
-  }catch(e){ const m=String(e.message||'');
-    MSG=['bad',/invalid login/i.test(m)?'E-Mail oder Passwort falsch.':/not confirmed/i.test(m)?'Bitte bestätige zuerst den Link in der E-Mail, die wir dir geschickt haben.':/already registered|already been registered/i.test(m)?'Für diese E-Mail gibt es schon ein Konto. Bitte melde dich an.':m]; render();
+  }catch(e){
+    if(/already registered|already been registered/i.test(String(e.message||''))){ MSG=['wait','Für diese E-Mail-Adresse gibt es schon ein Passwort. Melde dich damit an.']; authMode='login'; return render(); }
+    authFail(e);
   }
+}
+async function doLogin(ev){
+  ev.preventDefault(); const email=$('a-mail').value.trim().toLowerCase(), password=$('a-pw').value; $('a-btn').disabled=true;
+  try{ takeSession(await authCall('token?grant_type=password',{email,password})); MSG=''; ME=null; render._loaded=false; await render(); }
+  catch(e){ authFail(e); }
 }
 
 /* ===== Daten ===== */
 async function load(){
   const t=store.get(TKEY);
-  if(t){ const j=await api('rpc/partner_beitreten',{method:'POST',body:{p_token:t}}).catch(()=>null); if(j&&j.ok) store.set(TKEY,null); else if(j&&j.grund==='link'){ store.set(TKEY,null); toast('Dieser Einladungslink ist nicht mehr gültig.'); } }
+  if(t){ const j=await api('rpc/partner_beitreten',{method:'POST',body:{p_token:t}}).catch(()=>null); if(j&&j.ok) store.set(TKEY,null); else if(j&&j.grund==='link'){ store.set(TKEY,null); toast('Die Einladung passt nicht zu diesem Konto oder ist nicht mehr gültig.'); } }
   const rows=await api('partners?select=id,status,profile,draft,draft_at&limit=1'); ME=rows&&rows[0]||null;
   GUESTS=ME&&ME.status==='aktiv'?(await api('partner_guests?select=*&order=slot.asc').catch(()=>[]))||[]:[];
 }
@@ -138,7 +162,7 @@ async function load(){
 /* ===== Portal ===== */
 function fld(k,l,ph,v){ return `<label class="f">${l}<input class="in" data-f="${k}" value="${esc(v||'')}" placeholder="${esc(ph||'')}"></label>`; }
 function portal(){
-  if(!ME) return `<h1>Kein Partnerzugang</h1><p class="sub">Mit diesem Konto ist kein Partnerplatz verknüpft. Öffne bitte deinen persönlichen Einladungslink von ClosingHub und melde dich dann erneut an.</p>`;
+  if(!ME) return `<h1>Kein Partnerzugang</h1><p class="sub">Mit diesem Konto ist kein Partnerplatz verknüpft. Nutze bitte die E-Mail-Adresse, an die deine Einladung ging, oder öffne den Link aus der Einladung noch einmal.</p>`;
   if(ME.status==='beendet') return `<h1>Partnerschaft beendet</h1><p class="sub">Deine Partnerschaft mit ClosingHub ist beendet. Dein Partnerprofil ist nicht mehr sichtbar. Bei Fragen schreib an <a href="mailto:support@getclosinghub.com">support@getclosinghub.com</a>.</p>`;
   const p=ME.draft||ME.profile||{}, k=p.k||[], d=p.deal||[];
   return `<h1>Hallo ${esc((ME.profile&&ME.profile.n)||p.n||'')}</h1><p class="sub">Dein Partnerprofil bei ClosingHub. Änderungen prüft ClosingHub kurz, danach sind sie in der App sichtbar.</p>
@@ -213,7 +237,7 @@ async function removeGuest(slot){
 
 async function render(){
   $('out').style.display=SESSION?'':'none';
-  if(!SESSION){ $('main').innerHTML=authView(); return; }
+  if(!SESSION){ if(!render._inv){ render._inv=true; await checkInvite(); } $('main').innerHTML=authView(); return; }
   if(ME===null && !render._loaded){ $('main').innerHTML='<p class="sub" style="margin-top:30px">Lade …</p>'; try{ await load(); render._loaded=true; }catch(e){ if(!SESSION) return render(); $('main').innerHTML=`<div class="note bad">Daten konnten nicht geladen werden: ${esc(e.message)}</div><p><button class="btn" onclick="location.reload()">Nochmal versuchen</button></p>`; return; } }
   if(ME&&ME._edit){ const keepP=ME._edit; delete ME._edit; const d=ME.draft; ME.draft=keepP; $('main').innerHTML=portal(); ME.draft=d; return; }
   $('main').innerHTML=portal();
