@@ -305,6 +305,7 @@ const LOADERR={jobs:'',clients:''};
 const loadNote=k=>LOADERR[k]?`<div class="card" style="border-color:#b4543c;margin-bottom:14px"><b>⚠️ Daten konnten nicht geladen werden:</b> ${esc(LOADERR[k])}</div>`:'';
 async function refreshData(b){ if(b) b.disabled=true; try{ await loadAll(); drawNav(); $('main').innerHTML=(PAGES[route()]||dashboard)(); toast('Aktualisiert'); }catch(e){ toast('⚠️ '+e.message); if(b) b.disabled=false; } }
 async function loadAll(){
+  D.guests = await api('partner_guests?select=*&order=slot.asc').catch(()=>null);
   const [wl, cr, st, tk, inv, tix, ai, jb, cl] = await Promise.all([
     q('waitlist?select=*&order=created_at.desc'),
     q('contact_requests?select=*&order=created_at.desc'),
@@ -319,7 +320,7 @@ async function loadAll(){
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
-  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice(); D.partners=(S.markt&&Array.isArray(S.markt.partners))?S.markt.partners:null;
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice(); D.partners=(S.markt&&Array.isArray(S.markt.partners))?S.markt.partners:null; D.settings_partner_ids=(D.partners||[]).map(x=>x.id).filter(Boolean);
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
@@ -354,6 +355,7 @@ const NAV = [
   ['rechnungen','Rechnungen','invoice', ()=>D.invoices.filter(i=>i.st==='überfällig').length],
   ['laufband','Laufband & Angebote','ticker'],
   ['anfragen','Anfragen & Warteliste','inbox', ()=>D.requests.filter(r=>r.st==='neu').length],
+  ['partner','Partner','users'],
   ['Community'],
   ['support','Support','support', ()=>D.tickets.filter(t=>t.st==='offen').length],
   ['member','Member','users'],
@@ -930,10 +932,61 @@ function inhalte(){
     <div class="card" style="grid-column:1/-1"><div class="row between"><div><h3>Marktplatz · Dienstleistungen</h3><p class="muted" style="font-size:13px;margin-top:2px">Nur diese Dienstleistungen können im Marktplatz angeboten werden. Eine pro Zeile, die Reihenfolge gilt auch in der App.</p></div><span class="pill p-gold" id="mkCount">${(D.markt||[]).length} Dienstleistungen</span></div>
       <textarea class="in" id="mkList" rows="12" style="margin-top:12px;line-height:1.6" oninput="$('mkCount').textContent=this.value.split('\\n').filter(x=>x.trim()).length+' Dienstleistungen'">${esc((D.markt||[]).join('\n'))}</textarea>
       <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="saveMarkt(this)">Speichern</button><button class="btn" onclick="$('mkList').value=MARKT_DEFAULT.join('\\n');$('mkList').dispatchEvent(new Event('input'))">Standardliste laden</button></div></div>
-    <div class="card" style="grid-column:1/-1"><div class="row between"><div><h3>Marktplatz · Partner (höchstens 5)</h3><p class="muted" style="font-size:13px;margin-top:2px">Jeder Partner bekommt das hervorgehobene Partnerprofil in der App. Solange hier noch nie gespeichert wurde, zeigt die App die Beispiel-Partner.</p></div><span class="pill p-gold">${(D.partners||[]).length} von 5</span></div>
-      ${(D.partners||[]).map((p,i)=>ptCard(p,i)).join('')}
-      <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="savePartners(this)">Partner speichern</button>${(D.partners||[]).length<5?`<button class="btn" onclick="ptAdd()">Partner hinzufügen</button>`:''}</div></div>
+    <div class="card" style="grid-column:1/-1"><h3>Marktplatz · Partner</h3><p class="muted" style="font-size:13px;margin-top:2px">Partner und ihre Gäste pflegst du jetzt im Reiter <a href="#partner">Geschäft → Partner</a>.</p></div>
   </div>`;
+}
+function partner(){
+  const n=(D.partners||[]).length;
+  return `<h1 class="h1">Partner</h1><p class="sub">Höchstens 5 Partner. Jeder bekommt das hervorgehobene Partnerprofil in der App und kann bis zu 3 Gäste mit kostenloser Plus-Mitgliedschaft mitbringen.</p>
+  <div class="card"><div class="row between"><div><h3>Partner · ${n} von 5</h3><p class="muted" style="font-size:13px;margin-top:2px">${D.partners?'Änderungen am Profil werden erst mit „Partner speichern“ live.':'Hier wurde noch nie gespeichert. Die App zeigt bis dahin die Beispiel-Partner.'}</p></div></div>
+    ${(D.partners||[]).map((p,i)=>ptCard(p,i)).join('')||'<div class="empty" style="margin-top:12px">Noch kein Partner angelegt.</div>'}
+    <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="savePartners(this)">Partner speichern</button>${n<5?`<button class="btn" onclick="ptAdd()">Partner hinzufügen</button>`:''}</div></div>`;
+}
+const guestLink = t => 'https://www.getclosinghub.com/?gast='+t;
+const deDate = d => { const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d||''); return m?`${m[3]}.${m[2]}.${m[1]}`:''; };
+function guestBlock(p,i){
+  if(D.guests===null) return `<div class="demo" style="margin-top:12px">Gäste-Verwaltung ist noch nicht aktiv: Führe einmal die Datei „closinghub-partner-gaeste.sql“ in Supabase aus und lade die Zentrale neu.</div>`;
+  if(!p.id || !(D.settings_partner_ids||[]).includes(p.id)) return `<p class="muted" style="font-size:13px;margin-top:12px">Gäste kannst du eintragen, sobald dieser Partner gespeichert ist.</p>`;
+  const row=slot=>{ const g=(D.guests||[]).find(x=>x.partner_id===p.id&&x.slot===slot)||{};
+    const st=g.free_until?`kostenlos bis ${deDate(g.free_until)}`:(g.status||'frei');
+    return `<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+      <input class="in" style="flex:1;min-width:130px" id="g-n-${i}-${slot}" value="${esc(g.name||'')}" placeholder="Name Gast ${slot}">
+      <input class="in" style="flex:1.4;min-width:180px" type="email" id="g-e-${i}-${slot}" value="${esc(g.email||'')}" placeholder="E-Mail">
+      <span class="pill ${g.status==='eingelöst'?'p-ok':g.free_until?'p-warn':g.token?'p-gold':''}">${esc(st)}</span>
+      <button class="btn sm gold-b" onclick="guestInvite(${i},${slot},'mail')">Einladung senden</button>
+      <button class="btn sm" onclick="guestInvite(${i},${slot},'copy')">Link kopieren</button>
+      ${g.token?`<button class="btn sm" onclick="guestDel(${i},${slot})">Entfernen</button>`:''}</div>`; };
+  return `<div style="margin-top:14px;border-top:1px solid var(--line,#D5DAD3);padding-top:12px"><div class="row between"><b>Gäste dieses Partners (höchstens 3, Plus-Mitgliedschaft kostenlos)</b><button class="btn sm" onclick="partnerEnd(${i})">Partnerschaft beenden</button></div>
+    ${row(1)}${row(2)}${row(3)}
+    <p class="muted" style="font-size:12px;margin-top:8px">„Einladung senden“ speichert den Gast und öffnet dein Mailprogramm mit fertigem Text und persönlichem Link. Endet die Partnerschaft, bleiben die Gäste bis zum Monatsende kostenlos dabei und werden benachrichtigt.</p></div>`;
+}
+async function guestInvite(i,slot,how){
+  const p=(D.partners||[])[i]; if(!p||!p.id) return;
+  const c=x=>String(x||'').replace(/[<>"'`]/g,'').trim();
+  const name=c($(`g-n-${i}-${slot}`).value).slice(0,60), email=c($(`g-e-${i}-${slot}`).value).slice(0,120).toLowerCase();
+  if(!name) return toast('Bitte den Namen des Gastes eintragen');
+  if(how==='mail' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Bitte eine gültige E-Mail-Adresse eintragen');
+  const rows=await q('partner_guests?on_conflict=partner_id,slot',{method:'POST',prefer:'resolution=merge-duplicates,return=representation',body:{partner_id:p.id,partner_name:p.n,slot,name,email:email||null}});
+  const g=rows&&rows[0]; if(!g) return;
+  D.guests=(D.guests||[]).filter(x=>!(x.partner_id===p.id&&x.slot===slot)).concat(g);
+  const link=guestLink(g.token);
+  D.partners=ptRead(); D.partners[i]._open=true; render();
+  if(how==='copy'){ try{ await navigator.clipboard.writeText(link); toast('Einladungslink kopiert'); }catch(e){ prompt('Einladungslink:',link); } return; }
+  const body=`Hallo ${name},\n\n${p.n} ist offizieller Partner von ClosingHub und hat dich als Gast eingeladen. Damit bekommst du die Plus-Mitgliedschaft kostenlos, solange die Partnerschaft besteht.\n\nDein persönlicher Link:\n${link}\n\nÜber den Link trägst du dich mit deiner E-Mail-Adresse ein. Dein Gast-Platz ist dann für dich vorgemerkt.\n\nFreundliche Grüße\nElias Schulz\nClosingHub`;
+  location.href='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent('Deine Einladung zu ClosingHub')+'&body='+encodeURIComponent(body);
+}
+async function guestDel(i,slot){
+  const p=(D.partners||[])[i]; if(!p) return;
+  if(!confirm('Diesen Gast wirklich entfernen? Der Einladungslink wird damit ungültig.')) return;
+  await q(`partner_guests?partner_id=eq.${encodeURIComponent(p.id)}&slot=eq.${slot}`,{method:'DELETE'});
+  D.guests=(D.guests||[]).filter(x=>!(x.partner_id===p.id&&x.slot===slot)); D.partners=ptRead(); D.partners[i]._open=true; render(); toast('Gast entfernt');
+}
+async function partnerEnd(i){
+  const l=ptRead(), p=l[i]; if(!p) return;
+  if(!confirm('Partnerschaft mit „'+p.n+'“ beenden?\n\nDas Partnerprofil verschwindet sofort aus der App. Seine Gäste bleiben bis zum Monatsende kostenlos dabei und werden benachrichtigt.')) return;
+  const n=await q('rpc/partner_beenden',{method:'POST',body:{p_partner:p.id}});
+  l.splice(i,1); await setKey('markt',{services:D.markt,partners:l.map(({_open,...r})=>r)}); D.partners=l; D.settings_partner_ids=l.map(x=>x.id);
+  D.guests=await api('partner_guests?select=*&order=slot.asc').catch(()=>D.guests); render(); toast('Partnerschaft beendet · '+(n||0)+' Gäste benachrichtigt');
 }
 function ptCard(p,i){
   const f=(k,l,ph,v)=>`<label style="display:block;font-size:12px" class="muted">${l}<input class="in" data-pt="${i}" data-f="${k}" value="${esc(v!==undefined?v:(p[k]||''))}" placeholder="${esc(ph||'')}" style="margin-top:4px"></label>`;
@@ -949,24 +1002,25 @@ function ptCard(p,i){
     <label style="display:block;font-size:12px;margin-top:10px" class="muted">Kurzbeschreibung<textarea class="in" data-pt="${i}" data-f="bio" rows="2" style="margin-top:4px">${esc(p.bio||'')}</textarea></label>
     <label style="display:block;font-size:12px;margin-top:10px" class="muted">Leistungen, eine pro Zeile: Titel | Preis<textarea class="in" data-pt="${i}" data-f="offers" rows="3" style="margin-top:4px" placeholder="1:1 Mindset-Coaching (60 Min.) | 89">${esc((p.offers||[]).map(o=>o.t+' | '+o.pr).join('\n'))}</textarea></label>
     <div class="row" style="margin-top:10px"><label class="muted" style="font-size:13px"><input type="checkbox" data-pt="${i}" data-f="fem" ${p.fem?'checked':''}> Im Profil „Partnerin“ statt „Partner“ schreiben</label><button class="btn" style="margin-left:auto" onclick="ptDel(${i})">Partner entfernen</button></div>
+    ${guestBlock(p,i)}
   </details>`;
 }
 function ptRead(){
   const c=x=>String(x||'').replace(/[<>"'`]/g,'').trim();
   return (D.partners||[]).map((old,i)=>{ const g=k=>{ const el=document.querySelector(`[data-pt="${i}"][data-f="${k}"]`); return el?(el.type==='checkbox'?el.checked:c(el.value)):''; };
-    const p={n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^https:\/\//.test(g('img'))?g('img'):'',live:g('live').slice(0,90),fem:!!g('fem')};
+    const p={id:old.id||('p'+Math.random().toString(36).slice(2,10)),_open:!!(document.querySelector(`[data-pt="${i}"]`)||{closest:()=>null}).closest('details')?.open,n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^https:\/\//.test(g('img'))?g('img'):'',live:g('live').slice(0,90),fem:!!g('fem')};
     if(g('k0')) p.k=[g('k0').slice(0,12),g('k1').slice(0,30)];
     if(g('d0')) p.deal=[g('d0').slice(0,40),g('d1').slice(0,60),g('d2').slice(0,20)];
     p.offers=g('offers').split('\n').map(z=>{ const f=z.split('|').map(c); return {t:(f[0]||'').slice(0,70),pr:(f[1]||'').slice(0,12)}; }).filter(o=>o.t).slice(0,8);
     return p; });
 }
-function ptAdd(){ D.partners=ptRead(); if(D.partners.length>=5) return toast('Höchstens 5 Partner'); D.partners.push({_open:true}); render(); }
+function ptAdd(){ D.partners=ptRead(); if(D.partners.length>=5) return toast('Höchstens 5 Partner'); D.partners.push({id:'p'+Math.random().toString(36).slice(2,10),_open:true}); render(); }
 function ptDel(i){ const l=ptRead(); if(!confirm('Partner „'+(l[i].n||'ohne Namen')+'“ aus der Liste nehmen? Gespeichert wird erst mit „Partner speichern“.')) return; l.splice(i,1); D.partners=l; render(); }
 async function savePartners(b){
   const ps=ptRead();
   if(ps.length>5) return toast('Höchstens 5 Partner');
   if(ps.some(p=>!p.n||!p.s)) return toast('Jeder Partner braucht Name und Bereich');
-  b.disabled=true; try{ await setKey('markt',{services:D.markt,partners:ps}); D.partners=ps; render(); toast('Partner gespeichert – ist live in der App'); }finally{ b.disabled=false; }
+  b.disabled=true; try{ await setKey('markt',{services:D.markt,partners:ps.map(({_open,...r})=>r)}); D.partners=ps; D.settings_partner_ids=ps.map(x=>x.id); render(); toast('Partner gespeichert – ist live in der App'); }finally{ b.disabled=false; }
 }
 async function saveMarkt(b){
   const seen=new Set(), l=$('mkList').value.split('\n').map(x=>x.replace(/[<>"'`]/g,'').trim()).filter(x=>x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase()));
@@ -1044,7 +1098,7 @@ $('q').addEventListener('keydown',e=>{
 });
 
 /* ===== Render ===== */
-const PAGES={auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
+const PAGES={partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
 async function reload(){ LOADED=false; await render(); toast('Aktualisiert'); }
 async function render(){
   const logged=!!SESSION;

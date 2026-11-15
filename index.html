@@ -810,6 +810,39 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
 .screen .mav{box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--ink)}
 .screen .mp-act{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
 .screen .mp-act .btn-app{padding:8px}
+/* Partnerprofil */
+.screen .pp-head{background:var(--ink);color:#fff;margin:-10px -12px 0;padding:9px 12px 24px;position:relative}
+.screen .pp-head small{display:block;font-size:9.5px;color:#C9D3E3}
+.screen .pp-head b{display:block;font-size:12.5px;font-weight:850;font-variation-settings:"wdth" 82;margin-top:1px}
+.screen .pp-id{display:flex;align-items:flex-end;gap:14px;margin-top:-20px;position:relative}
+.screen .pp-id>div{padding-top:29px}
+.screen .pp-av{position:relative;flex:none;display:block}
+.screen .pp-av .av{display:block;box-shadow:0 0 0 3px var(--paper)}
+.screen .pp-seal{position:absolute;right:-6px;bottom:-3px;width:22px;height:22px}
+.screen .pp-id .fol{display:flex;gap:9px;font-size:11px;color:var(--ink-2);margin-top:2px}
+.screen .pp-id .fol b{color:var(--ink)}
+.screen .pp-kpi{display:grid;grid-template-columns:repeat(3,1fr);margin-top:10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.screen .pp-kpi div{padding:5px 2px;text-align:center;font-size:9.5px;color:var(--ink-3);line-height:1.25}
+.screen .pp-kpi div+div{border-left:1px solid var(--rule)}
+.screen .pp-kpi b{display:block;font-size:12px;color:var(--ink);font-variation-settings:"wdth" 80}
+.screen .pp-act{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.screen .pp-act .btn-app{padding:7px}
+.screen .pp-act .btn-app:first-child{grid-column:1/-1}
+.screen .pp-deal{margin-top:8px;width:100%;border:1px dashed var(--deal);border-radius:8px;background:var(--sheet);padding:6px 9px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10.5px;color:var(--ink-2);text-align:left;cursor:pointer}
+.screen .pp-deal b{display:block;font-size:11px;color:var(--deal)}
+.screen .pp-deal code{font:700 9.5px Archivo,sans-serif;letter-spacing:.05em;color:var(--deal)}
+.screen .pp-bill{border-top:1px solid var(--rule)}
+.screen .pp-bill div{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:11px;border-bottom:1px solid #EEF0EC}
+.screen .pp-bill small{display:block;font-size:9.5px;color:var(--ink-3)}
+.screen .pp-bill em{font-style:normal;font-weight:700;white-space:nowrap}
+.screen .pp-live{display:flex;gap:9px;align-items:center;padding:4px 0}
+.screen .pp-live .d{flex:none;width:34px;text-align:center;border-right:1px solid var(--rule);padding-right:8px;line-height:1.1;font-size:9px;color:var(--ink-3)}
+.screen .pp-live .d b{display:block;font-size:14px;color:var(--ink)}
+.screen .pp-live p{flex:1;font-size:11px;line-height:1.3}
+.screen .pp-live p small{display:block;font-size:9.5px;color:var(--ink-3)}
+.screen .pp-live button{flex:none;font:700 9.5px Archivo,sans-serif;border:1px solid var(--ink);border-radius:99px;padding:3px 8px;background:none;color:var(--ink);cursor:pointer}
+.screen .pp-live button.done{background:var(--ink);color:#fff}
+.screen .offer .pt{font-size:8.5px;font-weight:800;color:var(--seal);border:1px solid var(--seal);border-radius:99px;padding:0 5px;margin-left:5px;vertical-align:1px}
 .screen .stories{overflow-x:auto;overflow-y:hidden;padding:5px 12px 3px;margin:0 -12px 8px;gap:12px;scrollbar-width:none;scroll-snap-type:x proximity}
 .screen .stories::-webkit-scrollbar{display:none}
 .screen .story{width:50px;scroll-snap-align:start}
@@ -1628,6 +1661,7 @@ const EX={
   reviews:['Bewertungen','Auftraggeber bewerten dich','Nach jeder Zusammenarbeit gibt es Sterne und ein kurzes Feedback.'],
   medals:['Medaillen','Für besondere Leistungen','Zum Beispiel für Abschlüsse über ClosingHub oder starke Bewertungen.'],
   badge:['Abzeichen','Sichtbar für alle','Abzeichen bekommst du für Erfahrung, Umsatz und Treue.'],
+  partner:['Partner-Profil','Einer von 5 offiziellen Partnern','Geprüfte Experten mit Siegel, Leistungen, Member-Rabatt und Live-Vorträgen für Premium-Member.'],
   member:['Member-Profil','Wer steckt dahinter?','Rang, Bewertungen und Beiträge auf einen Blick. Folgen oder direkt eine Nachricht schreiben.']
 };
 const nt=$('#ntoast');let exNow='',exT=0;
@@ -1842,21 +1876,30 @@ function postQuestion(){
 }
 
 /* ---------- Marktplatz ---------- */
+/* Partnerkonten (Beispieldaten, 4 der 5 Partner kommen in der Demo vor) */
+const PARTNER={
+  Lena:{no:1,s:'Call-Analyse',since:'März 2026',k:['312','Calls analysiert'],off:'o2',bk:'Call-Analyse buchen',deal:['−20 % für Member','auf die erste Analyse','LENA20'],sv:[['Call-Analyse per Video','1 Call, 45 Min. Auswertung','79 €'],['Analyse-Paket','3 Calls mit Verlaufsvergleich','199 €'],['Team-Analyse','bis 5 Closer, ein Termin','auf Anfrage']],live:['19','Nov.','Wo der Abschluss verloren geht'],rv:['Marco','Closer','Nach der Analyse wusste ich genau, warum ich nach dem Preis jedes Mal einknicke.']},
+  Tobias:{no:2,s:'Skripte',since:'März 2026',k:['140','Skripte geschrieben'],off:'o5',bk:'Skript anfragen',deal:['−15 % für Member','auf das erste Skript','TOBIAS15'],sv:[['Individuelles Closing-Skript','für dein Angebot, mit Einwandteil','149 €'],['Setter-Skript','vom Opener bis zur Terminbuchung','99 €'],['Skript-Check','dein bestehendes Skript, schriftlich','49 €']],live:['26','Nov.','Das Skript, das nicht nach Skript klingt'],rv:['Felix','Closer','Klarer Aufbau, und die Einwände sind gleich mit drin.']},
+  Sofia:{no:4,s:'Chat-Setting',since:'Mai 2026',k:['1.900','Termine gesetzt'],off:'o3',bk:'Begleitung buchen',deal:['−15 % für Member','auf die Begleitung','SOFIA15'],sv:[['Chat-Setting-Begleitung','4 Wochen, jede Woche ein Call','129 €'],['Chat-Analyse','10 deiner Chats, schriftlich','39 €'],['Opener-Bibliothek','für Instagram und LinkedIn','19 €']],live:['10','Dez.','Vom ersten Opener zum gebuchten Termin'],rv:['Amira','Setterin','Nach zwei Wochen doppelt so viele Termine.']},
+  Felix:{no:5,s:'Stimmtraining',since:'Juni 2026',k:['180','Trainings gegeben'],off:'o6',bk:'Training buchen',deal:['−20 % für Member','auf das erste Training','FELIX20'],sv:[['Stimmtraining am Telefon','45 Min. per Zoom','59 €'],['Trainingspaket','4 Termine mit Aufnahmen','199 €'],['Follow-up-Skript nach No-Show','Vorlage zum Download','19 €']],live:['17','Dez.','So klingst du am Telefon souverän'],rv:['Jonas','Setter','Ich rede jetzt langsamer, und die Leute hören zu.']}
+};
 const OFFERS=[
   {id:'o1',cat:'skripte',t:'Follow-up-Skript nach No-Show',n:'Felix',pr:'19 €',st:4.6,rc:12,d:'Drei Nachrichten, die einen geplatzten Termin in 48 Stunden zurückholen.',inc:['Vorlage für WhatsApp und E-Mail','Zeitplan für die drei Nachrichten','Beispiele aus echten Chats'],rv:[['Jonas',5,'Zwei von drei No-Shows zurückgeholt.'],['Amira',4,'Kurz und direkt einsetzbar.']]},
-  {id:'o2',cat:'analyse',t:'Dein Closing-Call, Satz für Satz analysiert',n:'Sofia',pr:'49 €',st:4.9,rc:31,d:'Du schickst die Aufnahme, Sofia markiert jede Stelle, an der der Abschluss gekippt ist.',inc:['Schriftliche Analyse in 48 Stunden','Bessere Formulierungen für jede Stelle','10 Minuten Rückfragen per Video'],rv:[['Marco',5,'Hat mir meinen größten Fehler gezeigt: zu früh den Preis.'],['Tobias',5,'Sehr genau und ehrlich.']]},
-  {id:'o3',cat:'coaching',t:'1:1 Einwand-Training (60 Min.)',n:'Lena',pr:'89 €',st:5.0,rc:18,d:'Rollenspiel mit den zehn häufigsten Einwänden aus deiner Branche.',inc:['60 Minuten per Zoom','Persönliche Antwortliste danach','Aufnahme zum Nachhören'],rv:[['Amira',5,'Danach hatte ich für jeden Einwand eine Antwort.']]},
-  {id:'o4',cat:'skripte',t:'Setter-Leitfaden B2B Kaltakquise',n:'Jonas',pr:'24 €',st:4.4,rc:9,d:'Gesprächsleitfaden für die ersten 30 Sekunden am Telefon.',inc:['Leitfaden als PDF','Einwand-Kärtchen zum Ausdrucken'],rv:[['Felix',4,'Guter Start für neue Setter.']]}
+  {id:'o2',cat:'analyse',t:'Dein Closing-Call, Satz für Satz analysiert',n:'Lena',pr:'79 €',st:5.0,rc:44,d:'Du schickst die Aufnahme, Lena markiert jede Stelle, an der der Abschluss gekippt ist.',inc:['Schriftliche Analyse in 48 Stunden','Bessere Formulierungen für jede Stelle','10 Minuten Rückfragen per Video'],rv:[['Marco',5,'Hat mir meinen größten Fehler gezeigt: zu früh den Preis.'],['Tobias',5,'Sehr genau und ehrlich.']]},
+  {id:'o3',cat:'coaching',t:'Chat-Setting: 4 Wochen Begleitung',n:'Sofia',pr:'129 €',st:4.8,rc:23,d:'Sofia begleitet dich vom ersten Opener bis zum gebuchten Termin.',inc:['Jede Woche ein Call, 45 Minuten','Feedback auf deine echten Chats','Opener-Vorlagen für Instagram und LinkedIn'],rv:[['Amira',5,'Nach zwei Wochen doppelt so viele Termine.']]},
+  {id:'o4',cat:'skripte',t:'Setter-Leitfaden B2B Kaltakquise',n:'Jonas',pr:'24 €',st:4.4,rc:9,d:'Gesprächsleitfaden für die ersten 30 Sekunden am Telefon.',inc:['Leitfaden als PDF','Einwand-Kärtchen zum Ausdrucken'],rv:[['Felix',4,'Guter Start für neue Setter.']]},
+  {id:'o5',cat:'skripte',t:'Individuelles Closing-Skript für dein Angebot',n:'Tobias',pr:'149 €',st:4.9,rc:19,d:'Tobias schreibt dein Skript passend zu Angebot, Ticket und Zielgruppe.',inc:['Gesprächsleitfaden vom Opener bis zum Abschluss','Eigener Teil für die häufigsten Einwände','Eine Überarbeitung nach deinen ersten Calls'],rv:[['Felix',5,'Endlich ein Skript, das nicht nach Skript klingt.']]},
+  {id:'o6',cat:'coaching',t:'Stimme und Betonung am Telefon (45 Min.)',n:'Felix',pr:'59 €',st:4.7,rc:14,d:'Felix arbeitet mit dir an Tempo, Pausen und Betonung.',inc:['45 Minuten per Zoom','Übungen für jeden Tag','Aufnahme zum Nachhören'],rv:[['Jonas',5,'Ich rede jetzt langsamer, und die Leute hören zu.']]}
 ];
 let mf='alle';const bought=new Set();
 const stars=n=>'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));
 function renderOffers(){
-  $('#offerlist').innerHTML=OFFERS.filter(o=>mf==='alle'||o.cat===mf).map(o=>`<button type="button" class="offer" data-offer="${o.id}"><small>${({skripte:'SKRIPT',analyse:'CALL-ANALYSE',coaching:'COACHING'})[o.cat]}</small><b>${o.t}</b><div class="who num">${av(o.n,20)}${o.n} ${rk(PEOPLE[o.n].r)}<span>★ ${String(o.st).replace('.',',')} (${o.rc})</span><span class="pr">${bought.has(o.id)?'Gekauft':o.pr}</span></div></button>`).join('');
+  $('#offerlist').innerHTML=OFFERS.filter(o=>mf==='alle'||o.cat===mf).map(o=>`<button type="button" class="offer" data-offer="${o.id}"><small>${({skripte:'SKRIPT',analyse:'CALL-ANALYSE',coaching:'COACHING'})[o.cat]}</small><b>${o.t}</b><div class="who num">${av(o.n,20)}${o.n} ${rk(PEOPLE[o.n].r)}${PARTNER[o.n]?'<i class="pt">Partner</i>':''}<span>★ ${String(o.st).replace('.',',')} (${o.rc})</span><span class="pr">${bought.has(o.id)?'Gekauft':o.pr}</span></div></button>`).join('');
   requestAnimationFrame(()=>applyCrops($('#offerlist')));
 }
-function offerPage(id){
+function offerPage(id,keep){
   const o=OFFERS.find(x=>x.id===id);
-  openPage('Angebot',`<h4>${o.t}</h4><div class="who2" style="margin:6px 0 9px">${av(o.n,22)}<b>${o.n}</b>${rk(PEOPLE[o.n].r)}<span class="num" style="margin-left:auto">★ ${String(o.st).replace('.',',')} (${o.rc})</span></div><p class="pg-p">${o.d}</p><p class="pg-sec">Das bekommst du</p><ul class="ticks">${o.inc.map(x=>`<li>${x}</li>`).join('')}</ul><p class="pg-sec">Bewertungen</p>${o.rv.map(r=>`<div class="rv"><div class="top"><b>${r[0]}</b><span class="stars">${stars(r[1])}</span></div><p>${r[2]}</p></div>`).join('')}<div class="pg-cta"><button type="button" class="btn-app${bought.has(id)?' done':''}" data-buy="${id}">${bought.has(id)?'Gekauft, im Profil unter Käufe':'Kaufen für '+o.pr}</button></div>`,'offer');
+  openPage('Angebot',`<h4>${o.t}</h4><div class="who2" style="margin:6px 0 9px">${av(o.n,22)}<b>${o.n}</b>${rk(PEOPLE[o.n].r)}<span class="num" style="margin-left:auto">★ ${String(o.st).replace('.',',')} (${o.rc})</span></div><p class="pg-p">${o.d}</p><p class="pg-sec">Das bekommst du</p><ul class="ticks">${o.inc.map(x=>`<li>${x}</li>`).join('')}</ul><p class="pg-sec">Bewertungen</p>${o.rv.map(r=>`<div class="rv"><div class="top"><b>${r[0]}</b><span class="stars">${stars(r[1])}</span></div><p>${r[2]}</p></div>`).join('')}<div class="pg-cta"><button type="button" class="btn-app${bought.has(id)?' done':''}" data-buy="${id}">${bought.has(id)?'Gekauft, im Profil unter Käufe':'Kaufen für '+o.pr}</button></div>`,'offer',keep);
 }
 function buySheet(id){if(bought.has(id))return;const o=OFFERS.find(x=>x.id===id);
   gen(`<h5>Kauf bestätigen</h5><p class="g-sub">${o.t}, von ${o.n}</p><div class="facts2 num"><div>Preis<b>${o.pr}</b></div><div>Zugang<b>sofort</b></div></div><button type="button" class="btn-app" id="buy-ok" data-id="${id}" style="margin-top:10px">Jetzt kaufen</button><p class="hint-s">Demo: Es wird nichts berechnet.</p>`,'buy')}
@@ -1875,17 +1918,33 @@ function ptab(k){$$('.ptabs button').forEach(b=>b.classList.toggle('on',b.datase
 /* ---------- Profile anderer Member ---------- */
 const MEMBERS={
   Marco:{role:'Closer',exp:'1 Jahr Erfahrung, Deutschland',bio:'Closer für Coaching-Programme. Seit 3 Monaten auf ClosingHub.',st:'4,6',rc:6,fo:148,fg:92,b:[0,1],posts:['Mein erster 4.000-€-Deal, so lief der Call.','Einwand „zu teuer“: Ich frage jetzt immer „im Vergleich wozu?“.'],rv:[['Coaching-Anbieter, anonym',5,'Motiviert und lernt schnell.'],['Agentur, anonym',4,'Gute Calls, Follow-ups noch ausbaufähig.']]},
-  Sofia:{role:'Setterin',exp:'3 Jahre Erfahrung, Österreich',bio:'Setterin für B2B-Software. Termine mit unter 10 % No-Shows.',st:'4,9',rc:22,fo:540,fg:130,b:[0,1,3],posts:['3 Sätze, mit denen ich jeden Termin bestätige.','Erster 10k-Monat! Was ich anders gemacht habe.'],rv:[['Software-Firma, anonym',5,'Beste Setterin, mit der wir gearbeitet haben.'],['Agentur, anonym',5,'Termine immer sauber vorqualifiziert.']]},
-  Lena:{role:'Closerin',exp:'4 Jahre Erfahrung, Schweiz',bio:'High-Ticket Closerin, Rang Elite. Gibt Einwand-Trainings im Marktplatz.',st:'5,0',rc:31,fo:820,fg:210,b:[0,1,2,3],posts:['6. Hire über ClosingHub, Rang Elite gehalten!','Termin für den nächsten Tag direkt im Call festmachen.'],rv:[['Coaching-Anbieter, anonym',5,'Abschlussquote über 40 %.'],['Energie-Anbieter, anonym',5,'Sehr professionell.']]},
+  Sofia:{role:'Setterin',exp:'3 Jahre Erfahrung, Österreich',bio:'Setterin für Instagram und LinkedIn. Begleitet dich vom ersten Opener bis zum gebuchten Termin.',st:'4,9',rc:22,fo:540,fg:130,b:[0,1,3],posts:['3 Sätze, mit denen ich jeden Termin bestätige.','Erster 10k-Monat! Was ich anders gemacht habe.'],rv:[['Software-Firma, anonym',5,'Beste Setterin, mit der wir gearbeitet haben.'],['Agentur, anonym',5,'Termine immer sauber vorqualifiziert.']]},
+  Lena:{role:'Closerin',exp:'4 Jahre Erfahrung, Schweiz',bio:'Closerin im High-Ticket-Coaching. Analysiert deine Calls per Video und zeigt dir, an welcher Stelle der Abschluss verloren geht.',st:'5,0',rc:31,fo:820,fg:210,b:[0,1,2,3],posts:['6. Hire über ClosingHub, Rang Elite gehalten!','Termin für den nächsten Tag direkt im Call festmachen.'],rv:[['Coaching-Anbieter, anonym',5,'Abschlussquote über 40 %.'],['Energie-Anbieter, anonym',5,'Sehr professionell.']]},
   Amira:{role:'Setterin',exp:'Neu im Vertrieb, Deutschland',bio:'Gerade gestartet. Lernt jeden Tag im Forum dazu.',st:'–',rc:0,fo:41,fg:88,b:[0],posts:['Woche 1: 4 Bewerbungen, 1 Freischaltung, 1 Testgespräch.'],rv:[]},
   Jonas:{role:'Setter',exp:'1 Jahr Erfahrung, Deutschland',bio:'Outbound-Setter B2B. 80 Wählversuche am Tag.',st:'4,4',rc:5,fo:73,fg:64,b:[0],posts:['Wie reagiert ihr auf „Ich muss da nochmal drüber schlafen“?'],rv:[['Software-Firma, anonym',4,'Zuverlässig und fleißig.']]},
-  Felix:{role:'Closer',exp:'3 Jahre Erfahrung, Deutschland',bio:'Closer und Skript-Autor. Verkauft Follow-up-Skripte im Marktplatz.',st:'4,7',rc:14,fo:310,fg:120,b:[0,1],posts:['Frag zurück, was genau noch offen ist. Meist ist es nicht der Preis.'],rv:[['Agentur, anonym',5,'Klare Struktur in jedem Call.']]},
-  Tobias:{role:'Closer',exp:'6 Jahre Erfahrung, Deutschland',bio:'Teamlead für 8 Closer. Elite seit dem ersten Monat.',st:'4,9',rc:27,fo:690,fg:150,b:[0,1,2,3],posts:['Mein Tagesplan als Closer, 6 bis 14 Uhr.'],rv:[['Coaching-Anbieter, anonym',5,'Hat unser ganzes Team besser gemacht.']]}
+  Felix:{role:'Closer',exp:'3 Jahre Erfahrung, Deutschland',bio:'Closer und Stimmtrainer. Arbeitet mit dir an Tempo, Pausen und Betonung am Telefon.',st:'4,7',rc:14,fo:310,fg:120,b:[0,1],posts:['Frag zurück, was genau noch offen ist. Meist ist es nicht der Preis.'],rv:[['Agentur, anonym',5,'Klare Struktur in jedem Call.']]},
+  Tobias:{role:'Closer',exp:'6 Jahre Erfahrung, Deutschland',bio:'Teamlead für 8 Closer. Schreibt Closing- und Setting-Skripte passend zu deinem Angebot.',st:'4,9',rc:27,fo:690,fg:150,b:[0,1,2,3],posts:['Mein Tagesplan als Closer, 6 bis 14 Uhr.'],rv:[['Coaching-Anbieter, anonym',5,'Hat unser ganzes Team besser gemacht.']]}
 };
 const following=new Set(['Lena','Sofia']);
+const reminded=new Set();
+const SEAL=`<svg class="pp-seal" viewBox="0 0 100 100" role="img" aria-label="Siegel: offizieller Partner"><defs><path id="pp-ring" d="M50 50m-34 0a34 34 0 1 1 68 0a34 34 0 1 1-68 0"/></defs><circle cx="50" cy="50" r="48" fill="#B8860B"/><circle cx="50" cy="50" r="43" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="2 3"/><text font-family="Archivo" font-size="12.5" font-weight="800" fill="#fff" letter-spacing="2.2"><textPath href="#pp-ring">PARTNER · CLOSINGHUB ·</textPath></text><path d="m38 51 8 8 16-17" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function partnerPage(n,keep){
+  const m=MEMBERS[n],p=PARTNER[n];
+  const big=av(n,50).replace('class="av','class="av mav');
+  openPage(n,`<div class="pp-head"><small>Offizielle${m.role.endsWith('in')?' Partnerin':'r Partner'} von ClosingHub</small><b>${p.s}</b></div>
+  <div class="pp-id"><span class="pp-av">${big}${SEAL}</span><div><div><b>${n}</b>${rk(PEOPLE[n].r)}</div><div class="fol num"><span><b>${m.fo}</b> Follower</span><span><b>${m.fg}</b> gefolgt</span></div></div></div>
+  <p class="pinfo"><strong>${m.role}</strong>, ${m.exp}<br>${m.bio}</p>
+  <div class="pp-kpi num"><div><b>${m.st}</b>★ aus ${m.rc}</div><div><b>${p.k[0]}</b>${p.k[1]}</div><div><b>&lt; 24 h</b>Antwortzeit</div></div>
+  <div class="pp-act"><button type="button" class="btn-app" data-offer="${p.off}">${p.bk}</button><button type="button" class="btn-app ghost" data-msg="${n}">Nachricht</button><button type="button" class="btn-app ghost${following.has(n)?' done':''}" data-follow="${n}">${following.has(n)?'Gefolgt':'Folgen'}</button></div>
+  <button type="button" class="pp-deal" data-code="${p.deal[2]}"><span><b>${p.deal[0]}</b>${p.deal[1]}</span><code>${p.deal[2]}</code></button>
+  <p class="pg-sec">Leistungen</p><div class="pp-bill num">${p.sv.map(s=>`<div><span>${s[0]}<small>${s[1]}</small></span><em>${s[2]}</em></div>`).join('')}</div>
+  <p class="pg-sec">Nächster Live-Vortrag, für Premium-Member</p><div class="pp-live"><span class="d"><b>${p.live[0]}</b>${p.live[1]}</span><p>${p.live[2]}<small>Donnerstag, 19 Uhr, live in der App</small></p><button type="button" class="${reminded.has(n)?'done':''}" data-remind="${n}">${reminded.has(n)?'Gemerkt':'Erinnern'}</button></div>
+  <p class="pg-sec">Bewertungen von Membern</p><div class="rv"><div class="top"><b>${p.rv[0]}, ${p.rv[1]}</b><span class="stars">★★★★★</span></div><p>${p.rv[2]}</p></div>`,'partner',keep);
+}
 function profilePage(n,keep){
   if(n==='Elias'){closePage();closeStory(true);closeReels();closeSheets();return go(2)}
   const m=MEMBERS[n];if(!m)return;closeSheets();closeStory(true);closeReels();
+  if(PARTNER[n])return partnerPage(n,keep);
   const big=av(n,60).replace('class="av','class="av mav');
   openPage(n,`<div class="ph">${big}<div><div><b>${n}</b>${rk(PEOPLE[n].r)}</div><div class="fol num"><span>★ <b>${m.st}</b> (${m.rc})</span><span><b>${m.fo+(following.has(n)&&!m.f0?0:0)}</b> Follower</span><span><b>${m.fg}</b> gefolgt</span></div></div></div>
   <p class="pinfo"><strong>${m.role}</strong>, ${m.exp}<br>${m.bio}</p>
@@ -1965,7 +2024,9 @@ phone.addEventListener('click',e=>{
   if(d.ask)return askSheet(d.ask);
   if(b.id==='ask-send')return postQuestion();
   if(d.mf){mf=d.mf;$$('#mk-chips button').forEach(x=>x.classList.toggle('on',x===b));return renderOffers()}
-  if(d.offer)return offerPage(d.offer);
+  if(d.offer)return offerPage(d.offer,page.classList.contains('on'));
+  if(d.code)return ptoast(`Code ${d.code} kopiert`);
+  if(d.remind){const n=d.remind;reminded.has(n)?reminded.delete(n):reminded.add(n);b.classList.toggle('done',reminded.has(n));b.textContent=reminded.has(n)?'Gemerkt':'Erinnern';return ptoast(reminded.has(n)?'Wir erinnern dich vor dem Vortrag':'Erinnerung entfernt')}
   if(d.buy)return buySheet(d.buy);
   if(b.id==='buy-ok')return buy(d.id);
   if(d.ptab)return ptab(d.ptab);
@@ -2036,6 +2097,14 @@ let heroOut=false,formIn=false;
 function updDock(){const on=heroOut&&!formIn&&!form.classList.contains('done');dock.classList.toggle('show',on);dock.setAttribute('aria-hidden',!on)}
 new IntersectionObserver(([e])=>{formIn=e.isIntersecting;updDock()},{threshold:0}).observe(form);
 new IntersectionObserver(([e])=>{heroOut=!e.isIntersecting;updDock()},{threshold:0}).observe($('.hero-cta'));
+
+/* ---------- Gast-Einladung eines Partners ---------- */
+(function(){ const t=new URLSearchParams(location.search).get('gast'); if(!t||!/^[a-f0-9]{16,40}$/.test(t)) return;
+  fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/rpc/gast_einloesen',{method:'POST',headers:{apikey:'sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D','Content-Type':'application/json'},body:JSON.stringify({p_token:t})})
+    .then(r=>r.ok?r.json():null).then(j=>{ if(!j||!j.ok) return; const b=document.createElement('div'); b.setAttribute('role','status');
+      b.style.cssText='position:fixed;left:16px;right:16px;top:16px;z-index:90;max-width:520px;margin:0 auto;background:#0E1A2B;color:#fff;padding:14px 16px;border-radius:12px;font-size:15px;line-height:1.45;box-shadow:0 14px 34px -10px rgba(14,26,43,.45)';
+      b.textContent='Willkommen'+(j.name?', '+j.name:'')+'! Du bist als Gast von '+(j.partner||'einem ClosingHub-Partner')+' eingeladen. Deine kostenlose Plus-Mitgliedschaft ist vorgemerkt. Trag dich jetzt mit deiner E-Mail-Adresse ein.';
+      document.body.appendChild(b); setTimeout(()=>b.remove(),16000); }).catch(()=>{}); })();
 
 /* ---------- Start ---------- */
 sizePad();applyPrices();drawSpots();loadSettings();pollCount();setInterval(pollCount,60000);
