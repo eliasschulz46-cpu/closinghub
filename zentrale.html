@@ -319,7 +319,7 @@ async function loadAll(){
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
-  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice(); D.partners=(S.markt&&Array.isArray(S.markt.partners))?S.markt.partners:null;
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
@@ -930,14 +930,50 @@ function inhalte(){
     <div class="card" style="grid-column:1/-1"><div class="row between"><div><h3>Marktplatz · Dienstleistungen</h3><p class="muted" style="font-size:13px;margin-top:2px">Nur diese Dienstleistungen können im Marktplatz angeboten werden. Eine pro Zeile, die Reihenfolge gilt auch in der App.</p></div><span class="pill p-gold" id="mkCount">${(D.markt||[]).length} Dienstleistungen</span></div>
       <textarea class="in" id="mkList" rows="12" style="margin-top:12px;line-height:1.6" oninput="$('mkCount').textContent=this.value.split('\\n').filter(x=>x.trim()).length+' Dienstleistungen'">${esc((D.markt||[]).join('\n'))}</textarea>
       <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="saveMarkt(this)">Speichern</button><button class="btn" onclick="$('mkList').value=MARKT_DEFAULT.join('\\n');$('mkList').dispatchEvent(new Event('input'))">Standardliste laden</button></div></div>
+    <div class="card" style="grid-column:1/-1"><div class="row between"><div><h3>Marktplatz · Partner (höchstens 5)</h3><p class="muted" style="font-size:13px;margin-top:2px">Jeder Partner bekommt das hervorgehobene Partnerprofil in der App. Solange hier noch nie gespeichert wurde, zeigt die App die Beispiel-Partner.</p></div><span class="pill p-gold">${(D.partners||[]).length} von 5</span></div>
+      ${(D.partners||[]).map((p,i)=>ptCard(p,i)).join('')}
+      <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="savePartners(this)">Partner speichern</button>${(D.partners||[]).length<5?`<button class="btn" onclick="ptAdd()">Partner hinzufügen</button>`:''}</div></div>
   </div>`;
+}
+function ptCard(p,i){
+  const f=(k,l,ph,v)=>`<label style="display:block;font-size:12px" class="muted">${l}<input class="in" data-pt="${i}" data-f="${k}" value="${esc(v!==undefined?v:(p[k]||''))}" placeholder="${esc(ph||'')}" style="margin-top:4px"></label>`;
+  return `<details style="margin-top:12px;border:1px solid var(--line,#D5DAD3);border-radius:10px;padding:10px 12px" ${p._open?'open':''}><summary style="cursor:pointer;font-weight:600">${esc(p.n||'Neuer Partner')} <span class="muted" style="font-weight:400">· ${esc(p.s||'Bereich fehlt')}</span></summary>
+    <div class="grid g2" style="gap:10px;margin-top:10px">
+      ${f('n','Name','Paul')}${f('s','Bereich (steht groß im Profilkopf)','Morgen-Call')}
+      ${f('role','Rolle','Closer')}${f('meta','Zusatz hinter der Rolle','4 Jahre Erfahrung, Schweiz')}
+      ${f('bk','Text auf dem grünen Knopf','Coaching anfragen')}${f('img','Foto-Link (https)','https://…')}
+      ${f('k0','Kennzahl','312',(p.k||[])[0]||'')}${f('k1','Text unter der Kennzahl','Calls analysiert',(p.k||[])[1]||'')}
+      ${f('d0','Member-Vorteil','−20 % für Member',(p.deal||[])[0]||'')}${f('d1','Zusatz zum Vorteil','auf das erste Coaching',(p.deal||[])[1]||'')}
+      ${f('d2','Rabattcode','PAUL20',(p.deal||[])[2]||'')}${f('live','Live-Hinweis','Mo–Do, 7:30 Uhr live in der App')}
+    </div>
+    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Kurzbeschreibung<textarea class="in" data-pt="${i}" data-f="bio" rows="2" style="margin-top:4px">${esc(p.bio||'')}</textarea></label>
+    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Leistungen, eine pro Zeile: Titel | Preis<textarea class="in" data-pt="${i}" data-f="offers" rows="3" style="margin-top:4px" placeholder="1:1 Mindset-Coaching (60 Min.) | 89">${esc((p.offers||[]).map(o=>o.t+' | '+o.pr).join('\n'))}</textarea></label>
+    <div class="row" style="margin-top:10px"><label class="muted" style="font-size:13px"><input type="checkbox" data-pt="${i}" data-f="fem" ${p.fem?'checked':''}> Im Profil „Partnerin“ statt „Partner“ schreiben</label><button class="btn" style="margin-left:auto" onclick="ptDel(${i})">Partner entfernen</button></div>
+  </details>`;
+}
+function ptRead(){
+  const c=x=>String(x||'').replace(/[<>"'`]/g,'').trim();
+  return (D.partners||[]).map((old,i)=>{ const g=k=>{ const el=document.querySelector(`[data-pt="${i}"][data-f="${k}"]`); return el?(el.type==='checkbox'?el.checked:c(el.value)):''; };
+    const p={n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^https:\/\//.test(g('img'))?g('img'):'',live:g('live').slice(0,90),fem:!!g('fem')};
+    if(g('k0')) p.k=[g('k0').slice(0,12),g('k1').slice(0,30)];
+    if(g('d0')) p.deal=[g('d0').slice(0,40),g('d1').slice(0,60),g('d2').slice(0,20)];
+    p.offers=g('offers').split('\n').map(z=>{ const f=z.split('|').map(c); return {t:(f[0]||'').slice(0,70),pr:(f[1]||'').slice(0,12)}; }).filter(o=>o.t).slice(0,8);
+    return p; });
+}
+function ptAdd(){ D.partners=ptRead(); if(D.partners.length>=5) return toast('Höchstens 5 Partner'); D.partners.push({_open:true}); render(); }
+function ptDel(i){ const l=ptRead(); if(!confirm('Partner „'+(l[i].n||'ohne Namen')+'“ aus der Liste nehmen? Gespeichert wird erst mit „Partner speichern“.')) return; l.splice(i,1); D.partners=l; render(); }
+async function savePartners(b){
+  const ps=ptRead();
+  if(ps.length>5) return toast('Höchstens 5 Partner');
+  if(ps.some(p=>!p.n||!p.s)) return toast('Jeder Partner braucht Name und Bereich');
+  b.disabled=true; try{ await setKey('markt',{services:D.markt,partners:ps}); D.partners=ps; render(); toast('Partner gespeichert – ist live in der App'); }finally{ b.disabled=false; }
 }
 async function saveMarkt(b){
   const seen=new Set(), l=$('mkList').value.split('\n').map(x=>x.replace(/[<>"'`]/g,'').trim()).filter(x=>x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase()));
   if(!l.length) return toast('Mindestens eine Dienstleistung eintragen');
   if(l.length>40) return toast('Maximal 40 Dienstleistungen');
   if(l.some(x=>x.length>60)) return toast('Bitte kürzer: maximal 60 Zeichen pro Zeile');
-  b.disabled=true; try{ await setKey('markt',{services:l}); D.markt=l; render(); toast('Gespeichert – ist live in der App'); }finally{ b.disabled=false; }
+  b.disabled=true; try{ await setKey('markt',Object.assign({services:l},D.partners?{partners:D.partners}:{})); D.markt=l; render(); toast('Gespeichert – ist live in der App'); }finally{ b.disabled=false; }
 }
 async function setFeature(k,v){ D.settings.features[k]=v; await setKey('features',D.settings.features); toast('Gespeichert'); }
 async function saveHero(){ const h={top:$('h1').value.trim(),gold:$('h2').value.trim(),sub:$('h3').value.trim(),lead:$('h4').value.trim()}; await setKey('hero',h); Object.assign(D.settings,{heroTop:h.top,heroGold:h.gold,heroSub:h.sub,heroLead:h.lead}); render(); toast('Hero ist live'); }
