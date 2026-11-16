@@ -433,20 +433,111 @@ fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/settings?select=value&ke
 fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/rpc/partner_liste',{method:'POST',headers:{apikey:'sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D','Content-Type':'application/json'},body:'{}'})
   .then(r=>r.ok?r.json():null).then(applyPartners).catch(()=>{});
 const NEARBY = [['Felix','Performer','München · 4 km'],['Hannah','Rising','Augsburg · 31 km'],['Tobias','Dealmaker','München · 7 km'],['Mia','Starter','Freising · 22 km'],['David','Performer','Rosenheim · 48 km']];
+/* ---------- Abzeichen-Siegel (aus Claude outputs/Abzeichen/abzeichen.html) ---------- */
+const CHSeal=(function(){
+const GOLD=(id)=>`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7A5606"/><stop offset=".22" stop-color="#C99A2E"/><stop offset=".42" stop-color="#F4DF9C"/><stop offset=".58" stop-color="#D2A947"/><stop offset=".8" stop-color="#9C7110"/><stop offset="1" stop-color="#6E4D05"/></linearGradient>`;
+const GOLD2=(id)=>`<linearGradient id="${id}" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A6508"/><stop offset=".45" stop-color="#E9CB78"/><stop offset="1" stop-color="#7A5606"/></linearGradient>`;
+function rosette(r1,r2,n){let d='';for(let i=0;i<n*2;i++){const a=Math.PI*i/n-Math.PI/2,r=i%2?r2:r1;d+=(i?'L':'M')+(50+r*Math.cos(a)).toFixed(2)+' '+(50+r*Math.sin(a)).toFixed(2);}return d+'Z';}
+function scallop(r,n,b){let d='';for(let i=0;i<n;i++){const a0=2*Math.PI*i/n,a1=2*Math.PI*(i+1)/n,am=(a0+a1)/2;const p=(a,R)=>(50+R*Math.cos(a)).toFixed(2)+' '+(50+R*Math.sin(a)).toFixed(2);d+=(i?'':'M'+p(a0,r))+' Q'+p(am,r+b)+' '+p(a1,r);}return d+'Z';}
+function rays(r0,r1,n){let d='';for(let i=0;i<n;i++){const a=2*Math.PI*i/n;d+=`M${(50+r0*Math.cos(a)).toFixed(2)} ${(50+r0*Math.sin(a)).toFixed(2)}L${(50+r1*Math.cos(a)).toFixed(2)} ${(50+r1*Math.sin(a)).toFixed(2)}`;}return d;}
+const ENG='#4A3403';      // Prägung dunkel
+const HI='rgba(255,246,214,.75)'; // Lichtkante
+const emb=(svg)=>`<g transform="translate(0 .35)" fill="${HI}" stroke="${HI}">${svg}</g><g fill="${ENG}" stroke="${ENG}">${svg}</g>`;
+
+const leaf=(x,y,rot)=>`<ellipse cx="${x}" cy="${y}" rx="1.25" ry="3" transform="rotate(${rot} ${x} ${y})"/>`;
+function laurel(side){let s=`<path d="M${(50+33*Math.cos(Math.PI/2+side*0.3)).toFixed(2)} ${(50+33*Math.sin(Math.PI/2+side*0.3)).toFixed(2)}A33 33 0 0 ${side>0?1:0} ${(50+33*Math.cos(Math.PI/2+side*1.62)).toFixed(2)} ${(50+33*Math.sin(Math.PI/2+side*1.62)).toFixed(2)}" fill="none" stroke-width=".5"/>`;for(let i=0;i<7;i++){const t=Math.PI/2+side*(0.42+i*0.19);const deg=t*180/Math.PI;for(const k of[-1,1]){const r=33+k*1.9,x=50+r*Math.cos(t),y=50+r*Math.sin(t);s+=`<ellipse cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" rx="1" ry="2.6" stroke="none" transform="rotate(${(deg+side*k*-38).toFixed(1)} ${x.toFixed(2)} ${y.toFixed(2)})"/>`;}}return s;}
+
+// Linien-Icons aus app.html (viewBox 24)
+// Edle Symbole (viewBox 24). Linien setzen ihre Stärke selbst, Text und Flächen sind gefüllt.
+const L=(w,d)=>`<path fill="none" stroke-width="${w}" d="${d}"/>`;
+const IC={
+ nr1:`<text x="12.4" y="17.6" text-anchor="middle" font-family="Lora" font-style="italic" font-weight="600" font-size="14.5" stroke="none">Nº1</text>`,
+ crown:L(1.25,'M4.2 17.4 3 8.2l4.8 4L12 5.3l4.2 6.9L21 8.2l-1.2 9.2z')+L(1.25,'M4.6 20.2h14.8')+`<circle cx="3" cy="7.5" r="1.15" stroke="none"/><circle cx="12" cy="4.4" r="1.15" stroke="none"/><circle cx="21" cy="7.5" r="1.15" stroke="none"/><path stroke="none" d="m12 13 1.3 1.6L12 16.2l-1.3-1.6z"/>`,
+ key:`<g transform="rotate(-35 12 12)"><circle cx="6.2" cy="12" r="3.9" fill="none" stroke-width="1.15"/><circle cx="6.2" cy="12" r="1.6" fill="none" stroke-width=".75"/>`+L(1.15,'M10.1 12h11.6')+L(1.05,'M18.4 12v3.4M21.2 12v2.4')+L(.7,'M12 10.9v2.2M13.3 10.9v2.2')+`</g>`,
+ shield:L(1.25,'M12 2.6 4.4 5.5v5.7c0 4.6 3.1 8.4 7.6 10.2 4.5-1.8 7.6-5.6 7.6-10.2V5.5z')+L(.55,'M12 4.5 6.2 6.7v4.5c0 3.7 2.4 6.8 5.8 8.2 3.4-1.4 5.8-4.5 5.8-8.2V6.7z')+L(1.5,'m8.7 11.7 2.3 2.4 4.4-4.7'),
+ diamond:L(1.2,'M7 5h10l4 5-9 10.5L3 10z')+L(.65,'M3 10h18M9.5 5 8 10l4 10.5L16 10l-1.5-5M8 10l4-5 4 5'),
+ cap:L(1.2,'M2 9.4 12 5l10 4.4-10 4.5z')+L(1.2,'M6.5 11.5v4.3c0 1.4 2.5 2.8 5.5 2.8s5.5-1.4 5.5-2.8v-4.3')+L(.9,'M20 10.3v5')+`<path stroke="none" d="M19.05 15.1h1.9l.6 3.1h-3.1z"/>`,
+ nib:L(1.2,'M12 21.6 6.6 12.3 9 4.2h6l2.4 8.1z')+L(.85,'M12 21.6v-8.2')+`<circle cx="12" cy="11.7" r="1.35" fill="none" stroke-width="1"/>`+L(.9,'M8.4 2.5h7.2'),
+ sparkle:`<path stroke="none" d="M11 2.4c.6 5 2.8 7.2 7.8 7.8-5 .6-7.2 2.8-7.8 7.8-.6-5-2.8-7.2-7.8-7.8 5-.6 7.2-2.8 7.8-7.8z"/><path stroke="none" d="M18.6 15.2c.3 2.1 1.2 3 3.3 3.3-2.1.3-3 1.2-3.3 3.3-.3-2.1-1.2-3-3.3-3.3 2.1-.3 3-1.2 3.3-3.3z"/>`,
+ letter:`<rect x="2.6" y="5.6" width="18.8" height="12.8" rx="1.2" fill="none" stroke-width="1.2"/>`+L(.9,'m3 6.2 9 6.9 9-6.9')+`<circle cx="12" cy="13.6" r="2.7" stroke="none"/><path fill="none" stroke-width=".9" d="m11 16.1-.9 3M13 16.1l.9 3"/>`,
+ bulb:L(1.2,'M9.2 17.2h5.6M10.2 20h3.6M12 3.4a5.6 5.6 0 0 0-3.4 10.1c.6.5.9 1.1.9 1.8v1.9h5v-1.9c0-.7.3-1.3.9-1.8A5.6 5.6 0 0 0 12 3.4z')+L(.75,'M10.4 14.8l.8-4.6.8 1.2.8-1.2.8 4.6')
+};
+// Emaille je Gruppe
+const EN={gold:null,ink:['#2A3B58','#0B1524'],green:['#16A36A','#05583A'],blue:['#2A44A8','#0C1A5C']};
+const BADGES=[
+ ['Mitgliedschaft',[
+  ['dayone','Day One','DAY ONE','nr1','gold','Einer der ersten 250 Member'],
+  ['premium','Premium','PREMIUM','crown','gold','Aktives Premium-Abo'],
+  ['partner','Partner','PARTNER','logo','gold','Einer der 5 Partner'],
+  ['innercircle','Inner Circle','INNER CIRCLE','key','gold','Unterstützungsteam von ClosingHub']]],
+ ['Geprüft',[
+  ['identitaet','Identität geprüft','IDENTITÄT GEPRÜFT','shield','green','Ausweis bestätigt'],
+  ['highticket','High-Ticket','HIGH-TICKET','diamond','green','Abschluss ab 5.000 € nachgewiesen'],
+  ['ausgebildet','Ausgebildet von …','AUSGEBILDET VON','cap','green','Absolvent eines Ausbilders']]],
+ ['Leistung',[
+  ['hired','Hired via ClosingHub','HIRED VIA CLOSINGHUB','nib','blue','Erster Job über die Plattform'],
+  ['spotlight','Spotlight','SPOTLIGHT','sparkle','blue','Meiste Punkte im eigenen Rang in einem Monat']]],
+ ['Community',[
+  ['recruiter','Recruiter','RECRUITER','letter','ink','5 Member geworben'],
+  ['helpinghand','Helping Hand','HELPING HAND','bulb','ink','3 Verbesserungsvorschläge für ClosingHub gegeben']]]];
+
+function poly(r,n,rot){let d='';for(let i=0;i<n;i++){const a=2*Math.PI*i/n+rot;d+=(i?'L':'M')+(50+r*Math.cos(a)).toFixed(2)+' '+(50+r*Math.sin(a)).toFixed(2);}return d+'Z';}
+// Form je Gruppe
+const SHAPE={Mitgliedschaft:'round',Geprüft:'rosette',Leistung:'star',Community:'scallop'};
+// Eleganter Strahlenkranz: 16 schmale Strahlen, die nur knapp hinter dem Ring hervortreten
+function starRays(){let full='',half='';for(let i=0;i<48;i++){const a=Math.PI*i/24-Math.PI/2,L=i%2===0,tip=L?49.9:48,d=(L?2.4:1.7)*Math.PI/180,r0=44;
+ const P=(ang,r)=>(50+r*Math.cos(ang)).toFixed(2)+' '+(50+r*Math.sin(ang)).toFixed(2);
+ full+=`M${P(a-d,r0)}L${P(a,tip)}L${P(a+d,r0)}Z`; half+=`M${P(a,r0)}L${P(a,tip)}L${P(a+d,r0)}Z`;}return [full,half];}
+function medal(b,u,shape){
+ const [key,name,arc,icon,en]=b;
+ const n=arc.length, fs0=n<=9?7.4:n<=12?6.4:n<=15?5.6:4.9, ls0=n<=9?1.5:n<=12?1:n<=15?.6:.4;
+ const enamel=EN[en];
+ const ST=shape==='star', RING=ST?42.2:43.8, D1=ST?29.6:30.5, D2=ST?27.2:28, K=ST?.95:1;
+ const outer={
+  round:`<circle cx="50" cy="50" r="49.5" fill="url(#ga${u})"/><path d="${scallop(46.2,60,1.3)}" fill="none" stroke="${ENG}" stroke-width=".35" opacity=".5"/>`,
+  rosette:`<path d="${rosette(49.8,45.6,32)}" fill="url(#ga${u})"/><path d="${rosette(49.8,45.6,32)}" fill="none" stroke="${ENG}" stroke-width=".3" opacity=".5"/>`,
+  octagon:`<path d="${poly(49.8,8,Math.PI/8)}" fill="url(#ga${u})"/><path d="${poly(46.6,8,Math.PI/8)}" fill="none" stroke="${ENG}" stroke-width=".45" opacity=".55"/><path d="${poly(49.8,8,Math.PI/8)}" fill="none" stroke="${ENG}" stroke-width=".4" opacity=".6"/>`,
+  star:`<radialGradient id="bd${u}" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#FFF3C8"/><stop offset=".45" stop-color="#D9AE4A"/><stop offset="1" stop-color="#6E4D05"/></radialGradient><circle cx="50" cy="50" r="46.6" fill="url(#ga${u})"/>${Array.from({length:40},(_,i)=>{const a=2*Math.PI*i/40;return `<circle cx="${(50+47.4*Math.cos(a)).toFixed(2)}" cy="${(50+47.4*Math.sin(a)).toFixed(2)}" r="2.35" fill="url(#bd${u})"/>`}).join('')}<circle cx="50" cy="50" r="44.6" fill="url(#ga${u})"/><circle cx="50" cy="50" r="44.6" fill="none" stroke="${ENG}" stroke-width=".4" opacity=".6"/>`,
+  scallop:`<path d="${scallop(46,24,3.4)}" fill="url(#ga${u})"/><path d="${scallop(46,24,3.4)}" fill="none" stroke="${ENG}" stroke-width=".35" opacity=".55"/>`
+ }[shape];
+ const inner = false
+  ? `<path d="${poly(44,8,Math.PI/8)}" fill="url(#gb${u})"/><path d="${rays(30,44,160)}" stroke="${ENG}" stroke-width=".18" opacity=".3"/><path d="${poly(44,8,Math.PI/8)}" fill="none" stroke="${ENG}" stroke-width=".6"/>`
+  : `${shape==='star'?`<circle cx="50" cy="50" r="${RING}" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="1.4"/>`:''}<circle cx="50" cy="50" r="${RING}" fill="url(#gb${u})"/><path d="${rays(D1,RING,170)}" stroke="${ENG}" stroke-width=".18" opacity=".3"/><circle cx="50" cy="50" r="${RING}" fill="none" stroke="${ENG}" stroke-width=".6"/>`;
+ const defsEn = enamel ? `<radialGradient id="em${u}" cx=".5" cy=".28" r=".8"><stop offset="0" stop-color="${enamel[0]}"/><stop offset="1" stop-color="${enamel[1]}"/></radialGradient><linearGradient id="sh${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset=".25" stop-color="#000" stop-opacity="0"/></linearGradient>` : '';
+ const disc = enamel
+  ? `<circle cx="50" cy="50" r="${D1}" fill="url(#ga${u})"/><circle cx="50" cy="50" r="${D1}" fill="none" stroke="${ENG}" stroke-width=".5"/><circle cx="50" cy="50" r="${D2}" fill="url(#em${u})"/><circle cx="50" cy="50" r="${D2}" fill="url(#sh${u})"/>`
+  : `<circle cx="50" cy="50" r="${D1}" fill="url(#ga${u})"/><circle cx="50" cy="50" r="${D1}" fill="none" stroke="${ENG}" stroke-width=".6"/><circle cx="50" cy="50" r="28.6" fill="none" stroke="${ENG}" stroke-width=".25" opacity=".6"/>`;
+ const S=ST?1.38:1.42, T=(50-12*S).toFixed(2);
+ const ico = icon==='logo'
+  ? emb(`<text x="50" y="51.5" text-anchor="middle" font-family="Parisienne" font-size="13.5" stroke="none">Closing</text><text x="50" y="64.5" text-anchor="middle" font-family="Bebas Neue" font-size="13.5" letter-spacing="1.2" stroke="none">HUB</text><text x="50" y="38" text-anchor="middle" font-family="Archivo" font-size="3.8" font-weight="700" letter-spacing="1" stroke="none">OFFIZIELL</text>`)
+  : enamel
+   ? `<g transform="translate(${T} ${T}) scale(${S})" stroke-linecap="round" stroke-linejoin="round"><g fill="#000" stroke="#000" opacity=".45" transform="translate(0 .4)">${IC[icon]}</g><g fill="url(#gi${u})" stroke="url(#gi${u})">${IC[icon]}</g></g>`
+   : `<g transform="translate(${T} ${T}) scale(${S})" stroke-linecap="round" stroke-linejoin="round"><g fill="${HI}" stroke="${HI}" transform="translate(0 .3)">${IC[icon]}</g><g fill="${ENG}" stroke="${ENG}">${IC[icon]}</g></g>`;
+ const iconGrad=`<linearGradient id="gi${u}" x1="0" y1="0" x2="0" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FBEBB5"/><stop offset=".5" stop-color="#E2BC5C"/><stop offset="1" stop-color="#B8860B"/></linearGradient>`;
+ const deco = shape==='round' ? `<g>${laurel(1)}${laurel(-1)}</g>` : (ST?`<circle cx="18.6" cy="60" r="1.2" stroke="none"/><circle cx="81.4" cy="60" r="1.2" stroke="none"/>`:`<circle cx="17.2" cy="62" r="1.3" stroke="none"/><circle cx="82.8" cy="62" r="1.3" stroke="none"/>`);
+ const path = shape==='round' ? 'M13.5 50a36.5 36.5 0 0 1 73 0' : ST ? 'M14.6 51a35.4 35.4 0 0 1 70.8 0' : 'M13 52a37 37 0 0 1 74 0';
+ return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Abzeichen ${name}"><defs>${GOLD('ga'+u)}${GOLD2('gb'+u)}${defsEn}${iconGrad}<path id="tp${u}" d="${path}"/></defs>
+${outer}${inner}${disc}
+${emb(`<text font-family="Archivo" font-size="${(fs0*K).toFixed(2)}" font-weight="800" text-anchor="middle" letter-spacing="${(ls0*K).toFixed(2)}" stroke="none"><textPath href="#tp${u}" startOffset="50%">${arc}</textPath></text>${deco}`)}
+${ico}</svg>`;
+}
+const GRP={},BY={};BADGES.forEach(([g,l])=>l.forEach(b=>{GRP[b[0]]=g;BY[b[1]]=b}));let n=0;
+return function(name,size){const b=BY[name];if(!b)return '';return medal(b,'s'+(++n),SHAPE[GRP[b[0]]]).replace('<svg ','<svg width="'+size+'" height="'+size+'" style="display:block;flex:none" ');};
+})();
 const BADGES = [
-  ['Mitgliedschaft',[['Day One','Einer der ersten 250 Member','b_found'],['Premium','Aktives Premium-Abo. Gilt, solange du Premium bist','b_star'],['Partner','Einer der 5 Partner, solange die Partnerschaft läuft','b_partner'],['Inner Circle','Wird persönlich von ClosingHub vergeben','b_circle']]],
+  ['Mitgliedschaft',[['Day One','Einer der ersten 250 Member','b_found'],['Premium','Aktives Premium-Abo. Gilt, solange du Premium bist','b_star'],['Partner','Einer der 5 Partner, solange die Partnerschaft läuft','b_partner'],['Inner Circle','Unterstützungsteam von ClosingHub','b_circle']]],
   ['Geprüft',[['Identität geprüft','Ausweis von ClosingHub bestätigt','b_id'],['High-Ticket','Nachgewiesener Abschluss ab 5.000 €','b_diamond'],['Ausgebildet von …','Absolvent eines Ausbilders, nach Einreichung des Dokuments','b_cap']]],
-  ['Leistung',[['Hired via ClosingHub','Erster Job über die Plattform','b_brief'],['Spotlight','Meiste Punkte im eigenen Rang','sun']]],
-  ['Community',[['Recruiter','5 Member über deinen Einladungslink geworben','b_userplus'],['Helping Hand','Für Verbesserungsvorschläge, die ClosingHub besser machen','b_bulb']]],
+  ['Leistung',[['Hired via ClosingHub','Erster Job über die Plattform','b_brief'],['Spotlight','Meiste Punkte im eigenen Rang in einem Monat','sun']]],
+  ['Community',[['Recruiter','5 Member über deinen Einladungslink geworben','b_userplus'],['Helping Hand','3 Verbesserungsvorschläge für ClosingHub gegeben','b_bulb']]],
 ];
 const BADGE_IC = Object.fromEntries(BADGES.flatMap(g=>g[1].map(b=>[b[0],b[2]])));
-function badgeIcon(b,act){ return `<button type="button" onclick="${act||'openMedals()'}" title="${b}" aria-label="Abzeichen ${b}. Alle Abzeichen ansehen" class="w-11 h-11 rounded-full flex items-center justify-center" style="border:1px solid #087A4B;color:#087A4B;background:rgb(var(--panel));box-shadow:0 0 14px rgba(8,122,75,.18);cursor:pointer">${svg(BADGE_IC[b]||'b_shield',20)}</button>`; }
+function badgeIcon(b,act){ return `<button type="button" onclick="${act||'openMedals()'}" title="${b}" aria-label="Abzeichen ${b}. Alle Abzeichen ansehen" class="w-11 h-11 rounded-full flex items-center justify-center" style="cursor:pointer;filter:drop-shadow(0 2px 3px rgba(14,26,43,.28))">${CHSeal(b,44)||svg(BADGE_IC[b]||'b_shield',20)}</button>`; }
 function badgeQ(){ return `<button type="button" onclick="openMedals()" title="Welche Abzeichen gibt es?" aria-label="Noch kein Abzeichen. Alle Abzeichen ansehen" class="w-11 h-11 rounded-full flex items-center justify-center text-lg font-bold" style="border:1px dashed rgb(var(--line));color:rgb(var(--muted));background:rgb(var(--panel));opacity:.7;cursor:pointer">?</button>`; }
 const PBADGES = {Lena:['Day One','High-Ticket','Hired via ClosingHub'],Tobias:['Day One','Identität geprüft'],Sofia:['Day One','Premium'],Marco:['Day One','Hired via ClosingHub'],Jonas:['Day One']};
 function memberBadges(n){ const p=PARTNERS.find(x=>x.n===n); return [...(p?['Partner']:[]),...(PBADGES[n]||[])]; }
 function badgeRow(n){ const l=memberBadges(n); if(!l.length) return ''; const a=String(n).replace(/[^\p{L}\p{N} .-]/gu,'');
   return `<div class="mt-4"><p class="text-xs uppercase tracking-wide text-muted mb-2">Abzeichen</p><div class="flex flex-wrap gap-2">${l.map(b=>badgeIcon(b,`openBadges('${a}')`)).join('')}</div></div>`; }
-function badgePill(b){ return `<span class="inline-flex items-center gap-2 pl-1 pr-3.5 py-1 rounded-full border text-sm" style="border-color:#3a3020;background:rgb(var(--chip))"><span class="w-7 h-7 rounded-full flex items-center justify-center" style="border:1px solid #087A4B;color:#087A4B;background:rgb(var(--panel))">${svg(BADGE_IC[b]||'b_shield',15)}</span>${b}</span>`; }
+function badgePill(b){ return `<span class="inline-flex items-center gap-2 pl-1 pr-3.5 py-1 rounded-full border text-sm" style="border-color:#3a3020;background:rgb(var(--chip))"><span class="w-7 h-7 flex items-center justify-center">${CHSeal(b,28)||svg(BADGE_IC[b]||'b_shield',15)}</span>${b}</span>`; }
 const RANKS = ['Starter','Rising','Performer','Dealmaker','Rainmaker'];
 const RKN = {Starter:1,Rising:2,Performer:3,Dealmaker:4,Rainmaker:5};
 const RK_OLD = {Rookie:'Starter',Pro:'Performer',Elite:'Dealmaker',Legend:'Rainmaker'};
@@ -532,7 +623,7 @@ function openReviews(){
 }
 function badgeList(list){
   const have=b=>list.includes(b);
-  const row=b=>`<div class="flex items-center gap-3 py-2 border-t border-line" style="${have(b[0])?'':'opacity:.5'}"><span class="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style="border:1px solid ${have(b[0])?'#087A4B':'rgb(var(--line))'};color:${have(b[0])?'#087A4B':'inherit'}">${svg(b[2],17)}</span><div class="min-w-0 flex-1"><p class="text-sm font-semibold">${b[0]}</p><p class="text-xs text-muted">${b[1]}</p></div><span class="text-xs whitespace-nowrap ${have(b[0])?'text-gold font-semibold':'text-muted'}">${have(b[0])?'✓ erhalten':'offen'}</span></div>`;
+  const row=b=>`<div class="flex items-center gap-3 py-2 border-t border-line" style="${have(b[0])?'':'opacity:.5'}"><span class="w-10 h-10 flex items-center justify-center shrink-0" style="${have(b[0])?'':'filter:grayscale(1)'}">${CHSeal(b[0],40)||svg(b[2],17)}</span><div class="min-w-0 flex-1"><p class="text-sm font-semibold">${b[0]}</p><p class="text-xs text-muted">${b[1]}</p></div><span class="text-xs whitespace-nowrap ${have(b[0])?'text-gold font-semibold':'text-muted'}">${have(b[0])?'✓ erhalten':'offen'}</span></div>`;
   return BADGES.map(g=>`<p class="text-xs uppercase tracking-wider text-gold mt-4 mb-1">${g[0]}</p>${g[1].map(row).join('')}`).join('');
 }
 const BADGE_N = BADGES.reduce((s,g)=>s+g[1].length,0);
