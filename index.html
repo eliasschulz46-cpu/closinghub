@@ -1666,15 +1666,24 @@ const P={
 const ELI='assets/app/elias_portraet_eng.jpg';
 const PEOPLE={
   Elias:{av:`<img class="av" src="${ELI}" alt="" style="object-position:50% 18%">`,r:'Dealmaker'},
-  Marco:{c:'feed,148,98,80,80',r:'Rising'},Sofia:{c:'player,150,90,240,240',r:'Performer'},Lena:{c:'feed,264,98,80,80',r:'Dealmaker'},
-  Amira:{c:'feed,380,98,80,80',r:'Starter'},Jonas:{i:'JK',r:'Starter'},Felix:{i:'FB',r:'Performer'},Tobias:{i:'TW',r:'Dealmaker'},
-  Hannah:{i:'HL',r:'Rising'},Mia:{i:'MR',r:'Starter'},David:{i:'DO',r:'Performer'},ClosingHub:{i:'CH',r:''}
+  Marco:{img:'assets/app/profil/marco.jpg',r:'Rising'},
+  Sofia:{img:'assets/app/profil/sofia.jpg',r:'Performer'},
+  Lena:{img:'assets/app/profil/lena.jpg',r:'Dealmaker'},
+  Amira:{img:'assets/app/profil/amira.jpg',r:'Starter'},
+  Jonas:{img:'assets/app/profil/jonas.jpg',r:'Starter'},
+  Felix:{img:'assets/app/profil/felix.jpg',r:'Performer'},
+  Tobias:{img:'assets/app/profil/tobias.jpg',r:'Dealmaker'},
+  Hannah:{img:'assets/app/profil/hannah.jpg',r:'Rising'},
+  Mia:{img:'assets/app/profil/mia.jpg',r:'Starter'},
+  David:{img:'assets/app/profil/david.jpg',r:'Performer'},
+  ClosingHub:{i:'CH',r:''}
 };
 const RKN={Starter:1,Rising:2,Performer:3,Dealmaker:4,Rainmaker:5},rkLabel=r=>(RKN[r]?RKN[r]+' ':'')+r;
 const rkCls=r=>r==='Performer'?' pro':(r==='Dealmaker'||r==='Rainmaker')?' elite':'';
 const rk=r=>r?`<span class="rk${rkCls(r)}">${rkLabel(r)}</span>`:'';
 function av(n,s=28){const p=PEOPLE[n]||{i:n.slice(0,2).toUpperCase()};const st=`width:${s}px;height:${s}px`;
   if(n==='Elias')return `<img class="av" data-prof="Elias" src="${ELI}" alt="" style="${st};object-position:50% 18%">`;
+  if(p.img)return `<img class="av" data-prof="${n}" src="${p.img}" alt="" style="${st}">`;
   if(p.c)return `<span class="av crop" data-prof="${n}" data-crop="${p.c}" style="${st}"></span>`;
   return `<span class="av ${n==='ClosingHub'?'ch':'ini'}"${n==='ClosingHub'?'':` data-prof="${n}"`} style="${st}">${p.i}</span>`}
 let cur=0,segNow='jobs',paused=false,visible=false,userHold=0,step=0;
@@ -1832,7 +1841,7 @@ const STORIES=[
   {n:'Lena',t:'6. Hire über ClosingHub, Rang Dealmaker gehalten!'},
   {n:'Amira',t:'Woche 1: 4 Bewerbungen, 1 Freischaltung, 1 Testgespräch.'}
 ];
-$('#stories').innerHTML=STORIES.map((s,i)=>`<button class="story" type="button" data-story="${i}" id="st-${s.n.toLowerCase()}"><i class="crop" data-crop="${PEOPLE[s.n].c}"></i>${s.n}</button>`).join('');
+$('#stories').innerHTML=STORIES.map((s,i)=>`<button class="story" type="button" data-story="${i}" id="st-${s.n.toLowerCase()}"><i style="background:url(${PEOPLE[s.n].img}) center/cover"></i>${s.n}</button>`).join('');
 
 /* ---------- Reels ---------- */
 const REELS=[
@@ -1878,7 +1887,7 @@ function showStory(i){
   if(i<0)i=0;if(i>=STORIES.length){closeStory();return}
   si=i;const s=STORIES[i],p=PEOPLE[s.n];
   $('#st-n').textContent=s.n;$('#st-n').dataset.prof=s.n;$('#st-av').dataset.prof=s.n;const r=$('#st-r');r.textContent=rkLabel(p.r);r.className='rk'+rkCls(p.r);
-  const a=$('#st-av');a.className='av crop';a.dataset.crop=p.c;applyCrops(storyv);
+  const a=$('#st-av');a.className='av';a.style.background=`url(${p.img}) center/cover`;
   $('#st-t').textContent=s.t;$('#st-in').value='';
   $$('#st-bars i').forEach((b,k)=>{b.className=k<i?'done':''});
   const bar=$$('#st-bars i')[i];void bar.offsetWidth;bar.className='run';
