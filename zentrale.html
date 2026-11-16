@@ -209,6 +209,8 @@
   <span class="tag">Zentrale</span>
   <span class="sp"></span>
   <input class="in search" id="q" placeholder="Suchen: Member, Rechnung, Ticket …">
+  <a class="btn sm" href="partner.html" target="_blank">Partnerportal ↗</a>
+  <a class="btn sm" href="portal.html" target="_blank">Auftraggeberportal ↗</a>
   <a class="btn sm" href="index.html" target="_blank">Website ↗</a>
   <a class="btn sm" href="app.html" target="_blank">App ↗</a>
 </div>
@@ -278,21 +280,9 @@ const DEFAULT_SETTINGS = {
 };
 // Beispielbereiche, bis die App echte Member hat
 const DEMO = {
-  members:[
-    {name:'Lena K.',rank:'Elite',abo:'Premium',land:'DE · Bayern',warn:0,st:'aktiv'},
-    {name:'Felix W.',rank:'Pro',abo:'Day One',land:'DE · NRW',warn:0,st:'aktiv'},
-    {name:'max_sales',rank:'Rookie',abo:'Plus',land:'AT · Wien',warn:2,st:'aktiv'},
-    {name:'Carla V.',rank:'Rookie',abo:'Day One',land:'ES · Balearen',warn:3,st:'gesperrt'}
-  ],
-  queue:[
-    {id:1,kind:'Video',title:'„Einwand Zeitmangel“ von Felix',ai:'KI unsicher: 62 % Themenbezug'},
-    {id:2,kind:'Auftraggeber',title:'Solar GmbH (GmbH, 12 MA)',ai:'Website passt, USt-ID prüfen'},
-    {id:3,kind:'Erfolgsnachweis',title:'Lena · Provisionsabrechnung 8.400 €',ai:'Keine Manipulation erkannt'}
-  ],
-  reports:[
-    {id:1,title:'Beitrag „Schnell reich mit …“',why:'4 Meldungen · Spam'},
-    {id:2,title:'Bewerbung von max_sales',why:'Telefonnummer im Text (Mahnung 2/3)'}
-  ]
+  members:[],
+  queue:[],
+  reports:[]
 };
 let D = { settings:structuredClone(DEFAULT_SETTINGS), jobs:[], clients:[], waitlist:[], requests:[], ticker:[], invoices:[], tickets:[], ai:[], ...structuredClone(DEMO) };
 let LOADED = false;
@@ -592,7 +582,7 @@ function clProfile(c){
   return `<a href="#auftraggeber" class="muted" onclick="clSel=null;render()">← Alle Auftraggeber</a>
   <div class="row between" style="margin-top:8px"><div><h1 class="h1">${esc(c.firma)} ${pill(clStatus(c.status))}</h1><p class="sub">Registriert am ${new Date(c.created_at).toLocaleDateString('de-DE')}${c.gekuendigt_am?` · gekündigt am ${new Date(c.gekuendigt_am).toLocaleDateString('de-DE')}`:''}</p></div>
     <div class="row">${c.email?`<a class="btn" href="mailto:${esc(c.email)}">Mail</a>`:''}<button class="btn" onclick="newInvoice(${c.id})">+ Rechnung</button>
-      ${c.status==='aktiv'?`<button class="btn red" onclick="clCancel(${c.id})">Kündigen</button>`:`<button class="btn" onclick="clReactivate(${c.id})">Wieder aktivieren</button>`}</div></div>
+      ${c.status==='aktiv'?`<button class="btn red" onclick="clCancel(${c.id})">Kündigen</button>`:`<button class="btn" onclick="clReactivate(${c.id})">Wieder aktivieren</button><button class="btn red" onclick="clDelete(${c.id})">Endgültig löschen</button>`}</div></div>
   <div class="grid g4" style="margin-bottom:16px">
     ${kpi('Umsatz (bezahlt)', eur(clSum(c.id,['bezahlt','einbehalten'])), inv.length+' Rechnungen')}
     ${kpi('Offen', eur(clSum(c.id,['offen','überfällig'])), inv.filter(i=>i.st==='überfällig').length+' überfällig')}
@@ -628,6 +618,22 @@ async function clCancel(id){
   await q(`clients?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(c,patch);
   if(live.length){ await q(`jobs?client_id=eq.${id}&status=eq.live`,{method:'PATCH',body:{status:'beendet'}}); live.forEach(j=>j.status='beendet'); }
   render(); toast('Auftraggeber gekündigt');
+}
+async function clDelete(id){
+  const c=clById(id); if(!c) return;
+  if(c.status==='aktiv') return toast('Nur ehemalige Auftraggeber können gelöscht werden. Erst kündigen.');
+  const jobs=clJobs(id), inv=clInv(id);
+  if(jobs.some(j=>j.status==='live')) return toast('Es laufen noch Jobs. Erst beenden.');
+  if(!confirm(`${c.firma} endgültig löschen?\n\n• Profil und Stammdaten werden gelöscht.\n• ${jobs.length} Job(s) werden gelöscht.\n• ${inv.length} Rechnung(en) bleiben für die Buchhaltung erhalten.\n\nDas kann nicht rückgängig gemacht werden.`)) return;
+  const t=prompt('Zweite Bestätigung: Tippe LÖSCHEN, um '+c.firma+' endgültig zu entfernen.');
+  if((t||'').trim().toUpperCase()!=='LÖSCHEN') return toast('Abgebrochen, nichts gelöscht');
+  try{
+    if(jobs.length) await q(`jobs?client_id=eq.${id}`,{method:'DELETE'});
+    const del=await q(`clients?id=eq.${id}`,{method:'DELETE',prefer:'return=representation'});
+    if(Array.isArray(del)&&!del.length) return toast('⚠️ Löschen wurde von der Datenbank nicht ausgeführt');
+    D.jobs=D.jobs.filter(j=>j.client_id!==id); D.invoices.forEach(i=>{ if(i.client_id===id) i.client_id=null; });
+    D.clients=D.clients.filter(x=>x.id!==id); clSel=null; render(); toast('Auftraggeber gelöscht');
+  }catch(e){}
 }
 async function clReactivate(id){
   const patch={status:'aktiv',gekuendigt_am:null}; await q(`clients?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(clById(id),patch); render(); toast('Wieder aktiv');
@@ -847,8 +853,8 @@ async function reqDone(id){ await q(`contact_requests?id=eq.${id}`,{method:'PATC
 let tSel=null;
 function support(){
   const t=D.tickets.find(x=>x.id===tSel)||D.tickets[0];
-  const head=`<div class="row between"><div><h1 class="h1">Support</h1><p class="sub">Alle Anfragen von Membern und Auftraggebern. Die KI schreibt dir Antwortvorschläge.</p></div><button class="btn gold-b" onclick="newTicket()">+ Ticket</button></div>`;
-  if(!t) return head+`<div class="card empty">Noch keine Tickets. Sobald die App live ist, landen Support-Anfragen hier. Du kannst auch selbst eins anlegen, z. B. für eine Mail.</div>`;
+  const head=`<div class="row between"><div><h1 class="h1">Support</h1><p class="sub">Alle Anfragen von Membern und Auftraggebern. Der Support läuft später direkt über die App, auch gemeldete Beiträge landen dann hier.</p></div><button class="btn gold-b" onclick="newTicket()">+ Ticket</button></div>`;
+  if(!t) return head+`<div class="card empty">Noch keine Tickets. Sobald die App live ist, landen Support-Anfragen und gemeldete Beiträge hier. Du kannst auch selbst eins anlegen, z. B. für eine Mail.</div>`;
   return head+`<div class="grid g2 supg">
     <div class="card" style="padding:8px">${D.tickets.map(x=>`<div class="list-sel ${x.id===t.id?'on':''}" onclick="tSel=${x.id};render()"><div class="row between"><b>#${x.id} ${esc(x.from)}</b>${pill(x.st)}</div><div class="muted" style="font-size:13px">${esc(x.topic)}</div></div>`).join('')}</div>
     <div class="card"><div class="row between" style="margin-bottom:12px"><div><b style="font-size:16px">${esc(t.topic)}</b><div class="muted" style="font-size:12px">#${t.id} · ${esc(t.from)}${t.email?' · '+esc(t.email):''} · Priorität ${pill(t.prio)}</div></div>
@@ -883,27 +889,25 @@ async function saveTicket(b){
   }catch(e){ b.disabled=false; }
 }
 
-/* ===== Member (Beispiel) ===== */
+/* ===== Member ===== */
 function member(){
   return `<h1 class="h1">Member</h1><p class="sub">Ränge, Abos, Mahnungen. Bei 3 Mahnungen wird automatisch 1 Woche gesperrt.</p>
-  ${demoNote('Beispieldaten: Echte Member gibt es, sobald die App mit Login live ist.')}
   <div class="card tw"><table><thead><tr><th>Name</th><th>Rang</th><th>Abo</th><th>Region</th><th>Mahnungen</th><th>Status</th><th></th></tr></thead><tbody>
   ${D.members.map((m,i)=>`<tr><td><b>${esc(m.name)}</b></td><td><span class="pill p-gold">${m.rank}</span></td><td>${m.abo}</td><td class="muted">${m.land}</td><td>${[0,1,2].map(k=>`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;background:${k<m.warn?'var(--bad)':'#2a2a2f'}"></span>`).join('')} <span class="muted">${m.warn}/3</span></td><td>${pill(m.st)}</td>
-    <td style="text-align:right;white-space:nowrap">${m.st==='gesperrt'?`<button class="btn sm" onclick="D.members[${i}].st='aktiv';D.members[${i}].warn=0;render();toast('Entsperrt')">Entsperren</button>`:`<button class="btn sm" onclick="warn(${i})">+ Mahnung</button> <button class="btn sm red" onclick="ban(${i})">Sperren</button>`}</td></tr>`).join('')}
+    <td style="text-align:right;white-space:nowrap">${m.st==='gesperrt'?`<button class="btn sm" onclick="D.members[${i}].st='aktiv';D.members[${i}].warn=0;render();toast('Entsperrt')">Entsperren</button>`:`<button class="btn sm" onclick="warn(${i})">+ Mahnung</button> <button class="btn sm red" onclick="ban(${i})">Sperren</button>`}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Noch keine Member. Sie erscheinen hier, sobald die App mit Login live ist.</td></tr>'}
   </tbody></table></div>`;
 }
 function warn(i){ const m=D.members[i]; m.warn=Math.min(3,m.warn+1); if(m.warn>=3){ m.st='gesperrt'; toast(m.name+' für 1 Woche gesperrt'); } else toast('Mahnung '+m.warn+'/3 an '+m.name); render(); }
 function ban(i){ if(!confirm(D.members[i].name+' für 1 Woche sperren?')) return; D.members[i].st='gesperrt'; render(); }
 
-/* ===== Moderation (Beispiel) ===== */
+/* ===== Moderation ===== */
 function moderation(){
   return `<h1 class="h1">Prüfen & Meldungen</h1><p class="sub">Die KI prüft alles vor. Du gibst nur noch frei oder lehnst ab.</p>
-  ${demoNote('Beispieldaten: Inhalte zum Prüfen kommen, sobald Member in der App posten.')}
   <div class="grid g2">
     <div class="card"><h3>Zur Prüfung (${D.queue.length})</h3>${D.queue.map(x=>`<div class="item"><div class="ico">${ic(x.kind==='Auftraggeber'?'users':x.kind==='Video'?'spark':'shield',16)}</div><div style="flex:1"><span class="pill">${x.kind}</span><div style="margin-top:4px"><b>${esc(x.title)}</b></div><div class="muted" style="font-size:12px">KI: ${esc(x.ai)}</div>
-      <div class="row" style="margin-top:8px"><button class="btn sm gold-b" onclick="qDone(${x.id},'Freigegeben')">Freigeben</button><button class="btn sm red" onclick="qDone(${x.id},'Abgelehnt')">Ablehnen</button></div></div></div>`).join('')||'<div class="empty">Alles geprüft. 👌</div>'}</div>
+      <div class="row" style="margin-top:8px"><button class="btn sm gold-b" onclick="qDone(${x.id},'Freigegeben')">Freigeben</button><button class="btn sm red" onclick="qDone(${x.id},'Abgelehnt')">Ablehnen</button></div></div></div>`).join('')||'<div class="empty">Noch nichts zu prüfen. Inhalte erscheinen hier, sobald Member in der App posten.</div>'}</div>
     <div class="card"><h3>Meldungen (${D.reports.length})</h3>${D.reports.map(r=>`<div class="item"><div class="ico" style="color:var(--bad);border-color:#F3C9C4">${ic('bell',16)}</div><div style="flex:1"><b>${esc(r.title)}</b><div class="muted" style="font-size:12px">${esc(r.why)}</div>
-      <div class="row" style="margin-top:8px"><button class="btn sm" onclick="rDone(${r.id},'Ausgeblendet')">Ausblenden</button><button class="btn sm" onclick="rDone(${r.id},'Mahnung verschickt')">Mahnung</button><button class="btn sm" onclick="rDone(${r.id},'Erledigt')">Ignorieren</button></div></div></div>`).join('')||'<div class="empty">Keine Meldungen.</div>'}</div>
+      <div class="row" style="margin-top:8px"><button class="btn sm" onclick="rDone(${r.id},'Ausgeblendet')">Ausblenden</button><button class="btn sm" onclick="rDone(${r.id},'Mahnung verschickt')">Mahnung</button><button class="btn sm" onclick="rDone(${r.id},'Erledigt')">Ignorieren</button></div></div></div>`).join('')||'<div class="empty">Keine Meldungen. Gemeldete Beiträge landen hier, sobald die App live ist.</div>'}</div>
   </div>`;
 }
 function qDone(id,t){ D.queue=D.queue.filter(x=>x.id!==id); render(); toast(t); }
@@ -914,13 +918,9 @@ const setKey = (key,value) => q('settings',{method:'POST',prefer:'resolution=mer
 function inhalte(){
   const s=D.settings, f=s.features;
   const sw=(k,l,d)=>`<div class="row between" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>${l}</b><div class="muted" style="font-size:12px">${d}</div></div><label class="switch"><input type="checkbox" ${f[k]?'checked':''} onchange="setFeature('${k}',this.checked)"><span></span></label></div>`;
-  return `<h1 class="h1">Website & App</h1><p class="sub">Texte und Funktionen. Gespeichertes ist sofort live.</p>
+  return `<h1 class="h1">Website & App</h1><p class="sub">Funktionen und Marktplatz. Gespeichertes ist sofort live.</p>
   <div class="grid g2">
-    <div class="card"><h3>Landingpage · Hero</h3>
-      <div class="grid" style="gap:12px"><label class="f">Headline Zeile 1<input class="in" id="h1" value="${esc(s.heroTop)}"></label><label class="f">Headline Zeile 2 (gold)<input class="in" id="h2" value="${esc(s.heroGold)}"></label><label class="f">Untertitel<input class="in" id="h3" value="${esc(s.heroSub)}"></label><label class="f">Text darunter<textarea class="in" id="h4" rows="3">${esc(s.heroLead)}</textarea></label>
-      <div style="background:var(--bg2);border-radius:12px;padding:18px;text-align:center"><div style="font-size:26px;font-weight:700;line-height:1.1" id="pv1">${esc(s.heroTop)}</div><div class="gold" style="font-size:26px;font-weight:700" id="pv2">${esc(s.heroGold)}</div><div style="margin-top:6px;font-weight:600" id="pv3">${esc(s.heroSub)}</div><div class="muted" style="margin-top:6px;font-size:13px" id="pv4">${esc(s.heroLead)}</div></div>
-      <button class="btn gold-b" onclick="saveHero()">Speichern</button></div></div>
-    <div class="card"><h3>Funktionen</h3>
+    <div class="card" style="grid-column:1/-1"><h3>Funktionen</h3>
       ${sw('waitlistOpen','Warteliste offen','Live: Formular auf der Landingpage an/aus')}
       ${sw('marketplace','Marktplatz','Wirkt, sobald die echte App läuft')}
       ${sw('topjobs','Top-Jobs','Wirkt, sobald die echte App läuft')}
@@ -932,7 +932,6 @@ function inhalte(){
     <div class="card" style="grid-column:1/-1"><div class="row between"><div><h3>Marktplatz · Dienstleistungen</h3><p class="muted" style="font-size:13px;margin-top:2px">Nur diese Dienstleistungen können im Marktplatz angeboten werden. Eine pro Zeile, die Reihenfolge gilt auch in der App.</p></div><span class="pill p-gold" id="mkCount">${(D.markt||[]).length} Dienstleistungen</span></div>
       <textarea class="in" id="mkList" rows="12" style="margin-top:12px;line-height:1.6" oninput="$('mkCount').textContent=this.value.split('\\n').filter(x=>x.trim()).length+' Dienstleistungen'">${esc((D.markt||[]).join('\n'))}</textarea>
       <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="saveMarkt(this)">Speichern</button><button class="btn" onclick="$('mkList').value=MARKT_DEFAULT.join('\\n');$('mkList').dispatchEvent(new Event('input'))">Standardliste laden</button></div></div>
-    <div class="card" style="grid-column:1/-1"><h3>Marktplatz · Partner</h3><p class="muted" style="font-size:13px;margin-top:2px">Partner und ihre Gäste pflegst du jetzt im Reiter <a href="#partner">Geschäft → Partner</a>.</p></div>
   </div>`;
 }
 function partner(){
