@@ -82,9 +82,11 @@ section{position:relative}
    ===================================================================== */
 .hero{padding:56px 0 56px}
 .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
-h1{font-size:clamp(40px,4.7vw,68px);text-wrap:balance}
+h1{font-size:clamp(28px,4.3vw,56px)}
+h1 span{white-space:nowrap}
+@media (max-width:760px){h1{font-size:7.3vw}}
 h1 span{display:block}
-.lead{margin-top:22px;font-size:20px;line-height:1.5;color:var(--ink-2);max-width:34ch}
+.lead{margin-top:22px;font-size:20px;line-height:1.5;color:var(--ink-2);max-width:48ch}
 .hero-points{list-style:none;margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;max-width:480px}
 .hero-points li{display:flex;gap:10px;align-items:center;font-size:16.5px;font-weight:600}
 .hero-points svg{flex:none;color:var(--deal)}
@@ -214,7 +216,10 @@ h1 span{display:block}
 .ph{display:flex;gap:11px;align-items:center;margin-top:2px}
 .ph .pav{width:62px;height:62px;border-radius:50%;flex:none;box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--ink)}
 .ph b{font-size:16px;font-weight:800}
-.medal-n{border:0;background:var(--deal-soft);color:var(--deal);font-weight:800;font-size:10px;border-radius:99px;padding:1px 6px;margin-left:3px;vertical-align:2px;cursor:pointer}
+.medal-n{display:inline-flex;align-items:center;gap:4px;border:1px solid #BFDCCB;background:var(--deal-soft);color:var(--deal);font-weight:700;font-size:9.5px;line-height:1.5;border-radius:99px;padding:1px 7px;cursor:pointer}
+.pchips{display:flex;align-items:center;flex-wrap:wrap;gap:4px 5px;margin-top:4px}
+.pchips>*{white-space:nowrap}
+.pchips .rk{margin-left:0;line-height:1.5;padding:1px 7px}
 .ph .rate{font-weight:800;font-size:12px;margin-left:5px}
 .ph .fol{display:flex;gap:10px;font-size:11px;color:var(--ink-2);margin-top:3px}
 .ph .fol b{font-size:11.5px;color:var(--ink)}
@@ -455,8 +460,8 @@ h1 span{display:block}
 .member small{display:block;font-size:12px;color:var(--ink-2);margin-top:4px}
 .member .seal{width:92px;height:92px}
 .member .mrow:first-child{align-items:center}
-.receipt{background:var(--sheet);color:var(--ink);border-radius:var(--r-m);padding:30px 32px 34px;box-shadow:0 30px 60px -20px rgba(0,0,0,.55);position:relative}
-.receipt::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:10px;background:radial-gradient(circle at 10px 0,var(--sheet) 7px,transparent 7.5px) 0 0/20px 10px repeat-x}
+.receipt{background:var(--sheet);color:var(--ink);border-radius:var(--r-m) var(--r-m) 0 0;padding:30px 32px 34px;filter:drop-shadow(0 26px 30px rgba(0,0,0,.45));position:relative;margin-bottom:12px}
+.receipt::after{content:"";position:absolute;left:0;right:0;bottom:-11px;height:12px;background:var(--sheet);-webkit-mask:conic-gradient(from -45deg at 50% 100%,#000 90deg,#0000 0) 50% 0/22px 100% repeat-x;mask:conic-gradient(from -45deg at 50% 100%,#000 90deg,#0000 0) 50% 0/22px 100% repeat-x}
 .r-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:14px}
 .r-head h3{font-size:22px;font-weight:800;font-variation-settings:"wdth" 88}
 .r-head span{font-size:14px;color:var(--ink-2)}
@@ -636,7 +641,7 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
 .screen .fset.open .fset-in{padding:4px 11px}
 .screen .fs-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #EEF0EC}
 .screen .fs-row:first-child{border-top:0}
-.screen .fs-row.col{display:grid;gap:6px}
+.screen .fs-row.col{display:grid;gap:6px;grid-template-columns:1fr}
 .screen .fs-row b{font-size:11.5px;display:block}
 .screen .fs-row span{font-size:10px;color:var(--ink-3)}
 .screen .sw{width:34px;height:20px;border-radius:99px;border:0;background:#CBD2C8;position:relative;cursor:pointer;flex:none;transition:background-color .2s}
@@ -646,6 +651,8 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
 .screen .seg3{display:grid;grid-template-columns:repeat(3,1fr);background:var(--paper);border-radius:9px;padding:3px;gap:3px}
 .screen .seg3 button{border:0;background:none;border-radius:7px;padding:5px 0;font-size:10.5px;font-weight:700;color:var(--ink-2);cursor:pointer}
 .screen .seg3 button.on{background:var(--ink);color:#fff}
+.screen #rtimer{gap:6px;padding:4px;margin-top:6px;width:100%;align-self:stretch}
+.screen #rtimer button{padding:9px 0;font-size:12px;border-radius:8px}
 .screen .chips{display:flex;gap:5px;margin-bottom:9px;overflow-x:auto;scrollbar-width:none}
 .screen .chips::-webkit-scrollbar{display:none}
 .screen .chips.cw{flex-wrap:wrap;margin:0;padding:0;max-width:none}
@@ -768,6 +775,8 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
 .screen .ppane.on{display:block;animation:paneIn .24s ease-out}
 .screen .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:0}
 .screen .pgrid button{aspect-ratio:1;background:var(--sheet);border:1px solid #E3E7E1;border-radius:6px;padding:6px;font-size:8.5px;line-height:1.3;color:var(--ink);overflow:hidden;font-weight:600;text-align:left;cursor:pointer}
+.screen .pgrid button.txt{position:relative;border:0;color:#fff;font-size:8.6px;font-weight:700;line-height:1.3;padding:16px 7px 7px;background:radial-gradient(90% 70% at 100% 0%,rgba(16,185,112,.45),transparent 60%),repeating-linear-gradient(45deg,rgba(255,255,255,.045) 0 1px,transparent 1px 6px),linear-gradient(160deg,#1D3C8F 0%,#13265C 55%,#0B1530 100%)}
+.screen .pgrid button.txt::before{content:"\201C";position:absolute;left:6px;top:-1px;font:800 22px/1 Georgia,serif;color:#34D399}
 .screen .pgrid button.img{padding:0;background-size:cover;background-position:50% 18%;background-color:#C9CFC6}
 .screen .vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
 .screen .vgrid button{position:relative;aspect-ratio:9/16;border:0;border-radius:6px;overflow:hidden;cursor:pointer;padding:0;background:#C9CFC6}
@@ -909,7 +918,7 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
 <section class="hero" id="app" aria-labelledby="h1">
   <div class="wrap">
     <div>
-      <h1 class="display" id="h1">Social Media für Closer, Setter &amp;&nbsp;Vertriebler.</h1>
+      <h1 class="display" id="h1"><span>Social Media für Closer,</span> <span>Setter &amp;&nbsp;Vertriebler.</span></h1>
       <p class="lead">Alles, was du brauchst, an einem Ort: Auftraggeber, Unterhaltung und Weiterbildung. Für mehr Abschlüsse und mehr Fokus auf deine Einnahmequelle.</p>
       <ul class="hero-points">
         <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9z"/></svg>Auftraggeber mit klarer Provision</li>
@@ -987,11 +996,12 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
                 <div class="ph">
                   <img class="pav" src="assets/app/elias_portraet_eng.jpg" alt="Profilbild von Elias" width="64" height="64">
                   <div>
-                    <div><b>Elias</b><span class="rk elite">4 Dealmaker</span><button type="button" class="medal-n num" id="medal-n">12 Medaillen</button></div>
+                    <div><b>Elias</b></div>
+                    <div class="pchips"><span class="rk elite">4 Dealmaker</span><button type="button" class="medal-n num" id="medal-n"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="15" r="6"/><path d="M8.5 9.8 6 3h4l2 4 2-4h4l-2.5 6.8"/></svg>12 Medaillen</button></div>
                     <div class="fol num"><button type="button" data-ptab="reviews">★ <b>4,8</b> (27)</button><button type="button" id="fol-btn"><b>312</b> Follower</button><span><b>180</b> gefolgt</span></div>
                   </div>
                 </div>
-                <p class="pinfo"><strong>Closer</strong>, 5 Jahre Erfahrung, Spanien, DE und EN<br>High-Ticket Closer, B2B und Coaching</p>
+                <p class="pinfo"><strong>Closer</strong>, 5 Jahre Erfahrung<br>Lebt in Spanien, spricht Deutsch und Englisch<br>High-Ticket Closer, B2B und Coaching</p>
                 <div class="badges" id="badges"></div>
                 <div class="ptabs" role="tablist" aria-label="Profilbereiche"><button type="button" class="on" data-ptab="posts">Beiträge</button><button type="button" data-ptab="videos">Videos</button><button type="button" data-ptab="reviews">Bewertungen</button></div>
                 <div class="ppane on" data-ppane="posts"><div class="pgrid" id="pgrid"></div></div>
@@ -1216,15 +1226,15 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
 <!-- ===================== GRÜNDER ===================== -->
 <section class="sec founder" aria-labelledby="h-founder">
   <div class="wrap">
-    <img src="assets/app/elias_portraet_eng.jpg" alt="Elias, Gründer von ClosingHub" width="290" height="520" loading="lazy">
+    <img src="assets/app/elias_gruender.jpg" alt="Elias, Gründer von ClosingHub" width="720" height="1290" loading="lazy">
     <div>
       <h2 class="display" id="h-founder">Gebaut für Leute, die vom Verkaufen&nbsp;leben.</h2>
-      <p>Ich bin Elias, Gründer von ClosingHub. Gute Jobs gehen in Gruppen voller Spam unter, die Provision ist oft erst nach dem dritten Gespräch klar, und nach einem harten Call fehlt jemand, der versteht, worum es geht.</p>
-      <p>Deshalb baue ich ClosingHub: einen Ort, an dem Closer, Setter und Vertriebler Jobs finden, voneinander lernen und ihre Erfolge teilen.</p>
+      <p>Ich bin Elias, Gründer von ClosingHub. Meine Vision: eine Plattform, die Closer, Setter und Vertriebler an einem Punkt verbindet.</p>
+      <p>Ein Ort, der dir alles gibt, was du für deinen Beruf brauchst: Auftraggeber, Wissen von Profis, ehrlichen Austausch und eine Community, die dich antreibt. Damit du deine Grenzen immer wieder verschiebst und jeden Tag ein Stück besser wirst.</p>
       <ul class="founder-list">
-        <li>Jeder Job zeigt die Vergütung, bevor du dich bewirbst.</li>
-        <li>Nach jeder Zusammenarbeit bewertet ihr euch gegenseitig.</li>
-        <li>Keine Abofalle: Dein Day-One-Jahr endet von selbst.</li>
+        <li><b>Verbinden:</b> Closer, Setter, Vertriebler und Auftraggeber an einem Ort.</li>
+        <li><b>Wachsen:</b> Wissen, Feedback und Vorbilder für deinen nächsten Schritt.</li>
+        <li><b>Feiern:</b> Jeder Erfolg wird gesehen.</li>
       </ul>
       <p class="founder-sig">Elias</p>
     </div>
@@ -1318,9 +1328,8 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
       <details><summary>Warum nicht einfach LinkedIn oder Telegram-Gruppen?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Dort gehen gute Jobs zwischen Werbung und Spam unter. Auf ClosingHub siehst du die Vergütung vorab, die besten Antworten im Forum stehen oben, und dein Profil zeigt deine Erfolge mit Rang, Abzeichen und Bewertungen.</p></details>
       <details><summary>Verlängert sich mein Day-One-Jahr automatisch?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Nein. Nach 12 Monaten endet es von selbst, ohne Kündigung und ohne Abbuchung. Wir erinnern dich rechtzeitig per Mail. Wenn du bleiben willst, wählst du dein Paket selbst aus.</p></details>
       <details><summary>Warum soll ich unterschreiben?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Weil du dir einen von nur <span data-total>250</span> Plätzen reservierst. Die Unterschrift ist dein Handschlag mit uns. Sie kostet nichts und verpflichtet dich zu nichts.</p></details>
-      <details><summary>Ich habe noch keine Erfahrung im Vertrieb. Ist das was für mich?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Ja. Im Feed lernst du mit kurzen Inhalten, im Forum bekommst du Antworten von erfahrenen Closern, und mit Übungsgesprächen trainierst du, bevor du dich auf deinen ersten Job bewirbst.</p></details>
+      <details><summary>Ich habe noch keine Erfahrung im Vertrieb. Ist das was für mich?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Ja. Viele starten als Setter. Im Feed lernst du mit kurzen Inhalten, im Forum bekommst du Antworten von erfahrenen Closern, und im Marktplatz findest du Coachings, wenn du gezielt dazulernen willst.</p></details>
       <details><summary>Wie funktioniert es für Auftraggeber?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Du veröffentlichst deinen Job anonym. Closer und Setter bewerben sich mit ihrem Profil. Erst wenn du einen Kontakt freischaltest, seht ihr euch gegenseitig. So bleibt alles fair und nachvollziehbar.</p></details>
-      <details><summary>In welchen Ländern gibt es ClosingHub?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>ClosingHub startet auf Deutsch und Englisch und ist für ganz Europa gedacht. Damit die Qualität stimmt, nehmen wir zum Start maximal 1.000 Member pro Land auf.</p></details>
     </div>
   </div>
 </section>
@@ -1512,7 +1521,7 @@ const FEATURES=[
   ['msg','Nachrichten','Direkt','Schreib mit Closern, Settern und Auftraggebern.',['Text, Bilder und Sprachnachrichten','Lesebestätigung und Online-Status','Melden und Blockieren']],
   ['medal','Ränge und Abzeichen','Status','Intelligentes Profil mit Bewertungssystem, das dich präsentiert. Sammle Erfolge und werde besser.',['Medaillen sammeln durch Aktivität und Lob','Abzeichen für nachgewiesene Erfolge','Spotlight: Top-Profi-Closer und Top-Rookie-Closer des Monats']],
   ['shield','Bewertungen','Vertrauen','Gegenseitige Bewertungen nach jeder Zusammenarbeit.',['5 Sterne und kurzer Text','Du entscheidest, was im Profil steht','Mehr Vertrauen, bessere Jobs']],
-  ['gift','Member-Vorteile','Deals','Exklusive Angebote von Partnern nur für Member.',['Rabatte auf Tools und Equipment','Mehr Deals mit Premium','Monatlich neue Angebote']],
+  ['gift','Member-Vorteile','Deals','Exklusive Angebote von Partnern nur für Member.',['Morgendlicher Motivations-Live-Call','Rabatte auf Tools und Equipment','Mehr Deals mit Premium','Monatlich neue Angebote']],
 ];
 $('#spec').innerHTML=FEATURES.map(([ic,t,tag,d,li],i)=>`<div class="spec-row"><button type="button" aria-expanded="false" aria-controls="sp${i}"><span class="ico">${svg(IC[ic])}</span><h3>${t}<span class="sp-inl">${d}</span></h3><span class="tag">${tag}</span><span class="pm">${svg('<path d="M12 5v14M5 12h14"/>',20,2)}</span></button><div class="spec-body" id="sp${i}"><div><ul>${li.map(x=>`<li>${x}</li>`).join('')}</ul></div></div></div>`).join('');
 $$('.spec-row>button').forEach(b=>b.addEventListener('click',()=>{const r=b.parentElement,o=!r.classList.contains('open');r.classList.toggle('open',o);b.setAttribute('aria-expanded',o)}));
@@ -1882,7 +1891,7 @@ function showStory(i){
   $('#st-t').textContent=s.t;$('#st-in').value='';
   $$('#st-bars i').forEach((b,k)=>{b.className=k<i?'done':''});
   const bar=$$('#st-bars i')[i];void bar.offsetWidth;bar.className='run';
-  clearTimeout(stT);if(!reduce)stT=setTimeout(()=>{if(storyv.classList.contains('on')&&document.activeElement!==$('#st-in'))showStory(si+1)},3400);
+  clearTimeout(stT);if(!reduce)stT=setTimeout(()=>{if(storyv.classList.contains('on')&&document.activeElement!==$('#st-in'))showStory(si+1)},4860);
 }
 function openStory(i){closeSheets();closeReels();storyv.classList.add('on');storyv.setAttribute('aria-hidden','false');showStory(i);explain('story','#st-t')}
 function closeStory(silent){clearTimeout(stT);if(!storyv.classList.contains('on'))return;storyv.classList.remove('on');storyv.setAttribute('aria-hidden','true');if(!silent)explainView()}
@@ -1988,7 +1997,7 @@ function buy(id){bought.add(id);closeSheets();renderOffers();ptoast('Gekauft, vi
 const BADGES=[['shield','Day One','Einer der ersten 250 Member. Bleibt für immer im Profil.'],['id','Identität geprüft','Ausweis von ClosingHub bestätigt.'],['coin','Hired via ClosingHub','Den ersten Job über ClosingHub bekommen.'],['gem','High-Ticket','Nachgewiesener Abschluss ab 5.000 €.']];
 $('#badges').innerHTML=BADGES.map((b,i)=>`<button type="button" data-badge="${i}" aria-label="Abzeichen ${b[1]}">${SVG(P[b[0]],16)}</button>`).join('');
 const PGRID=[['img','assets/app/elias_praesentieren.jpg',1],['txt','Die 3-Sekunden-Pause nach dem Preis. Wer zuerst redet, verhandelt gegen sich selbst.'],['img','assets/app/elias_handy_tippen.jpg',2],['txt','Vor jedem Call drei Fragen notieren: Was will er erreichen, was hält ihn ab, was kostet ihn das Warten?'],['img','assets/app/elias_portraet_eng.jpg',1],['txt','Absagen sind Daten, keine Urteile. Schreib nach jedem Nein auf, an welcher Stelle es gekippt ist.']];
-$('#pgrid').innerHTML=PGRID.map(g=>g[0]==='img'?`<button type="button" class="img" data-reel="${g[2]}" style="background-image:url(${g[1]})" aria-label="Video ansehen"></button>`:`<button type="button" data-ptxt="${esc(g[1])}">${esc(g[1].split('.')[0])}.</button>`).join('');
+$('#pgrid').innerHTML=PGRID.map(g=>g[0]==='img'?`<button type="button" class="img" data-reel="${g[2]}" style="background-image:url(${g[1]})" aria-label="Video ansehen"></button>`:`<button type="button" class="txt" data-ptxt="${esc(g[1])}">${esc(g[1].split('.')[0])}.</button>`).join('');
 $('#vgrid').innerHTML=[['clip_elias1',1,'0:08'],['clip_elias2',2,'0:08']].map(v=>`<button type="button" data-reel="${v[1]}"><video src="assets/app/${v[0]}.mp4" muted loop playsinline autoplay preload="metadata"></video><span>▶ ${v[2]}</span></button>`).join('');
 const REVIEWS=[['Coaching-Anbieter, anonym',5,'Elias hat in 6 Wochen 11 Abschlüsse gemacht. Strukturiert und zuverlässig.','vor 2 Wochen'],['Software-Firma, anonym',5,'Sehr gute Vorbereitung auf jeden Call, klare Übergaben ans Team.','vor 1 Monat'],['Agentur, anonym',4,'Starker Closer, Reporting könnte noch regelmäßiger sein.','vor 2 Monaten'],['Energie-Anbieter, anonym',5,'Hohe Abschlussquote bei Solar-Terminen. Gerne wieder.','vor 3 Monaten']];
 $('#reviews').innerHTML=`<div class="rsum"><div class="big num">4,8<small>27 Bewertungen</small></div><div class="rbars num">${[[5,82],[4,14],[3,4],[2,0],[1,0]].map(r=>`<div><span>${r[0]}</span><i><b style="width:${r[1]}%"></b></i></div>`).join('')}</div></div>${REVIEWS.map(r=>`<div class="rv"><div class="top"><b>${r[0]}</b><span class="stars">${stars(r[1])}</span></div><p>${r[2]}</p><small>${r[3]}</small></div>`).join('')}`;
@@ -2156,9 +2165,10 @@ const STEPS=[
   [()=>ptab('posts'),600],
   T('.tabs [data-tab="0"]',()=>go(0),1600)
 ];
+const SPEED=0.7;
 function runStep(){
   let wait=600;
-  if(visible&&!paused&&Date.now()>userHold&&!document.hidden){const [fn,d]=STEPS[step];fn();wait=d;step=(step+1)%STEPS.length}
+  if(visible&&!paused&&Date.now()>userHold&&!document.hidden){const [fn,d]=STEPS[step];fn();wait=Math.round(d/SPEED);step=(step+1)%STEPS.length}
   setTimeout(runStep,wait);
 }
 phone.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')paused=true});
