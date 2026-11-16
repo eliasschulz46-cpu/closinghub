@@ -213,28 +213,29 @@ const S = { region:'Bayern', country:'Deutschland', wide:false, mcat:'Alle', use
 try{ const s=JSON.parse(localStorage.getItem('ch_prev')||'{}'); Object.assign(S,{user:!!s.user,mode:'consumer'}); }catch(e){}
 const save=()=>{ try{localStorage.setItem('ch_prev',JSON.stringify({user:S.user,mode:S.mode}))}catch(e){} };
 
-const ME = { name:'Elias', rank:'Elite', role:'Closer', years:5, country:'Spanien', langs:'DE, EN', bio:'High-Ticket Closer · B2B & Coaching', followers:312, following:180, rating:4.8,
-  badges:['Founding Member','Ausweis verifiziert','Verified 50k','High-Ticket','Platform-verified'],
-  medals:[['🤝 Hired via ClosingHub',3],['🌟 Starke Bewertung',6],['💬 Kommentator',2],['▶️ Lernstunde',1]] };
+const ME = { name:'Elias', rank:'Dealmaker', role:'Closer', years:5, country:'Spanien', langs:'DE, EN', bio:'High-Ticket Closer · B2B & Coaching', followers:312, following:180, rating:4.8,
+  ref:'elias', invited:0,
+  badges:['Day One','Premium','Identität geprüft','High-Ticket','Hired via ClosingHub'],
+  medals:[['🤝 Job über ClosingHub',3],['🌟 Starke Bewertung',6],['💬 Kommentator',2],['▶️ Lernstunde',1]] };
 S.badgesShown = S.badgesShown || ME.badges.slice(0,4);
 
 const POSTS = [
   {vid:1,id:15,tg:['Palmen','Büro'],k:'Member-Video',a:'Marco',r:'Rising',t:'Mein erster 4.000 €-Deal – so lief der Call.',l:152,c:24,v:'0:44'},
-  {vid:5,id:16,tg:['Porträt','Studio'],k:'Member-Video',a:'Sofia',r:'Pro',t:'3 Sätze, mit denen ich jeden Termin bestätige.',l:118,c:13,v:'0:39'},
-  {id:1,tg:['Schach', 'Gold'],k:'Zitat',bg:'koenig',a:'ClosingHub',r:'Legend',t:'„Ein Einwand ist kein Nein – er ist eine Bitte um mehr Sicherheit.“',l:128,c:14},
-  {vid:4,id:2,tg:['Bühne', 'Publikum'],k:'Seminar-Ausschnitt',a:'ClosingHub',r:'Legend',t:'Die 3-Sekunden-Pause nach dem Preis: Wer zuerst spricht, verliert Verhandlungsmacht.',l:342,c:41,v:'0:48'},
-  {id:3,tg:['Berge', 'Gipfel'],k:'Mindset',bg:'berge',a:'ClosingHub',r:'Legend',t:'Jedes Nein bringt dich einen Schritt näher an den Gipfel. Zähl die Schritte, nicht die Absagen.',l:251,c:19},
-  {vid:0,id:4,tg:['Headset', 'Büro'],k:'Member-Video',a:'Lena',r:'Elite',t:'So frage ich als Setter nach dem Termin – live aus meinem Call-Setup.',l:203,c:18,v:'0:52'},
-  {id:5,tg:['Diagramm', 'Wachstum'],k:'Zitat',bg:'chart',a:'ClosingHub',r:'Legend',t:'Closing ist kein Überreden. Closing ist Klarheit schaffen, damit der Kunde entscheiden kann.',l:296,c:21},
-  {id:6,tg:['Ozean', 'Ruhe'],k:'Achtsamkeit',bg:'wellen',a:'ClosingHub',r:'Legend',t:'Vor dem nächsten Call: drei tiefe Atemzüge. Ein ruhiger Kopf hört mehr als ein schneller Mund.',l:174,c:12},
-  {vid:3,id:7,tg:['Büro', 'Telefon'],k:'Film-Ausschnitt',a:'ClosingHub',r:'Legend',t:'Die berühmteste Verkaufsszene der Filmgeschichte – und was wir heute daraus lernen.',l:410,c:33,v:'0:58'},
-  {id:8,tg:['Denker', 'Fragen'],k:'Intelligenz',bg:'denker',a:'ClosingHub',r:'Legend',t:'Kluge Closer reden 30 % und fragen 70 %. Wer fragt, führt.',l:233,c:16},
-  {id:9,tg:['Münzen', 'Geld'],k:'Zitat',bg:'muenzen',a:'ClosingHub',r:'Legend',t:'Geld folgt dem Wert, den du lieferst – nicht der Zeit, die du absitzt.',l:318,c:28},
-  {id:10,tg:['Sonne', 'Morgen'],k:'Mindset',bg:'sonne',a:'ClosingHub',r:'Legend',t:'Jeder Tag ist ein neuer Sonnenaufgang für deine Pipeline.',l:142,c:8},
-  {vid:2,id:11,tg:['Laptop', 'Kalender'],k:'Member-Video',a:'Jonas',r:'Pro',t:'Mein Tagesplan als Remote Closer in 50 Sekunden.',l:96,c:9,v:'0:50'},
-  {id:12,tg:['Bühne', 'Sprache'],k:'Intelligenz',bg:'redner',a:'ClosingHub',r:'Legend',t:'Wer die Sprache des Kunden spricht, muss nicht laut sein, um gehört zu werden.',l:187,c:11},
-  {id:13,tg:['Wald', 'Natur'],k:'Achtsamkeit',bg:'wald',a:'ClosingHub',r:'Legend',t:'Wachstum passiert leise. Wie ein Wald – Baum für Baum, Call für Call.',l:121,c:6},
-  {id:14,tg:['Skyline', 'Stadt'],k:'Zitat',bg:'skyline',a:'ClosingHub',r:'Legend',t:'Baue heute die Skyline deines Lebens – ein Abschluss nach dem anderen.',l:265,c:22},
+  {vid:5,id:16,tg:['Porträt','Studio'],k:'Member-Video',a:'Sofia',r:'Performer',t:'3 Sätze, mit denen ich jeden Termin bestätige.',l:118,c:13,v:'0:39'},
+  {id:1,tg:['Schach', 'Gold'],k:'Zitat',bg:'koenig',a:'ClosingHub',r:'Rainmaker',t:'„Ein Einwand ist kein Nein – er ist eine Bitte um mehr Sicherheit.“',l:128,c:14},
+  {vid:4,id:2,tg:['Bühne', 'Publikum'],k:'Seminar-Ausschnitt',a:'ClosingHub',r:'Rainmaker',t:'Die 3-Sekunden-Pause nach dem Preis: Wer zuerst spricht, verliert Verhandlungsmacht.',l:342,c:41,v:'0:48'},
+  {id:3,tg:['Berge', 'Gipfel'],k:'Mindset',bg:'berge',a:'ClosingHub',r:'Rainmaker',t:'Jedes Nein bringt dich einen Schritt näher an den Gipfel. Zähl die Schritte, nicht die Absagen.',l:251,c:19},
+  {vid:0,id:4,tg:['Headset', 'Büro'],k:'Member-Video',a:'Lena',r:'Dealmaker',t:'So frage ich als Setter nach dem Termin – live aus meinem Call-Setup.',l:203,c:18,v:'0:52'},
+  {id:5,tg:['Diagramm', 'Wachstum'],k:'Zitat',bg:'chart',a:'ClosingHub',r:'Rainmaker',t:'Closing ist kein Überreden. Closing ist Klarheit schaffen, damit der Kunde entscheiden kann.',l:296,c:21},
+  {id:6,tg:['Ozean', 'Ruhe'],k:'Achtsamkeit',bg:'wellen',a:'ClosingHub',r:'Rainmaker',t:'Vor dem nächsten Call: drei tiefe Atemzüge. Ein ruhiger Kopf hört mehr als ein schneller Mund.',l:174,c:12},
+  {vid:3,id:7,tg:['Büro', 'Telefon'],k:'Film-Ausschnitt',a:'ClosingHub',r:'Rainmaker',t:'Die berühmteste Verkaufsszene der Filmgeschichte – und was wir heute daraus lernen.',l:410,c:33,v:'0:58'},
+  {id:8,tg:['Denker', 'Fragen'],k:'Intelligenz',bg:'denker',a:'ClosingHub',r:'Rainmaker',t:'Kluge Closer reden 30 % und fragen 70 %. Wer fragt, führt.',l:233,c:16},
+  {id:9,tg:['Münzen', 'Geld'],k:'Zitat',bg:'muenzen',a:'ClosingHub',r:'Rainmaker',t:'Geld folgt dem Wert, den du lieferst – nicht der Zeit, die du absitzt.',l:318,c:28},
+  {id:10,tg:['Sonne', 'Morgen'],k:'Mindset',bg:'sonne',a:'ClosingHub',r:'Rainmaker',t:'Jeder Tag ist ein neuer Sonnenaufgang für deine Pipeline.',l:142,c:8},
+  {vid:2,id:11,tg:['Laptop', 'Kalender'],k:'Member-Video',a:'Jonas',r:'Performer',t:'Mein Tagesplan als Remote Closer in 50 Sekunden.',l:96,c:9,v:'0:50'},
+  {id:12,tg:['Bühne', 'Sprache'],k:'Intelligenz',bg:'redner',a:'ClosingHub',r:'Rainmaker',t:'Wer die Sprache des Kunden spricht, muss nicht laut sein, um gehört zu werden.',l:187,c:11},
+  {id:13,tg:['Wald', 'Natur'],k:'Achtsamkeit',bg:'wald',a:'ClosingHub',r:'Rainmaker',t:'Wachstum passiert leise. Wie ein Wald – Baum für Baum, Call für Call.',l:121,c:6},
+  {id:14,tg:['Skyline', 'Stadt'],k:'Zitat',bg:'skyline',a:'ClosingHub',r:'Rainmaker',t:'Baue heute die Skyline deines Lebens – ein Abschluss nach dem anderen.',l:265,c:22},
 ];
 
 // 10 abstrakte Hintergründe in feinen Goldlinien – 3 Themen
@@ -254,13 +255,13 @@ function bgSvg(k){ const b=BG[k]; if(!b) return ''; return `<svg class="absolute
 
 const STORIES = [
   {n:'Marco',r:'Rising',e:'🔥',t:'Erster Abschluss über 4.200 € heute! Danke ans Forum für die Einwand-Tipps.'},
-  {n:'Lena',r:'Elite',e:'🏆',t:'6. Hire über ClosingHub – Rang Elite gehalten!'},
+  {n:'Lena',r:'Dealmaker',e:'🏆',t:'6. Hire über ClosingHub – Rang Elite gehalten!'},
   {ad:1,n:'CRM für Closer',e:'📊',t:'3 Monate −40 % für alle ClosingHub-Member.',cta:'Deal holen'},
-  {n:'Amira',r:'Rookie',e:'🚀',t:'Woche 1: 4 Bewerbungen, 1 Freischaltung, 1 Testgespräch.'},
-  {n:'Jonas',r:'Pro',e:'📞',t:'30 Calls heute, 4 Termine gesetzt. Läuft!'},
+  {n:'Amira',r:'Starter',e:'🚀',t:'Woche 1: 4 Bewerbungen, 1 Freischaltung, 1 Testgespräch.'},
+  {n:'Jonas',r:'Performer',e:'📞',t:'30 Calls heute, 4 Termine gesetzt. Läuft!'},
   {ad:1,n:'Power-Dialer',e:'☎️',t:'1 Monat gratis testen – exklusiv für Member.',cta:'Gratis testen'},
-  {n:'Sofia',r:'Pro',e:'💎',t:'High-Ticket-Deal über 8.000 € geclosed!'},
-  {n:'Tobias',r:'Elite',e:'⭐',t:'Neue 5-Sterne-Bewertung vom Auftraggeber.'},
+  {n:'Sofia',r:'Performer',e:'💎',t:'High-Ticket-Deal über 8.000 € geclosed!'},
+  {n:'Tobias',r:'Dealmaker',e:'⭐',t:'Neue 5-Sterne-Bewertung vom Auftraggeber.'},
 ];
 const JOBS = [
   {id:1,t:'High-Ticket Closer (Remote)',ind:'Coaching',p:'Online-Programm 3.000–8.000 €',reg:'DACH',pay:'10 % Provision pro Abschluss',size:'10–50 MA',age:'3–5 Jahre',rt:4.7,roles:'Closer',d:2,top:1},
@@ -310,34 +311,34 @@ const REGIONS = {
 };
 const MCATS = ['1:1 Closing-Coaching','1:1 Setter-Coaching','Chat-Setting-Training','Einwandbehandlung-Training','Kaltakquise-Training','Sprach- und Stimmtraining','Auftreten im Video-Call','Call-Analyse','Chat-Analyse','Skripte anfertigen','Fertige Skripte nach Branche','Vorlagen & Leitfäden','Mindset-Coaching','Bewerbungs-Check','Angebots-Check','Personal Branding','Start in die Selbstständigkeit','CRM- und KI-Tools im Vertrieb','Mini-Kurse für Einsteiger'];
 const OFFERS = [
-  {cat:'Vorlagen & Leitfäden',t:'Follow-up-Skript nach No-Show',s:'Felix',r:'Pro',st:4.6,n:12,pr:19,reg:'Bayern'},
-  {cat:'Vorlagen & Leitfäden',t:'Preis-Einwand: 7 Antworten',s:'Tobias',r:'Elite',st:4.9,n:31,pr:24,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Follow-up-Skript nach No-Show',s:'Felix',r:'Performer',st:4.6,n:12,pr:19,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Preis-Einwand: 7 Antworten',s:'Tobias',r:'Dealmaker',st:4.9,n:31,pr:24,reg:'Bayern'},
   {cat:'Fertige Skripte nach Branche',t:'Setter-Skript Immobilien',s:'Hannah',r:'Rising',st:4.4,n:5,pr:22,reg:'Bayern'},
-  {cat:'Vorlagen & Leitfäden',t:'Upsell-Leitfaden nach Abschluss',s:'Felix',r:'Pro',st:4.5,n:9,pr:17,reg:'Bayern'},
-  {cat:'Vorlagen & Leitfäden',t:'Telefon-Opener in 15 Sekunden',s:'Mia',r:'Rookie',st:4.2,n:2,pr:9,reg:'Bayern'},
-  {cat:'Fertige Skripte nach Branche',t:'Closing-Skript Solar',s:'Tobias',r:'Elite',st:4.8,n:26,pr:39,reg:'Bayern'},
-  {cat:'Fertige Skripte nach Branche',t:'High-Ticket Closing-Skript (Coaching)',s:'Lena',r:'Elite',st:4.9,n:37,pr:49,reg:'Bayern'},
-  {cat:'Fertige Skripte nach Branche',t:'Kaltakquise-Skript B2B Handwerk',s:'Jonas',r:'Pro',st:4.7,n:21,pr:29,reg:'Bayern'},
-  {cat:'Vorlagen & Leitfäden',t:'Setter-Opener für Instagram-DMs',s:'Sofia',r:'Pro',st:4.6,n:18,pr:19,reg:'Nordrhein-Westfalen'},
-  {cat:'Call-Analyse',t:'Ich analysiere deinen Sales-Call (Video-Feedback)',s:'Lena',r:'Elite',st:5.0,n:44,pr:79,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Upsell-Leitfaden nach Abschluss',s:'Felix',r:'Performer',st:4.5,n:9,pr:17,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Telefon-Opener in 15 Sekunden',s:'Mia',r:'Starter',st:4.2,n:2,pr:9,reg:'Bayern'},
+  {cat:'Fertige Skripte nach Branche',t:'Closing-Skript Solar',s:'Tobias',r:'Dealmaker',st:4.8,n:26,pr:39,reg:'Bayern'},
+  {cat:'Fertige Skripte nach Branche',t:'High-Ticket Closing-Skript (Coaching)',s:'Lena',r:'Dealmaker',st:4.9,n:37,pr:49,reg:'Bayern'},
+  {cat:'Fertige Skripte nach Branche',t:'Kaltakquise-Skript B2B Handwerk',s:'Jonas',r:'Performer',st:4.7,n:21,pr:29,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Setter-Opener für Instagram-DMs',s:'Sofia',r:'Performer',st:4.6,n:18,pr:19,reg:'Nordrhein-Westfalen'},
+  {cat:'Call-Analyse',t:'Ich analysiere deinen Sales-Call (Video-Feedback)',s:'Lena',r:'Dealmaker',st:5.0,n:44,pr:79,reg:'Bayern'},
   {cat:'Angebots-Check',t:'Einschätzung: Ist dieser Auftrag seriös und fair bezahlt?',s:'Marco',r:'Rising',st:4.4,n:6,pr:25,reg:'Berlin'},
-  {cat:'Einwandbehandlung-Training',t:'1:1 Einwand-Training (60 Min.)',s:'Jonas',r:'Pro',st:4.8,n:29,pr:89,reg:'Bayern'},
-  {cat:'1:1 Closing-Coaching',t:'Vom Setter zum Closer – Mentoring',s:'Lena',r:'Elite',st:4.9,n:15,pr:149,reg:'Hamburg'},
-  {cat:'CRM- und KI-Tools im Vertrieb',t:'CRM-Pipeline-Vorlage + Follow-up-Plan',s:'Amira',r:'Rookie',st:4.5,n:4,pr:15,reg:'Bayern'},
-  {cat:'Vorlagen & Leitfäden',t:'Einwand-Bibliothek (120 Antworten)',s:'Sofia',r:'Pro',st:4.8,n:52,pr:39,reg:'Hessen'},
-  {cat:'Mini-Kurse für Einsteiger',t:'Remote Closer in 14 Tagen',s:'Lena',r:'Elite',st:4.7,n:63,pr:199,reg:'Bayern'},
+  {cat:'Einwandbehandlung-Training',t:'1:1 Einwand-Training (60 Min.)',s:'Jonas',r:'Performer',st:4.8,n:29,pr:89,reg:'Bayern'},
+  {cat:'1:1 Closing-Coaching',t:'Vom Setter zum Closer – Mentoring',s:'Lena',r:'Dealmaker',st:4.9,n:15,pr:149,reg:'Hamburg'},
+  {cat:'CRM- und KI-Tools im Vertrieb',t:'CRM-Pipeline-Vorlage + Follow-up-Plan',s:'Amira',r:'Starter',st:4.5,n:4,pr:15,reg:'Bayern'},
+  {cat:'Vorlagen & Leitfäden',t:'Einwand-Bibliothek (120 Antworten)',s:'Sofia',r:'Performer',st:4.8,n:52,pr:39,reg:'Hessen'},
+  {cat:'Mini-Kurse für Einsteiger',t:'Remote Closer in 14 Tagen',s:'Lena',r:'Dealmaker',st:4.7,n:63,pr:199,reg:'Bayern'},
   {cat:'Personal Branding',t:'LinkedIn-Profil-Check für Closer',s:'Marco',r:'Rising',st:4.3,n:3,pr:19,reg:'Berlin'},
-  {cat:'Skripte anfertigen',t:'Individuelles Closing-Skript für dein Angebot',s:'Tobias',r:'Elite',st:4.9,n:19,pr:149,reg:'Bayern'},
-  {cat:'Chat-Setting-Training',t:'Chat-Setting: 4 Wochen Begleitung',s:'Sofia',r:'Pro',st:4.8,n:23,pr:129,reg:'Nordrhein-Westfalen'},
-  {cat:'Sprach- und Stimmtraining',t:'Stimme & Betonung am Telefon (45 Min.)',s:'Felix',r:'Pro',st:4.7,n:14,pr:59,reg:'Bayern'},
+  {cat:'Skripte anfertigen',t:'Individuelles Closing-Skript für dein Angebot',s:'Tobias',r:'Dealmaker',st:4.9,n:19,pr:149,reg:'Bayern'},
+  {cat:'Chat-Setting-Training',t:'Chat-Setting: 4 Wochen Begleitung',s:'Sofia',r:'Performer',st:4.8,n:23,pr:129,reg:'Nordrhein-Westfalen'},
+  {cat:'Sprach- und Stimmtraining',t:'Stimme & Betonung am Telefon (45 Min.)',s:'Felix',r:'Performer',st:4.7,n:14,pr:59,reg:'Bayern'},
 ];
 // Partner: je ein hervorgehobener Experte pro Dienstleistung (Beispieldaten)
 let PARTNERS = [
-  {n:'Lena',bk:'Call-Analyse buchen',r:'Elite',s:'Call-Analyse',bio:'Closerin im High-Ticket-Coaching. Analysiert deine Calls per Video und zeigt dir, an welcher Stelle der Abschluss verloren geht.',k:['312','Calls analysiert'],deal:['−20 % für Member','auf die erste Analyse','LENA20'],live:['19','Nov.','Wo der Abschluss verloren geht'],rv:['Marco','Closer','Nach der Analyse wusste ich genau, warum ich nach dem Preis jedes Mal einknicke.']},
-  {n:'Tobias',bk:'Skript anfragen',r:'Elite',s:'Skripte anfertigen',bio:'Schreibt Closing- und Setting-Skripte passgenau für dein Angebot und deine Zielgruppe.',k:['140','Skripte geschrieben'],deal:['−15 % für Member','auf das erste Skript','TOBIAS15'],live:['26','Nov.','Das Skript, das nicht nach Skript klingt'],rv:['Felix','Closer','Klarer Aufbau, und die Einwände sind gleich mit drin.']},
-  {n:'Jonas',bk:'Training buchen',r:'Pro',s:'Einwandbehandlung-Training',bio:'Trainiert mit dir die häufigsten Einwände, bis die Antworten sitzen.',k:['260','Trainings gegeben'],deal:['−20 % für Member','auf das erste Training','JONAS20'],live:['3','Dez.','Die 5 häufigsten Einwände, live trainiert'],rv:['Amira','Setterin','Danach hatte ich für jeden Einwand eine Antwort.']},
-  {n:'Sofia',bk:'Begleitung buchen',r:'Pro',s:'Chat-Setting-Training',bio:'Setterin für Instagram und LinkedIn. Begleitet dich vom ersten Opener bis zum gebuchten Termin.',k:['1.900','Termine gesetzt'],deal:['−15 % für Member','auf die Begleitung','SOFIA15'],live:['10','Dez.','Vom ersten Opener zum gebuchten Termin'],rv:['Amira','Setterin','Nach zwei Wochen doppelt so viele Termine.']},
-  {n:'Felix',bk:'Training buchen',r:'Pro',s:'Sprach- und Stimmtraining',bio:'Arbeitet mit dir an Tempo, Pausen und Betonung, damit du am Telefon souverän klingst.',k:['180','Trainings gegeben'],deal:['−20 % für Member','auf das erste Training','FELIX20'],live:['17','Dez.','So klingst du am Telefon souverän'],rv:['Jonas','Setter','Ich rede jetzt langsamer, und die Leute hören zu.']},
+  {n:'Lena',bk:'Call-Analyse buchen',r:'Dealmaker',s:'Call-Analyse',bio:'Closerin im High-Ticket-Coaching. Analysiert deine Calls per Video und zeigt dir, an welcher Stelle der Abschluss verloren geht.',k:['312','Calls analysiert'],deal:['−20 % für Member','auf die erste Analyse','LENA20'],live:['19','Nov.','Wo der Abschluss verloren geht'],rv:['Marco','Closer','Nach der Analyse wusste ich genau, warum ich nach dem Preis jedes Mal einknicke.']},
+  {n:'Tobias',bk:'Skript anfragen',r:'Dealmaker',s:'Skripte anfertigen',bio:'Schreibt Closing- und Setting-Skripte passgenau für dein Angebot und deine Zielgruppe.',k:['140','Skripte geschrieben'],deal:['−15 % für Member','auf das erste Skript','TOBIAS15'],live:['26','Nov.','Das Skript, das nicht nach Skript klingt'],rv:['Felix','Closer','Klarer Aufbau, und die Einwände sind gleich mit drin.']},
+  {n:'Jonas',bk:'Training buchen',r:'Performer',s:'Einwandbehandlung-Training',bio:'Trainiert mit dir die häufigsten Einwände, bis die Antworten sitzen.',k:['260','Trainings gegeben'],deal:['−20 % für Member','auf das erste Training','JONAS20'],live:['3','Dez.','Die 5 häufigsten Einwände, live trainiert'],rv:['Amira','Setterin','Danach hatte ich für jeden Einwand eine Antwort.']},
+  {n:'Sofia',bk:'Begleitung buchen',r:'Performer',s:'Chat-Setting-Training',bio:'Setterin für Instagram und LinkedIn. Begleitet dich vom ersten Opener bis zum gebuchten Termin.',k:['1.900','Termine gesetzt'],deal:['−15 % für Member','auf die Begleitung','SOFIA15'],live:['10','Dez.','Vom ersten Opener zum gebuchten Termin'],rv:['Amira','Setterin','Nach zwei Wochen doppelt so viele Termine.']},
+  {n:'Felix',bk:'Training buchen',r:'Performer',s:'Sprach- und Stimmtraining',bio:'Arbeitet mit dir an Tempo, Pausen und Betonung, damit du am Telefon souverän klingst.',k:['180','Trainings gegeben'],deal:['−20 % für Member','auf das erste Training','FELIX20'],live:['17','Dez.','So klingst du am Telefon souverän'],rv:['Jonas','Setter','Ich rede jetzt langsamer, und die Leute hören zu.']},
 ];
 const partnerOf = s => PARTNERS.find(p=>p.s===s && MCATS.includes(p.s));
 function partnersRow(){
@@ -351,7 +352,7 @@ function partnersRow(){
 function personModal(n){
   const p=PARTNERS.find(x=>x.n===n); let offers=OFFERS.filter(o=>o.s===n && MCATS.includes(o.cat));
   if(p&&p.real) offers=(p.offers||[]).map(o=>({t:o.t,pr:o.pr,cat:p.s,n:0,st:0}));
-  const r=(p&&p.r)||(offers[0]&&offers[0].r)||'Rookie';
+  const r=(p&&p.r)||(offers[0]&&offers[0].r)||'Starter';
   const rt=offers.length&&!(p&&p.real)?(offers.reduce((s,o)=>s+o.st,0)/offers.length).toFixed(1):null;
   if(p&&(p.k||p.real)) return partnerModal(p,offers,r,rt);
   document.getElementById('modal').innerHTML = `
@@ -364,6 +365,7 @@ function personModal(n){
           ${rt?`<p class="text-sm mt-0.5">⭐ <b>${rt.replace('.',',')}</b> <span class="text-muted">· ${offers.reduce((s,o)=>s+o.n,0)} Bewertungen</span></p>`:''}
           ${p?`<span class="inline-block mt-1.5 text-[11px] px-2.5 py-0.5 rounded-full border" style="border-color:#087A4B;color:#7FD1A8">Partner für ${p.s}</span>`:''}</div></div>
       ${p?`<p class="text-sm text-muted mt-4">${p.bio}</p>`:''}
+      ${badgeRow(n)}
       ${offers.length?`<p class="text-xs uppercase tracking-wide text-muted mt-5 mb-2">Angebote im Marktplatz</p><div class="space-y-2">${offers.map(o=>`<div class="flex items-center justify-between gap-3 border border-line rounded-xl px-3 py-2"><span class="min-w-0"><span class="block text-[10px] uppercase tracking-wide text-gold">${o.cat}</span><span class="block text-sm truncate">${o.t}</span></span><span class="font-serif text-lg text-gold whitespace-nowrap">${o.pr} €</span></div>`).join('')}</div>`:''}
       <div id="pmsg" class="mt-5">${S.user?`<textarea id="pmtxt" maxlength="500" class="input h-24 text-sm" placeholder="Schreib ${n} eine Nachricht …"></textarea>
         <button class="btn-gold w-full mt-2" onclick="sendPersonMsg('${n}')">Nachricht senden</button>`
@@ -386,7 +388,7 @@ function partnerModal(p,offers,r,rt){
         <div class="flex items-end gap-4 -mt-6">
           <div class="relative shrink-0"><div class="w-16 h-16 rounded-full overflow-hidden" style="box-shadow:0 0 0 3px rgb(var(--panel))">${avatar(n)}</div>${SEAL}</div>
           <div class="min-w-0 pt-8"><div class="text-lg leading-tight">${nameRank(n,r)}</div></div></div>
-        ${p.role||p.meta?`<p class="text-sm mt-3"><b>${p.role||''}</b>${p.role&&p.meta?', ':''}<span class="text-muted">${p.meta||''}</span></p>`:''}<p class="text-sm text-muted ${p.role||p.meta?'mt-1':'mt-3'}">${p.bio}</p>
+        ${p.role||p.meta?`<p class="text-sm mt-3"><b>${p.role||''}</b>${p.role&&p.meta?', ':''}<span class="text-muted">${p.meta||''}</span></p>`:''}<p class="text-sm text-muted ${p.role||p.meta?'mt-1':'mt-3'}">${p.bio}</p>${badgeRow(n)}
         <div class="grid grid-cols-3 mt-4 border-y border-line text-center text-[11px] text-muted">
           <div class="py-2"><b class="block text-base" style="color:rgb(var(--fg))">${rt?rt.replace('.',','):'Neu'}</b>${rt?`★ aus ${nr}`:'dabei'}</div>
           <div class="py-2 border-l border-line"><b class="block text-base" style="color:rgb(var(--fg))">${p.k?p.k[0]:'1 von 5'}</b>${p.k?p.k[1]:'Partnern'}</div>
@@ -418,7 +420,7 @@ function sendPersonMsg(n){
 function applyPartners(list){
   if(!Array.isArray(list)||!list.length) return;
   const c=(x,m)=>String(x??'').replace(/[<>"'`]/g,'').trim().slice(0,m||80);
-  PARTNERS=list.slice(0,5).map(p=>{ const o={n:c(p.n,40),s:c(p.s,60),role:c(p.role,40),meta:c(p.meta,80),bio:c(p.bio,300),bk:c(p.bk,40)||'Jetzt anfragen',r:['Rookie','Rising','Pro','Elite','Legend'].includes(p.r)?p.r:'Pro',img:(/^https:\/\/[^\s"'<>`]+$/.test(String(p.img||''))||(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(p.img||''))&&String(p.img).length<200000))?String(p.img):'',fem:!!p.fem,live:c(p.live,90),real:true};
+  PARTNERS=list.slice(0,5).map(p=>{ const o={n:c(p.n,40),s:c(p.s,60),role:c(p.role,40),meta:c(p.meta,80),bio:c(p.bio,300),bk:c(p.bk,40)||'Jetzt anfragen',r:RANKS.includes(p.r)?p.r:(RK_OLD[p.r]||'Performer'),img:(/^https:\/\/[^\s"'<>`]+$/.test(String(p.img||''))||(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(p.img||''))&&String(p.img).length<200000))?String(p.img):'',fem:!!p.fem,live:c(p.live,90),real:true};
     if(Array.isArray(p.k)&&c(p.k[0])) o.k=[c(p.k[0],12),c(p.k[1],30)];
     if(Array.isArray(p.deal)&&c(p.deal[0])) o.deal=[c(p.deal[0],40),c(p.deal[1],60),c(p.deal[2],20)];
     o.offers=(Array.isArray(p.offers)?p.offers:[]).slice(0,8).map(x=>({t:c(x&&x.t,70),pr:c(x&&x.pr,12)})).filter(x=>x.t);
@@ -430,11 +432,26 @@ fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/settings?select=value&ke
 // Echte Partner aus der Datenbank (nur aktive mit freigegebenem Profil). Ohne Treffer bleiben die Beispiel-Partner.
 fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/rpc/partner_liste',{method:'POST',headers:{apikey:'sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D','Content-Type':'application/json'},body:'{}'})
   .then(r=>r.ok?r.json():null).then(applyPartners).catch(()=>{});
-const NEARBY = [['Felix','Pro','München · 4 km'],['Hannah','Rising','Augsburg · 31 km'],['Tobias','Elite','München · 7 km'],['Mia','Rookie','Freising · 22 km'],['David','Pro','Rosenheim · 48 km']];
-const BADGE_IC = {'Founding Member':'b_found','Ausweis verifiziert':'b_id','Verified 50k':'b_money','High-Ticket':'b_diamond','Platform-verified':'b_shield'};
-function badgeIcon(b){ return `<span title="${b}" aria-label="${b}" class="w-11 h-11 rounded-full flex items-center justify-center" style="border:1px solid #087A4B;color:#087A4B;background:rgb(var(--panel));box-shadow:0 0 14px rgba(8,122,75,.18)">${svg(BADGE_IC[b]||'b_shield',20)}</span>`; }
+const NEARBY = [['Felix','Performer','München · 4 km'],['Hannah','Rising','Augsburg · 31 km'],['Tobias','Dealmaker','München · 7 km'],['Mia','Starter','Freising · 22 km'],['David','Performer','Rosenheim · 48 km']];
+const BADGES = [
+  ['Mitgliedschaft',[['Day One','Einer der ersten 250 Member','b_found'],['Premium','Aktives Premium-Abo. Gilt, solange du Premium bist','b_star'],['Partner','Einer der 5 Partner, solange die Partnerschaft läuft','b_partner'],['Inner Circle','Wird persönlich von ClosingHub vergeben','b_circle']]],
+  ['Geprüft',[['Identität geprüft','Ausweis von ClosingHub bestätigt','b_id'],['High-Ticket','Nachgewiesener Abschluss ab 5.000 €','b_diamond'],['Ausgebildet von …','Absolvent eines Ausbilders, nach Einreichung des Dokuments','b_cap']]],
+  ['Leistung',[['Hired via ClosingHub','Erster Job über die Plattform','b_brief'],['Spotlight','Meiste Punkte im eigenen Rang','sun']]],
+  ['Community',[['Recruiter','5 Member über deinen Einladungslink geworben','b_userplus'],['Helping Hand','Für Verbesserungsvorschläge, die ClosingHub besser machen','b_bulb']]],
+];
+const BADGE_IC = Object.fromEntries(BADGES.flatMap(g=>g[1].map(b=>[b[0],b[2]])));
+function badgeIcon(b,act){ return `<button type="button" onclick="${act||'openMedals()'}" title="${b}" aria-label="Abzeichen ${b}. Alle Abzeichen ansehen" class="w-11 h-11 rounded-full flex items-center justify-center" style="border:1px solid #087A4B;color:#087A4B;background:rgb(var(--panel));box-shadow:0 0 14px rgba(8,122,75,.18);cursor:pointer">${svg(BADGE_IC[b]||'b_shield',20)}</button>`; }
+function badgeQ(){ return `<button type="button" onclick="openMedals()" title="Welche Abzeichen gibt es?" aria-label="Noch kein Abzeichen. Alle Abzeichen ansehen" class="w-11 h-11 rounded-full flex items-center justify-center text-lg font-bold" style="border:1px dashed rgb(var(--line));color:rgb(var(--muted));background:rgb(var(--panel));opacity:.7;cursor:pointer">?</button>`; }
+const PBADGES = {Lena:['Day One','High-Ticket','Hired via ClosingHub'],Tobias:['Day One','Identität geprüft'],Sofia:['Day One','Premium'],Marco:['Day One','Hired via ClosingHub'],Jonas:['Day One']};
+function memberBadges(n){ const p=PARTNERS.find(x=>x.n===n); return [...(p?['Partner']:[]),...(PBADGES[n]||[])]; }
+function badgeRow(n){ const l=memberBadges(n); if(!l.length) return ''; const a=String(n).replace(/[^\p{L}\p{N} .-]/gu,'');
+  return `<div class="mt-4"><p class="text-xs uppercase tracking-wide text-muted mb-2">Abzeichen</p><div class="flex flex-wrap gap-2">${l.map(b=>badgeIcon(b,`openBadges('${a}')`)).join('')}</div></div>`; }
 function badgePill(b){ return `<span class="inline-flex items-center gap-2 pl-1 pr-3.5 py-1 rounded-full border text-sm" style="border-color:#3a3020;background:rgb(var(--chip))"><span class="w-7 h-7 rounded-full flex items-center justify-center" style="border:1px solid #087A4B;color:#087A4B;background:rgb(var(--panel))">${svg(BADGE_IC[b]||'b_shield',15)}</span>${b}</span>`; }
-const RKC = {Rookie:'color:#8A8A93;border-color:#232327',Rising:'color:#7dd3fc;border-color:#0c4a6e',Pro:'color:#6ee7b7;border-color:#064e3b',Elite:'color:#087A4B;border-color:#06603B',Legend:'color:#7FD1A8;border-color:#087A4B;background:#E3F1EA'};
+const RANKS = ['Starter','Rising','Performer','Dealmaker','Rainmaker'];
+const RKN = {Starter:1,Rising:2,Performer:3,Dealmaker:4,Rainmaker:5};
+const RK_OLD = {Rookie:'Starter',Pro:'Performer',Elite:'Dealmaker',Legend:'Rainmaker'};
+const rkLabel = r => (RKN[r]?RKN[r]+' ':'')+r;
+const RKC = {Starter:'color:#8A8A93;border-color:#232327',Rising:'color:#7dd3fc;border-color:#0c4a6e',Performer:'color:#6ee7b7;border-color:#064e3b',Dealmaker:'color:#087A4B;border-color:#06603B',Rainmaker:'color:#7FD1A8;border-color:#087A4B;background:#E3F1EA'};
 
 
 const IC = {
@@ -456,6 +473,13 @@ const IC = {
   b_id:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.5-1.6 1.6-2.4 3-2.4s2.5.8 3 2.4M14 10h4M14 13h3"/>',
   b_money:'<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6.5V8M12 16v1.5"/>',
   b_diamond:'<path d="M6 4h12l3 5-9 11L3 9zM3 9h18M9.5 4 8 9l4 11 4-11-1.5-5"/>',
+  b_star:'<path d="m12 3 2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9 6.6 19.8l1.1-6.1L3.2 9.4l6.1-.8z"/>',
+  b_partner:'<circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/>',
+  b_circle:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  b_cap:'<path d="m2 9 10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5M22 9v6"/>',
+  b_brief:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
+  b_userplus:'<circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7M19 8v6M16 11h6"/>',
+  b_bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
   b_shield:'<path d="M12 3 5 6v5c0 4.5 3 8.2 7 10 4-1.8 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/>',
   gearplay:'<path d="M21.80 8.24 L22.50 11.72 L20.20 12.22 L19.66 14.94 L21.59 16.27 L19.62 19.23 L17.64 17.95 L15.34 19.49 L15.76 21.80 L12.28 22.50 L11.78 20.20 L9.06 19.66 L7.73 21.59 L4.77 19.62 L6.05 17.64 L4.51 15.34 L2.20 15.76 L1.50 12.28 L3.80 11.78 L4.34 9.06 L2.41 7.73 L4.38 4.77 L6.36 6.05 L8.66 4.51 L8.24 2.20 L11.72 1.50 L12.22 3.80 L14.94 4.34 L16.27 2.41 L19.23 4.38 L17.95 6.36 L19.49 8.66Z"/><circle cx="12" cy="12" r="5.6"/><path d="M10.6 9.6v4.8l3.8-2.4z"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
@@ -486,7 +510,7 @@ document.addEventListener('click', e=>{
 function nameRank(n, r, medals){
   const total = medals ? medals.reduce((s,m)=>s+m[1],0) : 0;
   if(n==='ClosingHub') return `<span class="inline-flex items-baseline gap-[.3em]"><span class="font-semibold">${n}</span><sup class="text-white font-semibold" style="font-size:max(10px,.6em);letter-spacing:.03em">Present</sup></span>`;
-  return `<span class="inline-flex items-center gap-[.4em]"><span class="font-semibold">${n}</span><span class="rk" style="${RKC[r]}">${r}</span>${total?`<sup><button onclick="openMedals();event.stopPropagation()" class="text-gold font-bold hover:underline" style="font-size:max(11px,.6em)">${total}</button></sup>`:''}</span>`;
+  return `<span class="inline-flex items-center gap-[.4em]"><span class="font-semibold">${n}</span><span class="rk" style="${RKC[r]}">${rkLabel(r)}</span>${total?`<sup><button onclick="openMedals();event.stopPropagation()" class="text-gold font-bold hover:underline" style="font-size:max(11px,.6em)">${total}</button></sup>`:''}</span>`;
 }
 // Bewertungen aus drei Quellen (Beispieldaten)
 const REVIEWS = [
@@ -506,16 +530,42 @@ function openReviews(){
         ${g.list.map(([n,q,s])=>`<div class="mb-2"><div class="flex justify-between gap-2 text-sm"><b>${n}</b><span class="text-gold tracking-tight">${stars(s)}</span></div><p class="text-sm text-muted">„${q}“</p></div>`).join('')}</div>`).join('')}
     </div></div>`;
 }
+function badgeList(list){
+  const have=b=>list.includes(b);
+  const row=b=>`<div class="flex items-center gap-3 py-2 border-t border-line" style="${have(b[0])?'':'opacity:.5'}"><span class="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style="border:1px solid ${have(b[0])?'#087A4B':'rgb(var(--line))'};color:${have(b[0])?'#087A4B':'inherit'}">${svg(b[2],17)}</span><div class="min-w-0 flex-1"><p class="text-sm font-semibold">${b[0]}</p><p class="text-xs text-muted">${b[1]}</p></div><span class="text-xs whitespace-nowrap ${have(b[0])?'text-gold font-semibold':'text-muted'}">${have(b[0])?'✓ erhalten':'offen'}</span></div>`;
+  return BADGES.map(g=>`<p class="text-xs uppercase tracking-wider text-gold mt-4 mb-1">${g[0]}</p>${g[1].map(row).join('')}`).join('');
+}
+const BADGE_N = BADGES.reduce((s,g)=>s+g[1].length,0);
 function openMedals(){
   document.getElementById('modal').innerHTML = `
   <div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()">
-    <div class="card w-full max-w-md p-5 relative" onclick="event.stopPropagation()">
+    <div class="card w-full max-w-md p-5 relative max-h-[86vh] overflow-y-auto" onclick="event.stopPropagation()">
       <button onclick="closeModal()" class="absolute top-3 right-4 text-muted hover:text-white text-xl">✕</button>
-      <h3 class="font-serif text-xl mb-4">Medaillen von ${ME.name}</h3>
+      <h3 class="font-serif text-xl mb-1">${ME.badges.length?`Abzeichen von ${ME.name}`:'Diese Abzeichen gibt es'}</h3>
+      <p class="text-xs text-muted mb-3">${ME.badges.length?`Auszeichnungen. Jedes Abzeichen gibt es einmal. ${ME.badges.length} von ${BADGE_N} erhalten.`:'Du hast noch kein Abzeichen. Hier siehst du, welche es gibt und wofür du sie bekommst. Andere sehen in deinem Profil erst etwas, wenn du dein erstes hast.'}</p>
+      ${badgeList(ME.badges)}
+      <h3 class="font-serif text-xl mt-7 mb-1">Medaillen</h3>
+      <p class="text-xs text-muted mb-3">Belohnungen für Aktivität in der App. Medaillen werden gezählt.</p>
       <table class="w-full text-sm"><thead><tr class="text-muted text-left"><th class="pb-2">Medaille</th><th class="pb-2 text-right">Anzahl</th></tr></thead>
       <tbody>${ME.medals.map(m=>`<tr class="border-t border-line"><td class="py-2">${m[0]}</td><td class="py-2 text-right text-gold font-semibold">${m[1]}×</td></tr>`).join('')}</tbody></table>
     </div></div>`;
 }
+function openBadges(n){
+  const l=memberBadges(n);
+  document.getElementById('modal').innerHTML = `
+  <div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()">
+    <div class="card w-full max-w-md p-5 relative max-h-[86vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <button onclick="closeModal()" class="absolute top-3 right-4 text-muted hover:text-white text-xl">✕</button>
+      <button onclick="personModal('${n}')" class="text-gold text-sm mb-2 hover:underline">← Zurück zum Profil</button>
+      <h3 class="font-serif text-xl mb-1">Abzeichen von ${n}</h3>
+      <p class="text-xs text-muted mb-3">Auszeichnungen. Jedes Abzeichen gibt es einmal. ${l.length} von ${BADGE_N} erhalten.</p>
+      ${badgeList(l)}
+    </div></div>`;
+}
+function inviteLink(){ return 'https://www.getclosinghub.com/?ref='+ME.ref; }
+function copyInvite(btn){ const l=inviteLink(), ok=()=>{ btn.textContent='Kopiert ✓'; setTimeout(()=>btn.textContent='Kopieren',2000); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(l).then(ok).catch(()=>{ const i=document.getElementById('invLink'); i.select(); });
+  else { const i=document.getElementById('invLink'); i.select(); try{document.execCommand('copy');ok()}catch(e){} } }
 function closeModal(){ document.getElementById('modal').innerHTML=''; stopPlayer(); }
 const locked = (n) => n && !S.user;
 
@@ -594,14 +644,14 @@ function feed(){
 }
 function spotlightBanner(){
   return `<div class="card p-4 lg:hidden"><p class="text-xs uppercase tracking-wider text-muted mb-2">Spotlight des Monats</p>
-  <div class="flex justify-between text-sm"><div><p class="text-xs text-muted">👑 Top-Profi</p>${nameRank('Lena','Elite')}</div><div><p class="text-xs text-muted">🚀 Top-Rookie</p>${nameRank('Marco','Rising')}</div></div></div>`;
+  <div class="flex justify-between text-sm"><div><p class="text-xs text-muted">👑 Top-Profi</p>${nameRank('Lena','Dealmaker')}</div><div><p class="text-xs text-muted">🚀 Top-Starter</p>${nameRank('Marco','Rising')}</div></div></div>`;
 }
 function rightRail(){
   return `<aside class="hidden lg:block w-80 shrink-0 space-y-5 pt-6">
     ${S.user?`<div class="flex items-center gap-3"><div class="w-12 h-12 rounded-full gold-bg p-[2px]"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(ME.name)}</div></div>${nameRank(ME.name,ME.rank,ME.medals)}</div>`:`<a href="#login" class="btn-gold block">Kostenlos anmelden</a>`}
     <div class="card p-4"><p class="text-xs uppercase tracking-wider text-muted mb-3">Spotlight des Monats</p>
-      <p class="text-sm">👑 Top-Profi</p>${nameRank('Lena','Elite')}<p class="text-xs text-muted mb-3">2.480 Punkte · meiste Punkte ab Rang 4 (Elite, Legend)</p>
-      <p class="text-sm">🚀 Top-Rookie</p>${nameRank('Marco','Rising')}<p class="text-xs text-muted">1.120 Punkte · meiste Punkte bis Rang 2 (Rookie, Rising)</p></div>
+      <p class="text-sm">👑 Top-Profi</p>${nameRank('Lena','Dealmaker')}<p class="text-xs text-muted mb-3">2.480 Punkte · meiste Punkte ab Rang 4 (Dealmaker, Rainmaker)</p>
+      <p class="text-sm">🚀 Top-Starter</p>${nameRank('Marco','Rising')}<p class="text-xs text-muted">1.120 Punkte · meiste Punkte bis Rang 2 (Starter, Rising)</p></div>
     <div class="card p-4"><div class="flex justify-between mb-2"><p class="text-xs uppercase tracking-wider text-muted">Neueste Jobs</p><a href="#jobs" class="text-xs text-gold">Alle</a></div>
       ${JOBS.slice(0,3).map(j=>`<a href="#jobs" onclick="S.job=${j.id}" class="block py-2 border-t border-line first:border-0"><p class="text-sm font-medium">${j.t}</p><p class="text-xs text-gold">${j.pay}</p></a>`).join('')}</div>
     <div class="card p-4"><p class="text-xs uppercase tracking-wider text-muted mb-3">Member, die du kennen solltest</p>
@@ -656,7 +706,7 @@ function sheet(html){ const old=document.getElementById('psheet'); if(old) old.r
   d.onclick=closeSheet; document.body.appendChild(d); }
 function closeSheet(){ const d=document.getElementById('psheet'); if(d) d.remove(); if(S.player){ S.player.paused=false; drawPlayer(); } }
 function commentsP(id){
-  const base=[['Lena','Elite','Genau so mache ich es auch 🔥'],['Jonas','Pro','Direkt im nächsten Call getestet – funktioniert!'],['Hannah','Rising','Danke für den Input!']];
+  const base=[['Lena','Dealmaker','Genau so mache ich es auch 🔥'],['Jonas','Performer','Direkt im nächsten Call getestet – funktioniert!'],['Hannah','Rising','Danke für den Input!']];
   const mine=(S.cm[id]||[]).map(t=>[ME.name,ME.rank,t]);
   sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Kommentare</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
     <div class="space-y-3">${[...base,...mine].map(([n,r,t])=>`<div class="flex gap-3"><span class="w-8 h-8 rounded-full overflow-hidden shrink-0">${avatar(n)}</span><div><div class="text-sm">${nameRank(n,r)}</div><p class="text-sm text-white/90">${t}</p></div></div>`).join('')}</div>
@@ -849,7 +899,7 @@ function forum(){
     <p class="text-xs text-muted mt-6">🛡️ KI filtert Spam vorab · Beiträge melden möglich · Moderatoren ab Rang Elite</p></div>`;
 }
 function thread(){
-  const ans=[{n:'Lena',r:'Elite',t:'Frag zurück: „Zu teuer im Vergleich wozu?“ – dann redet der Kunde über seinen echten Maßstab.',h:24,best:1},{n:'Jonas',r:'Pro',t:'Ich rechne den Preis auf den Tag runter. 3.000 € = 8 € am Tag – weniger als sein Mittagessen.',h:11},{n:'Felix',r:'Pro',t:'Wichtig: erst Wert bestätigen lassen, dann über Preis sprechen. Sonst diskutierst du nur Zahlen.',h:7}];
+  const ans=[{n:'Lena',r:'Dealmaker',t:'Frag zurück: „Zu teuer im Vergleich wozu?“ – dann redet der Kunde über seinen echten Maßstab.',h:24,best:1},{n:'Jonas',r:'Performer',t:'Ich rechne den Preis auf den Tag runter. 3.000 € = 8 € am Tag – weniger als sein Mittagessen.',h:11},{n:'Felix',r:'Performer',t:'Wichtig: erst Wert bestätigen lassen, dann über Preis sprechen. Sonst diskutierst du nur Zahlen.',h:7}];
   return `<div class="max-w-3xl mx-auto px-4 py-6">
     <button onclick="S.thread=null;render()" class="text-sm text-muted mb-4">← Einwandbehandlung</button>
     <div class="card p-5 mb-4"><div class="flex items-center gap-2 mb-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block">${avatar('Marco')}</span>${nameRank('Marco','Rising')}</div>
@@ -904,10 +954,11 @@ function profile(){
     <div class="mt-5 space-y-2 text-left">
       <p class="text-sm">${ME.role} ⭐ · ${ME.years} Jahre Erfahrung · ${ME.country} · ${ME.langs}</p>
       <p class="text-sm text-muted">${ME.bio}</p>
-      <p class="text-xs text-muted">Tipp: Klick auf die kleine goldene Zahl hinter dem Rang → Medaillen-Tabelle</p>
+      
     </div>
     <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen</p>
-      <div class="flex flex-wrap gap-3">${S.badgesShown.map(badgeIcon).join('')}</div></div>
+      <div class="flex flex-wrap gap-3">${(l=>l.length?l.map(b=>badgeIcon(b)).join(''):badgeQ())(S.badgesShown.filter(b=>ME.badges.includes(b)))}</div>
+      <button onclick="openMedals()" class="text-gold text-sm mt-3 hover:underline">Alle Abzeichen und Medaillen ansehen →</button></div>
     <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Bewertungen</p>
       <button id="revCard" onclick="openReviews()" class="card w-full text-left p-4">
         <div class="flex items-center justify-between gap-3"><span class="text-base">⭐ <b>${String(ME.rating).replace('.',',')}</b> <span class="text-muted text-sm">· ${REVIEWS.reduce((s,g)=>s+g.n,0)} Bewertungen</span></span><span class="text-gold text-sm whitespace-nowrap">Alle ansehen →</span></div>
@@ -928,6 +979,9 @@ function settings(){
       <div class="flex flex-wrap gap-2">${FTOPICS.map(t=>`<button onclick="toggleTopic('${t}')" class="${(!S.topics||S.topics.includes(t))?'btn-gold':'btn-ghost'} text-sm">${t}</button>`).join('')}</div></div>
     <div class="card p-4"><p class="font-semibold mb-3">Welche Abzeichen sollen im Profil angezeigt werden?</p>
       ${ME.badges.map(b=>`<label class="flex items-center gap-3 py-2 cursor-pointer"><input type="checkbox" ${S.badgesShown.includes(b)?'checked':''} onchange="toggleBadge('${b}')" style="accent-color:#087A4B;width:16px;height:16px"> ${badgePill(b)}</label>`).join('')}</div>
+    <div class="card p-4"><p class="font-semibold mb-1">Member einladen</p><p class="text-xs text-muted mb-3">Schick deinen Link an Closer und Setter, die du kennst. Wer darüber beitritt, bekommt 10 % Rabatt auf die Mitgliedschaft und wird dir zugeordnet. Ab 5 geworbenen Membern bekommst du das Abzeichen „Recruiter“.</p>
+      <div class="flex gap-2"><input id="invLink" readonly value="${inviteLink()}" onclick="this.select()" class="flex-1 min-w-0 rounded-lg border border-line bg-panel px-3 py-2 text-sm"><button onclick="copyInvite(this)" class="btn-gold text-sm whitespace-nowrap">Kopieren</button></div>
+      <div class="flex items-center justify-between gap-3 mt-3 flex-wrap"><a class="btn-ghost text-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('Schau dir ClosingHub an, die Plattform für Closer und Setter. Über meinen Link bekommst du 10 % Rabatt auf die Mitgliedschaft: '+inviteLink())}">Per WhatsApp teilen</a><span class="text-xs text-muted">Bisher geworben: <b>${ME.invited} von 5</b></span></div></div>
     <div class="card p-4 text-sm space-y-1"><p class="font-semibold">Konto</p><p class="text-muted">Sprache · Benachrichtigungen · Datenschutz · Lieblingsrolle</p></div></div>`;
 }
 const FTOPICS=['Zitat','Mindset','Intelligenz','Achtsamkeit','Seminar-Ausschnitt','Film-Ausschnitt','Member-Video'];
@@ -940,7 +994,7 @@ function notifications(){
     <div class="card p-4 text-sm" id="rev">⭐ <b>Neue Bewertung verfügbar</b><br><span class="text-muted">„Top Closer, sehr strukturiert!“ – 5 Sterne</span>
       <div class="flex gap-2 mt-3"><button class="btn-gold text-xs" onclick="this.parentElement.innerHTML='<span class=text-emerald-400>✓ Im Profil angezeigt</span>'">Im Profil anzeigen</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Nicht angezeigt</span>'">Nicht anzeigen</button></div></div>
     <div class="card p-4 text-sm">🤝 <b>Ist der Job „High-Ticket Closer“ zustande gekommen?</b>
-      <div class="flex gap-2 mt-3 flex-wrap"><button class="btn-gold text-xs" onclick="this.parentElement.innerHTML='<span class=text-gold>🏅 Neue Medaille: Hired via ClosingHub!</span>'">Ja</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Danke für die Info</span>'">Nein</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Wir fragen in 4 Tagen nochmal nach</span>'">Noch keine Antwort</button></div></div>
+      <div class="flex gap-2 mt-3 flex-wrap"><button class="btn-gold text-xs" onclick="this.parentElement.innerHTML='<span class=text-gold>🏅 Neue Medaille: Job über ClosingHub!</span>'">Ja</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Danke für die Info</span>'">Nein</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Wir fragen in 4 Tagen nochmal nach</span>'">Noch keine Antwort</button></div></div>
     <div class="card p-4 text-sm">🏅 Neue Medaille: <b>Kommentator</b></div></div>`;
 }
 
@@ -1155,7 +1209,7 @@ function zentrale(){
         <div class="card p-4"><p class="font-semibold mb-3">Umsatz nach Quelle (Monat)</p>
           ${[['Freischaltungen (25 €)',3850],['Marktplatz-Gebühr 9,9 %',1240],['Werbung (Leiste/Feed)',1490],['Top-Jobs',350]].map(([k,v])=>`<div class="mb-2"><div class="flex justify-between text-sm"><span>${k}</span><span class="text-gold">${v.toLocaleString('de-DE')} €</span></div><div class="h-1.5 bg-line rounded mt-1"><div class="h-1.5 rounded gold-bg" style="width:${v/38.5}%"></div></div></div>`).join('')}</div>
         <div class="card p-4"><p class="font-semibold mb-3">Ränge & Regionen</p>
-          <div class="flex gap-2 flex-wrap mb-4">${[['Rookie',820],['Rising',260],['Pro',112],['Elite',41],['Legend',7]].map(([r,n])=>`<span class="rk" style="${RKC[r]}">${r} ${n}</span>`).join('')}</div>
+          <div class="flex gap-2 flex-wrap mb-4">${[['Starter',820],['Rising',260],['Performer',112],['Dealmaker',41],['Rainmaker',7]].map(([r,n])=>`<span class="rk" style="${RKC[r]}">${rkLabel(r)} · ${n}</span>`).join('')}</div>
           ${[['Bayern',312],['NRW',284],['Berlin',190],['Balearen',96]].map(([r,n])=>`<div class="flex justify-between text-sm py-1 border-t border-line"><span>${r}</span><span class="text-muted">${n} Member</span></div>`).join('')}</div></div>`,
     queue:`<div class="space-y-3">${[['🎬 Video','„Einwand Zeitmangel“ von Felix','KI unsicher: 62 % Themenbezug'],['🏢 Auftraggeber','Solar GmbH (Rechtsform GmbH, 12 MA)','KI: Website passt, USt-ID prüfen'],['🧾 Erfolgsnachweis','Lena · Provisionsabrechnung 8.400 €','KI: keine Manipulation erkannt'],['🛍️ Marktplatz','„Closing-Skript Solar“ von Tobias','KI: ok']].map(([t,n,k])=>`<div class="card p-4 flex flex-wrap justify-between items-center gap-3"><div><p class="text-xs text-gold">${t}</p><p class="font-semibold text-sm">${n}</p><p class="text-xs text-muted">${k}</p></div><div class="flex gap-2"><button class="btn-gold text-xs" onclick="this.parentElement.innerHTML='<span class=text-emerald-400>✓ Freigegeben</span>'">Freigeben</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Abgelehnt</span>'">Ablehnen</button></div></div>`).join('')}</div>`,
     reports:`<div class="space-y-3">${[['Beitrag gemeldet','„Schnell reich mit…“ – 4 Meldungen (Spam)','Ausblenden'],['Mahnung 2/3','Member „max_sales“ – Telefonnummer in Bewerbung','Profil ansehen'],['Werbeanfrage','Headset-Shop · Vorteils-Leiste · 149 €/Monat','Angebot senden']].map(([t,n,a])=>`<div class="card p-4 flex flex-wrap justify-between items-center gap-3"><div><p class="text-xs text-gold">${t}</p><p class="text-sm">${n}</p></div><button class="btn-ghost text-xs">${a}</button></div>`).join('')}</div>`,
@@ -1177,7 +1231,7 @@ function designs(){
   ${th.map(t=>`<p class="text-xs uppercase tracking-wider text-gold mb-3 mt-6">${t}</p><div class="grid grid-cols-2 md:grid-cols-4 gap-4">${Object.entries(BG).filter(([k,b])=>b.th===t).map(([k,b])=>`<div><div class="relative aspect-square card overflow-hidden flex items-center justify-center p-6">${bgSvg(k)}<p class="relative font-serif text-center text-sm">„Beispiel-Zitat“</p></div><p class="text-sm mt-2">${b.n}</p></div>`).join('')}</div>`).join('')}</div>`;
 }
 function vorteile(){
-  return `<div class="max-w-3xl mx-auto px-4 py-8"><h1 class="font-serif text-2xl mb-1">Member-Vorteile</h1><div class="flex justify-between items-start gap-3 mb-6"><p class="text-muted text-sm">Exklusive Deals – für alle Member, manche erst ab Rang Pro/Elite. Alle Angebote sind Anzeigen.</p><a href="#werbung" class="btn-ghost text-sm whitespace-nowrap">Werbung schalten</a></div>
+  return `<div class="max-w-3xl mx-auto px-4 py-8"><h1 class="font-serif text-2xl mb-1">Member-Vorteile</h1><div class="flex justify-between items-start gap-3 mb-6"><p class="text-muted text-sm">Exklusive Deals – für alle Member, manche erst ab Rang 3 Performer. Alle Angebote sind Anzeigen.</p><a href="#werbung" class="btn-ghost text-sm whitespace-nowrap">Werbung schalten</a></div>
   <div class="grid sm:grid-cols-2 gap-4">${PERKS.map(p=>`<div class="card p-5"><span class="text-[10px] uppercase tracking-wide ${p[2]==='Anzeige'?'text-muted':'text-gold'}">${p[2]}</span><p class="font-semibold mt-1">${p[0]}</p><p class="text-gold text-sm">${p[1]}</p>${p[3]&&S.user?`<a class="btn-ghost text-sm mt-3 inline-block" href="${p[3]}" target="_blank" rel="noopener sponsored">Deal holen ↗</a>`:`<button class="btn-ghost text-sm mt-3">${S.user?'Deal holen':'Anmelden zum Freischalten'}</button>`}</div>`).join('')}</div></div>`;
 }
 function search(){ return `<div class="max-w-lg mx-auto px-4 py-8"><input class="input" placeholder="Member, Jobs, Marktplatz durchsuchen…"></div>`; }
