@@ -1667,7 +1667,8 @@ const ELI='assets/app/elias_portraet_eng.jpg';
 const PEOPLE={
   Elias:{av:`<img class="av" src="${ELI}" alt="" style="object-position:50% 18%">`,r:'Dealmaker'},
   Marco:{c:'feed,148,98,80,80',r:'Rising'},Sofia:{c:'player,150,90,240,240',r:'Performer'},Lena:{c:'feed,264,98,80,80',r:'Dealmaker'},
-  Amira:{c:'feed,380,98,80,80',r:'Starter'},Jonas:{i:'JK',r:'Starter'},Felix:{i:'FB',r:'Performer'},Tobias:{i:'TW',r:'Dealmaker'},ClosingHub:{i:'CH',r:''}
+  Amira:{c:'feed,380,98,80,80',r:'Starter'},Jonas:{i:'JK',r:'Starter'},Felix:{i:'FB',r:'Performer'},Tobias:{i:'TW',r:'Dealmaker'},
+  Hannah:{i:'HL',r:'Rising'},Mia:{i:'MR',r:'Starter'},David:{i:'DO',r:'Performer'},ClosingHub:{i:'CH',r:''}
 };
 const RKN={Starter:1,Rising:2,Performer:3,Dealmaker:4,Rainmaker:5},rkLabel=r=>(RKN[r]?RKN[r]+' ':'')+r;
 const rkCls=r=>r==='Performer'?' pro':(r==='Dealmaker'||r==='Rainmaker')?' elite':'';
@@ -1758,14 +1759,34 @@ function closePage(){stack=[];page.classList.remove('on');page.setAttribute('ari
 /* ---------- Feed ---------- */
 let breath=true,rMin=10;const ptypes=new Set(['video','erfolg','frage','zitat','job']);
 const POSTS=[
-  {id:'sofia',type:'video',n:'Sofia',clip:'clip_sofia',reel:0,cap:'3 Sätze, mit denen ich jeden Termin bestätige.',dur:'0:08',likes:118,tags:'#Setting #Termin'},
-  {id:'lena',type:'erfolg',n:'Lena',text:'<b>6. Hire über ClosingHub.</b> Rang Dealmaker gehalten, danke an alle, die mir im Forum geholfen haben.',cong:31},
-  {id:'elias1',type:'video',n:'Elias',clip:'clip_elias1',reel:1,cap:'Angebot in 60 Sekunden: so baue ich es auf.',dur:'0:08',likes:96,tags:'#Closing #Pitch'},
-  {id:'jonas',type:'frage',n:'Jonas',thread:'t1'},
-  {id:'marco',type:'video',n:'Marco',crop:'feed,24,430,492,370',reel:3,cap:'Mein erster 4.000-€-Deal, so lief der Call.',dur:'0:44',likes:152,tags:'#Closing #HighTicket'},
-  {id:'zitat',type:'zitat',n:'ClosingHub',text:'„Ein Einwand ist kein Nein. Er ist eine Bitte um mehr Sicherheit.“',reel:4,likes:128},
-  {id:'job2',type:'job',n:'ClosingHub',job:'j3'},
-  {id:'elias2',type:'video',n:'Elias',clip:'clip_elias2',reel:2,cap:'So plane ich meinen Tag mit der Jobbörse.',dur:'0:08',likes:74,tags:'#Routine'}
+  {id:'sofia',type:'video',n:'Sofia',clip:'clip_sofia',reel:0,cap:'3 Sätze, mit denen ich jeden Termin bestätige.',dur:'0:08',likes:118,tags:'#Setting #Termin',cm:10},
+  {id:'lena',type:'erfolg',n:'Lena',text:'<b>6. Hire über ClosingHub.</b> Rang Dealmaker gehalten, danke an alle, die mir im Forum geholfen haben.',cong:31,cm:7},
+  {id:'e_tobias',type:'erfolg',n:'Tobias',text:'<b>41 Abschlüsse im Team diesen Monat.</b> Rekord für uns acht. Danke an alle, die im Forum ihre Skripte geteilt haben.',cong:52,cm:9},
+  {id:'elias1',type:'video',n:'Elias',clip:'clip_elias1',reel:1,cap:'Angebot in 60 Sekunden: so baue ich es auf.',dur:'0:08',likes:96,tags:'#Closing #Pitch',cm:3},
+  {id:'z_disziplin',type:'zitat',n:'ClosingHub',text:'„Motivation bringt dich in den ersten Call. Disziplin bringt dich in den hundertsten.“',reel:5,likes:344,cm:26},
+  {id:'jonas',type:'frage',n:'Jonas',thread:'t1',cm:0},
+  {id:'e_amira',type:'erfolg',n:'Amira',text:'<b>Erster gebuchter Termin als Setterin.</b> 61 Nachrichten, 9 Antworten, 1 Termin. Morgen geht es weiter.',cong:24,cm:6},
+  {id:'f_t3',type:'frage',n:'',thread:'t3'},
+  {id:'marco',type:'video',n:'Marco',crop:'feed,24,430,492,370',reel:3,cap:'Mein erster 4.000-€-Deal, so lief der Call.',dur:'0:44',likes:152,tags:'#Closing #HighTicket',cm:22},
+  {id:'e_david',type:'erfolg',n:'David',text:'<b>Erster Solar-Deal über 18.000 €.</b> Nach 50 getrackten Calls war klar: Mein Problem war der Einstieg, nicht der Preis.',cong:46,cm:11},
+  {id:'zitat',type:'zitat',n:'ClosingHub',text:'„Ein Einwand ist kein Nein. Er ist eine Bitte um mehr Sicherheit.“',reel:4,likes:128,cm:13},
+  {id:'e_sofia',type:'erfolg',n:'Sofia',text:'<b>23 % Antwortquote auf kalte Instagram-Leads.</b> Vorher waren es 8 %. Den neuen Opener habe ich ins Forum gestellt.',cong:38,cm:12},
+  {id:'f_t5',type:'frage',n:'',thread:'t5'},
+  {id:'job2',type:'job',n:'ClosingHub',job:'j3',cm:0},
+  {id:'e_hannah',type:'erfolg',n:'Hannah',text:'<b>Rang Rising erreicht.</b> Nebenberuflich, jeden Abend von 18 bis 20 Uhr. Kein perfekter Plan, aber ein fester.',cong:19,cm:4},
+  {id:'z_wert',type:'zitat',n:'ClosingHub',text:'„Der Preis ist nur dann zu hoch, wenn der Wert nicht klar ist.“',reel:6,likes:377,cm:29},
+  {id:'elias2',type:'video',n:'Elias',clip:'clip_elias2',reel:2,cap:'So plane ich meinen Tag mit der Jobbörse.',dur:'0:08',likes:74,tags:'#Routine',cm:5},
+  {id:'e_marco',type:'erfolg',n:'Marco',text:'<b>4 Abschlüsse in diesem Monat.</b> Letzten Monat waren es null. Geändert habe ich nur eins: jeden Call am selben Abend nachgehört.',cong:41,cm:9},
+  {id:'f_t8',type:'frage',n:'',thread:'t8'},
+  {id:'e_felix',type:'erfolg',n:'Felix',text:'<b>100. Stimmtraining gegeben.</b> Mein häufigster Tipp: den Preis etwas langsamer aussprechen als den Rest des Satzes.',cong:27,cm:5},
+  {id:'j_j1',type:'job',n:'ClosingHub',job:'j1'},
+  {id:'e_mia',type:'erfolg',n:'Mia',text:'<b>Erste Freischaltung durch einen Auftraggeber.</b> Ich habe dreimal nachgeschaut, ob das wirklich stimmt.',cong:35,cm:8},
+  {id:'z_fragen',type:'zitat',n:'ClosingHub',text:'„Wer fragt, führt. Starke Closer reden 30 % und fragen 70 %.“',reel:7,likes:233,cm:16},
+  {id:'f_t4',type:'frage',n:'',thread:'t4'},
+  {id:'e_jonas',type:'erfolg',n:'Jonas',text:'<b>Erste 5-Sterne-Bewertung von einem Auftraggeber.</b> 80 Wählversuche am Tag zahlen sich aus.',cong:22,cm:3},
+  {id:'e_lena',type:'erfolg',n:'Lena',text:'<b>312 Calls analysiert.</b> Der häufigste Fehler: Der Preis fällt, bevor der Kunde sein Problem selbst ausgesprochen hat.',cong:33,cm:14},
+  {id:'f_t7',type:'frage',n:'',thread:'t7'},
+  {id:'z_starter',type:'zitat',n:'ClosingHub',text:'„Jeder Rainmaker hat einmal als Starter angefangen.“',reel:8,likes:331,cm:23}
 ];
 const CMT={
   sofia:[['Jonas','Satz zwei nutze ich ab morgen.'],['Lena','Genau so, kurz und verbindlich.']],
@@ -1773,11 +1794,25 @@ const CMT={
   elias1:[['Sofia','Die Pause nach dem Preis ist Gold wert.']],
   marco:[['Lena','Stark! Welchen Einwand hattest du am Ende?'],['Felix','Glückwunsch, der Erste ist der wichtigste.']],
   zitat:[['Marco','Hängt jetzt neben meinem Bildschirm.']],
-  elias2:[['Tobias','Calls am Vormittag, genau mein Rhythmus.']]
+  elias2:[['Tobias','Calls am Vormittag, genau mein Rhythmus.']],
+  e_tobias:[['Lena','Starke Zahl für ein Team aus acht.'],['Jonas','Welches Skript nutzt ihr für den Einstieg?']],
+  z_disziplin:[['Hannah','Genau das brauchte ich heute.']],
+  e_amira:[['Sofia','Der erste ist der schwerste. Weiter so!'],['Marco','Glückwunsch, Amira!']],
+  e_david:[['Felix','18.000 €, Respekt.'],['Tobias','Tracking ist unterschätzt. Gute Arbeit.']],
+  e_sofia:[['Amira','Den Opener teste ich morgen.'],['Mia','Wo genau im Forum?']],
+  e_hannah:[['Lena','Fester Plan schlägt perfekten Plan.']],
+  z_wert:[['David','Hängt jetzt als Zettel am Monitor.']],
+  e_marco:[['Lena','Nachhören ist der beste Trainer.'],['Jonas','Mache ich ab heute auch.']],
+  e_felix:[['Marco','Den Tipp habe ich von dir, funktioniert.']],
+  e_mia:[['Amira','Willkommen im Club!'],['Hannah','So fühlt sich das an, genieß es.']],
+  z_fragen:[['Sofia','Im Setting genauso.']],
+  e_jonas:[['Felix','Verdient, Jonas.']],
+  e_lena:[['Tobias','Passiert in meinem Team auch ständig.'],['Marco','Ertappt.']],
+  z_starter:[['Mia','Das motiviert.']]
 };
 const head=(n,tag)=>`<div class="post-h">${av(n)}<b${n==='ClosingHub'?'':` class="pn" data-prof="${n}"`}>${n} ${rk(PEOPLE[n]?.r)}</b><span class="tag">${tag}</span></div>`;
 const likeBtn=(n)=>`<button type="button" class="like">${SVG(P.heart)}<em data-n="${n}">${n}</em></button>`;
-const cmtBtn=id=>`<button type="button" class="cmt" data-comments="${id}">${SVG(P.chat)}<em>${(CMT[id]||[]).length+[10,7,3,0,22,13,0,5][POSTS.findIndex(p=>p.id===id)]||0}</em></button>`;
+const cmtBtn=id=>`<button type="button" class="cmt" data-comments="${id}">${SVG(P.chat)}<em>${(CMT[id]||[]).length+(POSTS.find(p=>p.id===id)?.cm||0)}</em></button>`;
 function postHtml(p){
   if(p.type==='video'){
     const media=p.clip?`<video src="assets/app/${p.clip}.mp4" muted loop playsinline autoplay preload="metadata"></video><span class="live">Video</span>`:`<span class="vimg crop" data-crop="${p.crop}"></span>`;
@@ -1805,7 +1840,11 @@ const REELS=[
   {n:'Elias',clip:'clip_elias1',t:'Angebot in 60 Sekunden: so baue ich es auf.',l:96,c:'elias1'},
   {n:'Elias',clip:'clip_elias2',t:'So plane ich meinen Tag mit der Jobbörse.',l:74,c:'elias2'},
   {n:'Marco',crop:'feed,152,430,236,410',t:'Mein erster 4.000-€-Deal, so lief der Call.',l:152,c:'marco'},
-  {n:'ClosingHub',q:'„Ein Einwand ist kein Nein. Er ist eine Bitte um mehr Sicherheit.“',t:'Zitat des Tages',l:128,c:'zitat'}
+  {n:'ClosingHub',q:'„Ein Einwand ist kein Nein. Er ist eine Bitte um mehr Sicherheit.“',t:'Zitat des Tages',l:128,c:'zitat'},
+  {n:'ClosingHub',q:'„Motivation bringt dich in den ersten Call. Disziplin bringt dich in den hundertsten.“',t:'Zitat',l:344,c:'z_disziplin'},
+  {n:'ClosingHub',q:'„Der Preis ist nur dann zu hoch, wenn der Wert nicht klar ist.“',t:'Zitat',l:377,c:'z_wert'},
+  {n:'ClosingHub',q:'„Wer fragt, führt. Starke Closer reden 30 % und fragen 70 %.“',t:'Zitat',l:233,c:'z_fragen'},
+  {n:'ClosingHub',q:'„Jeder Rainmaker hat einmal als Starter angefangen.“',t:'Zitat',l:331,c:'z_starter'}
 ];
 track.innerHTML=REELS.map(r=>`<div class="reel${r.q?' q':''}">${r.clip?`<video src="assets/app/${r.clip}.mp4" muted loop playsinline preload="metadata"></video>`:r.crop?`<div class="still crop" data-crop="${r.crop}"></div>`:`<div class="bg">${r.q}</div>`}<div class="r-bot"><b>${r.n} ${rk(PEOPLE[r.n]?.r)}</b><p>${r.t}</p></div></div>`).join('');
 $('#r-dots').innerHTML=REELS.map(()=>'<i></i>').join('');
@@ -2055,8 +2094,12 @@ const MEMBERS={
   Amira:{role:'Setterin',exp:'Neu im Vertrieb, Deutschland',bio:'Gerade gestartet. Lernt jeden Tag im Forum dazu.',st:'–',rc:0,fo:41,fg:88,b:[0],posts:['Woche 1: 4 Bewerbungen, 1 Freischaltung, 1 Testgespräch.'],rv:[]},
   Jonas:{role:'Setter',exp:'1 Jahr Erfahrung, Deutschland',bio:'Outbound-Setter B2B. 80 Wählversuche am Tag.',st:'4,4',rc:5,fo:73,fg:64,b:[0],posts:['Wie reagiert ihr auf „Ich muss da nochmal drüber schlafen“?'],rv:[['Software-Firma, anonym',4,'Zuverlässig und fleißig.']]},
   Felix:{role:'Closer',exp:'3 Jahre Erfahrung, Deutschland',bio:'Closer und Stimmtrainer. Arbeitet mit dir an Tempo, Pausen und Betonung am Telefon.',st:'4,7',rc:14,fo:310,fg:120,b:[0,1],posts:['Frag zurück, was genau noch offen ist. Meist ist es nicht der Preis.'],rv:[['Agentur, anonym',5,'Klare Struktur in jedem Call.']]},
-  Tobias:{role:'Closer',exp:'6 Jahre Erfahrung, Deutschland',bio:'Teamlead für 8 Closer. Schreibt Closing- und Setting-Skripte passend zu deinem Angebot.',st:'4,9',rc:27,fo:690,fg:150,b:[0,1,2,3],posts:['Mein Tagesplan als Closer, 6 bis 14 Uhr.'],rv:[['Coaching-Anbieter, anonym',5,'Hat unser ganzes Team besser gemacht.']]}
+  Tobias:{role:'Closer',exp:'6 Jahre Erfahrung, Deutschland',bio:'Teamlead für 8 Closer. Schreibt Closing- und Setting-Skripte passend zu deinem Angebot.',st:'4,9',rc:27,fo:690,fg:150,b:[0,1,2,3],posts:['Mein Tagesplan als Closer, 6 bis 14 Uhr.'],rv:[['Coaching-Anbieter, anonym',5,'Hat unser ganzes Team besser gemacht.']]},
+  Hannah:{role:'Setterin',exp:'Nebenberuflich, 1 Jahr Erfahrung, Deutschland',bio:'Setzt abends Termine für Coaching-Anbieter. Tagsüber im Kundenservice.',st:'4,5',rc:4,fo:96,fg:110,b:[0],posts:[],rv:[['Coaching-Anbieter, anonym',5,'Pünktlich, freundlich und gut vorbereitet.']]},
+  Mia:{role:'Setterin',exp:'Neu im Vertrieb, Deutschland',bio:'Studentin, setzt nebenher Termine. Seit 4 Wochen auf ClosingHub.',st:'–',rc:0,fo:28,fg:74,b:[0],posts:[],rv:[]},
+  David:{role:'Closer',exp:'2 Jahre Erfahrung, Deutschland',bio:'Closer für Photovoltaik und Wärmepumpen. Trackt jeden Call.',st:'4,7',rc:9,fo:205,fg:140,b:[0,1],posts:[],rv:[['Energie-Anbieter, anonym',5,'Sehr strukturiert, hohe Abschlussquote bei vorqualifizierten Terminen.']]}
 };
+POSTS.filter(p=>p.type==='erfolg'&&p.id.startsWith('e_')&&MEMBERS[p.n]).forEach(p=>MEMBERS[p.n].posts.unshift(p.text.replace(/<[^>]+>/g,'')));
 const following=new Set(['Lena','Sofia']);
 const reminded=new Set();
 const SEAL=CHSeal('Partner',22).replace('<svg ','<svg class="pp-seal" ').replace('aria-label="Abzeichen Partner"','aria-label="Siegel: offizieller Partner"');
