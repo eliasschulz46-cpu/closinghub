@@ -618,7 +618,8 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
 }
 
 /* ---------- Demo-Handy v3 ---------- */
-.screen .view{translate:none;transition:opacity .22s ease-out}
+.screen .view{translate:none;transition:none;visibility:hidden}
+.screen .view.on{visibility:visible}
 .screen .view.on{translate:none;transition:opacity .28s ease-out}
 .screen .scroll{scroll-behavior:auto}
 .screen .pane.on{animation:paneIn .24s ease-out}
@@ -1226,7 +1227,7 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
 <!-- ===================== GRÜNDER ===================== -->
 <section class="sec founder" aria-labelledby="h-founder">
   <div class="wrap">
-    <img src="assets/app/elias_gruender.jpg" alt="Elias, Gründer von ClosingHub" width="720" height="1290" loading="lazy">
+    <img src="assets/app/elias_gruender.jpg" onerror="this.onerror=null;this.src='assets/app/elias_portraet_eng.jpg'" alt="Elias, Gründer von ClosingHub" width="720" height="1290" loading="lazy">
     <div>
       <h2 class="display" id="h-founder">Gebaut für Leute, die vom Verkaufen&nbsp;leben.</h2>
       <p>Ich bin Elias, Gründer von ClosingHub. Meine Vision: eine Plattform, die Closer, Setter und Vertriebler an einem Punkt verbindet.</p>
@@ -1274,7 +1275,7 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
           <li>Marktplatz: kaufen und verkaufen</li>
           <li>Nachrichten an Closer, Setter und Auftraggeber</li>
           <li>Ränge, Abzeichen und Bewertungen</li>
-          <li>Basis-Deals bei Partnern</li>
+          <li>Alle Partner-Deals</li>
         </ul>
         <a class="btn btn-l btn-ghost" href="#vertrag" data-abo="plus">Für Plus vormerken</a>
       </div>
@@ -1288,7 +1289,6 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
           <li>10 statt 5 Bewerbungen pro Monat</li>
           <li>Bewerbung hervorgehoben</li>
           <li>Wöchentliche Live-Vorträge von unseren Partnern</li>
-          <li>Alle Partner-Deals</li>
           <li>Premium-Abzeichen</li>
         </ul>
         <a class="btn btn-l btn-ghost" href="#vertrag" data-abo="premium">Für Premium vormerken</a>
@@ -1521,7 +1521,7 @@ const FEATURES=[
   ['msg','Nachrichten','Direkt','Schreib mit Closern, Settern und Auftraggebern.',['Text, Bilder und Sprachnachrichten','Lesebestätigung und Online-Status','Melden und Blockieren']],
   ['medal','Ränge und Abzeichen','Status','Intelligentes Profil mit Bewertungssystem, das dich präsentiert. Sammle Erfolge und werde besser.',['Medaillen sammeln durch Aktivität und Lob','Abzeichen für nachgewiesene Erfolge','Spotlight: Top-Profi-Closer und Top-Rookie-Closer des Monats']],
   ['shield','Bewertungen','Vertrauen','Gegenseitige Bewertungen nach jeder Zusammenarbeit.',['5 Sterne und kurzer Text','Du entscheidest, was im Profil steht','Mehr Vertrauen, bessere Jobs']],
-  ['gift','Member-Vorteile','Deals','Exklusive Angebote von Partnern nur für Member.',['Morgendlicher Motivations-Live-Call','Rabatte auf Tools und Equipment','Mehr Deals mit Premium','Monatlich neue Angebote']],
+  ['gift','Member-Vorteile','Deals','Exklusive Angebote von Partnern nur für Member.',['Morgendlicher Motivations-Live-Call','Rabatte auf Tools und Equipment','Monatlich neue Angebote']],
 ];
 $('#spec').innerHTML=FEATURES.map(([ic,t,tag,d,li],i)=>`<div class="spec-row"><button type="button" aria-expanded="false" aria-controls="sp${i}"><span class="ico">${svg(IC[ic])}</span><h3>${t}<span class="sp-inl">${d}</span></h3><span class="tag">${tag}</span><span class="pm">${svg('<path d="M12 5v14M5 12h14"/>',20,2)}</span></button><div class="spec-body" id="sp${i}"><div><ul>${li.map(x=>`<li>${x}</li>`).join('')}</ul></div></div></div>`).join('');
 $$('.spec-row>button').forEach(b=>b.addEventListener('click',()=>{const r=b.parentElement,o=!r.classList.contains('open');r.classList.toggle('open',o);b.setAttribute('aria-expanded',o)}));
@@ -1891,7 +1891,7 @@ function showStory(i){
   $('#st-t').textContent=s.t;$('#st-in').value='';
   $$('#st-bars i').forEach((b,k)=>{b.className=k<i?'done':''});
   const bar=$$('#st-bars i')[i];void bar.offsetWidth;bar.className='run';
-  clearTimeout(stT);if(!reduce)stT=setTimeout(()=>{if(storyv.classList.contains('on')&&document.activeElement!==$('#st-in'))showStory(si+1)},4860);
+  clearTimeout(stT);if(!reduce)stT=setTimeout(()=>{if(storyv.classList.contains('on')&&document.activeElement!==$('#st-in'))showStory(si+1)},6940);
 }
 function openStory(i){closeSheets();closeReels();storyv.classList.add('on');storyv.setAttribute('aria-hidden','false');showStory(i);explain('story','#st-t')}
 function closeStory(silent){clearTimeout(stT);if(!storyv.classList.contains('on'))return;storyv.classList.remove('on');storyv.setAttribute('aria-hidden','true');if(!silent)explainView()}
@@ -2165,7 +2165,7 @@ const STEPS=[
   [()=>ptab('posts'),600],
   T('.tabs [data-tab="0"]',()=>go(0),1600)
 ];
-const SPEED=0.7;
+const SPEED=0.49;
 function runStep(){
   let wait=600;
   if(visible&&!paused&&Date.now()>userHold&&!document.hidden){const [fn,d]=STEPS[step];fn();wait=Math.round(d/SPEED);step=(step+1)%STEPS.length}
