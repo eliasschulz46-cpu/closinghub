@@ -273,7 +273,7 @@ function logout(){ keepSession(null); render(); }
 
 /* ===== Daten ===== */
 const DEFAULT_SETTINGS = {
-  plus:3.33, premiumM:9.99, premiumY:89, unlock:25, marketFee:9.9, topJob:19, jobFee:0, vat:21,
+  plus:9.99, plusY:119.88, premiumM:19.99, premiumY:239.88, unlock:25, marketFee:9.9, topJob:19, jobFee:0, vat:21,
   dayoneTotal:250, dayoneFreeMonths:12, dayonePremiumMonths:3, maxPerCountry:1000, perCategory:10,
   heroTop:'Mehr closen –', heroGold:'mehr verdienen.', heroSub:'Die Plattform für Closer & Setter, die mehr wollen.', heroLead:'Attraktive Jobs, motivierender Feed, Kontakte auch in deiner Nähe und mehr besondere Member-Vorteile, die dich jeden Tag besser machen – für maximale Abschlüsse.',
   features:{arena:false, marketplace:true, stories:true, breathing:true, forum:true, topjobs:true, waitlistOpen:true}
@@ -307,7 +307,7 @@ async function loadAll(){
     api('jobs?select=*&order=created_at.desc').then(r=>{LOADERR.jobs='';return r;}).catch(e=>{LOADERR.jobs=e.message;return [];}),
     api('clients?select=*&order=created_at.desc').then(r=>{LOADERR.clients='';return r;}).catch(e=>{LOADERR.clients=e.message;return [];})
   ]);
-  D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at }));
+  D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at, quelle:w.quelle||'' }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
   const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
@@ -832,6 +832,15 @@ async function saveTick(id,b){
 
 /* ===== Anfragen & Warteliste ===== */
 let reqTab='anfragen';
+const refLink = id => 'https://www.getclosinghub.com/?partner='+id;
+const refCount = id => D.waitlist.filter(w=>w.quelle==='partner:'+id).length;
+function quelleLabel(q){
+  if(!q||q==='landingpage') return 'Website';
+  if(q.startsWith('partner:')){ const p=(D.partners||[]).find(x=>x.id===q.slice(8)); return 'Partner '+(p&&p.n?p.n:'#'+q.slice(8)); }
+  if(q.startsWith('einladung:')) return 'Einladung von '+q.slice(10);
+  return q;
+}
+async function copyRef(id,b){ try{ await navigator.clipboard.writeText(refLink(id)); toast('Empfehlungslink kopiert'); }catch(e){ prompt('Empfehlungslink:',refLink(id)); } }
 function anfragen(){
   const abo={dayone:'Day One',plus:'Plus',premium:'Premium'};
   return `<h1 class="h1">Anfragen & Warteliste</h1><p class="sub">Kontaktformular für Auftraggeber und alle Einträge der Warteliste.</p>
@@ -840,7 +849,7 @@ function anfragen(){
     <p style="margin-top:8px;white-space:pre-wrap">${esc(r.text)||'<span class="muted">Keine Nachricht</span>'}</p>
     <div class="row" style="margin-top:12px"><a class="btn sm gold-b" href="mailto:${esc(r.email)}?subject=${encodeURIComponent('Deine Anfrage bei ClosingHub')}" onclick="reqDone(${r.id})">Antworten</a>${r.type==='Werbung'?`<button class="btn sm" onclick="location.hash='laufband';setTimeout(editTick,50)">Als Laufband-Angebot anlegen</button>`:`<button class="btn sm" onclick="location.hash='rechnungen?neu'">Rechnung schreiben</button>`}${r.st!=='beantwortet'?`<button class="btn sm" onclick="reqDone(${r.id})">Als erledigt markieren</button>`:''}</div></div>`).join('')||'<div class="card empty">Noch keine Anfragen.</div>'}</div>`
   :`<div class="row between" style="margin-bottom:12px"><span class="muted">${D.waitlist.length} Einträge</span><button class="btn" onclick="csv('warteliste')">CSV-Export</button></div>
-    <div class="card tw"><table><thead><tr><th>Name</th><th>E-Mail</th><th>Abo</th><th>Eingetragen</th><th></th></tr></thead><tbody>${D.waitlist.map(w=>`<tr><td><b>${esc(w.name)}</b></td><td class="muted">${esc(w.email)}</td><td><span class="pill ${w.abo==='dayone'?'p-gold':''}">${abo[w.abo]||esc(w.abo)}</span></td><td class="muted">${fmtAt(w.at)}</td><td style="text-align:right"><button class="btn sm red" onclick="delWait(${w.id})">${ic('trash',13)} Entfernen</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Noch keine Einträge.</td></tr>'}</tbody></table></div>`}`;
+    <div class="card tw"><table><thead><tr><th>Name</th><th>E-Mail</th><th>Abo</th><th>Quelle</th><th>Eingetragen</th><th></th></tr></thead><tbody>${D.waitlist.map(w=>`<tr><td><b>${esc(w.name)}</b></td><td class="muted">${esc(w.email)}</td><td><span class="pill ${w.abo==='dayone'?'p-gold':''}">${abo[w.abo]||esc(w.abo)}</span></td><td class="muted">${esc(quelleLabel(w.quelle))}</td><td class="muted">${fmtAt(w.at)}</td><td style="text-align:right"><button class="btn sm red" onclick="delWait(${w.id})">${ic('trash',13)} Entfernen</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine Einträge.</td></tr>'}</tbody></table></div>`}`;
 }
 async function delWait(id){
   const w=D.waitlist.find(x=>x.id===id); if(!w) return;
@@ -956,6 +965,7 @@ function ptCard(p,i){
     ${r.draft?`<div class="demo" style="margin-top:10px"><b>${esc(p.n||'Der Partner')} möchte sein Profil ändern</b> <span class="muted">(${deDate(r.draft_at)})</span>${ptDiff(r)}
       <div class="row" style="margin-top:10px"><button class="btn gold-b sm" onclick="ptApprove(${i},true)">Freigeben</button><button class="btn sm" onclick="ptApprove(${i},false)">Ablehnen</button></div></div>`:''}
     ${r.status==='eingeladen'?`<div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap"><span class="muted" style="font-size:13px">Zugang zum Partnerportal für ${esc(r.invite_email||'(E-Mail fehlt)')}:</span><button class="btn sm gold-b" onclick="ptLink(${i},'mail')">Einladung senden</button><button class="btn sm" onclick="ptLink(${i},'copy')">Link kopieren</button></div>`:''}
+    <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap;font-size:13px"><b>Empfehlungslink:</b><span class="muted">${refLink(p.id)}</span><button class="btn sm" onclick="copyRef('${esc(p.id)}',this)">Kopieren</button><span class="pill ${refCount(p.id)?'p-ok':''}">${refCount(p.id)} auf der Warteliste</span></div>
     ${r.status==='aktiv'?`<div style="font-size:13px;margin-top:10px"><b>Kontaktdaten:</b> <span class="muted">${(c=>c&&c.strasse?esc([c.firma,c.strasse,[c.plz,c.ort].filter(Boolean).join(' '),c.land,c.tel,c.mail].filter(Boolean).join(' · ')):'vom Partner noch nicht hinterlegt')(r.kontakt)}</span></div>`:''}
     <div class="grid g2" style="gap:10px;margin-top:10px">
       ${f('n','Name','Paul')}${f('s','Wofür er Partner ist (steht groß im Profilkopf)','Morgen-Call')}
@@ -1089,7 +1099,7 @@ function einstellungen(){
   const n=(k,l,step='0.01',suf='')=>`<label class="f">${l}<div class="row" style="flex-wrap:nowrap"><input class="in" type="number" step="${step}" data-k="${k}" value="${s[k]}">${suf?`<span class="muted">${suf}</span>`:''}</div></label>`;
   return `<h1 class="h1">Preise & Einstellungen</h1><p class="sub">Alle Zahlen des Geschäftsmodells an einem Ort.</p>
   <div class="grid g2">
-    <div class="card"><h3>Abos</h3><div class="grid g2" style="gap:12px">${n('plus','Plus / Monat','0.01','€')}${n('premiumM','Premium / Monat','0.01','€')}${n('premiumY','Premium / Jahr','1','€')}${n('vat','MwSt / IVA','1','%')}</div></div>
+    <div class="card"><h3>Abos</h3><div class="grid g2" style="gap:12px">${n('plus','Plus / Monat','0.01','€')}${n('plusY','Plus / Jahr','0.01','€')}${n('premiumM','Premium / Monat','0.01','€')}${n('premiumY','Premium / Jahr','0.01','€')}${n('vat','MwSt / IVA','1','%')}</div></div>
     <div class="card"><h3>Day Ones</h3><div class="grid g2" style="gap:12px">${n('dayoneTotal','Anzahl Plätze (live)','1')}${n('dayoneFreeMonths','Gratis-Monate','1')}${n('dayonePremiumMonths','Premium-Monate gratis','1')}${n('maxPerCountry','Max. Member je Land','1')}</div></div>
     <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('marketFee','Marktplatz-Gebühr','0.1','%')}${n('topJob','Top-Job','0.01','€')}${n('jobFee','Gebühr pro veröffentlichtem Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
     <div class="card"><h3>Verbindung</h3><div class="row" style="margin-bottom:8px"><span class="pill p-ok">Supabase verbunden</span></div><p class="muted" style="font-size:13px">Angemeldet als ${esc(SESSION&&SESSION.email)}</p><button class="btn" style="margin-top:12px" onclick="logout()">Abmelden</button></div>
@@ -1122,7 +1132,7 @@ async function saveSettings(b){
   const s=D.settings; b.disabled=true;
   try{
     await Promise.all([
-      setKey('preise',{plus:s.plus,premiumM:s.premiumM,premiumY:s.premiumY,unlock:s.unlock,marketFee:s.marketFee,topJob:s.topJob,jobFee:s.jobFee,vat:s.vat}),
+      setKey('preise',{plus:s.plus,plusY:s.plusY,premiumM:s.premiumM,premiumY:s.premiumY,unlock:s.unlock,marketFee:s.marketFee,topJob:s.topJob,jobFee:s.jobFee,vat:s.vat}),
       setKey('dayone',{total:s.dayoneTotal,freeMonths:s.dayoneFreeMonths,premiumMonths:s.dayonePremiumMonths}),
       setKey('limits',{maxPerCountry:s.maxPerCountry,perCategory:s.perCategory})
     ]);
@@ -1133,7 +1143,7 @@ async function saveSettings(b){
 /* ===== CSV ===== */
 function csv(kind){
   const rows = kind==='rechnungen' ? [['Nr','Datum','Kunde','E-Mail','Leistung','Netto','MwSt %','Brutto','Status'],...D.invoices.map(i=>[i.no,i.date,i.cust,i.email,i.item,i.net.toFixed(2),i.vat,gross(i).toFixed(2),i.st])]
-    : [['Name','E-Mail','Abo','Datum'],...D.waitlist.map(w=>[w.name,w.email,w.abo,w.at.slice(0,10)])];
+    : [['Name','E-Mail','Abo','Datum','Quelle'],...D.waitlist.map(w=>[w.name,w.email,w.abo,w.at.slice(0,10),quelleLabel(w.quelle)])];
   const blob=new Blob(['﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n')],{type:'text/csv'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`closinghub-${kind}.csv`; a.click();
 }

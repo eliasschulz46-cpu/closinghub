@@ -443,7 +443,7 @@ function applyPartners(list){
   PARTNERS=list.slice(0,5).map(p=>{ const o={n:c(p.n,40),s:c(p.s,60),role:c(p.role,40),meta:c(p.meta,80),bio:c(p.bio,300),bk:c(p.bk,40)||'Jetzt anfragen',r:RANKS.includes(p.r)?p.r:(RK_OLD[p.r]||'Performer'),img:(/^https:\/\/[^\s"'<>`]+$/.test(String(p.img||''))||(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(p.img||''))&&String(p.img).length<200000))?String(p.img):'',fem:!!p.fem,live:c(p.live,90),real:true};
     if(Array.isArray(p.k)&&c(p.k[0])) o.k=[c(p.k[0],12),c(p.k[1],30)];
     if(Array.isArray(p.deal)&&c(p.deal[0])) o.deal=[c(p.deal[0],40),c(p.deal[1],60),c(p.deal[2],20)];
-    o.offers=(Array.isArray(p.offers)?p.offers:[]).slice(0,8).map(x=>({t:c(x&&x.t,70),pr:c(x&&x.pr,12)})).filter(x=>x.t);
+    o.offers=(Array.isArray(p.offers)?p.offers:[]).slice(0,3).map(x=>({t:c(x&&x.t,70),pr:c(x&&x.pr,12)})).filter(x=>x.t);
     return o; }).filter(p=>p.n&&p.s);
   if(typeof route==='function' && route()==='markt') render();
 }
@@ -498,7 +498,7 @@ const BADGES=[
   ['hired','Hired via ClosingHub','HIRED VIA CLOSINGHUB','nib','blue','Erster Job über die Plattform'],
   ['spotlight','Spotlight','SPOTLIGHT','sparkle','blue','Meiste Punkte im eigenen Rang in einem Monat']]],
  ['Community',[
-  ['recruiter','Recruiter','RECRUITER','letter','ink','5 Member geworben'],
+  ['recruiter','Recruiter','RECRUITER','letter','ink','3 Member geworben'],
   ['helpinghand','Helping Hand','HELPING HAND','bulb','ink','3 Verbesserungsvorschläge für ClosingHub gegeben']]]];
 
 function poly(r,n,rot){let d='';for(let i=0;i<n;i++){const a=2*Math.PI*i/n+rot;d+=(i?'L':'M')+(50+r*Math.cos(a)).toFixed(2)+' '+(50+r*Math.sin(a)).toFixed(2);}return d+'Z';}
@@ -548,7 +548,7 @@ const BADGES = [
   ['Mitgliedschaft',[['Day One','Einer der ersten 250 Member','b_found'],['Premium','Aktives Premium-Abo. Gilt, solange du Premium bist','b_star'],['Partner','Einer der 5 Partner, solange die Partnerschaft läuft','b_partner'],['Inner Circle','Unterstützungsteam von ClosingHub','b_circle']]],
   ['Geprüft',[['Identität geprüft','Ausweis von ClosingHub bestätigt','b_id'],['High-Ticket','Nachgewiesener Abschluss ab 5.000 €','b_diamond'],['Ausgebildet von …','Absolvent eines Ausbilders, nach Einreichung des Dokuments','b_cap']]],
   ['Leistung',[['Hired via ClosingHub','Erster Job über die Plattform','b_brief'],['Spotlight','Meiste Punkte im eigenen Rang in einem Monat','sun']]],
-  ['Community',[['Recruiter','5 Member über deinen Einladungslink geworben','b_userplus'],['Helping Hand','3 Verbesserungsvorschläge für ClosingHub gegeben','b_bulb']]],
+  ['Community',[['Recruiter','3 Member über deinen Einladungslink geworben','b_userplus'],['Helping Hand','3 Verbesserungsvorschläge für ClosingHub gegeben','b_bulb']]],
 ];
 const BADGE_IC = Object.fromEntries(BADGES.flatMap(g=>g[1].map(b=>[b[0],b[2]])));
 function badgeIcon(b,act){ return `<button type="button" onclick="${act||'openMedals()'}" title="${b}" aria-label="Abzeichen ${b}. Alle Abzeichen ansehen" class="w-11 h-11 rounded-full flex items-center justify-center" style="cursor:pointer;filter:drop-shadow(0 2px 3px rgba(14,26,43,.28))">${CHSeal(b,44)||svg(BADGE_IC[b]||'b_shield',20)}</button>`; }
@@ -1090,9 +1090,9 @@ function settings(){
       <div class="flex flex-wrap gap-2">${FTOPICS.map(t=>`<button onclick="toggleTopic('${t}')" class="${(!S.topics||S.topics.includes(t))?'btn-gold':'btn-ghost'} text-sm">${t}</button>`).join('')}</div></div>
     <div class="card p-4"><p class="font-semibold mb-3">Welche Abzeichen sollen im Profil angezeigt werden?</p>
       ${ME.badges.map(b=>`<label class="flex items-center gap-3 py-2 cursor-pointer"><input type="checkbox" ${S.badgesShown.includes(b)?'checked':''} onchange="toggleBadge('${b}')" style="accent-color:#087A4B;width:16px;height:16px"> ${badgePill(b)}</label>`).join('')}</div>
-    <div class="card p-4"><p class="font-semibold mb-1">Member einladen</p><p class="text-xs text-muted mb-3">Schick deinen Link an Closer und Setter, die du kennst. Wer darüber beitritt, bekommt ein Jahr lang 25 % Rabatt auf Plus und Premium und wird dir zugeordnet. Ab 5 geworbenen Membern bekommst du das Abzeichen „Recruiter“.</p>
+    <div class="card p-4"><p class="font-semibold mb-1">Member einladen</p><p class="text-xs text-muted mb-3">Schick deinen Link an Closer und Setter, die du kennst. Die erste Person, die darüber beitritt, bekommt ein Jahr lang 25 % Rabatt auf Plus und Premium. Alle weiteren kannst du ohne Rabatt einladen. Jede wird dir zugeordnet. Ab 3 geworbenen Membern bekommst du das Abzeichen „Recruiter“.</p>
       <div class="flex gap-2"><input id="invLink" readonly value="${inviteLink()}" onclick="this.select()" class="flex-1 min-w-0 rounded-lg border border-line bg-panel px-3 py-2 text-sm"><button onclick="copyInvite(this)" class="btn-gold text-sm whitespace-nowrap">Kopieren</button></div>
-      <div class="flex items-center justify-between gap-3 mt-3 flex-wrap"><a class="btn-ghost text-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('Schau dir ClosingHub an, die Plattform für Closer und Setter. Über meinen Link bekommst du ein Jahr lang 25 % Rabatt auf Plus und Premium: '+inviteLink())}">Per WhatsApp teilen</a><span class="text-xs text-muted">Bisher geworben: <b>${ME.invited} von 5</b></span></div></div>
+      <div class="flex items-center justify-between gap-3 mt-3 flex-wrap"><a class="btn-ghost text-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('Schau dir ClosingHub an, die Plattform für Closer und Setter. Hier ist mein Einladungslink: '+inviteLink())}">Per WhatsApp teilen</a><span class="text-xs text-muted">Bisher geworben: <b>${ME.invited} von 3</b></span></div></div>
     <div class="card p-4 text-sm space-y-1"><p class="font-semibold">Konto</p><p class="text-muted">Sprache · Benachrichtigungen · Datenschutz · Lieblingsrolle</p></div></div>`;
 }
 const FTOPICS=['Zitat','Mindset','Intelligenz','Achtsamkeit','Seminar-Ausschnitt','Film-Ausschnitt','Member-Video'];
