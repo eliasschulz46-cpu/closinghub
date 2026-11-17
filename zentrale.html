@@ -310,7 +310,7 @@ async function loadAll(){
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at, quelle:w.quelle||'' }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
-  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.gate=S.app_gate||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
@@ -929,6 +929,10 @@ function inhalte(){
   const sw=(k,l,d)=>`<div class="row between" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>${l}</b><div class="muted" style="font-size:12px">${d}</div></div><label class="switch"><input type="checkbox" ${f[k]?'checked':''} onchange="setFeature('${k}',this.checked)"><span></span></label></div>`;
   return `<h1 class="h1">Website & App</h1><p class="sub">Funktionen und Marktplatz. Gespeichertes ist sofort live.</p>
   <div class="grid g2">
+    <div class="card" style="grid-column:1/-1"><div class="row between"><div><h3>App-Sperre</h3><p class="muted" style="font-size:13px;margin-top:2px">Solange die Sperre an ist, öffnet sich die App (app.html) nur mit Passwort. Die Website bleibt offen.</p></div>
+        <span class="pill ${(D.gate||{}).on&&(D.gate||{}).hash?'p-ok':'p-warn'}">${(D.gate||{}).on&&(D.gate||{}).hash?'Sperre ist an':((D.gate||{}).hash?'Sperre ist aus':'Noch kein Passwort gesetzt')}</span></div>
+      <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap"><input class="in" id="gatePw" type="password" autocomplete="new-password" placeholder="Neues Passwort (mindestens 8 Zeichen)" style="max-width:320px"><button class="btn gold-b" onclick="saveGate(this)">Passwort speichern und sperren</button>${(D.gate||{}).hash?`<button class="btn" onclick="toggleGate(${(D.gate||{}).on?'false':'true'})">${(D.gate||{}).on?'Sperre ausschalten':'Sperre einschalten'}</button>`:''}</div>
+      <p class="muted" style="font-size:12.5px;margin-top:8px">Gespeichert wird nur ein Prüfwert, nicht das Passwort selbst. Ein neues Passwort meldet alle Geräte ab, die das alte benutzt haben.</p></div>
     <div class="card" style="grid-column:1/-1"><h3>Funktionen</h3>
       ${sw('waitlistOpen','Warteliste offen','Live: Formular auf der Landingpage an/aus')}
       ${sw('marketplace','Marktplatz','Wirkt, sobald die echte App läuft')}
@@ -1089,6 +1093,13 @@ async function saveMarkt(b){
   if(l.some(x=>x.length>60)) return toast('Bitte kürzer: maximal 60 Zeichen pro Zeile');
   b.disabled=true; try{ await setKey('markt',{services:l}); D.markt=l; render(); toast('Gespeichert – ist live in der App'); }finally{ b.disabled=false; }
 }
+async function gateHash(pw){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('closinghub-app:'+pw)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+async function saveGate(b){
+  const pw=$('gatePw').value; if(pw.length<8) return toast('Das Passwort braucht mindestens 8 Zeichen');
+  b.disabled=true;
+  try{ D.gate={on:true,hash:await gateHash(pw)}; await setKey('app_gate',D.gate); render(); toast('Gespeichert. Die App ist jetzt gesperrt'); }catch(e){ b.disabled=false; }
+}
+async function toggleGate(on){ D.gate={...(D.gate||{}),on}; await setKey('app_gate',D.gate); render(); toast(on?'Sperre ist an':'Sperre ist aus'); }
 async function setFeature(k,v){ D.settings.features[k]=v; await setKey('features',D.settings.features); toast('Gespeichert'); }
 async function saveHero(){ const h={top:$('h1').value.trim(),gold:$('h2').value.trim(),sub:$('h3').value.trim(),lead:$('h4').value.trim()}; await setKey('hero',h); Object.assign(D.settings,{heroTop:h.top,heroGold:h.gold,heroSub:h.sub,heroLead:h.lead}); render(); toast('Hero ist live'); }
 document.addEventListener('input',e=>{ if(['h1','h2','h3','h4'].includes(e.target.id)) $('pv'+e.target.id[1]).textContent=e.target.value; });

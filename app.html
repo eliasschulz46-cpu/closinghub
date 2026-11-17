@@ -207,6 +207,54 @@ tailwind.config = { theme: { extend: {
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+<style>
+#chgate{position:fixed;inset:0;z-index:2147483000;background:#0E1A2B;color:#fff;display:none;place-items:center;padding:24px;font-family:Archivo,system-ui,-apple-system,sans-serif}
+html.ch-locked #chgate{display:grid}
+html.ch-locked body>*:not(#chgate){display:none!important}
+#chgate .bx{width:100%;max-width:380px;text-align:center}
+#chgate .lg{font-size:30px;font-weight:800;letter-spacing:.01em;margin-bottom:6px}
+#chgate p{color:#C9D2DE;font-size:15px;line-height:1.5;margin:0 0 18px}
+#chgate input{width:100%;padding:13px 14px;border-radius:10px;border:1px solid #33435A;background:#16263B;color:#fff;font:inherit;font-size:16px;text-align:center}
+#chgate input:focus{outline:2px solid #7FD1A8;outline-offset:2px}
+#chgate button{width:100%;margin-top:12px;padding:13px;border-radius:10px;border:0;background:#087A4B;color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+#chgate .er{color:#FFB4A9;font-size:14px;min-height:20px;margin-top:10px}
+</style>
+<script>document.documentElement.classList.add('ch-locked');</script>
+<div id="chgate" role="dialog" aria-modal="true" aria-label="Zugang zur App"><div class="bx">
+  <div class="lg">ClosingHub</div>
+  <p id="chgate-t">Einen Moment …</p>
+  <form id="chgate-f" style="display:none" autocomplete="off">
+    <input id="chgate-i" type="password" placeholder="Passwort" aria-label="Passwort" autocomplete="current-password">
+    <button type="submit">App öffnen</button>
+  </form>
+  <button type="button" id="chgate-r" style="display:none;background:#33435A">Nochmal versuchen</button>
+  <div class="er" id="chgate-e" role="alert"></div>
+</div></div>
+<script>
+/* ===== Zugangssperre: Passwort wird in der Zentrale festgelegt, hier steht nur der Vergleich ===== */
+(function(){
+  var SB='https://bzcnqggwyfocpbkwqhsy.supabase.co', KEY='sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D', LS='ch_app_gate';
+  var $=function(i){return document.getElementById(i)}, conf=null;
+  function unlock(){ document.documentElement.classList.remove('ch-locked'); }
+  function get(){ try{ return localStorage.getItem(LS); }catch(e){ return null; } }
+  function put(v){ try{ localStorage.setItem(LS,v); }catch(e){} }
+  async function hash(pw){ var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('closinghub-app:'+pw)); return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join(''); }
+  async function start(){
+    $('chgate-e').textContent=''; $('chgate-r').style.display='none'; $('chgate-f').style.display='none'; $('chgate-t').textContent='Einen Moment …';
+    try{ var r=await fetch(SB+'/rest/v1/settings?select=value&key=eq.app_gate',{headers:{apikey:KEY},cache:'no-store'}); if(!r.ok) throw 0; var j=await r.json(); conf=(j[0]&&j[0].value)||{on:false}; }
+    catch(e){ $('chgate-t').textContent='Die App ist gerade nicht erreichbar. Prüf deine Internetverbindung.'; $('chgate-r').style.display=''; return; }
+    if(!conf.on||!conf.hash) return unlock();
+    if(get()===conf.hash) return unlock();
+    $('chgate-t').textContent='Die App ist noch nicht öffentlich. Gib dein Passwort ein, um sie zu öffnen.';
+    $('chgate-f').style.display=''; $('chgate-i').focus();
+  }
+  $('chgate-f').addEventListener('submit',async function(ev){ ev.preventDefault(); var v=$('chgate-i').value; if(!v) return;
+    try{ var h=await hash(v); if(conf&&h===conf.hash){ put(h); unlock(); } else { $('chgate-e').textContent='Das Passwort stimmt nicht.'; $('chgate-i').select(); } }
+    catch(e){ $('chgate-e').textContent='Das hat nicht geklappt. Lade die Seite neu.'; } });
+  $('chgate-r').addEventListener('click',start);
+  start();
+})();
+</script>
 <div id="app"></div>
 <div id="modal"></div>
 
