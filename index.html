@@ -1182,7 +1182,7 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
           <div class="stamp" aria-hidden="true"><b>ABGESCHLOSSEN</b><span class="num" id="t-nr">Day One</span></div>
         </div>
         <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
-        <label class="consent"><input type="checkbox" id="ok" required><span>Ich bin einverstanden, dass ClosingHub mich zum Start per E-Mail informiert. Abmeldung jederzeit möglich. Mehr in der <button type="button" class="link" data-open="ds">Datenschutzerklärung</button>.</span></label>
+        <label class="consent"><input type="checkbox" id="ok" required><span>Ich bin einverstanden, dass ClosingHub mich per E-Mail zum Start und mit Neuigkeiten rund um ClosingHub informiert (z. B. ClosingHub News, Partner, Gewinnspiele). Abmeldung jederzeit möglich, in jeder Mail per Link. Mehr in der <button type="button" class="link" data-open="ds">Datenschutzerklärung</button>.</span></label>
         <div class="c-foot">
           <button class="btn btn-l" type="submit" id="sendBtn">Day-One-Platz sichern</button>
           <p class="err" id="err" role="alert"></p>
@@ -1370,7 +1370,7 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
   <div class="wrap">
     <div class="sec-head">
       <h2 class="display" id="h-koop">Kooperationen</h2>
-      <p>Du hast ein Tool, ein Training oder eine Community für Vertriebler? Lass uns gemeinsam etwas für Closer und Setter aufbauen.</p>
+      <p>Du hast ein Tool, ein Training oder eine Community für Vertriebler? Lass uns gemeinsam etwas für Closer, Setter und Vertriebler aufbauen.</p>
     </div>
     <ul class="koop-list">
       <li><b>Partner-Deals</b><span>Biete dein Tool oder deinen Service mit Rabatt exklusiv für unsere Member an.</span></li>
@@ -1626,7 +1626,7 @@ form.addEventListener('submit',async e=>{
   if(!d.name||!d.name.trim()){nameIn.setAttribute('aria-invalid','true');nameIn.focus();return showErr('Trag deinen Vornamen ein.')}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((d.email||'').trim())){mailIn.setAttribute('aria-invalid','true');mailIn.focus();return showErr('Diese E-Mail-Adresse sieht unvollständig aus. Prüf sie bitte.')}
   if(ink<40){pad.classList.add('bad');pad.scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});return showErr('Es fehlt noch deine Unterschrift. Unterschreib im Feld oder tipp auf „Mit meinem Namen unterschreiben“.')}
-  if(!$('#ok').checked){$('#ok').focus();return showErr('Setz den Haken, damit wir dir zum Start schreiben dürfen.')}
+  if(!$('#ok').checked){$('#ok').focus();return showErr('Setz den Haken, damit wir dir schreiben dürfen.')}
   btn.disabled=true;btn.textContent='Wird eingetragen …';
   const name=d.name.trim(), email=d.email.trim().toLowerCase(), abo=d.abo||'dayone';
   const QUELLE=(()=>{try{const pt=localStorage.getItem('ch_partner');if(pt)return 'partner:'+pt;const c=localStorage.getItem('ch_ref');return c?'einladung:'+c:'landingpage'}catch(e){return 'landingpage'}})();
@@ -1638,7 +1638,7 @@ form.addEventListener('submit',async e=>{
     await pollCount();
     $('#t-nr').textContent=abo==='dayone'&&TAKEN?`Day One Nr. ${TAKEN}`:(abo==='dayone'?'Day One':PKG[abo]);
     $('#t-text').textContent=`Du bist drin, ${name}. Zum Start bekommst du eine Mail an ${email}.`;
-    $('#t-wa').href='https://wa.me/?text='+encodeURIComponent('Schau dir ClosingHub an, die Plattform für Closer und Setter. Die ersten 250 sind das erste Jahr gratis dabei: https://getclosinghub.com');
+    $('#t-wa').href='https://wa.me/?text='+encodeURIComponent('Schau dir ClosingHub an, die Plattform für Closer, Setter und Vertriebler. Die ersten 250 sind das erste Jahr gratis dabei: https://getclosinghub.com');
     form.querySelectorAll('.blank input').forEach(i=>i.style.width=(i.value.length+1)+'ch');
     form.querySelectorAll('input').forEach(i=>{i.readOnly=true});$('#f-rolle').disabled=true;
     form.classList.add('done');updDock();
@@ -2154,6 +2154,7 @@ const IC={
  nib:L(1.2,'M12 21.6 6.6 12.3 9 4.2h6l2.4 8.1z')+L(.85,'M12 21.6v-8.2')+`<circle cx="12" cy="11.7" r="1.35" fill="none" stroke-width="1"/>`+L(.9,'M8.4 2.5h7.2'),
  sparkle:`<path stroke="none" d="M11 2.4c.6 5 2.8 7.2 7.8 7.8-5 .6-7.2 2.8-7.8 7.8-.6-5-2.8-7.2-7.8-7.8 5-.6 7.2-2.8 7.8-7.8z"/><path stroke="none" d="M18.6 15.2c.3 2.1 1.2 3 3.3 3.3-2.1.3-3 1.2-3.3 3.3-.3-2.1-1.2-3-3.3-3.3 2.1-.3 3-1.2 3.3-3.3z"/>`,
  letter:`<rect x="2.6" y="5.6" width="18.8" height="12.8" rx="1.2" fill="none" stroke-width="1.2"/>`+L(.9,'m3 6.2 9 6.9 9-6.9')+`<circle cx="12" cy="13.6" r="2.7" stroke="none"/><path fill="none" stroke-width=".9" d="m11 16.1-.9 3M13 16.1l.9 3"/>`,
+ flag:L(1.2,'M2.4 19.6 8.8 9.6l3.1 4.4 3-4.5 6.7 10.1z')+L(.7,'M6.9 12.6l1.9 1.3 1.6-1.3')+L(1,'M14.9 9.6V2.8')+`<path stroke="none" d="M15.3 2.9h5.2l-1.5 1.9 1.5 1.9h-5.2z"/>`,
  bulb:L(1.2,'M9.2 17.2h5.6M10.2 20h3.6M12 3.4a5.6 5.6 0 0 0-3.4 10.1c.6.5.9 1.1.9 1.8v1.9h5v-1.9c0-.7.3-1.3.9-1.8A5.6 5.6 0 0 0 12 3.4z')+L(.75,'M10.4 14.8l.8-4.6.8 1.2.8-1.2.8 4.6')
 };
 // Emaille je Gruppe
@@ -2172,6 +2173,7 @@ const BADGES=[
   ['hired','Hired via ClosingHub','HIRED VIA CLOSINGHUB','nib','blue','Erster Job über die Plattform'],
   ['spotlight','Spotlight','SPOTLIGHT','sparkle','blue','Meiste Punkte im eigenen Rang in einem Monat']]],
  ['Community',[
+  ['challenger','Challenger','CHALLENGER','flag','ink','Start-Challenge: 10 der ersten 14 Tage geschafft'],
   ['recruiter','Recruiter','RECRUITER','letter','ink','3 Member geworben'],
   ['helpinghand','Helping Hand','HELPING HAND','bulb','ink','3 Verbesserungsvorschläge für ClosingHub gegeben']]]];
 
