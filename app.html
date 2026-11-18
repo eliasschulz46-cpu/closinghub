@@ -109,6 +109,50 @@ window.tailwind=window.tailwind||{}; tailwind.config = { theme: { extend: {
   @keyframes adIn{from{transform:translateX(110%)}to{transform:translateX(0)}}
   .ad-out{animation:adOut 1.5s cubic-bezier(.6,0,1,.6) forwards}
   .ad-in{animation:adIn 1.5s cubic-bezier(0,.4,.4,1) forwards}
+  /* PC: Laufband läuft durch, Einträge anklickbar */
+  .admarq{display:none}
+  @media (min-width:768px){
+    .adlane{display:none}
+    .admarq{display:block;position:absolute;inset:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent 168px,#000 236px,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,transparent 168px,#000 236px,#000 calc(100% - 48px),transparent)}
+    .admarq-track{display:flex;align-items:center;height:100%;width:max-content;animation:admarq linear infinite;will-change:transform}
+    .admarq:hover .admarq-track{animation-play-state:paused}
+    .admarq-it{display:inline-flex;align-items:center;gap:.5rem;white-space:nowrap;padding:0 2.25rem;height:100%}
+    .admarq-it:hover .admarq-t{text-decoration:underline}
+    /* PC: genau 5 Storys sichtbar, weitere per Scrollen */
+    .storyrow{scroll-snap-type:x mandatory;scroll-padding-left:2px}
+    .storyrow>button{flex:0 0 calc((100% - 48px)/5);width:auto;scroll-snap-align:start}
+  }
+  @keyframes admarq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (prefers-reduced-motion:reduce){ .admarq-track{animation:none} }
+  .icbox.navava{overflow:hidden;padding:0;border-color:#087A4B}
+  /* Profil: Abzeichen und Medaillen in einer Zeile; reicht der Platz nicht, rutschen alle Medaillen gemeinsam in die naechste */
+  .bm-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px}
+  .bm-b{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .bm-m{display:flex;flex-wrap:nowrap;align-items:center;gap:12px;flex:0 0 auto}
+  /* Bewertungsfenster */
+  .rev-box{width:100%;max-width:380px;padding:18px 18px 12px;max-height:78vh;display:flex;flex-direction:column}
+  .rev-tabs{display:flex;gap:6px;margin:12px 0 2px}
+  .rev-tab{flex:1 1 0;min-width:0;border:1px solid rgb(var(--line));border-radius:10px;padding:7px 4px;text-align:center;font-size:12px;font-weight:600;line-height:1.3}
+  .rev-tab span{display:block;font-size:11px;font-weight:400;color:rgb(var(--muted))}
+  .rev-tab.on{border-color:#087A4B;background:rgba(8,122,75,.12)}
+  .rev-list{overflow-y:auto;margin-top:4px}
+  .rev-it{padding:10px 0;border-top:1px solid rgb(var(--line))}
+  .rev-it:first-child{border-top:0}
+  /* PC-Chat */
+  .chat-bub{max-width:75%;padding:.5rem .75rem;border-radius:1rem;border-bottom-left-radius:.375rem;font-size:.875rem;background:rgb(var(--panel));border:1px solid rgb(var(--line));overflow-wrap:anywhere}
+  .chat-bub.out{border-color:transparent;border-bottom-left-radius:1rem;border-bottom-right-radius:.375rem}
+  .chat-bub.med{padding:.375rem}
+  .chat-media{display:block;max-width:260px;max-height:300px;width:auto;border-radius:.75rem}
+  .chat-aud{display:block;width:250px;max-width:100%;height:40px}
+  .chat-exp{display:block;font-size:10px;opacity:.75;margin-top:4px;padding:0 4px}
+  .chat-btn{width:40px;height:40px;flex:0 0 40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgb(var(--icl));color:rgb(var(--ic));cursor:pointer;transition:border-color .2s}
+  .chat-btn:hover{border-color:#087A4B}
+  .chat-btn.rec{background:#c0392b;border-color:#c0392b;color:#fff}
+  .chat-recbar{flex:1;display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;color:rgb(var(--muted))}
+  .chat-dot{width:9px;height:9px;border-radius:50%;background:#c0392b;animation:chatdot 1s ease-in-out infinite}
+  @keyframes chatdot{50%{opacity:.25}}
+  .chat-note{font-size:11px;color:rgb(var(--muted));padding:0 1rem .6rem;margin-top:-.4rem}
+  .chat-err{font-size:12px;color:#c0392b;padding:.4rem 1rem 0}
   @keyframes slUp{from{transform:translateY(18%);opacity:.3}to{transform:none;opacity:1}}
   @keyframes slDown{from{transform:translateY(-18%);opacity:.3}to{transform:none;opacity:1}}
   .slide-up{animation:slUp .35s cubic-bezier(.2,.8,.2,1)}
@@ -363,8 +407,12 @@ const SB_URL='https://bzcnqggwyfocpbkwqhsy.supabase.co', SB_KEY='sb_publishable_
 const adLink = u => /^https?:\/\//i.test(u||'') ? String(u).replace(/"/g,'%22').replace(/</g,'%3C') : '';
 const tickGet = cols => fetch(`${SB_URL}/rest/v1/ticker_public?select=${cols}&order=sort.asc`,{headers:{apikey:SB_KEY}}).then(r=>r.ok?r.json():null);
 tickGet('title,offer,link').then(rows=>rows||tickGet('title,offer'))
-  .then(rows=>{ if(Array.isArray(rows)&&rows.length){ PERKS.splice(0,PERKS.length,...rows.map(r=>[r.title,r.offer,'Anzeige',adLink(r.link)])); const c=document.getElementById('adcur'); if(c&&c.parentElement) c.parentElement.innerHTML=adItem(S.adIdx||0,''); if(typeof route==='function' && route()==='vorteile') render(); } }).catch(()=>{});
-function adItem(i,cls){ const p=PERKS[i%PERKS.length]; return `<a id="adcur" ${p[3]?`href="${p[3]}" target="_blank" rel="noopener sponsored"`:'href="#vorteile"'} class=""absolute inset-0 flex items-center justify-center gap-2 whitespace-nowrap ${cls}"><span class="pointer-events-auto flex items-center gap-2"><span class="text-[10px] uppercase tracking-wide text-muted border border-line rounded px-1.5">Anzeige</span><span>${p[0]}</span><span class="text-gold">· ${p[1]}</span></span></a>`; }
+  .then(rows=>{ if(Array.isArray(rows)&&rows.length){ PERKS.splice(0,PERKS.length,...rows.map(r=>[r.title,r.offer,'Anzeige',adLink(r.link)])); const c=document.getElementById('adcur'); if(c&&c.parentElement) c.parentElement.innerHTML=adItem(S.adIdx||0,''); const mq=document.getElementById('admarq'); if(mq) mq.innerHTML=adTrack(); if(typeof route==='function' && route()==='vorteile') render(); } }).catch(()=>{});
+function adItem(i,cls){ const p=PERKS[i%PERKS.length]; return `<a id="adcur" ${p[3]?`href="${p[3]}" target="_blank" rel="noopener sponsored"`:'href="#vorteile"'} class="absolute inset-0 flex items-center justify-center gap-2 whitespace-nowrap ${cls}"><span class="pointer-events-auto flex items-center gap-2"><span class="text-[10px] uppercase tracking-wide text-muted border border-line rounded px-1.5">Anzeige</span><span>${p[0]}</span><span class="text-gold">· ${p[1]}</span></span></a>`; }
+// PC: durchlaufendes Laufband. Die Einträge stehen doppelt hintereinander, damit die Schleife ohne Sprung läuft.
+function adTrack(){ const n=PERKS.length; if(!n) return ''; const k=Math.max(1,Math.ceil(8/n)), half=[]; for(let j=0;j<k;j++) for(let i=0;i<n;i++) half.push(i);
+  const it=i=>{ const p=PERKS[i]; return `<a class="admarq-it" ${p[3]?`href="${p[3]}" target="_blank" rel="noopener sponsored"`:'href="#vorteile"'}><span class="text-[10px] uppercase tracking-wide text-muted border border-line rounded px-1.5">Anzeige</span><span class="admarq-t">${p[0]}</span><span class="text-gold">· ${p[1]}</span></a>`; };
+  const dur=half.length*9; return `<div class="admarq-track" style="animation-duration:${dur}s;animation-delay:-${((Date.now()/1000)%dur).toFixed(2)}s">${half.concat(half).map(it).join('')}</div>`; }
 // Laufband: alle 20 s fährt die Anzeige raus (1,5 s beschleunigen) und die nächste rein (1,5 s abbremsen)
 S.adIdx = 0;
 setInterval(()=>{
@@ -672,24 +720,26 @@ document.addEventListener('click', e=>{
 function nameRank(n, r, medals){
   const total = medals ? medals.reduce((s,m)=>s+m[1],0) : 0;
   if(n==='ClosingHub') return `<span class="inline-flex items-baseline gap-[.3em]"><span class="font-semibold">${n}</span><sup class="text-white font-semibold" style="font-size:max(10px,.6em);letter-spacing:.03em">Present</sup></span>`;
-  return `<span class="inline-flex items-center gap-[.4em]"><span class="font-semibold">${n}</span><span class="rk" style="${RKC[r]}">${rkLabel(r)}</span>${total?`<sup><button onclick="openMedals();event.stopPropagation()" class="text-gold font-bold hover:underline" style="font-size:max(11px,.6em)">${total}</button></sup>`:''}</span>`;
+  return `<span class="inline-flex items-center gap-[.4em]"><span class="font-semibold">${n}</span><span class="rk" style="${RKC[r]}">${rkLabel(r)}</span></span>`;
 }
 // Bewertungen aus drei Quellen (Beispieldaten)
 const REVIEWS = [
   {t:'Auftraggeber',ic:'💼',avg:'4,9',n:9,list:[['Solar GmbH','Sehr strukturiert, 4 Abschlüsse in der ersten Woche.',5],['Coaching-Agentur','Zuverlässig und stark in der Einwandbehandlung.',5]]},
+  {t:'Mitglieder',ic:'👥',avg:'4,8',n:3,list:[['Mitglied · Dealmaker','Verlässlich, gibt ehrliches Feedback und hilft im Forum weiter.',5],['Mitglied · Performer','Guter Austausch, klare Tipps zur Einwandbehandlung.',5]]},
   {t:'Marktplatz',ic:'🛍️',avg:'4,7',n:11,list:[['Hannah · Käuferin','Die Call-Analyse hat mir sofort geholfen.',5],['Tobias · Anbieter','Faire und schnelle Zusammenarbeit.',4]]},
-  {t:'Closer Arena',ic:'⚔️',avg:'4,8',n:3,list:[['Lena · Gegnerin','Starker Konter auf „zu teuer“, fairer Gegner.',5]]},
 ];
-function openReviews(){
-  const stars=n=>'★'.repeat(n)+'☆'.repeat(5-n);
+function openReviews(t){
+  // Kategorien erscheinen nur, wenn dort eine Bewertung hinterlegt ist
+  const G=REVIEWS.filter(g=>g.n>0&&g.list&&g.list.length); if(!G.length) return;
+  const cur=G.find(g=>g.t===t)||G[0], stars=n=>'★'.repeat(n)+'☆'.repeat(5-n);
   document.getElementById('modal').innerHTML = `
   <div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()">
-    <div class="card w-full max-w-md p-5 relative max-h-[86vh] overflow-y-auto" onclick="event.stopPropagation()">
-      <button onclick="closeModal()" class="absolute top-3 right-4 text-muted hover:text-white text-xl">✕</button>
-      <h3 class="font-serif text-xl mb-1">Bewertungen von ${ME.name}</h3>
-      <p class="text-sm text-muted mb-3">⭐ <b class="text-white">${String(ME.rating).replace('.',',')}</b> aus ${REVIEWS.reduce((s,g)=>s+g.n,0)} Bewertungen</p>
-      ${REVIEWS.map(g=>`<div class="border-t border-line pt-3 mt-3"><div class="flex justify-between items-center mb-2"><span class="text-xs uppercase tracking-wider text-gold">${g.ic} ${g.t}</span><span class="text-sm"><b>${g.avg}</b> <span class="text-muted">· ${g.n}</span></span></div>
-        ${g.list.map(([n,q,s])=>`<div class="mb-2"><div class="flex justify-between gap-2 text-sm"><b>${n}</b><span class="text-gold tracking-tight">${stars(s)}</span></div><p class="text-sm text-muted">„${q}“</p></div>`).join('')}</div>`).join('')}
+    <div class="card rev-box relative" onclick="event.stopPropagation()">
+      <button onclick="closeModal()" class="absolute top-3 right-4 text-muted hover:text-white text-xl" aria-label="Schließen">✕</button>
+      <h3 class="font-serif text-xl">Bewertungen</h3>
+      <p class="text-sm text-muted">⭐ <b style="color:rgb(var(--ic))">${String(ME.rating).replace('.',',')}</b> aus ${G.reduce((s,g)=>s+g.n,0)} Bewertungen</p>
+      <div class="rev-tabs">${G.map(g=>`<button type="button" class="rev-tab ${g===cur?'on':''}" onclick="openReviews('${g.t}')">${g.t}<span>⭐ ${g.avg} · ${g.n}</span></button>`).join('')}</div>
+      <div class="rev-list">${cur.list.map(([n,q,s])=>`<div class="rev-it"><div class="flex justify-between gap-2 text-sm"><b>${n}</b><span class="text-gold tracking-tight">${stars(s)}</span></div><p class="text-sm text-muted">„${q}“</p></div>`).join('')}</div>
     </div></div>`;
 }
 function badgeList(list){
@@ -773,7 +823,7 @@ const locked = (n) => n && !S.user;
 
 function shell(content){
   const r = route();
-  const side = NAV.map(([h,i,l,n])=>`<a href="#${locked(n)?'login':h}" class="nav-a ${r===h?'on':''} ${locked(n)?'opacity-40':''}">${ic(i,h==='create')}<span class="hidden xl:inline">${l}</span>${locked(n)?'<span class="hidden xl:inline ml-auto text-xs">🔒</span>':''}</a>`).join('');
+  const side = NAV.map(([h,i,l,n])=>`<a href="#${locked(n)?'login':h}" class="nav-a ${r===h?'on':''} ${locked(n)?'opacity-40':''}">${h==='profile'&&S.user?`<span class="icbox navava">${avatar(ME.name)}</span>`:ic(i,h==='create')}<span class="hidden xl:inline">${l}</span>${locked(n)?'<span class="hidden xl:inline ml-auto text-xs">🔒</span>':''}</a>`).join('');
   const bottom = MNAV.map(([h,i,n])=>`<a href="#${locked(n)?'login':h}" class="p-2 ${locked(n)?'opacity-30':''}"><span class="${r===h||(h==='jobs'&&(r==='forum'||r==='markt'))?'icon-on':''}">${ic(i,h==='create')}</span></a>`).join('');
   return `
   <div class="min-h-screen flex">
@@ -794,6 +844,7 @@ function shell(content){
       <div class="relative border-b border-line bg-panel/60 px-4 pt-1.5 pb-1 md:py-2 text-sm flex flex-col md:flex-row items-center gap-0.5 md:gap-3 md:h-11 overflow-hidden">
         <span class="relative z-10 text-gold font-semibold inline-flex items-center gap-1.5 shrink-0 text-[11px] md:text-sm md:pr-3 perk-label">${svg('gift',14)} Member-Vorteile</span>
         <div class="adlane relative h-6 w-full md:absolute md:inset-0 md:h-auto overflow-hidden pointer-events-none">${adItem(S.adIdx||0,'')}</div>
+        <div id="admarq" class="admarq">${adTrack()}</div>
       </div>
       ${S.mode==='auftraggeber'?`<div class="px-4 py-2 text-xs bg-gold/10 text-gold border-b border-line">Auftraggeber-Modus aktiv · <a href="#jobs" class="underline">Meine Jobs</a> · Bewerber · Rechnungen</div>`:''}
       <main>${content}</main>
@@ -850,7 +901,7 @@ function spotlightBanner(){
 }
 function rightRail(){
   return `<aside class="hidden lg:block w-80 shrink-0 space-y-5 pt-6">
-    ${S.user?`<div class="flex items-center gap-3"><div class="w-12 h-12 rounded-full gold-bg p-[2px]"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(ME.name)}</div></div>${nameRank(ME.name,ME.rank,ME.medals)}</div>`:`<a href="#login" class="btn-gold block">Kostenlos anmelden</a>`}
+    ${S.user?'':`<a href="#login" class="btn-gold block">Kostenlos anmelden</a>`}
     <div class="card p-4"><p class="text-xs uppercase tracking-wider text-muted mb-3">Spotlight des Monats</p>
       <p class="text-sm">👑 Top-Profi</p>${nameRank('Lena','Dealmaker')}<p class="text-xs text-muted mb-3">2.480 Punkte · meiste Punkte ab Rang 4 (Dealmaker, Rainmaker)</p>
       <p class="text-sm">🚀 Top-Starter</p>${nameRank('Marco','Rising')}<p class="text-xs text-muted">1.120 Punkte · meiste Punkte bis Rang 2 (Starter, Rising)</p></div>
@@ -1079,12 +1130,12 @@ function drawChat(){
     b.innerHTML=`<p class="px-5 pb-2 font-semibold">Nachrichten</p><div class="overflow-y-auto flex-1">${CHATS.map(c=>{ const nm=c.n.split(' · ')[0], last=(S.chatMsgs[c.id]||[]).slice(-1)[0], ag=c.k==='Auftraggeber';
       return `<button onclick="S.chatSel=${c.id};S.read[${c.id}]=1;drawChat();render()" class="w-full flex items-center gap-3 px-5 py-3 border-t border-line text-left">
         <span class="w-11 h-11 rounded-full overflow-hidden shrink-0 ${ag?'gold-bg flex items-center justify-center text-black text-xs font-bold':''}">${ag?'AG':avatar(nm)}</span>
-        <span class="flex-1 min-w-0"><span class="flex justify-between"><b class="text-sm">${c.n}</b>${S.read[c.id]?'':'<span class="w-2 h-2 rounded-full gold-bg mt-1.5"></span>'}</span><span class="block text-xs text-muted truncate">${last?last[1]:''}</span><span class="text-[10px] text-gold">${c.k}</span></span></button>`; }).join('')}</div>`;
+        <span class="flex-1 min-w-0"><span class="flex justify-between"><b class="text-sm">${c.n}</b>${S.read[c.id]?'':'<span class="w-2 h-2 rounded-full gold-bg mt-1.5"></span>'}</span><span class="block text-xs text-muted truncate">${last?msgLast(last[1]):''}</span><span class="text-[10px] text-gold">${c.k}</span></span></button>`; }).join('')}</div>`;
     return;
   }
   const c=CHATS.find(x=>x.id===S.chatSel), nm=c.n.split(' · ')[0], ag=c.k==='Auftraggeber', msgs=S.chatMsgs[c.id]||[];
   b.innerHTML=`<div class="flex items-center gap-3 px-4 pb-2 border-b border-line"><button onclick="S.chatSel=null;drawChat()" class="text-2xl px-1 leading-none">‹</button><span class="w-8 h-8 rounded-full overflow-hidden ${ag?'gold-bg flex items-center justify-center text-black text-[10px] font-bold':''}">${ag?'AG':avatar(nm)}</span><b class="text-sm">${c.n}</b><span class="ml-auto text-[10px] text-muted">online</span></div>
-    <div id="chatmsgs" class="flex-1 overflow-y-auto px-4 py-3 space-y-2">${msgs.map(([d,t])=>`<div class="flex ${d==='out'?'justify-end':''}"><span class="max-w-[75%] px-3 py-2 rounded-2xl text-sm ${d==='out'?'gold-bg text-black rounded-br-md':'rounded-bl-md'}" style="${d==='out'?'':'background:rgb(var(--panel));border:1px solid rgb(var(--line))'}">${t}</span></div>`).join('')}${msgs.some(m=>m[0]==='out')?'<p class="text-right text-[10px] text-muted">Gelesen ✓✓</p>':''}</div>
+    <div id="chatmsgs" class="flex-1 overflow-y-auto px-4 py-3 space-y-2">${msgs.map(([d,t])=>`<div class="flex ${d==='out'?'justify-end':''}"><span class="max-w-[75%] px-3 py-2 rounded-2xl text-sm ${d==='out'?'gold-bg text-black rounded-br-md':'rounded-bl-md'}" style="${d==='out'?'':'background:rgb(var(--panel));border:1px solid rgb(var(--line))'}">${msgBody(t)}</span></div>`).join('')}${msgs.some(m=>m[0]==='out')?'<p class="text-right text-[10px] text-muted">Gelesen ✓✓</p>':''}</div>
     <form class="flex gap-2 p-3 border-t border-line" onsubmit="event.preventDefault();sendChat(this.m)"><input name="m" class="input" placeholder="Nachricht…" autocomplete="off"><button class="btn-gold">↑</button></form>`;
   const m=document.getElementById('chatmsgs'); m.scrollTop=m.scrollHeight;
 }
@@ -1118,14 +1169,60 @@ function thread(){
 }
 
 const CHATS=[{id:1,n:'Lena · Elite',m:'Danke für den Tipp mit der Pause!',k:'Closer/Setter'},{id:2,n:'Auftraggeber #A-2041',m:'Kontakt freigeschaltet ✓ – Lass uns Dienstag telefonieren.',k:'Auftraggeber'},{id:3,n:'Jonas · Pro',m:'Lust auf ein Testgespräch?',k:'Closer/Setter'}];
+// ---- PC-Chat: Text, Bilder/Videos und Sprachnachrichten. Demo: Medien liegen nur im Browser dieses Geräts.
+// Echtes Hochladen und das automatische Löschen nach 30 Tagen auf dem Server kommen mit den Member-Konten.
+const MEDIA_TAGE=30;
+function msgOk(m){ return typeof m[1]==='string' || Date.now()-m[1].at < MEDIA_TAGE*864e5; }
+function msgLast(t){ return typeof t==='string' ? t : ({img:'📷 Bild',vid:'🎬 Video',aud:'🎤 Sprachnachricht'})[t.k]; }
+function msgBody(t){
+  if(typeof t==='string') return t;
+  const note=`<span class="chat-exp">wird nach ${MEDIA_TAGE} Tagen gelöscht</span>`;
+  if(t.k==='img') return `<img src="${t.url}" alt="Bild" class="chat-media">${note}`;
+  if(t.k==='vid') return `<video src="${t.url}" controls preload="metadata" class="chat-media"></video>${note}`;
+  return `<audio src="${t.url}" controls preload="metadata" class="chat-aud"></audio>${note}`;
+}
+function pcScroll(){ const m=document.getElementById('pcmsgs'); if(m) m.scrollTop=m.scrollHeight; }
+function pcPush(id,body){ (S.chatMsgs[id]=S.chatMsgs[id]||[]).push(['out',body]); S.chatErr=''; render(); pcScroll(); }
+function pcSend(inp){ if(!inp) return; const v=inp.value.trim(); if(!v) return; pcPush(S.chat, esc(v)); const i=document.getElementById('pcinput'); if(i) i.focus(); }
+function pcFile(inp){ const f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
+  const k=f.type.startsWith('image/')?'img':f.type.startsWith('video/')?'vid':'';
+  if(!k){ S.chatErr='Bitte ein Bild oder ein Video auswählen.'; render(); return; }
+  if(f.size>50*1024*1024){ S.chatErr='Die Datei ist größer als 50 MB. Bitte eine kleinere wählen.'; render(); return; }
+  pcPush(S.chat,{k,url:URL.createObjectURL(f),at:Date.now()}); }
+function recTime(){ const s=Math.floor((Date.now()-(S.recAt||Date.now()))/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+function pcRec(){
+  if(S.rec){ S.rec.stop(); return; }
+  if(!navigator.mediaDevices||!window.MediaRecorder){ S.chatErr='Dieser Browser kann keine Sprachnachrichten aufnehmen.'; render(); return; }
+  const id=S.chat;
+  navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{
+    const r=new MediaRecorder(st), ch=[];
+    r.ondataavailable=e=>{ if(e.data&&e.data.size) ch.push(e.data); };
+    r.onstop=()=>{ st.getTracks().forEach(t=>t.stop()); clearInterval(S.recT); S.rec=null;
+      if(ch.length) pcPush(id,{k:'aud',url:URL.createObjectURL(new Blob(ch,{type:r.mimeType||'audio/webm'})),at:Date.now()}); else render(); };
+    r.start(); S.rec=r; S.recAt=Date.now(); S.chatErr='';
+    S.recT=setInterval(()=>{ const e=document.getElementById('pcrec'); if(e) e.textContent=recTime(); if(Date.now()-S.recAt>300000) r.stop(); },500);
+    render(); pcScroll();
+  }).catch(()=>{ S.chatErr='Kein Zugriff auf das Mikrofon. Bitte im Browser erlauben.'; render(); });
+}
 function messages(){
-  const c=CHATS.find(x=>x.id===S.chat);
+  const c=CHATS.find(x=>x.id===S.chat), msgs=(S.chatMsgs[c.id]||[]).filter(msgOk);
+  const last=id=>{ const l=(S.chatMsgs[id]||[]).filter(msgOk).slice(-1)[0]; return l?msgLast(l[1]):''; };
+  const A='width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
+  const IC_IMG=`<svg ${A}><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 15.5l-5-5L6 20"/></svg>`;
+  const IC_MIC=`<svg ${A}><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg>`;
+  const IC_STOP='<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>';
   return `<div class="grid md:grid-cols-[320px_1fr]" style="height:calc(100vh - 45px)">
     <div class="border-r border-line overflow-y-auto"><p class="font-serif text-xl p-4">Nachrichten</p>
-      ${CHATS.map(x=>`<button onclick="S.chat=${x.id};render()" class="w-full text-left p-4 border-t border-line hover:bg-panel ${x.id===S.chat?'bg-panel':''}"><p class="font-semibold text-sm">${x.n}</p><p class="text-xs text-muted truncate">${x.m}</p><p class="text-[10px] text-gold mt-1">${x.k}</p></button>`).join('')}</div>
-    <div class="hidden md:flex flex-col"><div class="p-4 border-b border-line font-semibold">${c.n}</div>
-      <div class="flex-1 p-4"><div class="card inline-block px-4 py-2 text-sm">${c.m}</div></div>
-      <div class="p-4 border-t border-line flex gap-2"><input class="input" placeholder="Nachricht… (Kontaktdaten vor Freischaltung werden gefiltert)"><button class="btn-gold">Senden</button></div></div></div>`;
+      ${CHATS.map(x=>`<button onclick="S.chat=${x.id};S.read[${x.id}]=1;S.chatErr='';render();pcScroll()" class="w-full text-left p-4 border-t border-line hover:bg-panel ${x.id===S.chat?'bg-panel':''}"><p class="font-semibold text-sm">${x.n}</p><p class="text-xs text-muted truncate">${last(x.id)||x.m}</p><p class="text-[10px] text-gold mt-1">${x.k}</p></button>`).join('')}</div>
+    <div class="hidden md:flex flex-col" style="min-height:0"><div class="p-4 border-b border-line font-semibold">${c.n}</div>
+      <div id="pcmsgs" class="flex-1 overflow-y-auto p-4 space-y-2" style="min-height:0">${msgs.map(([d,t])=>`<div class="flex ${d==='out'?'justify-end':''}"><span class="chat-bub ${d==='out'?'out gold-bg text-black':''} ${typeof t==='string'?'':'med'}">${msgBody(t)}</span></div>`).join('')}</div>
+      ${S.chatErr?`<p class="chat-err">${S.chatErr}</p>`:''}
+      <form class="p-4 border-t border-line flex gap-2 items-center" onsubmit="event.preventDefault();pcSend(this.m)">
+        <label class="chat-btn" title="Bild oder Video senden" aria-label="Bild oder Video senden">${IC_IMG}<input type="file" accept="image/*,video/*" class="hidden" onchange="pcFile(this)"></label>
+        <button type="button" class="chat-btn ${S.rec?'rec':''}" onclick="pcRec()" title="${S.rec?'Aufnahme beenden und senden':'Sprachnachricht aufnehmen'}" aria-label="${S.rec?'Aufnahme beenden und senden':'Sprachnachricht aufnehmen'}">${S.rec?IC_STOP:IC_MIC}</button>
+        ${S.rec?`<span class="chat-recbar"><span class="chat-dot"></span>Aufnahme läuft <b id="pcrec">${recTime()}</b> · Stopp-Knopf sendet</span>`:`<input id="pcinput" name="m" class="input" autocomplete="off" placeholder="Nachricht… (Kontaktdaten vor Freischaltung werden gefiltert)"><button class="btn-gold">Senden</button>`}
+      </form>
+      <p class="chat-note">Bilder, Videos und Sprachnachrichten werden nach ${MEDIA_TAGE} Tagen automatisch gelöscht.</p></div></div>`;
 }
 
 function create(){
@@ -1158,14 +1255,13 @@ function profile(){
       <p class="text-sm text-muted">${ME.bio}</p>
       
     </div>
-    <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen</p>
-      <div class="flex flex-wrap gap-3">${(l=>l.length?l.map(b=>badgeIcon(b)).join(''):badgeQ())(S.badgesShown.filter(b=>ME.badges.includes(b)))}</div>
-      ${(r=>r?`<p class="text-xs uppercase tracking-wider text-muted mt-6 mb-3">Medaillen</p><div class="flex flex-wrap gap-3">${r}</div>`:'')(medalRow(ME.medals))}
+    <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen und Medaillen</p>
+      <div class="bm-row"><div class="bm-b">${(l=>l.length?l.map(b=>badgeIcon(b)).join(''):badgeQ())(S.badgesShown.filter(b=>ME.badges.includes(b)))}</div>${(r=>r?`<div class="bm-m">${r}</div>`:'')(medalRow(ME.medals))}</div>
       <button onclick="openMedals()" class="text-gold text-sm mt-3 hover:underline">Alle Abzeichen und Medaillen ansehen →</button></div>
     <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Bewertungen</p>
       <button id="revCard" onclick="openReviews()" class="card w-full text-left p-4">
         <div class="flex items-center justify-between gap-3"><span class="text-base">⭐ <b>${String(ME.rating).replace('.',',')}</b> <span class="text-muted text-sm">· ${REVIEWS.reduce((s,g)=>s+g.n,0)} Bewertungen</span></span><span class="text-gold text-sm whitespace-nowrap">Alle ansehen →</span></div>
-        <div class="mt-3 space-y-1.5 text-sm">${REVIEWS.map(g=>`<div class="flex justify-between gap-3"><span class="text-muted">${g.ic} ${g.t}</span><span><b>${g.avg}</b> <span class="text-muted">· ${g.n}</span></span></div>`).join('')}</div>
+        <div class="mt-3 space-y-1.5 text-sm">${REVIEWS.filter(g=>g.n>0).map(g=>`<div class="flex justify-between gap-3"><span class="text-muted">${g.ic} ${g.t}</span><span><b>${g.avg}</b> <span class="text-muted">· ${g.n}</span></span></div>`).join('')}</div>
       </button></div>
     <div class="mt-8 grid grid-cols-3 gap-1">${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
     ${S.user?`<div class="mt-8 flex flex-wrap gap-3"><button onclick="S.user=false;save();go('feed')" class="btn-ghost">Abmelden</button></div>`:''}
@@ -1204,7 +1300,7 @@ function notifications(){
 
 function storiesRow(){
   const own = '';
-  return `<div class="flex gap-3 overflow-x-auto noscroll pt-1 pb-1 px-0.5">${own}${STORIES.map((st,i)=>st.ad?'':`
+  return `<div class="storyrow flex gap-3 overflow-x-auto noscroll pt-1 pb-1 px-0.5">${own}${STORIES.map((st,i)=>st.ad?'':`
     <button onclick="openStory(${i})" class="flex flex-col items-center gap-1 shrink-0 w-[72px]">
       <div class="w-16 h-16 rounded-full p-[2px] ${st.ad?'':'gold-bg'}" style="${st.ad?'background:#3a3a40':''}"><div class="w-full h-full rounded-full bg-panel border-2 border-bg overflow-hidden flex items-center justify-center text-2xl">${st.ad?st.e:avatar(st.n)}</div></div>
       <span class="text-[11px] truncate w-full text-center ${st.ad?'text-muted':''}">${st.ad?'Anzeige':st.n}</span></button>`).join('')}</div>`;
