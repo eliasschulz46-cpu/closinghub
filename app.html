@@ -266,7 +266,7 @@ const save=()=>{ try{localStorage.setItem('ch_prev',JSON.stringify({user:S.user,
 const ME = { name:'Elias', rank:'Dealmaker', role:'Closer', years:5, country:'Spanien', langs:'DE, EN', bio:'High-Ticket Closer · B2B & Coaching', followers:312, following:180, rating:4.8,
   ref:'elias', invited:0,
   badges:['Day One','Premium','Identität geprüft','High-Ticket','Hired via ClosingHub'],
-  medals:[['🤝 Job über ClosingHub',3],['🌟 Starke Bewertung',6],['💬 Kommentator',2],['▶️ Lernstunde',1]] };
+  medals:[['Dranbleiber',3],['Creator',2],['Kommentator',2],['Lernstunde',2],['Top-Beitrag',1],['Vermittelt',2]] };
 S.badgesShown = S.badgesShown || ME.badges.slice(0,4);
 
 const POSTS = [
@@ -697,6 +697,47 @@ function badgeList(list){
   return BADGES.map(g=>`<p class="text-xs uppercase tracking-wider text-gold mt-4 mb-1">${g[0]}</p>${g[1].map(row).join('')}`).join('');
 }
 const BADGE_N = BADGES.reduce((s,g)=>s+g[1].length,0);
+/* ClosingHub Medaillen: Vektor, ohne externe Dateien. CHMedal(name, groesse) liefert SVG-Text. */
+const CHMedal=(function(){
+  const IC={
+    'Dranbleiber':'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4M9 15l2 2 4-4"/>',
+    'Creator':'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    'Kommentator':'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h7M8.5 14h4"/>',
+    'Helfer':'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M5.6 5.6l3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/>',
+    'Lernstunde':'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.4 2.7 2.8 6 2.8s6-1.4 6-2.8v-4.5M22 9v6"/>',
+    'Sozialisiert':'<circle cx="8.5" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M2.5 19v-.6a6 6 0 0 1 12 0v.6M15.5 14a5 5 0 0 1 6 4.6v.4"/>',
+    'Punktejäger':'<path d="M3 17l5.5-5.5 4 4L21 7"/><path d="M15 7h6v6"/>',
+    'Top-Beitrag':'<path d="M12 3c.6 3 4.5 4.6 4.5 9.2A4.5 4.5 0 0 1 12 17a4.5 4.5 0 0 1-4.5-4.800c0-1.800 1-3 1.800-3.700.200 1.400.900 2.200 1.700 2.500C10.600 8.400 10.800 5.500 12 3z"/><path d="M8 20.500h8"/>',
+    'Vermittelt':'<rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9 7.500V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.500M3 13h18M11 13v1.500h2V13"/>',
+    'Erfolgsnachweis':'<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M9.500 14l2 2 3.500-4"/>',
+    'Werber':'<circle cx="9" cy="8" r="3.500"/><path d="M2.500 20v-.800a6.500 6.500 0 0 1 13 0V20M19 8v6M16 11h6"/>'
+  };
+  const EVENT={'Vermittelt':1,'Erfolgsnachweis':1,'Werber':1};
+  let n=0;
+  function medal(name,size){
+    const id='chm'+(++n), ev=!!EVENT[name];
+    const band=ev?['#0E1A2B','#1F3350','#B8860B']:['#087A4B','#0A9159','#E3F1EA'];
+    const icon=(IC[name]||'<circle cx="12" cy="12" r="5"/>').replace(/(\d)\.(\d)00/g,'$1.$2');
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="${size}" height="${Math.round(size*1.2)}" role="img" aria-label="Medaille ${name}">
+<defs><linearGradient id="${id}a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#D9DEE5"/><stop offset="1" stop-color="#9AA4B2"/></linearGradient>
+<linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F9FB"/><stop offset="1" stop-color="#E3E8EE"/></linearGradient></defs>
+<path d="M30 2h16l10 34H38z" fill="${band[0]}"/><path d="M70 2H54L44 36h18z" fill="${band[1]}"/>
+<path d="M37 2h4l10 34h-4z" fill="${band[2]}" opacity=".9"/><path d="M63 2h-4L49 36h4z" fill="${band[2]}" opacity=".55"/>
+<circle cx="50" cy="74" r="42" fill="url(#${id}a)" stroke="#7E8896" stroke-width="1.5"/>
+<circle cx="50" cy="74" r="34" fill="url(#${id}b)" stroke="#AEB7C3" stroke-width="1.2"/>
+<circle cx="50" cy="74" r="38" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="1.5 4" opacity=".9"/>
+<g transform="translate(26 50) scale(2)" fill="none" stroke="${ev?'#0E1A2B':'#087A4B'}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${icon}</g>
+</svg>`;
+  }
+  return medal;
+})();
+const MEDALS=[['Dranbleiber','12 aktive Tage im Monat','Monat'],['Creator','8 Beiträge im Monat','Monat'],['Kommentator','30 Kommentare im Monat','Monat'],['Helfer','5 hilfreiche Antworten im Monat','Monat'],['Lernstunde','12 Morgen-Calls oder 3 Livevorträge im Monat','Monat'],['Sozialisiert','5 Mitglieder im Monat bewertet','Monat'],['Punktejäger','1.000 Punkte im Monat','Monat'],['Top-Beitrag','Ein Beitrag mit 50 Likes','Monat'],['Vermittelt','Job über ClosingHub bekommen','Ereignis'],['Erfolgsnachweis','Je geprüftem Erfolgsnachweis','Ereignis'],['Werber','Je 3 geworbene Mitglieder','Ereignis']];
+function medalGrid(list){
+  const cnt=n=>{const m=(list||[]).find(x=>x[0]===n);return m?m[1]:0};
+  const sec=(t,k)=>`<p class="text-xs uppercase tracking-wider text-gold mt-4 mb-2">${t}</p><div class="grid grid-cols-3 gap-2">${MEDALS.filter(m=>m[2]===k).map(([n,d])=>{const c=cnt(n);return `<div class="rounded-xl border border-line p-2 text-center relative" style="${c?'':'opacity:.45;filter:grayscale(1)'}"><div class="flex justify-center">${CHMedal(n,52)}</div><p class="text-xs font-semibold mt-1">${n}</p><p class="text-[10px] text-muted leading-tight mt-0.5">${d}</p>${c?`<span class="absolute top-1.5 right-2 text-gold text-xs font-bold">${c}×</span>`:''}</div>`}).join('')}</div>`;
+  return sec('Monats-Medaillen','Monat')+sec('Ereignis-Medaillen','Ereignis');
+}
+function medalRow(list){ return (list||[]).filter(m=>m[1]>0).map(([n,c])=>`<button type="button" onclick="openMedals()" title="${n}: ${c}×" class="relative" style="line-height:0">${CHMedal(n,34)}<span class="absolute -bottom-1 -right-1 text-[10px] font-bold text-gold bg-panel rounded-full px-1" style="line-height:1.4">${c}</span></button>`).join(''); }
 function openMedals(){
   document.getElementById('modal').innerHTML = `
   <div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()">
@@ -706,9 +747,8 @@ function openMedals(){
       <p class="text-xs text-muted mb-3">${ME.badges.length?`Auszeichnungen. Jedes Abzeichen gibt es einmal. ${ME.badges.length} von ${BADGE_N} erhalten.`:'Du hast noch kein Abzeichen. Hier siehst du, welche es gibt und wofür du sie bekommst. Andere sehen in deinem Profil erst etwas, wenn du dein erstes hast.'}</p>
       ${badgeList(ME.badges)}
       <h3 class="font-serif text-xl mt-7 mb-1">Medaillen</h3>
-      <p class="text-xs text-muted mb-3">Belohnungen für Aktivität in der App. Medaillen werden gezählt.</p>
-      <table class="w-full text-sm"><thead><tr class="text-muted text-left"><th class="pb-2">Medaille</th><th class="pb-2 text-right">Anzahl</th></tr></thead>
-      <tbody>${ME.medals.map(m=>`<tr class="border-t border-line"><td class="py-2">${m[0]}</td><td class="py-2 text-right text-gold font-semibold">${m[1]}×</td></tr>`).join('')}</tbody></table>
+      <p class="text-xs text-muted mb-3">Belohnungen für Aktivität in der App. Monats-Medaillen gibt es einmal pro Monat, Ereignis-Medaillen bei jedem Erfolg. Jede Medaille bringt 50 Bonuspunkte.</p>
+      ${medalGrid(ME.medals)}
     </div></div>`;
 }
 function openBadges(n){
@@ -1119,6 +1159,7 @@ function profile(){
     </div>
     <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen</p>
       <div class="flex flex-wrap gap-3">${(l=>l.length?l.map(b=>badgeIcon(b)).join(''):badgeQ())(S.badgesShown.filter(b=>ME.badges.includes(b)))}</div>
+      ${(r=>r?`<p class="text-xs uppercase tracking-wider text-muted mt-6 mb-3">Medaillen</p><div class="flex flex-wrap gap-3">${r}</div>`:'')(medalRow(ME.medals))}
       <button onclick="openMedals()" class="text-gold text-sm mt-3 hover:underline">Alle Abzeichen und Medaillen ansehen →</button></div>
     <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Bewertungen</p>
       <button id="revCard" onclick="openReviews()" class="card w-full text-left p-4">
@@ -1155,8 +1196,8 @@ function notifications(){
     <div class="card p-4 text-sm" id="rev">⭐ <b>Neue Bewertung verfügbar</b><br><span class="text-muted">„Top Closer, sehr strukturiert!“ – 5 Sterne</span>
       <div class="flex gap-2 mt-3"><button class="btn-gold text-xs" onclick="this.parentElement.innerHTML='<span class=text-emerald-400>✓ Im Profil angezeigt</span>'">Im Profil anzeigen</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Nicht angezeigt</span>'">Nicht anzeigen</button></div></div>
     <div class="card p-4 text-sm">🤝 <b>Ist der Job „High-Ticket Closer“ zustande gekommen?</b>
-      <div class="flex gap-2 mt-3 flex-wrap"><button class="btn-gold text-xs" onclick="this.parentElement.innerHTML='<span class=text-gold>🏅 Neue Medaille: Job über ClosingHub!</span>'">Ja</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Danke für die Info</span>'">Nein</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Wir fragen in 4 Tagen nochmal nach</span>'">Noch keine Antwort</button></div></div>
-    <div class="card p-4 text-sm">🏅 Neue Medaille: <b>Kommentator</b></div></div>`;
+      <div class="flex gap-2 mt-3 flex-wrap"><button class="btn-gold text-xs" onclick="this.parentElement.innerHTML='<span class=text-gold>🏅 Neue Medaille: Vermittelt!</span>'">Ja</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Danke für die Info</span>'">Nein</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Wir fragen in 4 Tagen nochmal nach</span>'">Noch keine Antwort</button></div></div>
+    <div class="card p-4 text-sm flex items-center gap-3">${CHMedal('Kommentator',38)}<span>Neue Medaille: <b>Kommentator</b><br><span class="text-muted">30 Kommentare in diesem Monat · +50 Punkte</span></span></div></div>`;
 }
 
 
