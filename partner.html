@@ -197,7 +197,12 @@ function portal(){
   return `<h1>Hallo ${esc((ME.profile&&ME.profile.n)||p.n||'')}</h1><p class="sub">Dein Partnerbereich bei ClosingHub.</p>
   <div class="nav" id="nav">${navHtml()}</div>
   <div class="card" style="margin-top:10px"><div class="row" style="justify-content:space-between"><div style="min-width:0;flex:1"><b>Dein Empfehlungslink</b><p class="muted" style="overflow-wrap:anywhere">${myLink()}</p></div><button class="btn sm go" onclick="copyMyLink()">Link kopieren</button></div>
-    <p class="muted" style="margin-top:6px">Wer sich über diesen Link bei ClosingHub einträgt, wird dir zugeordnet. Teile ihn in Storys, Reels oder Nachrichten.</p></div>
+    <p class="muted" style="margin-top:6px">Wer sich über diesen Link bei ClosingHub anmeldet, wird dir dauerhaft zugeordnet und spart 10&nbsp;% auf seine Mitgliedschaft, monatlich wie jährlich. Teile ihn in Storys, Reels oder Nachrichten.</p>
+    <div class="grid" style="margin-top:12px;gap:10px">
+      <div class="note ok" style="margin:0"><b>25&nbsp;% Provision</b><br>auf alle Zahlungen im ersten Jahr der Mitgliedschaft</div>
+      <div class="note ok" style="margin:0"><b>15&nbsp;% Provision</b><br>auf alle weiteren Zahlungen, solange das Mitglied bleibt</div>
+    </div>
+    <p class="muted" style="margin-top:8px;font-size:12px">Grundlage ist der gezahlte Betrag nach Rabatt. Abgerechnet wird monatlich bis zum 10. für Zahlungen, die mindestens 30 Tage zurückliegen, per Überweisung mit Gutschrift. Endet die Partnerschaft, endet auch die Provision. Deine geworbenen Mitglieder und deine Provision siehst du hier, sobald die Mitgliedschaften starten.</p></div>
   ${sec('profil',`${ME.draft?`<div class="note wait">Deine letzte Änderung wartet auf Freigabe. Du kannst sie hier weiter anpassen und erneut senden.</div>`:(ME.profile&&ME.profile.s?`<div class="note ok">Dein Profil ist live in der App.</div>`:`<div class="note wait">Dein Profil ist noch nicht ausgefüllt. Trag deine Angaben ein und sende sie zur Freigabe.</div>`)}
   <div class="card"><h2>Dein Profil</h2><p class="muted">Pflicht sind nur dein Name und wofür du Partner bist. Leere Felder erscheinen im Profil nicht. Änderungen prüft ClosingHub kurz, danach sind sie in der App sichtbar.</p>
     <div class="row" style="margin:14px 0"><img class="photo" id="p-img" src="${esc(p.img||'')}" alt="" style="${p.img?'':'visibility:hidden'}">
@@ -250,18 +255,19 @@ function delOffer(i){ const l=readOffers(); if(l[i]&&l[i].t&&!confirm('Dieses An
 function kontaktHtml(){
   if(KONTAKT===undefined) return `<h2>Kontaktdaten</h2><div class="note wait">Dieser Bereich wird gerade eingerichtet und ist in Kürze verfügbar.</div>`;
   const c=KONTAKT||{}, f=(k,l,ph,v,type)=>`<label class="f">${l}<input class="in" data-c="${k}" type="${type||'text'}" value="${esc(v||'')}" placeholder="${esc(ph||'')}"></label>`;
-  return `<h2>Kontaktdaten</h2><p class="muted">Diese Angaben sieht nur ClosingHub, zum Beispiel für Vertrag und Abrechnung. Sie erscheinen nicht in deinem Profil.</p>
+  return `<h2>Kontaktdaten</h2><p class="muted">Diese Angaben sieht nur ClosingHub, zum Beispiel für Vertrag, Gutschrift und Auszahlung deiner Provision. Sie erscheinen nicht in deinem Profil.</p>
     ${kontaktFehlt()?`<div class="note wait">Bitte trag deine vollständigen Kontaktdaten ein.</div>`:''}
     <div class="grid" style="margin-top:14px">
       ${f('firma','Firma (optional)','Musterfirma GmbH',c.firma)}${f('strasse','Straße und Hausnummer','Musterstraße 12',c.strasse)}
       ${f('plz','Postleitzahl','80331',c.plz)}${f('ort','Ort','München',c.ort)}
       ${f('land','Land','Deutschland',c.land)}${f('tel','Telefonnummer','+49 170 1234567',c.tel,'tel')}
       ${f('mail','E-Mail-Adresse','name@beispiel.de',c.mail||(SESSION&&SESSION.email)||'','email')}
+      ${f('steuer','Steuernummer oder USt-IdNr. (für die Gutschrift)','DE123456789',c.steuer)}${f('iban','IBAN (für die Auszahlung der Provision)','DE89 3704 0044 0532 0130 00',c.iban)}
     </div>
     <div class="row" style="margin-top:16px"><button class="btn go" onclick="saveKontakt(this)">Kontaktdaten speichern</button></div>`;
 }
 async function saveKontakt(b){
-  const g=k=>clean((document.querySelector(`[data-c="${k}"]`)||{}).value), c={firma:g('firma').slice(0,120),strasse:g('strasse').slice(0,120),plz:g('plz').slice(0,12),ort:g('ort').slice(0,80),land:g('land').slice(0,60),tel:g('tel').slice(0,30),mail:g('mail').slice(0,120).toLowerCase()};
+  const g=k=>clean((document.querySelector(`[data-c="${k}"]`)||{}).value), c={firma:g('firma').slice(0,120),strasse:g('strasse').slice(0,120),plz:g('plz').slice(0,12),ort:g('ort').slice(0,80),land:g('land').slice(0,60),tel:g('tel').slice(0,30),mail:g('mail').slice(0,120).toLowerCase(),steuer:g('steuer').slice(0,40),iban:g('iban').replace(/\s+/g,' ').toUpperCase().slice(0,42)};
   if(!c.strasse||!c.plz||!c.ort||!c.land) return toast('Bitte die vollständige Anschrift eintragen');
   if(c.tel.replace(/\D/g,'').length<6) return toast('Bitte eine gültige Telefonnummer eintragen');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.mail)) return toast('Bitte eine gültige E-Mail-Adresse eintragen');
