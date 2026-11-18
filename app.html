@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ClosingHub – Vorschau</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=Lora:ital,wght@0,400;0,600;1,500&family=Parisienne&family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
 <script>document.documentElement.classList.add('js');try{if(localStorage.getItem('ch_farbe')!=='dark')document.documentElement.classList.add('light')}catch(e){document.documentElement.classList.add('light')}</script>
-<script src="https://cdn.tailwindcss.com"></script>
 <script>
 
 /* Logo-Animation (einmal pro Seitenaufruf): Leuchtpunkt läuft durch die Linie von „closing“, danach flackert „HUB“ wie eine Neonröhre */
@@ -54,7 +53,7 @@
 })();
 const _lp0=Date.now(); const LP=()=> Date.now()-_lp0<3000 ? 'play' : '';
 
-tailwind.config = { theme: { extend: {
+window.tailwind=window.tailwind||{}; tailwind.config = { theme: { extend: {
   colors: { bg:'rgb(var(--bg) / <alpha-value>)', panel:'rgb(var(--panel) / <alpha-value>)', line:'rgb(var(--line) / <alpha-value>)', muted:'rgb(var(--muted) / <alpha-value>)', gold:{ DEFAULT:'#087A4B', light:'#3FA877', dark:'#06603B' }, ink:'#0E1A2B', pen:'#1F3FBF' },
   fontFamily: { serif:['Lora','serif'], sans:['Archivo','system-ui','sans-serif'] } } } };
 </script>
@@ -205,6 +204,7 @@ tailwind.config = { theme: { extend: {
 
 <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
 <script defer src="/_vercel/insights/script.js"></script>
+<link rel="stylesheet" href="assets/app-tailwind.css">
 </head>
 <body>
 <style>

@@ -6,8 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Zentrale · ClosingHub</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%230E1A2B%22/%3E%3Ctext x=%2232%22 y=%2248%22 text-anchor=%22middle%22 font-family=%22Arial Black,Arial%22 font-weight=%22900%22 font-size=%2246%22 fill=%22%23ffffff%22%3EH%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Parisienne&family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
 <style>
   :root{--bg:#0A0A0B;--bg2:#111113;--card:#141416;--line:#232327;--fg:#F5F5F5;--muted:#8B8B93;--gold:#D4A843;--grad:linear-gradient(135deg,#F3D58A,#D4A843 50%,#A97C22);--ok:#5FBF7A;--warn:#E0A84A;--bad:#E06A6A}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -280,7 +279,7 @@ const DEFAULT_SETTINGS = {
 };
 // Beispielbereiche, bis die App echte Member hat
 const DEMO = {
-  members:[],
+  members:null,
   queue:[],
   reports:[]
 };
@@ -319,6 +318,7 @@ async function loadAll(){
   D.tickets = tix.map(t=>({ id:t.id, from:t.from_name, email:t.email, topic:t.topic, prio:t.prio, st:t.status, msgs:t.messages||[] }));
   D.ai = ai.map(a=>({ id:a.id, area:a.area||'Allgemein', title:a.title, text:a.text||'', why:a.why||'', impact:a.impact||'', st:a.status, t:fmtAt(a.created_at) }));
   D.jobs = jb||[]; D.clients = cl||[]; setTimeout(autoPrep,50);
+  { const mb=await api('members?select=*&order=created_at.desc').catch(()=>null); D.members=mb; D.proofs = mb===null ? [] : ((await api('member_proofs?select=*&order=created_at.desc').catch(()=>[]))||[]); await mbAutoRise(); }
   LOADED = true;
 }
 
@@ -331,7 +331,7 @@ function openModal(html){ $('mbox').innerHTML=html; $('modal').classList.add('op
 function closeModal(){ $('modal').classList.remove('open'); }
 $('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
-const pill = st => { const m={bezahlt:'p-ok',gelöst:'p-ok',aktiv:'p-ok',übernommen:'p-ok',beantwortet:'p-ok',offen:'p-warn',neu:'p-gold',wartet:'p-warn',einbehalten:'p-gold',überfällig:'p-bad',gesperrt:'p-bad','gekündigt':'p-bad',online:'p-ok','wartet auf Prüfung':'p-gold',abgelehnt:'p-bad',später:'p-warn',hoch:'p-bad',normal:'',niedrig:''}; return `<span class="pill ${m[st]||''}">${esc(st)}</span>`; };
+const pill = st => { const m={'bestätigt':'p-ok',bezahlt:'p-ok',gelöst:'p-ok',aktiv:'p-ok',übernommen:'p-ok',beantwortet:'p-ok',offen:'p-warn',neu:'p-gold',wartet:'p-warn',einbehalten:'p-gold',überfällig:'p-bad',gesperrt:'p-bad','gekündigt':'p-bad',online:'p-ok','wartet auf Prüfung':'p-gold',abgelehnt:'p-bad',später:'p-warn',hoch:'p-bad',normal:'',niedrig:''}; return `<span class="pill ${m[st]||''}">${esc(st)}</span>`; };
 const gross = inv => inv.net*(1+(inv.vat ?? D.settings.vat)/100);
 const demoNote = t => `<div class="demo">${t}</div>`;
 
@@ -348,7 +348,7 @@ const NAV = [
   ['partner','Partner','users', ()=>(D.prow||[]).filter(r=>r.draft).length],
   ['Community'],
   ['support','Support','support', ()=>D.tickets.filter(t=>t.st==='offen').length],
-  ['member','Member','users'],
+  ['member','Member','users', ()=>(D.proofs||[]).filter(p=>p.status==='offen').length],
   ['moderation','Prüfen & Meldungen','shield', ()=>D.queue.length+D.reports.length],
   ['System'],
   ['inhalte','Website & App','pen'],
@@ -779,7 +779,7 @@ function showInvoice(id){
 }
 function printInvoice(){
   const w=window.open('','_blank'); if(!w) return toast('Pop-up blockiert');
-  w.document.write(`<html><head><title>Rechnung</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Parisienne&family=Bebas+Neue&family=Inter:wght@400;600&display=swap"><style>body{font-family:Inter,sans-serif;padding:30px}table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #eee;text-align:left}.logo{display:inline-flex;align-items:baseline}.l1{font-family:Parisienne}.l2{font-family:'Bebas Neue';color:#A97C22;font-size:1.12em}</style></head><body>${$('invdoc').innerHTML}<script>setTimeout(()=>print(),600)<\/script></body></html>`);
+  w.document.write(`<html><head><title>Rechnung</title><link rel="stylesheet" href="${location.origin}/assets/fonts/fonts.css"><style>body{font-family:Inter,sans-serif;padding:30px}table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #eee;text-align:left}.logo{display:inline-flex;align-items:baseline}.l1{font-family:Parisienne}.l2{font-family:'Bebas Neue';color:#A97C22;font-size:1.12em}</style></head><body>${$('invdoc').innerHTML}<script>setTimeout(()=>print(),600)<\/script></body></html>`);
   w.document.close();
 }
 
@@ -898,16 +898,128 @@ async function saveTicket(b){
   }catch(e){ b.disabled=false; }
 }
 
-/* ===== Member ===== */
+/* ===== Member: Rang nach Erfahrung, Nachweise ===== */
+const RANG=['','Starter','Rising','Performer','Dealmaker','Rainmaker'];
+const PROOF_ART={ausbildung:'Ausbildungszertifikat',abrechnung:'Abrechnung / Provision',high_ticket:'High-Ticket-Abschluss (ab 5.000 €)',dauer:'Nachweis über die Dauer im Vertrieb',ausweis:'Ausweis',sonstiges:'Sonstiges'};
+let mbSel=null, mbQ='';
+const mbProofs = id => (D.proofs||[]).filter(p=>p.member_id===id);
+const mbMonths = m => { if(!m.im_vertrieb_seit) return 0; const a=new Date(m.im_vertrieb_seit), b=new Date(); return Math.max(0,(b.getFullYear()-a.getFullYear())*12+b.getMonth()-a.getMonth()-(b.getDate()<a.getDate()?1:0)); };
+const mbDauer = m => { const n=mbMonths(m); if(!m.im_vertrieb_seit) return 'nicht eingetragen'; return n>=12?`${Math.floor(n/12)} J. ${n%12} M.`:`${n} Monate`; };
+// Was die Nachweise hergeben: Grundlage für den Rang
+function mbFacts(m){
+  const ok=mbProofs(m.id).filter(p=>p.status==='bestaetigt');
+  return { mon:mbMonths(m), ausb:ok.some(p=>p.art==='ausbildung'), abr:ok.filter(p=>p.art==='abrechnung').reduce((a,p)=>a+(+p.monate||0),0), ht:ok.some(p=>p.art==='high_ticket'), gegen:ok.some(p=>p.gegengeprueft) };
+}
+function rankAuto(m){
+  const f=mbFacts(m); let r=1;
+  if(f.mon>=6||f.ausb) r=2;
+  if(f.mon>=12&&f.abr>=3) r=3;
+  if(f.mon>=36&&f.abr>=12&&f.ht) r=4;
+  if(f.mon>=60&&f.abr>=12&&f.ht&&f.gegen) r=5;
+  return r;
+}
+// Was für den nächsten Rang noch fehlt
+function rankMissing(m){
+  const f=mbFacts(m), r=Math.max(m.rang,rankAuto(m)); if(r>=5) return [];
+  const need={2:[[f.mon>=6||f.ausb,'6 Monate im Vertrieb oder ein bestätigtes Ausbildungszertifikat']],
+    3:[[f.mon>=12,'1 Jahr im Vertrieb'],[f.abr>=3,'bestätigte Abrechnungen über mindestens 3 Monate']],
+    4:[[f.mon>=36,'3 Jahre im Vertrieb'],[f.abr>=12,'bestätigte Abrechnungen über mindestens 12 Monate'],[f.ht,'ein bestätigter High-Ticket-Abschluss ab 5.000 €']],
+    5:[[f.mon>=60,'5 Jahre im Vertrieb'],[f.abr>=12,'bestätigte Abrechnungen über mindestens 12 Monate'],[f.ht,'ein bestätigter High-Ticket-Abschluss ab 5.000 €'],[f.gegen,'mindestens ein Nachweis von dir per Anruf gegengeprüft']]}[r+1];
+  return need.filter(x=>!x[0]).map(x=>x[1]);
+}
+// Automatischer Aufstieg: Rang steigt nur, nie automatisch nach unten. Fest eingestellte Ränge bleiben.
+async function mbAutoRise(){
+  if(!D.members) return; const up=[];
+  for(const m of D.members){ if(m.rang_fest) continue; const r=rankAuto(m); if(r>m.rang){ try{ await api(`members?id=eq.${m.id}`,{method:'PATCH',body:{rang:r}}); up.push(`${m.name}: ${RANG[m.rang]} → ${RANG[r]}`); m.rang=r; }catch(e){} } }
+  if(up.length){ D.mbRise=(D.mbRise||[]).concat(up.map(t=>({t,at:new Date().toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})}))).slice(-20); }
+}
 function member(){
-  return `<h1 class="h1">Member</h1><p class="sub">Ränge, Abos, Mahnungen. Bei 3 Mahnungen wird automatisch 1 Woche gesperrt.</p>
-  <div class="card tw"><table><thead><tr><th>Name</th><th>Rang</th><th>Abo</th><th>Region</th><th>Mahnungen</th><th>Status</th><th></th></tr></thead><tbody>
-  ${D.members.map((m,i)=>`<tr><td><b>${esc(m.name)}</b></td><td><span class="pill p-gold">${m.rank}</span></td><td>${m.abo}</td><td class="muted">${m.land}</td><td>${[0,1,2].map(k=>`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;background:${k<m.warn?'var(--bad)':'#2a2a2f'}"></span>`).join('')} <span class="muted">${m.warn}/3</span></td><td>${pill(m.st)}</td>
-    <td style="text-align:right;white-space:nowrap">${m.st==='gesperrt'?`<button class="btn sm" onclick="D.members[${i}].st='aktiv';D.members[${i}].warn=0;render();toast('Entsperrt')">Entsperren</button>`:`<button class="btn sm" onclick="warn(${i})">+ Mahnung</button> <button class="btn sm red" onclick="ban(${i})">Sperren</button>`}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Noch keine Member. Sie erscheinen hier, sobald die App mit Login live ist.</td></tr>'}
+  if(D.members===null) return `<h1 class="h1">Member</h1><p class="sub">Ränge, Nachweise, Mahnungen.</p><div class="card"><div class="demo">Der Member-Bereich ist noch nicht aktiv: Führe einmal die Datei „closinghub-member.sql“ in Supabase aus und lade die Zentrale neu.</div></div>`;
+  const m=D.members.find(x=>x.id===mbSel); if(m) return mbProfile(m);
+  const list=D.members.filter(x=>!mbQ||(x.name+' '+(x.email||'')).toLowerCase().includes(mbQ.toLowerCase()));
+  const open=(D.proofs||[]).filter(p=>p.status==='offen').length;
+  return `<div class="row between"><div><h1 class="h1">Member</h1><p class="sub">Der Rang richtet sich nach der Erfahrung und den bestätigten Nachweisen. Er steigt automatisch, sobald die Bedingungen erfüllt sind.</p></div>
+    <div class="row"><input class="in" style="max-width:240px" placeholder="Member suchen …" value="${esc(mbQ)}" onchange="mbQ=this.value;render()"><button class="btn gold-b" onclick="mbNew()">+ Member anlegen</button></div></div>
+  ${open?`<div class="card" style="border-color:var(--gold);margin-bottom:14px"><b class="gold">${open} Nachweis(e) warten auf deine Prüfung</b></div>`:''}
+  ${(D.mbRise||[]).length?`<div class="card" style="margin-bottom:14px"><h3>Automatisch aufgestiegen</h3>${D.mbRise.slice().reverse().map(x=>`<div class="muted" style="font-size:13px;margin-top:4px">${esc(x.at)} · ${esc(x.t)}</div>`).join('')}</div>`:''}
+  <div class="card tw"><table><thead><tr><th>Name</th><th>Rolle</th><th>Rang</th><th>Im Vertrieb</th><th>Nachweise</th><th>Punkte (Monat)</th><th>Mahnungen</th><th>Status</th><th></th></tr></thead><tbody>
+  ${list.map(x=>{ const pr=mbProofs(x.id), o=pr.filter(p=>p.status==='offen').length; return `<tr style="cursor:pointer" onclick="mbSel=${x.id};render()"><td><b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${esc(x.email||'')}</div></td><td>${esc(x.rolle)}</td>
+    <td><span class="pill p-gold">${x.rang} ${RANG[x.rang]}</span>${x.rang_fest?' <span class="pill">fest</span>':''}</td><td class="muted">${mbDauer(x)}</td>
+    <td>${pr.filter(p=>p.status==='bestaetigt').length} bestätigt${o?` · <b class="gold">${o} offen</b>`:''}</td><td>${x.punkte_monat}</td><td>${x.mahnungen}/3</td><td>${pill(x.status==='gekuendigt'?'gekündigt':x.status)}</td>
+    <td style="text-align:right"><button class="btn sm">Profil</button></td></tr>`; }).join('')||`<tr><td colspan="9" class="empty">${D.members.length?'Niemand gefunden.':'Noch keine Member. Sie erscheinen hier, sobald die App mit Login live ist. Zum Testen kannst du einen Member von Hand anlegen.'}</td></tr>`}
   </tbody></table></div>`;
 }
-function warn(i){ const m=D.members[i]; m.warn=Math.min(3,m.warn+1); if(m.warn>=3){ m.st='gesperrt'; toast(m.name+' für 1 Woche gesperrt'); } else toast('Mahnung '+m.warn+'/3 an '+m.name); render(); }
-function ban(i){ if(!confirm(D.members[i].name+' für 1 Woche sperren?')) return; D.members[i].st='gesperrt'; render(); }
+function mbProfile(m){
+  const pr=mbProofs(m.id), miss=rankMissing(m), auto=rankAuto(m), f=mbFacts(m);
+  const row=(l,v)=>`<div class="row between" style="padding:8px 0;border-top:1px solid var(--line)"><span class="muted">${l}</span><span style="text-align:right">${v}</span></div>`;
+  return `<a href="#member" class="muted" onclick="mbSel=null;render()">← Alle Member</a>
+  <div class="row between" style="margin-top:8px"><div><h1 class="h1">${esc(m.name)} <span class="pill p-gold">${m.rang} ${RANG[m.rang]}</span></h1><p class="sub">${esc(m.rolle)} · dabei seit ${new Date(m.created_at).toLocaleDateString('de-DE')}${m.email?' · '+esc(m.email):''}</p></div>
+    <div class="row">${m.email?`<a class="btn" href="mailto:${esc(m.email)}">Mail</a>`:''}<button class="btn" onclick="mbWarn(${m.id})">+ Mahnung (−500 Punkte)</button>${m.status==='gesperrt'?`<button class="btn" onclick="mbSet(${m.id},{status:'aktiv'},'Entsperrt')">Entsperren</button>`:`<button class="btn red" onclick="if(confirm('${esc(m.name)} sperren?'))mbSet(${m.id},{status:'gesperrt'},'Gesperrt')">Sperren</button>`}</div></div>
+  <div class="grid g2">
+    <div class="card"><h3>Rang und Erfahrung</h3>
+      <div class="grid g2" style="gap:12px;margin-top:6px">
+        <label class="f">Im Vertrieb seit<input class="in" type="date" id="mb-seit" value="${esc(m.im_vertrieb_seit||'')}"></label>
+        <label class="f">Rang<select class="in" id="mb-rang">${[1,2,3,4,5].map(r=>`<option value="${r}" ${r===m.rang?'selected':''}>${r} ${RANG[r]}</option>`).join('')}</select></label>
+      </div>
+      <div class="row between" style="padding:12px 0 4px"><div><b>Rang fest einstellen</b><div class="muted" style="font-size:12px">An: Der Rang bleibt so, wie du ihn wählst. Aus: Er steigt automatisch.</div></div><label class="switch"><input type="checkbox" id="mb-fest" ${m.rang_fest?'checked':''}><span></span></label></div>
+      <button class="btn gold-b" onclick="mbSaveRank(${m.id},this)">Speichern</button>
+      <div style="margin-top:14px">${row('Erfahrung',mbDauer(m))}${row('Bestätigte Abrechnungen',f.abr+' Monate')}${row('Ausbildung bestätigt',f.ausb?'ja':'nein')}${row('High-Ticket bestätigt',f.ht?'ja':'nein')}${row('Per Anruf gegengeprüft',f.gegen?'ja':'nein')}${row('Rang laut Nachweisen',auto+' '+RANG[auto])}</div>
+      ${m.rang>=5?'':`<p class="muted" style="font-size:13px;margin-top:10px"><b>Für ${RANG[Math.max(m.rang,auto)+1]||'den nächsten Rang'} fehlt noch:</b> ${miss.length?esc(miss.join(' · ')):'nichts mehr. Der Aufstieg erfolgt beim nächsten Laden automatisch.'}</p>`}
+    </div>
+    <div class="card"><h3>Stammdaten und Aktivität</h3>
+      <div class="grid g2" style="gap:12px;margin-top:6px"><label class="f">Name<input class="in" id="mb-name" value="${esc(m.name)}"></label><label class="f">E-Mail<input class="in" id="mb-mail" type="email" value="${esc(m.email||'')}"></label>
+        <label class="f">Rolle<select class="in" id="mb-rolle">${['Closer','Setter','Vertriebler'].map(r=>`<option ${r===m.rolle?'selected':''}>${r}</option>`).join('')}</select></label>
+        <label class="f">Paket<select class="in" id="mb-abo">${[['dayone','Day One'],['plus','Plus'],['premium','Premium']].map(([k,l])=>`<option value="${k}" ${k===m.abo?'selected':''}>${l}</option>`).join('')}</select></label></div>
+      <label class="f" style="margin-top:12px">Notiz (nur für dich)<textarea class="in" id="mb-notiz" rows="2">${esc(m.notiz||'')}</textarea></label>
+      <button class="btn gold-b" style="margin-top:12px" onclick="mbSaveBase(${m.id},this)">Speichern</button>
+      <div style="margin-top:14px">${row('Punkte diesen Monat',m.punkte_monat)}${row('Punkte gesamt',m.punkte)}${row('Mahnungen',m.mahnungen+' von 3')}${row('Status',pill(m.status==='gekuendigt'?'gekündigt':m.status))}</div></div>
+  </div>
+  <div class="row between" style="margin:24px 0 10px"><h3 style="font-size:16px;margin:0">Eingereichte Nachweise (${pr.length})</h3><button class="btn" onclick="mbProofNew(${m.id})">+ Nachweis eintragen</button></div>
+  <div class="card tw"><table><thead><tr><th>Art</th><th>Beschreibung</th><th>Zeitraum</th><th>Eingereicht</th><th>Status</th><th></th></tr></thead><tbody>
+  ${pr.map(p=>`<tr><td><b>${esc(PROOF_ART[p.art]||p.art)}</b></td><td>${esc(p.titel||'–')}${p.datei_url?` · <a href="${esc(p.datei_url)}" target="_blank" rel="noopener" class="gold">Dokument öffnen ↗</a>`:''}${p.notiz?`<div class="muted" style="font-size:12px">${esc(p.notiz)}</div>`:''}</td>
+    <td class="muted">${p.monate?p.monate+' Monate':'–'}</td><td class="muted">${new Date(p.created_at).toLocaleDateString('de-DE')}</td>
+    <td>${pill(p.status==='bestaetigt'?'bestätigt':p.status)}${p.gegengeprueft?' <span class="pill p-ok">gegengeprüft</span>':''}</td>
+    <td style="text-align:right;white-space:nowrap">${p.status!=='bestaetigt'?`<button class="btn sm gold-b" onclick="mbProofSet(${p.id},{status:'bestaetigt',geprueft_at:new Date().toISOString()},'Bestätigt')">Bestätigen</button> `:''}${p.status!=='abgelehnt'?`<button class="btn sm" onclick="mbProofSet(${p.id},{status:'abgelehnt',geprueft_at:new Date().toISOString()},'Abgelehnt')">Ablehnen</button> `:''}<button class="btn sm" onclick="mbProofSet(${p.id},{gegengeprueft:${p.gegengeprueft?'false':'true'}},'Gespeichert')">${p.gegengeprueft?'Gegenprüfung zurücknehmen':'Per Anruf gegengeprüft'}</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine Nachweise. Mitglieder reichen sie später in der App unter Einstellungen → „Nachweise hochladen“ ein. Bis dahin kannst du sie hier von Hand eintragen.</td></tr>'}
+  </tbody></table></div>`;
+}
+const mbById = id => D.members.find(x=>x.id===id);
+async function mbSet(id,patch,msg){ try{ await q(`members?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(mbById(id),patch); await mbAutoRise(); render(); if(msg) toast(msg); }catch(e){} }
+async function mbSaveRank(id,b){
+  const m=mbById(id), seit=$('mb-seit').value||null, rang=+$('mb-rang').value, fest=$('mb-fest').checked;
+  if(!fest&&rang<m.rang&&!confirm('Der Rang sinkt damit. Ohne „Rang fest einstellen“ steigt er wieder automatisch, sobald die Nachweise es hergeben. Trotzdem speichern?')) return;
+  b.disabled=true; await mbSet(id,{im_vertrieb_seit:seit,rang,rang_fest:fest},'Gespeichert');
+}
+async function mbSaveBase(id,b){ const n=$('mb-name').value.trim(); if(!n) return toast('Name fehlt'); b.disabled=true; await mbSet(id,{name:n,email:$('mb-mail').value.trim()||null,rolle:$('mb-rolle').value,abo:$('mb-abo').value,notiz:$('mb-notiz').value.trim()||null},'Gespeichert'); }
+async function mbWarn(id){
+  const m=mbById(id); if(!confirm(`${m.name} verwarnen?\n\n• Mahnung ${Math.min(3,m.mahnungen+1)} von 3\n• 500 Punkte Abzug\n• Bei der dritten Mahnung wird gesperrt`)) return;
+  const w=Math.min(3,m.mahnungen+1); await mbSet(id,{mahnungen:w,punkte:m.punkte-500,punkte_monat:m.punkte_monat-500,...(w>=3?{status:'gesperrt'}:{})}, w>=3?'Dritte Mahnung, gesperrt':'Mahnung '+w+' von 3');
+}
+function mbNew(){
+  openModal(`<h3 style="font-size:18px">Member anlegen</h3><p class="muted" style="font-size:13px;margin-top:4px">Später entstehen Member automatisch bei der Anmeldung in der App.</p><div class="grid" style="gap:12px;margin-top:12px">
+    <label class="f">Name<input class="in" id="mn-name"></label><label class="f">E-Mail<input class="in" id="mn-mail" type="email"></label>
+    <label class="f">Rolle<select class="in" id="mn-rolle"><option>Closer</option><option>Setter</option><option>Vertriebler</option></select></label>
+    <label class="f">Im Vertrieb seit (optional)<input class="in" id="mn-seit" type="date"></label>
+    <div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="mbCreate(this)">Anlegen</button></div></div>`);
+}
+async function mbCreate(b){
+  const n=$('mn-name').value.trim(); if(!n) return toast('Name fehlt'); b.disabled=true;
+  try{ const [r]=await q('members',{method:'POST',prefer:'return=representation',body:{name:n,email:$('mn-mail').value.trim()||null,rolle:$('mn-rolle').value,im_vertrieb_seit:$('mn-seit').value||null}}); D.members.unshift(r); mbSel=r.id; closeModal(); await mbAutoRise(); render(); }catch(e){ b.disabled=false; }
+}
+function mbProofNew(id){
+  openModal(`<h3 style="font-size:18px">Nachweis eintragen</h3><div class="grid" style="gap:12px;margin-top:12px">
+    <label class="f">Art<select class="in" id="pn-art">${Object.entries(PROOF_ART).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></label>
+    <label class="f">Beschreibung<input class="in" id="pn-titel" placeholder="z. B. Provisionsabrechnungen Januar bis Juni 2026"></label>
+    <label class="f">Abgedeckter Zeitraum in Monaten (bei Abrechnungen)<input class="in" id="pn-mon" type="number" min="0" max="240"></label>
+    <label class="f">Link zum Dokument (optional)<input class="in" id="pn-url" placeholder="https://…"></label>
+    <label class="f">Notiz (optional)<input class="in" id="pn-notiz" placeholder="z. B. am 20.11. beim Auftraggeber angerufen"></label>
+    <div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="mbProofCreate(${id},this)">Eintragen</button></div></div>`);
+}
+async function mbProofCreate(id,b){
+  const url=$('pn-url').value.trim(); if(url&&!/^https:\/\//.test(url)) return toast('Der Link muss mit https:// beginnen');
+  b.disabled=true;
+  try{ const [r]=await q('member_proofs',{method:'POST',prefer:'return=representation',body:{member_id:id,art:$('pn-art').value,titel:$('pn-titel').value.trim()||null,monate:+$('pn-mon').value||null,datei_url:url||null,notiz:$('pn-notiz').value.trim()||null}}); D.proofs.unshift(r); closeModal(); render(); toast('Eingetragen, jetzt prüfen und bestätigen'); }catch(e){ b.disabled=false; }
+}
+async function mbProofSet(pid,patch,msg){ try{ await q(`member_proofs?id=eq.${pid}`,{method:'PATCH',body:patch}); Object.assign(D.proofs.find(x=>x.id===pid),patch); await mbAutoRise(); render(); toast(msg); }catch(e){} }
 
 /* ===== Moderation ===== */
 function moderation(){
