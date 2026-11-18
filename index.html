@@ -874,6 +874,13 @@ footer button:hover,footer a:hover{color:var(--ink);text-decoration:underline}
 .screen .pp-live button{flex:none;font:700 9.5px Archivo,sans-serif;border:1px solid var(--ink);border-radius:99px;padding:3px 8px;background:none;color:var(--ink);cursor:pointer}
 .screen .pp-live button.done{background:var(--ink);color:#fff}
 .screen .offer .pt{font-size:8.5px;font-weight:800;color:var(--seal);border:1px solid var(--seal);border-radius:99px;padding:0 5px;margin-left:5px;vertical-align:1px}
+.screen .offer .o-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.screen .offer .o-top .pr{margin-left:0;white-space:nowrap}
+.screen .offer .who{flex-wrap:nowrap;white-space:nowrap;overflow:hidden;min-width:0}
+.screen .offer .who .nm{font-weight:700;color:var(--ink)}
+.screen .offer .rk{margin-left:0;background:transparent;border-color:var(--rule);color:var(--ink-2);white-space:nowrap;flex:none}
+.screen .offer .pt{margin-left:0;flex:none}
+.screen .offer .o-meta{margin-top:6px;padding-top:6px;border-top:1px solid #EEF0EC;font-size:10px;color:var(--ink-3)}
 .screen .stories{overflow-x:auto;overflow-y:hidden;padding:5px 12px 3px;margin:0 -12px 8px;gap:12px;scrollbar-width:none;scroll-snap-type:x proximity}
 .screen .stories::-webkit-scrollbar{display:none}
 .screen .story{width:50px;scroll-snap-align:start}
@@ -2015,7 +2022,7 @@ const OFFERS=[
 let mf='alle';const bought=new Set();
 const stars=n=>'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));
 function renderOffers(){
-  $('#offerlist').innerHTML=OFFERS.filter(o=>mf==='alle'||o.cat===mf).map(o=>`<button type="button" class="offer" data-offer="${o.id}"><small>${({skripte:'SKRIPT',analyse:'CALL-ANALYSE',coaching:'COACHING'})[o.cat]}</small><b>${o.t}</b><div class="who num">${av(o.n,20)}${o.n} ${rk(PEOPLE[o.n].r)}${PARTNER[o.n]?'<i class="pt">Partner</i>':''}<span>★ ${String(o.st).replace('.',',')} (${o.rc})</span><span class="pr">${bought.has(o.id)?'Gekauft':o.pr}</span></div></button>`).join('');
+  $('#offerlist').innerHTML=OFFERS.filter(o=>mf==='alle'||o.cat===mf).map(o=>`<button type="button" class="offer" data-offer="${o.id}"><div class="o-top"><small>${({skripte:'SKRIPT',analyse:'CALL-ANALYSE',coaching:'COACHING'})[o.cat]}</small><span class="pr num">${bought.has(o.id)?'Gekauft':o.pr}</span></div><b>${o.t}</b><div class="who">${av(o.n,20)}<span class="nm">${o.n}</span>${rk(PEOPLE[o.n].r)}${PARTNER[o.n]?'<i class="pt">Partner</i>':''}</div><div class="o-meta num">★ ${String(o.st).replace('.',',')} · ${o.rc} Bewertungen</div></button>`).join('');
   requestAnimationFrame(()=>applyCrops($('#offerlist')));
 }
 function offerPage(id,keep){

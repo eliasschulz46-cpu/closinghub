@@ -612,6 +612,7 @@ const RANKS = ['Starter','Rising','Performer','Dealmaker','Rainmaker'];
 const RKN = {Starter:1,Rising:2,Performer:3,Dealmaker:4,Rainmaker:5};
 const RK_OLD = {Rookie:'Starter',Pro:'Performer',Elite:'Dealmaker',Legend:'Rainmaker'};
 const rkLabel = r => (RKN[r]?RKN[r]+' ':'')+r;
+const rkChip = r => `<span class="inline-flex items-center gap-1 whitespace-nowrap text-[11px] leading-none px-2 py-1 rounded-full border border-line text-muted"><b class="text-gold">${RKN[r]||''}</b>${r}</span>`;
 const RKC = {Starter:'color:#8A8A93;border-color:#232327',Rising:'color:#7dd3fc;border-color:#0c4a6e',Performer:'color:#6ee7b7;border-color:#064e3b',Dealmaker:'color:#087A4B;border-color:#06603B',Rainmaker:'color:#7FD1A8;border-color:#087A4B;background:#E3F1EA'};
 
 
@@ -1325,20 +1326,18 @@ function markt(){
     </div>
     ${partnersRow()}
     <p class="text-xs text-muted mb-4">Eigenes Angebot? Reich es per Mail oder telefonisch bei uns ein. Wir prüfen jedes Angebot persönlich.</p>
-    <div class="flex gap-2 overflow-x-auto noscroll mb-5">${cats.map(c=>`<button onclick="S.mcat='${c}';render()" class="${S.mcat===c?'btn-gold':'btn-ghost'} text-sm whitespace-nowrap">${c}${c!=='Alle'&&!S.wide?` <span class="opacity-70">${slots(c)}/10</span>${10-slots(c)<=3&&10-slots(c)>0?' <span class="text-[10px] font-bold" style="color:#ff8a5c">🔥</span>':''}`:''}</button>`).join('')}</div>
+    <div class="flex gap-2 overflow-x-auto noscroll mb-5">${cats.map(c=>`<button onclick="S.mcat='${c}';render()" class="${S.mcat===c?'btn-gold':'btn-ghost'} text-xs whitespace-nowrap" style="padding:.4rem .8rem;border-radius:999px">${c}${c!=='Alle'&&!S.wide?` <span class="opacity-70">${slots(c)}/10</span>${10-slots(c)<=3&&10-slots(c)>0?' <span class="text-[10px] font-bold" style="color:#ff8a5c">🔥</span>':''}`:''}</button>`).join('')}</div>
     ${!S.wide?scarcity(slots):''}
     ${!S.wide&&S.mcat!=='Alle'?`<p class="text-xs text-muted mb-4">${slots(S.mcat)} von 10 Plätzen in ${S.region} belegt${slots(S.mcat)>=10?' – <span class="text-gold">Kategorie voll, Warteliste</span>':''}</p>`:''}
     ${pt?`<button onclick="personModal('${pt.n}')" class="card w-full text-left p-4 mb-4 flex items-center gap-4" style="border-color:#087A4B;box-shadow:0 0 0 1px #06603B inset">
       <span class="w-14 h-14 rounded-full gold-bg p-[2px] shrink-0"><span class="block w-full h-full rounded-full overflow-hidden bg-panel">${avatar(pt.n)}</span></span>
       <span class="flex-1 min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">Partner für ${pt.s}</span><span class="block mt-0.5">${nameRank(pt.n,pt.r)}</span><span class="block text-xs text-muted truncate">${pt.bio}</span></span>
       <span class="btn-ghost text-sm whitespace-nowrap">Profil ansehen</span></button>`:''}
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      ${shown.length?shown.map(o=>`<div class="card p-5 flex flex-col">
-        <span class="text-[10px] uppercase tracking-wide text-gold">${o.cat}</span>
-        <p class="font-semibold mt-1 flex-1">${o.t}</p>
-        <button onclick="personModal('${o.s}')" class="mt-3 text-sm flex items-center gap-2 text-left"><span class="w-7 h-7 rounded-full overflow-hidden shrink-0">${avatar(o.s)}</span>${nameRank(o.s,o.r)}</button>
-        <p class="text-xs text-muted mt-1">⭐ ${o.st.toFixed(1)} · ${o.n} Bewertungen · ${o.reg}</p>
-        <div class="flex justify-between items-center mt-4"><span class="font-serif text-2xl text-gold">${o.pr} €</span><button onclick="${S.user?`buyModal('${o.t.replace(/'/g,'')}',${o.pr})`:`go('login')`}" class="btn-ghost text-sm">Kaufen</button></div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      ${shown.length?shown.map(o=>`<div class="card p-4 flex flex-col gap-3">
+        <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">${o.cat}</span><p class="font-semibold leading-snug mt-0.5">${o.t}</p></div><span class="font-serif text-xl text-gold whitespace-nowrap leading-none mt-1">${o.pr} €</span></div>
+        <button onclick="personModal('${o.s}')" class="flex items-center gap-2 text-sm text-left min-w-0"><span class="w-7 h-7 rounded-full overflow-hidden shrink-0">${avatar(o.s)}</span><span class="font-medium truncate">${o.s}</span>${rkChip(o.r)}</button>
+        <div class="flex items-center justify-between gap-3 border-t border-line pt-3"><span class="text-xs text-muted truncate">⭐ <b class="text-[rgb(var(--fg))] font-semibold">${o.st.toFixed(1).replace('.',',')}</b> · ${o.n} Bewertungen · ${o.reg}</span><button onclick="${S.user?`buyModal('${o.t.replace(/'/g,'')}',${o.pr})`:`go('login')`}" class="btn-gold text-xs whitespace-nowrap" style="padding:.4rem .9rem">Kaufen</button></div>
       </div>`).join(''):`<div class="card p-6 text-muted text-sm">Noch keine Angebote in ${S.region}. ${S.user?'Sei der Erste und sichere dir einen der 10 Plätze!':''} Tipp: „Ganzes Land durchsuchen“ aktivieren.</div>`}
     </div>
     <p class="text-xs text-muted mt-6">Käufe laufen sicher über ClosingHub. Verkäufer werden nach jedem Kauf bewertet. ClosingHub-Gebühr: 9,9 % pro Verkauf.</p>
