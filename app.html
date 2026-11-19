@@ -121,6 +121,8 @@ window.tailwind=window.tailwind||{}; tailwind.config = { theme: { extend: {
     /* PC: genau 5 Storys sichtbar, weitere per Scrollen */
     .storyrow{scroll-snap-type:x mandatory;scroll-padding-left:2px}
     .storyrow>button{flex:0 0 calc((100% - 48px)/5);width:auto;scroll-snap-align:start}
+    .storyrow>button>div{width:78px;height:78px}
+    .storyrow>button>span{font-size:12.5px}
   }
   @keyframes admarq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   @media (prefers-reduced-motion:reduce){ .admarq-track{animation:none} }
@@ -303,7 +305,7 @@ html.ch-locked body>*:not(#chgate){display:none!important}
 <div id="modal"></div>
 
 <script>
-const S = { notif:{jobs:true,status:true,msg:true,community:true,live:true,erfolge:true,konto:true}, ch:{day:3,done:[3,3,1]}, region:'Bayern', country:'Deutschland', wide:false, mcat:'Alle', user:false, mode:'consumer', liked:{}, job:1, sent:false, chat:1, badgesShown:null, player:null, ptimer:null };
+const S = { jsubs:['Closer'], notif:{jobs:true,status:true,msg:true,community:true,live:true,erfolge:true,konto:true}, ch:{day:3,done:[3,3,1]}, region:'Bayern', country:'Deutschland', wide:false, mcat:'Alle', user:false, mode:'consumer', liked:{}, job:1, sent:false, chat:1, badgesShown:null, player:null, ptimer:null };
 try{ const s=JSON.parse(localStorage.getItem('ch_prev')||'{}'); Object.assign(S,{user:!!s.user,mode:'consumer'}); }catch(e){}
 const save=()=>{ try{localStorage.setItem('ch_prev',JSON.stringify({user:S.user,mode:S.mode}))}catch(e){} };
 
@@ -452,10 +454,10 @@ const OFFERS = [
 ];
 // Partner: je ein hervorgehobener Experte pro Dienstleistung (Beispieldaten)
 let PARTNERS = [
-  {n:'Lena',bk:'Call-Analyse buchen',r:'Dealmaker',s:'Call-Analyse',bio:'Closerin im High-Ticket-Coaching. Analysiert deine Calls per Video und zeigt dir, an welcher Stelle der Abschluss verloren geht.',k:['312','Calls analysiert'],deal:['−20 % für Member','auf die erste Analyse','LENA20'],live:['19','Nov.','Wo der Abschluss verloren geht'],rv:['Marco','Closer','Nach der Analyse wusste ich genau, warum ich nach dem Preis jedes Mal einknicke.']},
-  {n:'Tobias',bk:'Skript anfragen',r:'Dealmaker',s:'Skripte anfertigen',bio:'Schreibt Closing- und Setting-Skripte passgenau für dein Angebot und deine Zielgruppe.',k:['140','Skripte geschrieben'],deal:['−15 % für Member','auf das erste Skript','TOBIAS15'],live:['26','Nov.','Das Skript, das nicht nach Skript klingt'],rv:['Felix','Closer','Klarer Aufbau, und die Einwände sind gleich mit drin.']},
-  {n:'Jonas',bk:'Training buchen',r:'Performer',s:'Einwandbehandlung-Training',bio:'Trainiert mit dir die häufigsten Einwände, bis die Antworten sitzen.',k:['260','Trainings gegeben'],deal:['−20 % für Member','auf das erste Training','JONAS20'],live:['3','Dez.','Die 5 häufigsten Einwände, live trainiert'],rv:['Amira','Setterin','Danach hatte ich für jeden Einwand eine Antwort.']},
-  {n:'Sofia',bk:'Begleitung buchen',r:'Performer',s:'Chat-Setting-Training',bio:'Setterin für Instagram und LinkedIn. Begleitet dich vom ersten Opener bis zum gebuchten Termin.',k:['1.900','Termine gesetzt'],deal:['−15 % für Member','auf die Begleitung','SOFIA15'],live:['10','Dez.','Vom ersten Opener zum gebuchten Termin'],rv:['Amira','Setterin','Nach zwei Wochen doppelt so viele Termine.']},
+  {n:'Lena',link:'https://www.instagram.com/getclosinghub',bk:'Call-Analyse buchen',r:'Dealmaker',s:'Call-Analyse',bio:'Closerin im High-Ticket-Coaching. Analysiert deine Calls per Video und zeigt dir, an welcher Stelle der Abschluss verloren geht.',k:['312','Calls analysiert'],deal:['−20 % für Member','auf die erste Analyse','LENA20'],live:['19','Nov.','Wo der Abschluss verloren geht'],rv:['Marco','Closer','Nach der Analyse wusste ich genau, warum ich nach dem Preis jedes Mal einknicke.']},
+  {n:'Tobias',link:'https://www.instagram.com/getclosinghub',bk:'Skript anfragen',r:'Dealmaker',s:'Skripte anfertigen',bio:'Schreibt Closing- und Setting-Skripte passgenau für dein Angebot und deine Zielgruppe.',k:['140','Skripte geschrieben'],deal:['−15 % für Member','auf das erste Skript','TOBIAS15'],live:['26','Nov.','Das Skript, das nicht nach Skript klingt'],rv:['Felix','Closer','Klarer Aufbau, und die Einwände sind gleich mit drin.']},
+  {n:'Jonas',link:'https://www.instagram.com/getclosinghub',bk:'Training buchen',r:'Performer',s:'Einwandbehandlung-Training',bio:'Trainiert mit dir die häufigsten Einwände, bis die Antworten sitzen.',k:['260','Trainings gegeben'],deal:['−20 % für Member','auf das erste Training','JONAS20'],live:['3','Dez.','Die 5 häufigsten Einwände, live trainiert'],rv:['Amira','Setterin','Danach hatte ich für jeden Einwand eine Antwort.']},
+  {n:'Sofia',link:'https://www.instagram.com/getclosinghub',bk:'Begleitung buchen',r:'Performer',s:'Chat-Setting-Training',bio:'Setterin für Instagram und LinkedIn. Begleitet dich vom ersten Opener bis zum gebuchten Termin.',k:['1.900','Termine gesetzt'],deal:['−15 % für Member','auf die Begleitung','SOFIA15'],live:['10','Dez.','Vom ersten Opener zum gebuchten Termin'],rv:['Amira','Setterin','Nach zwei Wochen doppelt so viele Termine.']},
   {n:'Felix',bk:'Training buchen',r:'Performer',s:'Sprach- und Stimmtraining',bio:'Arbeitet mit dir an Tempo, Pausen und Betonung, damit du am Telefon souverän klingst.',k:['180','Trainings gegeben'],deal:['−20 % für Member','auf das erste Training','FELIX20'],live:['17','Dez.','So klingst du am Telefon souverän'],rv:['Jonas','Setter','Ich rede jetzt langsamer, und die Leute hören zu.']},
 ];
 const partnerOf = s => PARTNERS.find(p=>p.s===s && MCATS.includes(p.s));
@@ -506,7 +508,8 @@ function partnerModal(p,offers,r,rt){
         <div class="flex items-end gap-4 -mt-6">
           <div class="relative shrink-0"><div class="w-16 h-16 rounded-full overflow-hidden" style="box-shadow:0 0 0 3px rgb(var(--panel))">${avatar(n)}</div>${SEAL}</div>
           <div class="min-w-0 pt-8"><div class="text-lg leading-tight">${nameRank(n,r)}</div></div></div>
-        ${p.role||p.meta?`<p class="text-sm mt-3"><b>${p.role||''}</b>${p.role&&p.meta?', ':''}<span class="text-muted">${p.meta||''}</span></p>`:''}<p class="text-sm text-muted ${p.role||p.meta?'mt-1':'mt-3'}">${p.bio}</p>${badgeRow(n)}
+        ${p.role||p.meta?`<p class="text-sm mt-3"><b>${p.role||''}</b>${p.role&&p.meta?', ':''}<span class="text-muted">${p.meta||''}</span></p>`:''}<p class="text-sm text-muted ${p.role||p.meta?'mt-1':'mt-3'}">${p.bio}</p>
+        <div class="mt-4"><p class="text-xs uppercase tracking-wide text-muted mb-2">Abzeichen</p><div class="flex flex-wrap items-center gap-2">${p.link?`<a href="${p.link}" target="_blank" rel="noopener" title="Profil von ${n} öffnen" class="inline-flex items-center gap-2 h-11 pl-1.5 pr-4 rounded-full text-sm font-semibold whitespace-nowrap transition hover:opacity-90" style="background:#087A4B;color:#fff"><span class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(255,255,255,.18)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></span>Profil</a><span class="w-px h-7 mx-1" style="background:rgb(var(--line))"></span>`:''}${memberBadges(n).map(b=>badgeIcon(b,`openBadges('${String(n).replace(/[^\p{L}\p{N} .-]/gu,'')}')`)).join('')}</div></div>
         <div class="grid grid-cols-3 mt-4 border-y border-line text-center text-[11px] text-muted">
           <div class="py-2"><b class="block text-base" style="color:rgb(var(--fg))">${rt?rt.replace('.',','):'Neu'}</b>${rt?`★ aus ${nr}`:'dabei'}</div>
           <div class="py-2 border-l border-line"><b class="block text-base" style="color:rgb(var(--fg))">${p.k?p.k[0]:'1 von 5'}</b>${p.k?p.k[1]:'Partnern'}</div>
@@ -538,7 +541,7 @@ function sendPersonMsg(n){
 function applyPartners(list){
   if(!Array.isArray(list)||!list.length) return;
   const c=(x,m)=>String(x??'').replace(/[<>"'`]/g,'').trim().slice(0,m||80);
-  PARTNERS=list.slice(0,5).map(p=>{ const o={n:c(p.n,40),s:c(p.s,60),role:c(p.role,40),meta:c(p.meta,80),bio:c(p.bio,300),bk:c(p.bk,40)||'Jetzt anfragen',r:RANKS.includes(p.r)?p.r:(RK_OLD[p.r]||'Performer'),img:(/^https:\/\/[^\s"'<>`]+$/.test(String(p.img||''))||(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(p.img||''))&&String(p.img).length<200000))?String(p.img):'',fem:!!p.fem,live:c(p.live,90),real:true};
+  PARTNERS=list.slice(0,5).map(p=>{ const o={n:c(p.n,40),s:c(p.s,60),role:c(p.role,40),meta:c(p.meta,80),bio:c(p.bio,300),bk:c(p.bk,40)||'Jetzt anfragen',r:RANKS.includes(p.r)?p.r:(RK_OLD[p.r]||'Performer'),img:(/^https:\/\/[^\s"'<>`]+$/.test(String(p.img||''))||(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(p.img||''))&&String(p.img).length<200000))?String(p.img):'',fem:!!p.fem,live:c(p.live,90),link:(/^https:\/\/[^\s"'<>`]+$/.test(String(p.link||''))?String(p.link).slice(0,200):''),real:true};
     if(Array.isArray(p.k)&&c(p.k[0])) o.k=[c(p.k[0],12),c(p.k[1],30)];
     if(Array.isArray(p.deal)&&c(p.deal[0])) o.deal=[c(p.deal[0],40),c(p.deal[1],60),c(p.deal[2],20)];
     o.offers=(Array.isArray(p.offers)?p.offers:[]).slice(0,3).map(x=>({t:c(x&&x.t,70),pr:c(x&&x.pr,12)})).filter(x=>x.t);
@@ -654,7 +657,8 @@ const BADGE_IC = Object.fromEntries(BADGES.flatMap(g=>g[1].map(b=>[b[0],b[2]])))
 function badgeIcon(b,act){ return `<button type="button" onclick="${act||'openMedals()'}" title="${b}" aria-label="Abzeichen ${b}. Alle Abzeichen ansehen" class="w-11 h-11 rounded-full flex items-center justify-center" style="cursor:pointer;filter:drop-shadow(0 2px 3px rgba(14,26,43,.28))">${CHSeal(b,44)||svg(BADGE_IC[b]||'b_shield',20)}</button>`; }
 function badgeQ(){ return `<button type="button" onclick="openMedals()" title="Welche Abzeichen gibt es?" aria-label="Noch kein Abzeichen. Alle Abzeichen ansehen" class="w-11 h-11 rounded-full flex items-center justify-center text-lg font-bold" style="border:1px dashed rgb(var(--line));color:rgb(var(--muted));background:rgb(var(--panel));opacity:.7;cursor:pointer">?</button>`; }
 const PBADGES = {Lena:['Day One','High-Ticket','Hired via ClosingHub'],Tobias:['Day One','Identität geprüft'],Sofia:['Day One','Premium'],Marco:['Day One','Hired via ClosingHub'],Jonas:['Day One']};
-function memberBadges(n){ const p=PARTNERS.find(x=>x.n===n); return [...(p?['Partner']:[]),...(PBADGES[n]||[])]; }
+const PARTNER_BADGES=['Identität geprüft','High-Ticket','Ausgebildet von …','Inner Circle'];
+function memberBadges(n){ const p=PARTNERS.find(x=>x.n===n); return p?['Partner',...(PBADGES[n]||[]).filter(b=>PARTNER_BADGES.includes(b))]:(PBADGES[n]||[]); }
 function badgeRow(n){ const l=memberBadges(n); if(!l.length) return ''; const a=String(n).replace(/[^\p{L}\p{N} .-]/gu,'');
   return `<div class="mt-4"><p class="text-xs uppercase tracking-wide text-muted mb-2">Abzeichen</p><div class="flex flex-wrap gap-2">${l.map(b=>badgeIcon(b,`openBadges('${a}')`)).join('')}</div></div>`; }
 function badgePill(b){ return `<span class="inline-flex items-center gap-2 pl-1 pr-3.5 py-1 rounded-full border text-sm" style="border-color:#3a3020;background:rgb(var(--chip))"><span class="w-7 h-7 flex items-center justify-center">${CHSeal(b,28)||svg(BADGE_IC[b]||'b_shield',15)}</span>${b}</span>`; }
@@ -909,7 +913,7 @@ function feed(){
       <div class="relative aspect-square bg-bg flex items-center justify-center p-8 cursor-pointer border-y border-line overflow-hidden" onclick="S.plist=S.feedList;startPlayer(${i})" style="${p.v&&p.vid===undefined?'background:radial-gradient(circle at 50% 40%,#1c1a14,#0A0A0B 70%)':''}">
         ${p.vid!==undefined?`<img src="${VIDS[p.vid]}" class="absolute inset-0 w-full h-full object-cover"><span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}
         ${p.bg?bgSvg(p.bg):''}
-        ${p.v?`<span class="absolute inset-0 flex items-center justify-center opacity-25">${svg('play',120)}</span><span class="absolute bottom-3 right-3 text-xs bg-black/70 rounded px-2 py-0.5" style="color:#fff">▶ ${p.v}</span>`:''}
+        ${p.v?`<span class="absolute bottom-3 right-3 text-xs bg-black/70 rounded px-2 py-0.5" style="color:#fff">▶ ${p.v}</span>`:''}
         ${p.vid!==undefined?`<p class="absolute left-4 right-20 bottom-3 text-sm" style="position:absolute;color:#fff">${p.t}</p>`:`<p class="font-serif text-xl leading-relaxed text-center relative" style="${p.v?'color:#F2F4F1':''}">${p.t}</p>`}</div>
       <div class="p-4">
         ${actionBar(p,'feed')}
@@ -1071,8 +1075,14 @@ function labelContrast(el){
   }catch(e){ set(false); } };
   img.complete?run():img.onload=run;
 }
-const JROLES = ['Closer','Setter','Coach','Sonstiges'];
-const jobFits = x => { const r=S.jrole; if(!r) return true; const s=(x.roles||'')+' '+(x.t||''); if(r==='Sonstiges') return !/closer|setter|coach/i.test(s); return new RegExp(r,'i').test(s); };
+const JROLES = ['Closer','Setter','Vertrieb','Sonstiges'];
+const jobFits = x => { const r=S.jrole; if(!r) return true; const s=(x.roles||'')+' '+(x.t||''); if(r==='Sonstiges') return !/closer|setter|vertrieb/i.test(s); return new RegExp(r,'i').test(s); };
+function jobSubBar(){
+  const cats=S.jrole?[S.jrole]:JROLES, on=c=>S.jsubs.includes(c);
+  return `<div class="card p-3"><div class="flex items-center justify-between gap-2"><p class="text-sm font-semibold">🔔 Job-Benachrichtigungen</p><span class="text-[11px] text-muted">${S.jsubs.length?S.jsubs.length+' abonniert':'keine'}</span></div>
+    <p class="text-xs text-muted mt-0.5 mb-2">Abonniere Kategorien und erfahre sofort von neuen Jobs.</p>
+    <div class="flex gap-1.5 flex-wrap">${JROLES.map(c=>`<button onclick="S.jsubs=${'S.jsubs.includes(\''+c+'\')?S.jsubs.filter(x=>x!==\''+c+'\'):[...S.jsubs,\''+c+'\']'};render()" class="text-xs px-2.5 py-1 rounded-full border" style="${on(c)?'background:#087A4B;border-color:#087A4B;color:#fff':'border-color:rgb(var(--line))'}">${on(c)?'✓ ':'+ '}${c}</button>`).join('')}</div></div>`;
+}
 function jobs(){
   const j = JOBS.find(x=>x.id===S.job)||JOBS[0];
   const list = JOBS.filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4 ${x.id===j.id?'!border-gold':''}" style="${x.id===j.id?'border-color:#087A4B':''}">
@@ -1090,8 +1100,12 @@ function jobs(){
     <div class="grid md:grid-cols-[340px_1fr] gap-5">
       <div class="space-y-3">
         <div class="flex gap-2 flex-wrap pb-1">${JROLES.map(r=>`<button onclick="S.jrole=S.jrole==='${r}'?null:'${r}';render()" class="px-3.5 py-1.5 rounded-full border text-sm ${S.jrole===r?'text-black font-semibold':'text-muted'}" style="${S.jrole===r?'background:linear-gradient(135deg,#7FD1A8,#087A4B 50%,#06603B);border-color:#087A4B':'border-color:rgb(var(--line))'}">${r}</button>`).join('')}</div>
-        <p class="text-xs uppercase tracking-wider text-gold">★ Top-Jobs</p>
-        ${JOBS.filter(x=>x.top).filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4" style="border-color:#087A4B;box-shadow:0 0 0 1px #06603B inset"><span class="text-[10px] uppercase text-gold">Top-Job · Anzeige</span><p class="font-semibold">${x.t}</p><p class="text-sm text-gold">${x.pay}</p></button>`).join('')}
+        ${jobSubBar()}
+        <p class="text-xs uppercase tracking-wider text-gold font-semibold">★ Top-Jobs</p>
+        ${JOBS.filter(x=>x.top).filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="w-full text-left rounded-2xl p-[1.5px]" style="background:linear-gradient(135deg,#D9B45A,#087A4B 55%,#06603B)"><span class="block rounded-[15px] p-4 relative overflow-hidden" style="background:linear-gradient(135deg,rgba(217,180,90,.14),rgba(8,122,75,.10) 60%),rgb(var(--panel))">
+          <span class="flex items-center justify-between gap-2"><span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style="background:#087A4B;color:#fff">★ Top-Job</span><span class="text-[10px] text-muted">Anzeige</span></span>
+          <span class="block font-semibold mt-2 text-[15px]">${x.t}</span><span class="block text-sm text-muted">${x.ind} · ${x.reg}</span>
+          <span class="flex items-center justify-between mt-2"><span class="text-sm font-semibold text-gold">${x.pay}</span><span class="text-xs text-gold">Ansehen →</span></span></span></button>`).join('')}
         ${Array.from({length:3-JOBS.filter(x=>x.top).length}).map(()=>`<div class="card p-4 text-sm text-muted border-dashed" style="border-style:dashed">Freier Top-Platz · <span class="text-gold">19 €</span> – für Auftraggeber</div>`).join('')}
         <p class="text-xs uppercase tracking-wider text-muted pt-2">Alle Jobs</p>
         ${list||'<p class="text-sm text-muted">Gerade keine Jobs in dieser Kategorie.</p>'}</div>
@@ -1175,10 +1189,10 @@ document.addEventListener('touchend',e=>{ if(hY===null) return; const dy=hY-e.ch
 
 function forum(){
   if(S.thread) return thread();
-  return `<div class="max-w-3xl mx-auto px-4 py-6"><div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><span class="btn-gold">Forum</span><a href="#markt" class="btn-ghost">Marktplatz</a></div>
+  return `<div class="px-4 py-6 max-w-6xl mx-auto"><div class="max-w-3xl"><div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><span class="btn-gold">Forum</span><a href="#markt" class="btn-ghost">Marktplatz</a></div>
     <div class="flex justify-between items-center mb-4"><h1 class="font-serif text-2xl">Forum</h1>${S.user?'<button class="btn-gold text-sm">+ Neues Thema</button>':'<a href="#login" class="btn-gold text-sm">Anmelden zum Mitreden</a>'}</div>
     ${FCATS.map(([g,cs])=>`<p class="text-xs uppercase tracking-wider text-gold mt-6 mb-3">${g}</p><div class="space-y-3">${cs.map(([i,n,c])=>`<div onclick="S.thread=1;render()" class="card p-4 flex justify-between items-center hover:border-gold" style="cursor:pointer"><span>${i} <b class="ml-1">${n}</b></span><span class="text-sm text-muted">${c} Themen</span></div>`).join('')}</div>`).join('')}
-    <p class="text-xs text-muted mt-6">🛡️ KI filtert Spam vorab · Beiträge melden möglich · Moderatoren ab Rang Elite</p></div>`;
+    <p class="text-xs text-muted mt-6">🛡️ KI filtert Spam vorab · Beiträge melden möglich · Moderatoren ab Rang 4 Dealmaker</p></div></div>`;
 }
 function thread(){
   const ans=[{n:'Lena',r:'Dealmaker',t:'Frag zurück: „Zu teuer im Vergleich wozu?“ – dann redet der Kunde über seinen echten Maßstab.',h:24,best:1},{n:'Jonas',r:'Performer',t:'Ich rechne den Preis auf den Tag runter. 3.000 € = 8 € am Tag – weniger als sein Mittagessen.',h:11},{n:'Felix',r:'Performer',t:'Wichtig: erst Wert bestätigen lassen, dann über Preis sprechen. Sonst diskutierst du nur Zahlen.',h:7}];
@@ -1276,7 +1290,7 @@ function profile(){
     <div class="flex items-center gap-5">
       <div class="w-24 h-24 md:w-36 md:h-36 rounded-full gold-bg p-[3px] shrink-0"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(ME.name)}</div></div>
       <div class="flex-1 space-y-2 min-w-0">
-        <div class="flex items-center gap-3 flex-wrap text-xl">${nameRank(ME.name,ME.rank,ME.medals)} <span class="text-base whitespace-nowrap">⭐ <b>${ME.rating}</b></span></div>
+        <div class="flex items-center gap-3 flex-wrap text-xl">${nameRank(ME.name,ME.rank,ME.medals)} <button onclick="openReviews()" title="Bewertungen ansehen" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line pl-2.5 pr-2 py-1 text-sm leading-none transition hover:border-gold"><span style="color:#E0A82E">★</span><b>${String(ME.rating).replace('.',',')}</b><span class="text-muted">· ${REVIEWS.reduce((s,g)=>s+g.n,0)}</span><span class="text-muted text-xs">›</span></button></div>
         <div class="flex gap-5 text-sm flex-wrap"><span><b>${ME.followers}</b> Follower</span><span><b>${ME.following}</b> gefolgt</span></div>
       </div></div>
     <div class="mt-5 space-y-2 text-left">
@@ -1287,11 +1301,6 @@ function profile(){
     <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen und Medaillen</p>
       <div class="bm-row"><div class="bm-b">${(l=>l.length?l.map(b=>badgeIcon(b)).join(''):badgeQ())(S.badgesShown.filter(b=>ME.badges.includes(b)))}</div>${(r=>r?`<div class="bm-m">${r}</div>`:'')(medalRow(ME.medals))}</div>
       <button onclick="openMedals()" class="text-gold text-sm mt-3 hover:underline">Alle Abzeichen und Medaillen ansehen →</button></div>
-    <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Bewertungen</p>
-      <button id="revCard" onclick="openReviews()" class="card w-full text-left p-4">
-        <div class="flex items-center justify-between gap-3"><span class="text-base">⭐ <b>${String(ME.rating).replace('.',',')}</b> <span class="text-muted text-sm">· ${REVIEWS.reduce((s,g)=>s+g.n,0)} Bewertungen</span></span><span class="text-gold text-sm whitespace-nowrap">Alle ansehen →</span></div>
-        <div class="mt-3 space-y-1.5 text-sm">${REVIEWS.filter(g=>g.n>0).map(g=>`<div class="flex justify-between gap-3"><span class="text-muted">${g.ic} ${g.t}</span><span><b>${g.avg}</b> <span class="text-muted">· ${g.n}</span></span></div>`).join('')}</div>
-      </button></div>
     <div class="mt-8 grid grid-cols-3 gap-1">${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
     ${S.user?`<div class="mt-8 flex flex-wrap gap-3"><button onclick="S.user=false;save();go('feed')" class="btn-ghost">Abmelden</button></div>`:''}
   </div>`;
@@ -1310,6 +1319,9 @@ function settings(){
     <div class="card p-4"><p class="font-semibold mb-1">Member einladen</p><p class="text-xs text-muted mb-3">Schick deinen Link an Closer, Setter und Vertriebler, die du kennst. Die erste Person, die darüber beitritt, bekommt ein Jahr lang 25&nbsp;% Rabatt auf Plus und Premium. Alle weiteren kannst du ohne Rabatt einladen. Jede wird dir zugeordnet. Ab 3 geworbenen Membern bekommst du das Abzeichen „Recruiter“.</p>
       <div class="flex gap-2"><input id="invLink" readonly value="${inviteLink()}" onclick="this.select()" class="flex-1 min-w-0 rounded-lg border border-line bg-panel px-3 py-2 text-sm"><button onclick="copyInvite(this)" class="btn-gold text-sm whitespace-nowrap">Kopieren</button></div>
       <div class="flex items-center justify-between gap-3 mt-3 flex-wrap"><a class="btn-ghost text-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('Schau dir ClosingHub an, die Plattform für Closer, Setter und Vertriebler. Hier ist mein Einladungslink: '+inviteLink())}">Per WhatsApp teilen</a><span class="text-xs text-muted">Bisher geworben: <b>${ME.invited} von 3</b></span></div></div>
+    <div class="card p-4"><p class="font-semibold mb-1">Profiltext</p><p class="text-xs text-muted mb-3">Steht unter deinem Namen im Profil. Erzähl kurz, was du machst und wofür du stehst.</p>
+      <textarea id="bioIn" maxlength="300" class="input h-24 text-sm" oninput="document.getElementById('bioCnt').textContent=this.value.length+' / 300'">${ME.bio}</textarea>
+      <div class="flex items-center justify-between mt-2"><span id="bioCnt" class="text-xs text-muted">${ME.bio.length} / 300</span><button class="btn-gold text-sm" onclick="ME.bio=document.getElementById('bioIn').value.trim().slice(0,300);this.textContent='✓ Gespeichert';setTimeout(()=>render(),900)">Speichern</button></div></div>
     ${notifCard()}
     <div class="card p-4 text-sm space-y-1"><p class="font-semibold">Konto</p><p class="text-muted">Sprache · Datenschutz · Lieblingsrolle</p></div></div>`;
 }
