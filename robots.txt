@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Disallow: /zentrale
+Disallow: /partner
+Disallow: /portal
+Disallow: /app
+
+# KI-Suchen ausdrücklich erlaubt
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-SearchBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://www.getclosinghub.com/sitemap.xml
