@@ -307,7 +307,7 @@ async function loadAll(){
     api('jobs?select=*&order=created_at.desc').then(r=>{LOADERR.jobs='';return r;}).catch(e=>{LOADERR.jobs=e.message;return [];}),
     api('clients?select=*&order=created_at.desc').then(r=>{LOADERR.clients='';return r;}).catch(e=>{LOADERR.clients=e.message;return [];})
   ]);
-  D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at, quelle:w.quelle||'' }));
+  D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at, quelle:w.quelle||'', token:w.invite_token||null, member:w.member_id||null }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
   const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.gate=S.app_gate||{}; fxLoad(S); D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
@@ -850,7 +850,7 @@ function anfragen(){
   ${reqTab==='anfragen'?`<div class="grid">${D.requests.map(r=>`<div class="card"><div class="row between"><div class="row"><span class="pill ${r.type==='Werbung'?'':'p-gold'}">${r.type}</span><b>${esc(r.name)}</b><span class="muted" style="font-size:12px">${esc(r.email)} · ${esc(r.at)}</span></div>${pill(r.st)}</div>
     <p style="margin-top:8px;white-space:pre-wrap">${esc(r.text)||'<span class="muted">Keine Nachricht</span>'}</p>
     <div class="row" style="margin-top:12px"><a class="btn sm gold-b" href="mailto:${esc(r.email)}?subject=${encodeURIComponent('Deine Anfrage bei ClosingHub')}" onclick="reqDone(${r.id})">Antworten</a>${r.type==='Werbung'?`<button class="btn sm" onclick="location.hash='laufband';setTimeout(editTick,50)">Als Laufband-Angebot anlegen</button>`:`<button class="btn sm" onclick="location.hash='rechnungen?neu'">Rechnung schreiben</button>`}${r.st!=='beantwortet'?`<button class="btn sm" onclick="reqDone(${r.id})">Als erledigt markieren</button>`:''}</div></div>`).join('')||'<div class="card empty">Noch keine Anfragen.</div>'}</div>`
-  :`<div class="row between" style="margin-bottom:12px"><span class="muted">${D.waitlist.length} Einträge</span><button class="btn" onclick="csv('warteliste')">CSV-Export</button></div>
+  :`${invCard()}<div class="row between" style="margin-bottom:12px"><span class="muted">${D.waitlist.length} Einträge</span><button class="btn" onclick="csv('warteliste')">CSV-Export</button></div>
     <div class="card tw"><table><thead><tr><th>Name</th><th>E-Mail</th><th>Abo</th><th>Quelle</th><th>Eingetragen</th><th></th></tr></thead><tbody>${D.waitlist.map(w=>`<tr><td><b>${esc(w.name)}</b></td><td class="muted">${esc(w.email)}</td><td><span class="pill ${w.abo==='dayone'?'p-gold':''}">${abo[w.abo]||esc(w.abo)}</span></td><td class="muted">${esc(quelleLabel(w.quelle))}</td><td class="muted">${fmtAt(w.at)}</td><td style="text-align:right"><button class="btn sm red" onclick="delWait(${w.id})">${ic('trash',13)} Entfernen</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine Einträge.</td></tr>'}</tbody></table></div>`}`;
 }
 async function delWait(id){
@@ -1349,8 +1349,49 @@ function feedx(){
     <div class="card"><h3>Push-Mitteilungen</h3><p class="muted" style="font-size:12.5px;margin-bottom:6px">Standard: alles an. Mitglieder können jede Kategorie selbst abschalten. Was du hier ausschaltest, verschwindet für alle.</p>
       ${PUSH_KAT.map(([k,t,d])=>`<button type="button" onclick="pxToggle('${k}')" class="row between" style="width:100%;padding:10px 0;border:0;border-top:1px solid rgba(128,128,128,.25);background:none;color:inherit;text-align:left;cursor:pointer"><span><b style="font-size:14px">${t}</b><br><span class="muted" style="font-size:12px">${d}</span></span>${sw(p[k]!==false)}</button>`).join('')}</div>
   </div>
-  ${demoNote('Hinweis: Antworten, Likes und Stimmen im Battle sowie die Streak-Minuten werden aktuell auf dem Gerät des Mitglieds gespeichert. Sobald die echten Mitgliedskonten live sind, laufen sie über die Datenbank, damit alle dasselbe sehen. Push-Mitteilungen kommen bis dahin nur, solange die App offen ist.')}
+  ${demoNote('Antworten, Likes, Stimmen und Streak laufen über die Datenbank (closinghub-app-konten.sql). Push-Mitteilungen kommen vorerst nur, solange die App offen ist – echte Push aufs Handy ist der nächste Schritt.')}
   <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn gold-b" onclick="fxSave(this)">Alles speichern</button></div>`;
+}
+
+/* ===== App-Einladungen aus der Warteliste ===== */
+const APP_URL='https://www.getclosinghub.com/app?einladung=';
+const invLink = w => APP_URL+w.token;
+function invMail(w){
+  const vn=String(w.name||'').trim().split(' ')[0]||'';
+  const sub='Dein Platz ist bereit – ClosingHub ist live';
+  const body=`Hey ${vn},\n\nClosingHub ist live und dein Platz ist reserviert${w.abo==='dayone'?' – inklusive Day-One-Abzeichen':''}. Klick auf deinen persönlichen Link und wähle nur noch dein Passwort:\n\n${invLink(w)}\n\nDer Link gehört nur dir, bitte nicht weitergeben.\n\nFreundliche Grüße\nElias Schulz\nClosingHub`;
+  return `mailto:${encodeURIComponent(w.email)}?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(body)}`;
+}
+async function invCreate(b){
+  b.disabled=true;
+  try{ const n=await q('rpc/waitlist_links_erzeugen',{method:'POST',body:{}}); LOADED=false; await render(); toast(n?`${n} persönliche Links erzeugt`:'Alle haben schon einen Link'); }
+  catch(e){ toast('Fehlt noch: closinghub-app-konten.sql in Supabase ausführen'); }
+  finally{ b.disabled=false; }
+}
+function invCopy(id,btn){ const w=D.waitlist.find(x=>x.id===id); if(!w||!w.token) return; navigator.clipboard.writeText(invLink(w)).then(()=>{ btn.textContent='Kopiert ✓'; setTimeout(()=>btn.textContent='Link kopieren',1800); }); }
+function invCsv(){
+  const rows=[['Name','Vorname','E-Mail','Abo','Link']].concat(D.waitlist.filter(w=>w.token&&!w.member).map(w=>[w.name,String(w.name).split(' ')[0],w.email,w.abo,invLink(w)]));
+  const t=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+t],{type:'text/csv;charset=utf-8'})); a.download='closinghub-app-einladungen.csv'; a.click();
+}
+function invCard(){
+  const L=D.waitlist, aktiv=L.filter(w=>w.member).length, mitLink=L.filter(w=>w.token&&!w.member).length, ohne=L.filter(w=>!w.token&&!w.member).length;
+  return `<div class="card" style="margin-bottom:14px"><div class="row between"><h3 style="margin:0">App-Einladungen</h3><div class="row"><span class="pill p-ok">${aktiv} aktiv</span><span class="pill">${mitLink} eingeladen</span>${ohne?`<span class="pill">${ohne} ohne Link</span>`:''}</div></div>
+    <p class="muted" style="font-size:12.5px;margin:6px 0 12px">Jeder auf der Warteliste bekommt einen persönlichen Link. Damit wählt er in der App nur noch sein Passwort – Name, E-Mail und Abo werden übernommen. Der Link funktioniert nur einmal und nur mit seiner E-Mail.</p>
+    <div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn gold-b sm" onclick="invCreate(this)">${ohne?`Links für ${ohne} Einträge erzeugen`:'Links erzeugen'}</button><button class="btn sm" onclick="invCsv()" ${mitLink?'':'disabled'}>CSV für Newsletter-Tool</button><button class="btn sm" onclick="invOpen=!invOpen;render()">${invOpen?'Liste zuklappen':'Einzeln verschicken'}</button></div>
+    <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:12px;align-items:flex-end"><label class="f" style="flex:1;min-width:150px">Name<input class="in" id="inv-n" placeholder="z. B. Paul Test"></label><label class="f" style="flex:1.4;min-width:190px">E-Mail<input class="in" id="inv-e" type="email" placeholder="name@mail.de"></label><label class="f" style="min-width:120px">Abo<select class="in" id="inv-a"><option value="dayone">Day One</option><option value="plus">Plus</option><option value="premium">Premium</option></select></label><button class="btn sm" onclick="invAdd(this)">＋ Person hinzufügen</button></div>
+    ${invOpen?`<div class="tw" style="margin-top:12px"><table><thead><tr><th>Name</th><th>E-Mail</th><th>Status</th><th></th></tr></thead><tbody>${L.map(w=>`<tr><td><b>${esc(w.name)}</b></td><td class="muted">${esc(w.email)}</td><td>${w.member?'<span class="pill p-ok">Aktiv ✓</span>':w.token?'<span class="pill">Link bereit</span>':'<span class="muted">–</span>'}</td><td style="text-align:right;white-space:nowrap">${w.token&&!w.member?`<button class="btn sm" onclick="invCopy(${w.id},this)">Link kopieren</button> <a class="btn sm gold-b" href="${invMail(w)}">Mail</a>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}
+  </div>`;
+}
+let invOpen=false;
+async function invAdd(b){
+  const n=$('inv-n').value.trim(), e=$('inv-e').value.trim().toLowerCase(), a=$('inv-a').value;
+  if(!n||!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(e)) return toast('Bitte Name und gültige E-Mail eingeben');
+  if(D.waitlist.some(w=>w.email.toLowerCase()===e)) return toast('Diese E-Mail steht schon auf der Warteliste');
+  b.disabled=true;
+  try{ await q('waitlist',{method:'POST',body:{name:n,email:e,abo:a,quelle:'zentrale'}}); try{ await q('rpc/waitlist_links_erzeugen',{method:'POST',body:{}}); }catch(x){}
+    invOpen=true; LOADED=false; await render(); toast(n+' hinzugefügt – Link ist bereit'); }
+  finally{ b.disabled=false; }
 }
 
 const PAGES={feedx,partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
