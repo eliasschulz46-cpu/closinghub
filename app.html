@@ -1815,6 +1815,9 @@ const FCATS=[['Plattform',[['📣','ClosingHub',0]]],['Vertrieb-Basics',[['💬'
 const FTHREADS=[];
 // Selbst gestellte Fragen bleiben vorerst nur im Browser dieses Geräts (bis es Member-Konten gibt).
 try{ JSON.parse(localStorage.getItem('ch_fthreads')||'[]').forEach(t=>{ if(t&&t.cat&&t.q) FTHREADS.push({cat:String(t.cat),q:String(t.q),t:String(t.t||''),a:t.a,r:t.r,own:1}); }); }catch(e){}
+// Antworten auf Forum-Fragen: vorerst ebenfalls nur im Browser dieses Geräts gespeichert.
+let FANS={}; try{ FANS=JSON.parse(localStorage.getItem('ch_fans')||'{}')||{}; }catch(e){ FANS={}; }
+function sendAnswer(i,inp){ const t=FTHREADS[i], v=inp?inp.value.trim():''; if(!t||!v) return; const k=t.cat+'|'+t.q; (FANS[k]=FANS[k]||[]).push({a:ME.name,r:ME.rank,t:v}); try{ localStorage.setItem('ch_fans',JSON.stringify(FANS)); }catch(e){} render(); }
 function newThread(cat){
   if(!S.user){ go('login'); return; }
   const cats=FCATS.flatMap(g=>g[1].map(c=>c[1]));
@@ -1895,7 +1898,8 @@ function thread(){
     <div class="flex justify-between items-center mb-4 gap-3"><h1 class="font-serif text-2xl">${cat}</h1>${S.user?`<button class="btn-gold text-sm" onclick="newThread('${cat}')">+ Neues Thema</button>`:''}</div>
     ${list.length?list.map(t=>`<div class="card p-5 mb-3"><div class="flex items-center gap-2 mb-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block">${avatar(t.a||'ClosingHub')}</span>${nameRank(t.a||'ClosingHub',t.r||'Rainmaker')}</div>
       <h2 class="font-serif text-xl mb-2">${esc(t.q)}</h2>${t.t?`<p class="text-sm text-muted">${esc(t.t)}</p>`:''}
-      ${S.user?'<div class="flex gap-2 mt-4"><input class="input" placeholder="Deine Antwort…"><button class="btn-gold">Senden</button></div>':''}</div>`).join(''):`<div class="card p-5 text-sm"><p class="font-semibold mb-1">Hier steht noch keine Frage.</p><p class="text-muted">Zum Start stellt ClosingHub die ersten drei Fragen. Danach bist du dran.</p></div>`}
+      ${(FANS[t.cat+'|'+t.q]||[]).map(x=>`<div class="border-t border-line mt-3 pt-3"><div class="flex items-center gap-2 mb-1"><span class="w-7 h-7 rounded-full overflow-hidden inline-block">${avatar(x.a)}</span>${nameRank(x.a,x.r)}</div><p class="text-sm">${esc(x.t)}</p></div>`).join('')}
+      ${S.user?`<form class="flex gap-2 mt-4" onsubmit="event.preventDefault();sendAnswer(${FTHREADS.indexOf(t)},this.a)"><input name="a" class="input" placeholder="Deine Antwort…" autocomplete="off"><button class="btn-gold">Senden</button></form>`:''}</div>`).join(''):`<div class="card p-5 text-sm"><p class="font-semibold mb-1">Hier steht noch keine Frage.</p><p class="text-muted">Zum Start stellt ClosingHub die ersten drei Fragen. Danach bist du dran.</p></div>`}
   </div>`;
 }
 
