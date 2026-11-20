@@ -966,7 +966,7 @@ function openBadges(n){
     </div></div>`;
 }
 function inviteLink(){ return 'https://www.getclosinghub.com/?ref='+ME.ref; }
-function copyInvite(btn){ const l=inviteLink(), ok=()=>{ btn.textContent='Kopiert ✓'; setTimeout(()=>btn.textContent='Kopieren',2000); };
+function copyInvite(btn){ try{ chEv('einladen'); }catch(e){} const l=inviteLink(), ok=()=>{ btn.textContent='Kopiert ✓'; setTimeout(()=>btn.textContent='Kopieren',2000); };
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(l).then(ok).catch(()=>{ const i=document.getElementById('invLink'); i.select(); });
   else { const i=document.getElementById('invLink'); i.select(); try{document.execCommand('copy');ok()}catch(e){} } }
 function closeModal(){ document.getElementById('modal').innerHTML=''; stopPlayer(); }
@@ -1038,6 +1038,7 @@ function notifCard(){
 const CH_BADGE='Challenger';
 function chDo(i){ const t=S.ch.done[S.ch.day-1]||0; S.ch.done[S.ch.day-1]=t|i; render(); }
 function challengeCard(){
+  if(S.member) return challengeReal();
   if(!S.user&&false) return '';
   const d=S.ch.day, today=S.ch.done[d-1]||0, full=v=>v===3, cnt=S.ch.done.filter(full).length;
   const dot=i=>{const v=S.ch.done[i]||0; const st=full(v)?'background:#087A4B;border-color:#087A4B;color:#fff':(i===d-1?'border-color:#087A4B;color:#087A4B':'color:rgb(var(--muted))'); return `<span class="aspect-square rounded-full border border-line flex items-center justify-center text-[9px] font-semibold" style="${st}">${full(v)?'✓':i+1}</span>`;};
@@ -1094,7 +1095,7 @@ async function loadMember(){
   if(!m){ let adm=false; try{ adm=await rpc('is_admin'); }catch(e){}
     if(!adm){ dropSes(); save(); S.loginErr='Für diese E-Mail gibt es noch kein Mitgliedskonto. Nutze deinen persönlichen Einladungslink.'; S.route='login'; try{ history.replaceState(null,'',location.pathname+'#login'); }catch(e){} render(); return; }
     S.adminPreview=true; }
-  applyMember(m); render(); if(m){ mbLoad(); unreadLoad(); chatsLoad(); mkLoad(); ptLoad(); }
+  applyMember(m); render(); if(m){ mbLoad(); unreadLoad(); chatsLoad(); mkLoad(); ptLoad(); chLoad(); }
 }
 async function doLogin(){
   const e=(document.getElementById('lgE')||{}).value||'', p=(document.getElementById('lgP')||{}).value||'', er=document.getElementById('lgErr'), b=document.getElementById('lgBtn');
@@ -1966,6 +1967,45 @@ async function ptRedeemGo(id,pid,b){ b.disabled=true; const j=await rpc('gutsche
   if(!j||!j.ok){ b.disabled=false; alert('Das hat nicht geklappt. Versuch es gleich nochmal.'); return; }
   closeModal(); await ptLoad(); if(typeof chatsLoad==='function') chatsLoad(); if(typeof openConv==='function'){ go('messages'); setTimeout(()=>openConv('p'+pid),400); } else render(); }
 
+// ===== Start-Challenge (echt, 14 Tage) =====
+const CH_ROUTE={post:'create',suche:'search',einstellungen:'einstellungen',forum:'forum',feed:'feed',jobs:'jobs',markt:'markt'};
+async function chLoad(){ if(!S.member) return; const j=await rpc('challenge_status',{}).catch(()=>null); if(!j) return; S.chs=j; const e=document.getElementById('chcard'); if(e) e.outerHTML=challengeReal(); }
+function chToday(){ const c=S.chs; if(!c||!(c.tag>=1&&c.tag<=14)) return null; return {d:c.tag,bits:c.tage[c.tag-1]||0,t:c.plan[c.tag-1]}; }
+async function chEv(k){ const t=chToday(); if(!t) return; const i=t.t.findIndex(x=>x.k===k&&(x.typ==='klick'||x.typ==='selbst')); if(i<0||(t.bits&(1<<i))) return;
+  const j=await rpc('challenge_klick',{p_key:k}).catch(()=>null); if(j&&j.ok) chLoad(); }
+function chGo(i){ const t=chToday(); if(!t) return; const a=t.t[i];
+  if(a.typ==='selbst'){ if(confirm(a.t+' – erledigt?')) chEv(a.k); return; }
+  if(a.typ==='feedback'){ return chFeedback(); }
+  if(a.k==='bilanz'){ return chBilanz(); }
+  const r=CH_ROUTE[a.h]; if(r){ if(a.k==='job'){ S.jopen=0; } go(r); } }
+function chBilanz(){ const c=S.chs, w=c.tage.slice(0,7), full=w.filter(v=>v===3).length;
+  document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()"><div class="card w-full max-w-md p-5 relative space-y-3" onclick="event.stopPropagation()">
+    <button onclick="closeModal()" class="absolute top-3 right-4 text-muted text-xl">✕</button><p class="text-xs uppercase tracking-wider text-gold font-semibold">Deine Woche 1</p>
+    <p class="font-serif" style="font-size:26px;line-height:1.2">${full} von 7 Tagen geschafft ${full>=5?'🔥':'💪'}</p>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">${w.map((v,i)=>`<div class="rounded-xl text-center p-2 text-xs font-semibold" style="${v===3?'background:#087A4B;color:#fff':'border:1px solid rgb(var(--line));color:rgb(var(--muted))'}">Tag ${i+1}<br>${v===3?'✓':v?'½':'–'}</div>`).join('')}</div>
+    <p class="text-sm text-muted">${full>=5?'Starke Woche! Bleib dran, für das Abzeichen „Challenger“ brauchst du 10 der 14 Tage.':'Für das Abzeichen „Challenger“ brauchst du 10 der 14 Tage. Woche 2 ist deine Chance – du schaffst das.'}</p>
+    <button class="btn-gold w-full" onclick="closeModal()">Weiter geht's</button></div></div>`;
+  chEv('bilanz'); }
+function chFeedback(){ document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()"><form class="card w-full max-w-md p-5 relative space-y-3" onclick="event.stopPropagation()" onsubmit="event.preventDefault();chFbSend(this)">
+    <button type="button" onclick="closeModal()" class="absolute top-3 right-4 text-muted text-xl">✕</button><h3 class="font-serif text-xl">Dein Feedback zu ClosingHub</h3><p class="text-sm text-muted">Was gefällt dir, was fehlt, was nervt? Elias liest jede Nachricht persönlich.</p>
+    <textarea name="t" class="input h-32 text-sm" maxlength="2000" required></textarea><p id="fbErr" class="text-sm" style="color:#e5484d"></p><button class="btn-gold w-full">Abschicken</button></form></div>`; }
+async function chFbSend(f){ const t=f.t.value.trim(); if(t.length<5){ document.getElementById('fbErr').textContent='Schreib bitte ein paar Worte mehr.'; return; }
+  f.querySelector('.btn-gold').disabled=true; const j=await rpc('challenge_feedback_senden',{p_text:t}).catch(()=>null);
+  if(!j||!j.ok){ f.querySelector('.btn-gold').disabled=false; document.getElementById('fbErr').textContent='Das hat nicht geklappt. Versuch es gleich nochmal.'; return; }
+  closeModal(); chLoad(); alert('Danke für dein Feedback! 🙏'); }
+function challengeReal(){ const c=S.chs; if(!c) return '<div id="chcard"></div>'; const T=chToday();
+  if(!T) return '<div id="chcard"></div>';
+  const full=v=>v===3, cnt=c.geschafft||0, d=T.d;
+  const dot=i=>{ const v=c.tage[i]||0; const st=full(v)?'background:#087A4B;border-color:#087A4B;color:#fff':(i===d-1?'border-color:#087A4B;color:#087A4B':(i<d-1?'color:rgb(var(--muted));opacity:.5':'color:rgb(var(--muted))')); return `<span class="aspect-square rounded-full border border-line flex items-center justify-center text-[9px] font-semibold" style="${st}">${full(v)?'✓':i+1}</span>`; };
+  const row=(a,i)=>{ const done=!!(T.bits&(1<<i)); return `<div class="flex items-center justify-between gap-3 py-2.5 border-t border-line"><span class="text-sm ${done?'text-muted line-through':''}" style="line-height:1.4">${done?'✓ ':''}${esc(a.t)}</span>${done?'<span class="text-xs text-gold font-semibold whitespace-nowrap">Erledigt</span>':`<button onclick="chGo(${i})" class="btn-gold text-xs whitespace-nowrap" style="padding:.35rem .8rem">${a.typ==='selbst'?'Abhaken':'Los'}</button>`}</div>`; };
+  return `<div id="chcard" class="card p-4" style="border-color:#087A4B">
+    <div class="flex items-center justify-between gap-2"><p class="text-xs uppercase tracking-wider text-gold font-semibold">Start-Challenge</p><span class="text-xs text-muted">Tag ${d} von 14</span></div>
+    <p class="font-semibold mt-1">Deine Aufgaben für heute</p>
+    <div class="mt-3" style="display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:3px">${Array.from({length:14},(_,i)=>dot(i)).join('')}</div>
+    <div class="mt-3">${T.t.map(row).join('')}</div>
+    <p class="text-xs mt-2 ${full(T.bits)?'text-gold font-semibold':'text-muted'}">${full(T.bits)?'🎉 Tag geschafft! +20 Punkte':'Belohnung heute: +20 Punkte, wenn du beide Aufgaben schaffst'}</p>
+    <p class="text-xs text-muted mt-2 border-t border-line pt-2">${cnt} von 10 Tagen geschafft. Schaffe 10 der 14 Tage und sichere dir das Abzeichen „Challenger“.</p></div>`; }
+
 function feed(){
   const ft = S.ptopics || S.topics;
   const fp=feedPool(); const pool = fp ? (ft ? fp.filter(p=>ft.includes(p.k)) : fp) : (ft ? POSTS.filter(p=>ft.includes(p.k)) : POSTS);
@@ -2151,12 +2191,12 @@ function jobSubBar(){
   const cats=S.jrole?[S.jrole]:JROLES, on=c=>S.jsubs.includes(c);
   return `<div class="card p-3"><div class="flex items-center justify-between gap-2"><p class="text-sm font-semibold">🔔 Job-Benachrichtigungen</p><span class="text-[11px] text-muted">${S.jsubs.length?S.jsubs.length+' abonniert':'keine'}</span></div>
     <p class="text-xs text-muted mt-0.5 mb-2">Abonniere Kategorien und erfahre sofort von neuen Jobs.</p>
-    <div class="flex gap-1.5 flex-wrap">${JROLES.map(c=>`<button onclick="S.jsubs=${'S.jsubs.includes(\''+c+'\')?S.jsubs.filter(x=>x!==\''+c+'\'):[...S.jsubs,\''+c+'\']'};render()" class="text-xs px-2.5 py-1 rounded-full border" style="${on(c)?'background:#087A4B;border-color:#087A4B;color:#fff':'border-color:rgb(var(--line))'}">${on(c)?'✓ ':'+ '}${c}</button>`).join('')}</div></div>`;
+    <div class="flex gap-1.5 flex-wrap">${JROLES.map(c=>`<button onclick="chEv('jobabo');S.jsubs=${'S.jsubs.includes(\''+c+'\')?S.jsubs.filter(x=>x!==\''+c+'\'):[...S.jsubs,\''+c+'\']'};render()" class="text-xs px-2.5 py-1 rounded-full border" style="${on(c)?'background:#087A4B;border-color:#087A4B;color:#fff':'border-color:rgb(var(--line))'}">${on(c)?'✓ ':'+ '}${c}</button>`).join('')}</div></div>`;
 }
 function jobs(){
   if(S.member && !JOBS.some(x=>x.live)) return jobsEmpty();
   const j = JOBS.find(x=>x.id===S.job)||JOBS.find(x=>x.live)||JOBS[0];
-  const list = JOBS.filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;S.jopen=1;render();if(innerWidth<768)scrollTo(0,0)" class="card w-full text-left p-4 ${x.id===j.id?'!border-gold':''}" style="${x.id===j.id?'border-color:#087A4B':''}">
+  const list = JOBS.filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;S.jopen=1;chEv('job');render();if(innerWidth<768)scrollTo(0,0)" class="card w-full text-left p-4 ${x.id===j.id?'!border-gold':''}" style="${x.id===j.id?'border-color:#087A4B':''}">
     <p class="font-semibold">${x.t}</p><p class="text-sm text-muted">${x.ind} · ${x.reg}</p><p class="text-sm text-gold mt-1">${x.pay}</p><p class="text-xs text-muted mt-1">${x.d===0?'Heute':'vor '+x.d+' Tagen'}</p></button>`).join('');
   const action = !S.user ? `<a href="#login" class="btn-gold">🔒 Anmelden zum Bewerben</a>`
     : S.sent ? `<p class="text-emerald-400">✓ Bewerbung gesendet. Der Auftraggeber sieht dein anonymes Profil und kann den Kontakt für 25 € freischalten.</p>`
@@ -2175,7 +2215,7 @@ function jobs(){
         ${jobSubBar()}
         ${S.member?myAppsCard():''}
         <p class="text-xs uppercase tracking-wider text-gold font-semibold">★ Top-Jobs</p>
-        ${JOBS.filter(x=>x.top).filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;S.jopen=1;render();if(innerWidth<768)scrollTo(0,0)" class="w-full text-left rounded-2xl p-[1.5px]" style="background:linear-gradient(135deg,#D9B45A,#087A4B 55%,#06603B)"><span class="block rounded-[15px] p-4 relative overflow-hidden" style="background:linear-gradient(135deg,rgba(217,180,90,.14),rgba(8,122,75,.10) 60%),rgb(var(--panel))">
+        ${JOBS.filter(x=>x.top).filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;S.jopen=1;chEv('job');render();if(innerWidth<768)scrollTo(0,0)" class="w-full text-left rounded-2xl p-[1.5px]" style="background:linear-gradient(135deg,#D9B45A,#087A4B 55%,#06603B)"><span class="block rounded-[15px] p-4 relative overflow-hidden" style="background:linear-gradient(135deg,rgba(217,180,90,.14),rgba(8,122,75,.10) 60%),rgb(var(--panel))">
           <span class="flex items-center justify-between gap-2"><span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style="background:#087A4B;color:#fff">★ Top-Job</span><span class="text-[10px] text-muted">Anzeige</span></span>
           <span class="block font-semibold mt-2 text-[15px]">${x.t}</span><span class="block text-sm text-muted">${x.ind} · ${x.reg}</span>
           <span class="flex items-center justify-between mt-2"><span class="text-sm font-semibold text-gold">${x.pay}</span><span class="text-xs text-gold">Ansehen →</span></span></span></button>`).join('')}
@@ -2669,6 +2709,7 @@ function render(){
   if(r==='login'){ document.getElementById('app').innerHTML=login(); return; }
   if(r==='zentrale'){ document.getElementById('app').innerHTML=zentrale(); return; }
   const fn = PAGES[r] || feed;
+  if(S.member&&S.chs){ if(r==='markt') setTimeout(()=>chEv('markt'),300); if(r==='feed'&&Date.now()-(S._chT||0)>15000){ S._chT=Date.now(); setTimeout(chLoad,1500); } }
   document.getElementById('app').innerHTML = shell(fn());
   window.scrollTo(0,0); try{ markBell(); }catch(e){}
 }
