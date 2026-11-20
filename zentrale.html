@@ -310,7 +310,7 @@ async function loadAll(){
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at, quelle:w.quelle||'', token:w.invite_token||null, member:w.member_id||null }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
-  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.gate=S.app_gate||{}; fxLoad(S); D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.gate=S.app_gate||{}; fxLoad(S); setTimeout(()=>{ mxLoad(); meldLoad(); },600); D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
@@ -351,6 +351,8 @@ const NAV = [
   ['support','Support','support', ()=>D.tickets.filter(t=>t.st==='offen').length],
   ['member','Member','users', ()=>(D.proofs||[]).filter(p=>p.status==='offen').length],
   ['moderation','Prüfen & Meldungen','shield', ()=>D.queue.length+D.reports.length],
+  ['marktx','Marktplatz & Forum','users', ()=>(D.mx||[]).filter(x=>x.status==='beantragt').length],
+  ['mitmachx','Mitmach-Karten','flame', ()=>0],
   ['feedx','Feed & Battle','flame', ()=>{ try{ const b=D.battle; if(!b||!b.on||!b.start) return 0; const i=bxInfo().i; return (b.queue.length-i-1)<=7?'!':0; }catch(e){ return 0; } }],
   ['System'],
   ['inhalte','Website & App','pen'],
@@ -978,10 +980,10 @@ function mbProfile(m){
   </div>
   <div class="row between" style="margin:24px 0 10px"><h3 style="font-size:16px;margin:0">Eingereichte Nachweise (${pr.length})</h3><button class="btn" onclick="mbProofNew(${m.id})">+ Nachweis eintragen</button></div>
   <div class="card tw"><table><thead><tr><th>Art</th><th>Beschreibung</th><th>Zeitraum</th><th>Eingereicht</th><th>Status</th><th></th></tr></thead><tbody>
-  ${pr.map(p=>`<tr><td><b>${esc(PROOF_ART[p.art]||p.art)}</b></td><td>${esc(p.titel||'–')}${p.datei_url?` · <a href="${esc(p.datei_url)}" target="_blank" rel="noopener" class="gold">Dokument öffnen ↗</a>`:''}${p.notiz?`<div class="muted" style="font-size:12px">${esc(p.notiz)}</div>`:''}</td>
+  ${pr.map(p=>`<tr><td><b>${esc(PROOF_ART[p.art]||p.art)}</b></td><td>${esc(p.titel||'–')}${p.datei_url?` · <a href="#" onclick="event.preventDefault();zProofOpen(${p.id})" class="gold">Dokument öffnen ↗</a>`:''}${p.notiz?`<div class="muted" style="font-size:12px">${esc(p.notiz)}</div>`:''}</td>
     <td class="muted">${p.monate?p.monate+' Monate':'–'}</td><td class="muted">${new Date(p.created_at).toLocaleDateString('de-DE')}</td>
     <td>${pill(p.status==='bestaetigt'?'bestätigt':p.status)}${p.gegengeprueft?' <span class="pill p-ok">gegengeprüft</span>':''}</td>
-    <td style="text-align:right;white-space:nowrap">${p.status!=='bestaetigt'?`<button class="btn sm gold-b" onclick="mbProofSet(${p.id},{status:'bestaetigt',geprueft_at:new Date().toISOString()},'Bestätigt')">Bestätigen</button> `:''}${p.status!=='abgelehnt'?`<button class="btn sm" onclick="mbProofSet(${p.id},{status:'abgelehnt',geprueft_at:new Date().toISOString()},'Abgelehnt')">Ablehnen</button> `:''}<button class="btn sm" onclick="mbProofSet(${p.id},{gegengeprueft:${p.gegengeprueft?'false':'true'}},'Gespeichert')">${p.gegengeprueft?'Gegenprüfung zurücknehmen':'Per Anruf gegengeprüft'}</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine Nachweise. Mitglieder reichen sie später in der App unter Einstellungen → „Nachweise hochladen“ ein. Bis dahin kannst du sie hier von Hand eintragen.</td></tr>'}
+    <td style="text-align:right;white-space:nowrap">${p.status!=='bestaetigt'?`<button class="btn sm gold-b" onclick="zProofApprove(${p.id},this)">Bestätigen</button> `:''}${p.status!=='abgelehnt'?`<button class="btn sm" onclick="mbProofSet(${p.id},{status:'abgelehnt',geprueft_at:new Date().toISOString()},'Abgelehnt')">Ablehnen</button> `:''}<button class="btn sm" onclick="mbProofSet(${p.id},{gegengeprueft:${p.gegengeprueft?'false':'true'}},'Gespeichert')">${p.gegengeprueft?'Gegenprüfung zurücknehmen':'Per Anruf gegengeprüft'}</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine Nachweise. Mitglieder reichen sie später in der App unter Einstellungen → „Nachweise hochladen“ ein. Bis dahin kannst du sie hier von Hand eintragen.</td></tr>'}
   </tbody></table></div>`;
 }
 const mbById = id => D.members.find(x=>x.id===id);
@@ -1026,6 +1028,7 @@ async function mbProofSet(pid,patch,msg){ try{ await q(`member_proofs?id=eq.${pi
 /* ===== Moderation ===== */
 function moderation(){
   return `<h1 class="h1">Prüfen & Meldungen</h1><p class="sub">Die KI prüft alles vor. Du gibst nur noch frei oder lehnst ab.</p>
+  ${meldCard()}
   <div class="grid g2">
     <div class="card"><h3>Zur Prüfung (${D.queue.length})</h3>${D.queue.map(x=>`<div class="item"><div class="ico">${ic(x.kind==='Auftraggeber'?'users':x.kind==='Video'?'spark':'shield',16)}</div><div style="flex:1"><span class="pill">${x.kind}</span><div style="margin-top:4px"><b>${esc(x.title)}</b></div><div class="muted" style="font-size:12px">KI: ${esc(x.ai)}</div>
       <div class="row" style="margin-top:8px"><button class="btn sm gold-b" onclick="qDone(${x.id},'Freigegeben')">Freigeben</button><button class="btn sm red" onclick="qDone(${x.id},'Abgelehnt')">Ablehnen</button></div></div></div>`).join('')||'<div class="empty">Noch nichts zu prüfen. Inhalte erscheinen hier, sobald Member in der App posten.</div>'}</div>
@@ -1394,7 +1397,150 @@ async function invAdd(b){
   finally{ b.disabled=false; }
 }
 
-const PAGES={feedx,partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
+/* ===== Nachweise: Original öffnen (privat) und beim Bestätigen automatisch geschwärzte Vorschau erzeugen ===== */
+const zUid = () => { try{ const p=SESSION.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(atob(p)).sub; }catch(e){ return null; } };
+async function zToken(){ if(SESSION && SESSION.expires_at - 60 < Date.now()/1000) await refresh(); return SESSION.access_token; }
+async function zProofBlob(p){
+  if(!p.datei_url) return null;
+  if(!/^nachweise\//.test(p.datei_url)){ const r=await fetch(p.datei_url); return r.ok?await r.blob():null; }
+  const r=await fetch(`${SB_URL}/storage/v1/object/authenticated/${p.datei_url}`,{headers:{apikey:SB_KEY,Authorization:'Bearer '+await zToken()}});
+  if(!r.ok) throw new Error('Dokument nicht gefunden ('+r.status+')'); return await r.blob();
+}
+async function zProofOpen(pid){
+  const p=(D.proofs||[]).find(x=>x.id===pid); if(!p) return; const w=window.open('','_blank');
+  try{ const b=await zProofBlob(p); if(!b) throw new Error('Kein Dokument'); w.location=URL.createObjectURL(b); }catch(e){ if(w) w.close(); toast('⚠️ '+e.message); }
+}
+async function zSchwaerzen(blob){
+  const bmp=await createImageBitmap(blob), W=560, H=Math.round(W*bmp.height/bmp.width);
+  const s=document.createElement('canvas'); s.width=26; s.height=Math.max(8,Math.round(26*bmp.height/bmp.width)); s.getContext('2d').drawImage(bmp,0,0,s.width,s.height);
+  const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'); x.imageSmoothingEnabled=false; x.drawImage(s,0,0,W,H);
+  x.fillStyle='rgba(14,26,43,.45)'; x.fillRect(0,0,W,H);
+  x.save(); x.translate(W/2,H/2); x.rotate(-0.35); x.fillStyle='rgba(255,255,255,.9)'; x.font='800 30px Archivo,system-ui,sans-serif'; x.textAlign='center'; x.fillText('GEPRÜFT · ClosingHub',0,10); x.restore();
+  return await new Promise(ok=>c.toBlob(ok,'image/jpeg',.8));
+}
+async function zProofApprove(pid,btn){
+  const p=(D.proofs||[]).find(x=>x.id===pid); if(!p) return; btn.disabled=true; btn.textContent='Schwärzt …';
+  let vorschau=null;
+  try{
+    const b=await zProofBlob(p);
+    if(b && /^image\//.test(b.type)){
+      const g=await zSchwaerzen(b), path=`${zUid()}/geschwaerzt/${pid}-${Date.now()}.jpg`;
+      const r=await fetch(`${SB_URL}/storage/v1/object/medien/${path}`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+await zToken(),'Content-Type':'image/jpeg'},body:g});
+      if(!r.ok) throw new Error('Vorschau hochladen fehlgeschlagen ('+r.status+')');
+      vorschau=`${SB_URL}/storage/v1/object/public/medien/${path}`;
+    }
+  }catch(e){ toast('⚠️ '+e.message+' – Nachweis wird ohne Vorschau bestätigt'); }
+  await mbProofSet(pid,{status:'bestaetigt',geprueft_at:new Date().toISOString(),vorschau_url:vorschau},vorschau?'Bestätigt – geschwärzte Vorschau ist beim Auftraggeber sichtbar':'Bestätigt');
+}
+
+/* ===== Echte Meldungen aus der App (Nachrichten, Beiträge, Kommentare, Profile) ===== */
+async function meldLoad(){ try{ D.meld=(await q('rpc/meldungen_liste',{method:'POST',body:{}}))||[]; }catch(e){ D.meld=[]; } if((location.hash||'').includes('moderation')) render(); }
+const MELD_TYP={nachricht:'Nachricht',beitrag:'Beitrag',kommentar:'Kommentar',member:'Profil',forum:'Forum'};
+function meldCard(){
+  if(D.meld===undefined){ D.meld=null; meldLoad(); }
+  const l=(D.meld||[]).filter(x=>x.status==='offen');
+  return `<div class="card" style="margin-bottom:16px"><div class="row between"><h3 style="margin:0">Meldungen aus der App (${l.length})</h3><button class="btn sm" onclick="D.meld=undefined;render()">Aktualisieren</button></div>
+    ${D.meld===null?'<p class="muted">Lade …</p>':l.length?l.map(x=>`<div class="item"><div class="ico" style="color:var(--bad);border-color:#F3C9C4">${ic('bell',16)}</div><div style="flex:1">
+      <div class="row" style="gap:6px"><span class="pill">${MELD_TYP[x.typ]||x.typ}</span><span class="muted" style="font-size:12px">${new Date(x.created_at).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})} · gemeldet von ${esc(x.melder||'–')}</span></div>
+      <div style="margin-top:6px"><b>${esc(x.inhalt&&x.inhalt.autor||'–')}:</b> ${esc((x.inhalt&&x.inhalt.text)||'(ohne Text)').slice(0,300)}${x.inhalt&&x.inhalt.media?` · <a class="gold" href="${esc(x.inhalt.media)}" target="_blank" rel="noopener">Medium ↗</a>`:''}</div>
+      ${x.grund?`<div class="muted" style="font-size:12.5px;margin-top:4px">Grund: ${esc(x.grund)}</div>`:''}
+      <div class="row" style="margin-top:8px"><button class="btn sm red" onclick="meldDo(${x.id},true,this)">${x.typ==='member'?'Als erledigt markieren':'Entfernen'}</button>${x.inhalt&&x.inhalt.autor_id?`<button class="btn sm" onclick="mbSel=${x.inhalt.autor_id};location.hash='member'">Profil von ${esc(String(x.inhalt.autor).split(' ')[0])}</button>`:''}<button class="btn sm" onclick="meldDo(${x.id},false,this)">Ignorieren</button></div></div></div>`).join('')
+      :'<div class="empty">Keine offenen Meldungen. Mitglieder können Nachrichten, Beiträge und Profile in der App melden.</div>'}</div>`;
+}
+async function meldDo(id,weg,b){ b.disabled=true; try{ await q('rpc/meldung_bearbeiten',{method:'POST',body:{p_id:id,p_entfernen:weg}}); toast(weg?'Entfernt':'Ignoriert'); D.meld=undefined; render(); }catch(e){ b.disabled=false; } }
+
+/* ===== Marktplatz-Anträge + Forum-Fragen als ClosingHub ===== */
+async function mxLoad(){ try{ D.mx=(await q('rpc/markt_antraege',{method:'POST',body:{}}))||[]; }catch(e){ D.mx=[]; } if((location.hash||'').includes('marktx')) render(); }
+const FORUM_KATS=['ClosingHub','Einwandbehandlung','Setting & Terminierung','High-Ticket Closing','Motivation & Absagen','Tagesplanung','CRM & Dialer','Erfolge feiern'];
+function marktx(){
+  if(D.mx===undefined){ D.mx=null; mxLoad(); }
+  const l=D.mx||[], offen=l.filter(x=>x.status==='beantragt'), aktiv=l.filter(x=>x.status==='aktiv');
+  const card=(x,neu)=>`<div class="item"><div class="ico">${ic('users',16)}</div><div style="flex:1">
+    <div class="row between"><b>${esc(x.titel)} · ${Number(x.preis).toLocaleString('de-DE')} €</b><span class="pill">${esc(x.kategorie)}${neu?(x.belegt?' · schon vergeben':' · frei'):''}</span></div>
+    <div class="muted" style="font-size:12.5px;margin-top:4px">von <a class="gold" href="#member" onclick="mbSel=${x.member_id}">${esc(x.name)}</a> (Rang ${x.rang}) · ${esc(x.email||'')} · ${neu?'eingereicht '+new Date(x.created_at).toLocaleDateString('de-DE'):'sichtbar bis '+new Date(x.laeuft_bis).toLocaleDateString('de-DE')}</div>
+    ${x.beschreibung?`<p style="font-size:13.5px;margin:6px 0 0">${esc(x.beschreibung)}</p>`:''}
+    <div class="row" style="margin-top:8px">${neu?`<button class="btn sm gold-b" onclick="mxDo(${x.id},true,this)" ${x.belegt?'disabled title="Leistung schon vergeben"':''}>Freigeben (6 Monate)</button><button class="btn sm red" onclick="mxDo(${x.id},false,this)">Ablehnen</button>`:`<button class="btn sm" onclick="mxDo(${x.id},false,this)">Vorzeitig beenden</button>`}</div></div></div>`;
+  return `<h1 class="h1">Marktplatz & Forum</h1><p class="sub">Angebote von Mitgliedern freigeben und im Forum als ClosingHub Fragen stellen.</p>
+  <div class="card" style="margin-bottom:16px"><div class="row between"><h3 style="margin:0">Angebote zur Prüfung (${offen.length})</h3><button class="btn sm" onclick="D.mx=undefined;render()">Aktualisieren</button></div>
+    ${D.mx===null?'<p class="muted">Lade …</p>':offen.map(x=>card(x,true)).join('')||'<div class="empty">Keine offenen Anträge. Mitglieder reichen Angebote in der App unter Marktplatz → „Angebot einreichen“ ein.</div>'}</div>
+  <div class="grid g2">
+    <div class="card"><h3>Aktive Angebote (${aktiv.length})</h3>${aktiv.map(x=>card(x,false)).join('')||'<div class="empty">Noch keine aktiven Angebote.</div>'}</div>
+    <div class="card"><h3>Forum: Frage als ClosingHub stellen</h3><p class="muted" style="font-size:12.5px">Zum Start stellst du die ersten Fragen. Sie erscheinen mit dem ClosingHub-Logo.</p>
+      <label class="f">Kategorie<select class="in" id="fq-k">${FORUM_KATS.map(k=>`<option>${k}</option>`).join('')}</select></label>
+      <label class="f" style="margin-top:10px">Frage<input class="in" id="fq-t" maxlength="140" placeholder="z. B. Wie reagiert ihr auf „zu teuer“?"></label>
+      <label class="f" style="margin-top:10px">Text (optional)<textarea class="in" id="fq-x" rows="3" maxlength="600"></textarea></label>
+      <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn gold-b" onclick="fqSend(this)">Veröffentlichen</button></div></div>
+  </div>`;
+}
+async function mxDo(id,ok,b){ let notiz=null; if(!ok){ notiz=prompt('Kurze Begründung für das Mitglied (optional):'); if(notiz===null) return; }
+  b.disabled=true; try{ const j=await q('rpc/markt_entscheiden',{method:'POST',body:{p_id:id,p_ok:ok,p_notiz:notiz}}); if(j&&j.grund==='vergeben') toast('Leistung hat schon einen Anbieter'); else toast(ok?'Freigegeben – 6 Monate sichtbar':'Erledigt'); D.mx=undefined; render(); }catch(e){ b.disabled=false; } }
+async function fqSend(b){ const t=$('fq-t').value.trim(); if(t.length<5) return toast('Bitte eine Frage eingeben'); b.disabled=true;
+  try{ await q('rpc/forum_frage_admin',{method:'POST',body:{p_kat:$('fq-k').value,p_titel:t,p_text:$('fq-x').value}}); toast('Frage ist im Forum'); $('fq-t').value=''; $('fq-x').value=''; }catch(e){ toast('Fehlt noch: closinghub-forum-markt.sql in Supabase ausführen'); } b.disabled=false; }
+/* ===== Mitmach-Karten (Feed) + Glücksrad ===== */
+const MKZ={dc:'Daily Close',sd:'Schätz den Deal',wb:'Wisch-Battle',uf:'Umfrage',gr:'Glücksrad'};
+async function mkzLoad(){ try{ D.mkz=(await q('rpc/mitmach_admin_liste',{method:'POST',body:{}}))||[]; D.grz=(await q('rpc/gluecksrad_admin',{method:'POST',body:{}}))||{}; }catch(e){ D.mkz=[]; D.grz={}; D.mkzErr=1; } if((location.hash||'').includes('mitmachx')) render(); }
+function mkzVal(id){ const e=$(id); return e?e.value.trim():''; }
+function mkzForm(t,c){ const d=(c&&c.daten)||{}, v=x=>esc(x==null?'':String(x));
+  if(t==='dc') return `<label class="f">Einwand des Kunden<input class="in" id="mz-e" maxlength="200" value="${v(d.einwand)}" placeholder="z. B. Ich muss das erst mit meiner Frau besprechen."></label>
+    ${[0,1,2].map(i=>`<label class="f" style="margin-top:10px">Antwort ${i+1} <span class="muted" style="font-weight:400">· <input type="radio" name="mz-r" value="${i}" ${(+d.richtig||0)===i?'checked':''}> richtige Antwort</span><input class="in" id="mz-a${i}" maxlength="160" value="${v((d.a||[])[i])}"></label>`).join('')}
+    <label class="f" style="margin-top:10px">Erklärung (erscheint nach dem Tippen)<textarea class="in" id="mz-x" rows="2" maxlength="300">${v(d.erklaerung)}</textarea></label>`;
+  if(t==='sd') return `<label class="f">Frage<input class="in" id="mz-f" maxlength="140" value="${v(d.frage||'Was verdient der Closer an einem Abschluss?')}"></label>
+    <p class="muted" style="font-size:12.5px;margin:10px 0 4px">Fakten (bis zu 4 Kacheln)</p>${[0,1,2,3].map(i=>`<div class="row" style="gap:8px;margin-top:6px"><input class="in" id="mz-k${i}" maxlength="24" placeholder="z. B. Ticket" value="${v(((d.fakten||[])[i]||[])[0])}"><input class="in" id="mz-v${i}" maxlength="40" placeholder="z. B. 6.000 €" value="${v(((d.fakten||[])[i]||[])[1])}"></div>`).join('')}
+    <div class="row" style="gap:8px;margin-top:10px"><label class="f" style="flex:1">Echter Wert in €<input class="in" id="mz-w" type="number" min="0" value="${v(d.wert)}"></label><label class="f" style="flex:1">Regler bis (€)<input class="in" id="mz-m" type="number" min="100" value="${v(d.max||2000)}"></label></div>
+    <label class="f" style="margin-top:10px">Erklärung<textarea class="in" id="mz-x" rows="2" maxlength="300" placeholder="z. B. Üblich sind 10 % Provision, also 600 €.">${v(d.erklaerung)}</textarea></label>`;
+  if(t==='wb') return `<label class="f">Frage<input class="in" id="mz-f" maxlength="140" value="${v(d.frage||'Welcher Satz bringt dich weiter?')}"></label>
+    <label class="f" style="margin-top:10px">Satz A<textarea class="in" id="mz-a" rows="2" maxlength="240">${v(d.a)}</textarea></label>
+    <label class="f" style="margin-top:10px">Satz B<textarea class="in" id="mz-b" rows="2" maxlength="240">${v(d.b)}</textarea></label>
+    <label class="f" style="margin-top:10px">Erklärung (erscheint nach dem Abstimmen)<textarea class="in" id="mz-x" rows="2" maxlength="300">${v(d.erklaerung)}</textarea></label>`;
+  return `<label class="f">Frage<input class="in" id="mz-f" maxlength="140" value="${v(d.frage)}" placeholder="z. B. Wann closed ihr am besten?"></label>
+    ${[0,1,2,3].map(i=>`<label class="f" style="margin-top:10px">Option ${i+1}${i>1?' (optional)':''}<input class="in" id="mz-o${i}" maxlength="60" value="${v((d.a||[])[i])}"></label>`).join('')}`;
+}
+function mkzData(t){
+  if(t==='dc'){ const a=[0,1,2].map(i=>mkzVal('mz-a'+i)); if(!mkzVal('mz-e')||a.some(x=>!x)) return null; const r=document.querySelector('input[name=mz-r]:checked'); return {einwand:mkzVal('mz-e'),a,richtig:r?+r.value:0,erklaerung:mkzVal('mz-x')}; }
+  if(t==='sd'){ const f=[0,1,2,3].map(i=>[mkzVal('mz-k'+i),mkzVal('mz-v'+i)]).filter(x=>x[0]&&x[1]); const w=+mkzVal('mz-w'), m=+mkzVal('mz-m')||2000; if(!mkzVal('mz-f')||!(w>=0)||mkzVal('mz-w')===''||w>m) return null; return {frage:mkzVal('mz-f'),fakten:f,wert:w,max:m,erklaerung:mkzVal('mz-x')}; }
+  if(t==='wb'){ if(!mkzVal('mz-a')||!mkzVal('mz-b')) return null; return {frage:mkzVal('mz-f')||'Welcher Satz bringt dich weiter?',a:mkzVal('mz-a'),b:mkzVal('mz-b'),erklaerung:mkzVal('mz-x')}; }
+  const a=[0,1,2,3].map(i=>mkzVal('mz-o'+i)).filter(Boolean); if(!mkzVal('mz-f')||a.length<2) return null; return {frage:mkzVal('mz-f'),a};
+}
+function mkzTitle(c){ const d=c.daten||{}; return esc(c.typ==='dc'?'„'+(d.einwand||'')+'“':c.typ==='wb'?(d.a||'').slice(0,60)+' vs. '+(d.b||'').slice(0,40)+'…':d.frage||''); }
+function mitmachx(){
+  if(D.mkz===undefined){ D.mkz=null; mkzLoad(); }
+  const t=D.mkTab||'dc', tabs=Object.keys(MKZ).map(k=>`<button class="btn sm ${k===t?'gold-b':''}" onclick="D.mkTab='${k}';D.mkEdit=null;render()">${MKZ[k]}</button>`).join('');
+  const head=`<h1 class="h1">Mitmach-Karten</h1><p class="sub">Etwa jeder 10. Post im Feed ist eine Mitmach-Karte, im Wechsel: Daily Close → Schätz den Deal → Wisch-Battle → Umfrage. Jeden Tag ab 6 Uhr rückt pro Format die nächste Karte aus der Warteschlange nach. Solange noch nichts eingestellt ist, zeigt die App Beispiel-Karten.</p><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:16px">${tabs}</div>`;
+  if(D.mkz===null) return head+'<p class="muted">Lade …</p>';
+  if(D.mkzErr) return head+'<div class="card"><div class="empty">Fehlt noch: closinghub-mitmachen.sql in Supabase ausführen.</div></div>';
+  if(t==='gr') return head+grzPage();
+  const l=(D.mkz||[]).filter(c=>c.typ===t), live=l.find(c=>c.status==='live'), wq=l.filter(c=>c.status==='warteschlange'), old=l.filter(c=>c.status==='fertig');
+  const ed=D.mkEdit?l.find(c=>c.id===D.mkEdit):null;
+  const row=(c,i)=>`<div class="item"><div class="ico">${c.status==='live'?'🟢':i+1}</div><div style="flex:1;min-width:0"><b style="display:block">${mkzTitle(c)}</b><span class="muted" style="font-size:12.5px">${c.status==='live'?'Live seit '+new Date(c.live_ab).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})+' · '+c.antworten+' Antworten':c.status==='fertig'?'Gelaufen · '+c.antworten+' Antworten':'Kommt '+(i===0?'als Nächstes':'in '+(i+1)+' Tagen')}</span></div>
+    ${c.status==='warteschlange'?`<div class="row" style="gap:6px"><button class="btn sm" onclick="D.mkEdit=${c.id};render();scrollTo(0,0)">Bearbeiten</button><button class="btn sm red" onclick="mkzDel(${c.id},this)">Entfernen</button></div>`:''}</div>`;
+  return head+`<div class="grid g2">
+    <div class="card"><h3>${ed?'Karte bearbeiten':'Neue Karte: '+MKZ[t]}</h3>${mkzForm(t,ed)}
+      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px">${ed?'<button class="btn" onclick="D.mkEdit=null;render()">Abbrechen</button>':''}<button class="btn gold-b" onclick="mkzSave('${t}',this)">${ed?'Speichern':'In die Warteschlange'}</button></div></div>
+    <div class="card"><h3>Live & Warteschlange</h3>
+      ${live?row(live,0):'<div class="empty" style="margin-bottom:8px">Gerade keine Karte live. Die App zeigt Beispiel-Karten, bis du welche einstellst.</div>'}
+      ${wq.map(row).join('')||'<p class="muted" style="font-size:13px">Warteschlange leer.</p>'}
+      ${wq.length&&wq.length<4?`<p class="muted" style="font-size:12.5px;margin-top:8px">⚠️ Nur noch ${wq.length} ${wq.length===1?'Karte':'Karten'} – bald nachlegen.</p>`:''}
+      ${old.length?`<p class="muted" style="font-size:12px;margin:14px 0 4px">Zuletzt gelaufen</p>${old.slice(0,5).map(row).join('')}`:''}</div></div>`;
+}
+async function mkzSave(t,b){ const d=mkzData(t); if(!d) return toast('Bitte alle Pflichtfelder ausfüllen'); b.disabled=true;
+  try{ const j=await q('rpc/mitmach_admin_speichern',{method:'POST',body:{p_id:D.mkEdit||null,p_typ:t,p_daten:d}}); if(!j||!j.ok) throw 0; toast(D.mkEdit?'Gespeichert':'In der Warteschlange'); D.mkEdit=null; D.mkz=undefined; render(); }catch(e){ b.disabled=false; toast('Speichern hat nicht geklappt'); } }
+async function mkzDel(id,b){ if(!confirm('Diese Karte aus der Warteschlange entfernen?')) return; b.disabled=true;
+  try{ await q('rpc/mitmach_admin_entfernen',{method:'POST',body:{p_id:id}}); toast('Entfernt'); D.mkz=undefined; render(); }catch(e){ b.disabled=false; } }
+function grzPage(){ const g=D.grz||{}, l=g.gewinne||[], tot=l.filter(x=>x.aktiv).reduce((a,x)=>a+(+x.gewicht),0)||1, dr=g.drehs||[];
+  const r=x=>`<div class="row" style="gap:8px;margin-top:8px;align-items:flex-end"><label class="f" style="flex:3">Gewinn<input class="in" id="gz-t${x.id}" maxlength="40" value="${esc(x.text)}"></label>
+    <label class="f" style="flex:1">Gewicht<input class="in" id="gz-g${x.id}" type="number" min="0" max="1000" value="${x.gewicht}"></label><label class="f" style="flex:1">Punkte<input class="in" id="gz-p${x.id}" type="number" min="0" value="${x.punkte}"></label>
+    <label class="f" style="flex:none;text-align:center">Aktiv<input type="checkbox" id="gz-a${x.id}" ${x.aktiv?'checked':''} style="display:block;margin:10px auto"></label>
+    <span class="pill" style="flex:none;margin-bottom:8px">${x.aktiv?Math.round(x.gewicht/tot*100):0} %</span><button class="btn sm" style="flex:none;margin-bottom:4px" onclick="grzSave(${x.id},this)">Speichern</button></div>`;
+  return `<div class="grid g2"><div class="card"><h3>Gewinne im Rad</h3><p class="muted" style="font-size:12.5px">Freitags ab 8 Uhr darf jedes Mitglied einmal drehen. „Gewicht“ bestimmt die Chance (der %-Wert rechts). Bei „Punkte“ werden die Punkte automatisch gutgeschrieben, alles andere erscheint rechts in der Gewinnerliste zum Einlösen. Solange hier nichts steht, zeigt die App ein Beispiel-Rad.</p>
+    ${l.map(r).join('')||''}
+    <p class="muted" style="font-size:12px;margin:16px 0 0">Neuer Gewinn</p>${r({id:0,text:'',gewicht:10,punkte:0,aktiv:true}).replace('Speichern','Hinzufügen')}</div>
+    <div class="card"><h3>Gewinner (letzte 3 Wochen)</h3>${dr.map(d=>`<div class="item"><div class="ico">${d.erledigt?'✓':'🎁'}</div><div style="flex:1"><b>${esc(d.gewinn)}</b><div class="muted" style="font-size:12.5px">${esc(d.name)} · ${esc(d.email||'')} · ${new Date(d.created_at).toLocaleDateString('de-DE')}</div></div>${d.erledigt?'':`<button class="btn sm gold-b" onclick="grzDone(${d.id},this)">Eingelöst</button>`}</div>`).join('')||'<div class="empty">Noch niemand hat gedreht.</div>'}</div></div>`;
+}
+async function grzSave(id,b){ const t=mkzVal('gz-t'+id); if(!t) return toast('Bitte einen Gewinn eintragen'); b.disabled=true;
+  try{ await q('rpc/gluecksrad_admin_speichern',{method:'POST',body:{p_id:id||null,p_text:t,p_gewicht:+mkzVal('gz-g'+id)||0,p_punkte:+mkzVal('gz-p'+id)||0,p_aktiv:$('gz-a'+id).checked}}); toast('Gespeichert'); D.mkz=undefined; render(); }catch(e){ b.disabled=false; toast('Speichern hat nicht geklappt'); } }
+async function grzDone(id,b){ b.disabled=true; try{ await q('rpc/gluecksrad_admin_erledigt',{method:'POST',body:{p_id:id}}); D.mkz=undefined; render(); }catch(e){ b.disabled=false; } }
+
+const PAGES={feedx,marktx,mitmachx,partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
 async function reload(){ LOADED=false; await render(); toast('Aktualisiert'); }
 async function render(){
   const logged=!!SESSION;
