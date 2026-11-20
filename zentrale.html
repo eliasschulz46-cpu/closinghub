@@ -1710,6 +1710,50 @@ function fpCard(){ if(D.fposts===undefined){ D.fposts=null; fpLoad(); }
           ${p.ki_kategorie?`<div class="muted" style="font-size:11.5px">KI: ${esc(p.ki_kategorie)}${p.ki_kategorie!==p.kategorie?' · <span style="color:#B8860B">weicht ab</span>':' ✓'}</div>`:''}</div>
         <select class="in" style="width:auto" onchange="fpSet(${p.id},this.value,this)">${FK.map(k=>`<option ${k===p.kategorie?'selected':''}>${k}</option>`).join('')}</select></div>`; }).join('')}</div>`:'<div class="empty">Keine Beiträge.</div>'}</div>`; }
 const _feedx0=feedx; feedx=function(){ return _feedx0()+fpCard(); };
+/* ===== Kategorien des Feeds verwalten ===== */
+const KZ_DEF=[['Erfolg','Abschluss, Umsatz, Provision, Meilenstein','🏆'],['Tipp','Konkreter Praxistipp, oft als kurzes Video','💡'],['Wissen','Psychologie, Verkaufstechnik, Fakten','🧠'],['Mindset','Einstellung, Disziplin, Motivation','🔥'],['Zitat','Kurzer Spruch, Text im Vordergrund','❝'],['Story','Persönliche Geschichte, Erlebnis','📖'],['Lifestyle','Alltag, Reisen, Freiheit durch Vertrieb','🌴'],['Comedy','Lustiges aus dem Vertriebsalltag','😂'],['Meme','Meme-Bild oder -Video','🤣'],['Gedicht','Verse, Reime, Lyrik','✒️'],['Achtsamkeit','Ruhe, Pause, Gesundheit, Balance','🧘'],['Seminar-Ausschnitt','Bühne, Vortrag, Webinar','🎤'],['Film-Ausschnitt','Szene aus Film oder Serie','🎬']].map(([n,d,i])=>({n,d,i}));
+D.kz=undefined; D.kzEdit=null;
+function kzSync(){ FK.length=0; (D.kz||KZ_DEF).forEach(k=>FK.push(k.n)); }
+async function kzLoad(){ D.kz=null; try{ const r=await api('settings?select=value&key=eq.kategorien'); const l=r&&r[0]&&r[0].value&&r[0].value.liste; D.kz=(l&&l.length?l:KZ_DEF).map(k=>({n:k.n,d:k.d||'',i:k.i||(KZ_DEF.find(x=>x.n===k.n)||{}).i||'✦'})); }catch(e){ D.kz=KZ_DEF.slice(); } kzSync(); if((location.hash||'').includes('feedx')) render(); }
+function kzStart(){ D.kzEdit=(D.kz||KZ_DEF).map(k=>({...k,o:k.n})); D.kzDel=[]; render(); }
+function kzRow(i,f,v){ D.kzEdit[i][f]=v; }
+function kzMove(i,d){ const a=D.kzEdit, j=i+d; if(j<0||j>=a.length) return; [a[i],a[j]]=[a[j],a[i]]; render(); }
+function kzRemove(i){ const k=D.kzEdit[i]; if(k.o) D.kzDel.push(k.o); D.kzEdit.splice(i,1); render(); }
+function kzAdd(){ D.kzEdit.push({n:'',d:'',i:'✦',o:null}); render(); setTimeout(()=>{ const l=document.querySelectorAll('.kz-n'); if(l.length) l[l.length-1].focus(); },30); }
+async function kzSave(btn){
+  const l=D.kzEdit.map(k=>({...k,n:(k.n||'').trim(),d:(k.d||'').trim(),i:(k.i||'').trim()||'✦'}));
+  if(!l.length) return toast('⚠️ Mindestens eine Kategorie muss bleiben.');
+  if(l.some(k=>!k.n)) return toast('⚠️ Jede Kategorie braucht einen Namen.');
+  if(new Set(l.map(k=>k.n.toLowerCase())).size!==l.length) return toast('⚠️ Ein Name ist doppelt.');
+  if(l.some(k=>/['"<>]/.test(k.n))) return toast('⚠️ Namen bitte ohne Anführungszeichen und spitze Klammern.');
+  const ziel=(document.getElementById('kzZiel')||{}).value||l[0].n;
+  const ren=l.filter(k=>k.o&&k.o!==k.n), del=(D.kzDel||[]).filter(o=>!l.some(k=>k.n===o));
+  if(del.length&&!confirm(`Beiträge aus ${del.map(x=>'„'+x+'“').join(', ')} werden nach „${ziel}“ verschoben. Gelöscht wird nichts. Weiter?`)) return;
+  btn.disabled=true;
+  try{
+    await setKey('kategorien',{liste:l.map(({n,d,i})=>({n,d,i}))});
+    for(const k of ren){ await api(`posts?kategorie=eq.${encodeURIComponent(k.o)}`,{method:'PATCH',body:{kategorie:k.n}}); }
+    for(const o of del){ await api(`posts?kategorie=eq.${encodeURIComponent(o)}`,{method:'PATCH',body:{kategorie:ziel}}); }
+    D.kz=l.map(({n,d,i})=>({n,d,i})); D.kzEdit=null; kzSync(); D.fposts=undefined; toast('✓ Kategorien gespeichert – gilt sofort in der App'); render();
+  }catch(e){ toast('⚠️ '+e.message); btn.disabled=false; }
+}
+function kzCard(){ if(D.kz===undefined){ D.kz=null; kzLoad(); }
+  const E=D.kzEdit, cur=D.kz||[];
+  if(!E) return `<div class="card" style="margin-top:16px"><div class="row between"><h3 style="margin:0">Feed-Kategorien</h3><button class="btn" onclick="kzStart()">Bearbeiten</button></div>
+    <p class="muted" style="font-size:12.5px;margin:6px 0 10px">Diese Kategorien wählen Mitglieder beim Posten. Die KI schlägt eine davon vor. Reihenfolge = Reihenfolge in der App.</p>
+    ${D.kz===null?'<p class="muted">Lädt …</p>':`<div style="display:flex;flex-wrap:wrap;gap:8px">${cur.map(k=>`<span title="${esc(k.d)}" style="display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:99px;border:1px solid var(--line,#ddd);font-size:13px">${esc(k.i)} <b style="font-weight:600">${esc(k.n)}</b></span>`).join('')}</div>`}</div>`;
+  return `<div class="card" style="margin-top:16px;border-color:#087A4B"><div class="row between"><h3 style="margin:0">Feed-Kategorien bearbeiten</h3><div class="row" style="gap:8px"><button class="btn" onclick="D.kzEdit=null;render()">Abbrechen</button><button class="btn gold" onclick="kzSave(this)">Speichern</button></div></div>
+    <p class="muted" style="font-size:12.5px;margin:6px 0 12px">Symbol · Name · kurze Beschreibung (die sieht das Mitglied, und die KI nutzt sie zum Einordnen). Umbenennen zieht alle Beiträge mit.</p>
+    <div style="display:grid;gap:8px">${E.map((k,i)=>`<div class="item" style="align-items:center;gap:8px">
+      <input class="in" style="width:52px;text-align:center;font-size:18px;padding:6px" value="${esc(k.i)}" maxlength="4" oninput="kzRow(${i},'i',this.value)" aria-label="Symbol">
+      <input class="in kz-n" style="width:190px" value="${esc(k.n)}" maxlength="30" placeholder="Name" oninput="kzRow(${i},'n',this.value)">
+      <input class="in" style="flex:1;min-width:0" value="${esc(k.d)}" maxlength="140" placeholder="Beschreibung" oninput="kzRow(${i},'d',this.value)">
+      ${k.o&&k.o!==k.n&&k.n?`<span class="muted" style="font-size:11px;white-space:nowrap">war: ${esc(k.o)}</span>`:''}
+      <button class="btn" title="Nach oben" onclick="kzMove(${i},-1)" ${i?'':'disabled'}>↑</button><button class="btn" title="Nach unten" onclick="kzMove(${i},1)" ${i<E.length-1?'':'disabled'}>↓</button>
+      <button class="btn" title="Entfernen" onclick="kzRemove(${i})" style="color:#c0392b">✕</button></div>`).join('')}</div>
+    <div class="row between" style="margin-top:12px;flex-wrap:wrap;gap:10px"><button class="btn" onclick="kzAdd()">＋ Kategorie hinzufügen</button>
+      ${(D.kzDel||[]).length?`<label class="muted" style="font-size:12.5px">Beiträge entfernter Kategorien verschieben nach <select id="kzZiel" class="in" style="width:auto;display:inline-block">${E.filter(k=>k.n).map(k=>`<option>${esc(k.n)}</option>`).join('')}</select></label>`:''}</div></div>`; }
+const _feedx1=feedx; feedx=function(){ return _feedx1()+kzCard(); };
 
 async function mbDel(id){ const m=mbById(id); if(!m) return; const t=prompt(m.name+' endgültig löschen?\n\nDas löscht das Konto mit ALLEM: Beiträge, Kommentare, Chats, Bewerbungen, Punkte, Nachweise und den Einladungslink. Das kann man nicht rückgängig machen.\n\nZum Bestätigen tippe: LÖSCHEN'); if(t===null) return; if(t.trim().toUpperCase()!=='LÖSCHEN') return toast('Nicht gelöscht – Bestätigung falsch'); try{ const j=await q('rpc/member_loeschen',{method:'POST',body:{p_id:id}}); if(!j||!j.ok) throw 0; D.members=(D.members||[]).filter(x=>x.id!==id); mbSel=null; toast('Endgültig gelöscht'); location.hash='#member'; render(); }catch(e){ toast('Fehlt noch: closinghub-mitglieder.sql in Supabase ausführen'); } }
 const PAGES={feedx,marktx,mitmachx,punktex,partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};

@@ -396,7 +396,44 @@ window.tailwind=window.tailwind||{}; tailwind.config = { theme: { extend: {
 .sk4{--k1:#0b2a5b;--k2:#BFF3FF;--k3:#3BA7FF;--gl:rgba(120,210,255,.6);--c:#7FDBFF}
 @media (prefers-reduced-motion:reduce){.sk .sk-r,.sk .sk-gl,.sk .sk-sp{animation:none!important}.sk .sk-sp{display:none}}
 </style>
-</head>
+<style>
+.ch-left{max-width:calc(48rem + 2rem);margin-left:max(0px,calc((100% - 72rem)/2));margin-right:auto}.ch-left.sm{max-width:calc(36rem + 2rem)}
+@media (min-width:768px){.hubtabs{display:none!important}}
+.mq-bar{display:flex;gap:10px;flex-wrap:wrap}.mq-in{flex:1 1 280px;display:flex;align-items:center;gap:10px;padding:0 14px;height:46px;border-radius:12px;border:1px solid rgb(var(--line));background:rgb(var(--panel));color:rgb(var(--muted))}.mq-in:focus-within{border-color:#087A4B;box-shadow:0 0 0 3px rgba(8,122,75,.15)}.mq-in input{flex:1;background:transparent;border:0;outline:0;color:rgb(var(--fg));font-size:14px;min-width:0}
+.mq-sel{position:relative;flex:0 1 280px}.mq-sel select{appearance:none;-webkit-appearance:none;width:100%;height:46px;border-radius:12px;border:1px solid rgb(var(--line));background:rgb(var(--panel));color:rgb(var(--fg));padding:0 40px 0 14px;font-size:14px;font-weight:600;cursor:pointer}.mq-sel:after{content:'';position:absolute;right:16px;top:50%;width:8px;height:8px;border-right:2px solid #087A4B;border-bottom:2px solid #087A4B;transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.ks-wrap{align-items:flex-end}@media (min-width:640px){.ks-wrap{align-items:center;padding:16px}.ks-sheet{max-width:600px}}.ks-sheet{border-radius:20px 20px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(0,0,0,.35);animation:ksUp .26s cubic-bezier(.2,.8,.2,1)}@media (min-width:640px){.ks-sheet{border-radius:18px;padding:24px}}@keyframes ksUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.ks-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ks-t{display:flex;align-items:flex-start;gap:10px;text-align:left;padding:10px 11px;border-radius:12px;border:1px solid rgb(var(--line));background:rgb(var(--bg));transition:border-color .15s,background .15s;font-size:13.5px}.ks-t:hover{border-color:#087A4B}.ks-t.on{border-color:#087A4B;background:rgba(8,122,75,.1);box-shadow:inset 0 0 0 1px #087A4B}
+.ks-ic{flex:none;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(127,127,127,.12)}.ks-t.on .ks-ic{background:#087A4B}
+.ks-ki{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:10px;border-radius:14px;border:1px solid rgba(217,180,90,.55);background:linear-gradient(135deg,rgba(217,180,90,.16),rgba(217,180,90,.04));font-size:14px}.ks-ki.on{box-shadow:inset 0 0 0 1px #D9B45A;border-color:#D9B45A}.ks-ki .ks-ic{width:38px;height:38px;font-size:19px;background:rgba(217,180,90,.25)}.ks-chk{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(217,180,90,.8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#1a1405}.ks-ki.on .ks-chk{background:#D9B45A}
+.ks-spin{width:22px;height:22px;border-radius:50%;border:2.5px solid rgba(217,180,90,.3);border-top-color:#D9B45A;animation:ksSpin .8s linear infinite;flex:none}@keyframes ksSpin{to{transform:rotate(360deg)}}
+#cfGo:disabled{opacity:.45;cursor:not-allowed}
+/* Chat */
+.cmbox{background:rgb(var(--bg))}.cml{border-right:1px solid rgb(var(--line))}
+.cx-lh{padding:18px 16px 10px;position:sticky;top:0;background:rgb(var(--bg));z-index:2}.cx-search{display:flex;align-items:center;gap:8px;margin-top:12px;height:40px;padding:0 12px;border-radius:12px;background:rgb(var(--panel));border:1px solid rgb(var(--line));color:rgb(var(--muted))}.cx-search:focus-within{border-color:#087A4B}.cx-search input{flex:1;min-width:0;background:transparent;border:0;outline:0;font-size:13.5px;color:rgb(var(--fg))}
+.cx-it{width:calc(100% - 16px);margin:2px 8px;display:flex;align-items:center;gap:12px;text-align:left;padding:10px;border-radius:14px;transition:background .15s}.cx-it:hover{background:rgb(var(--panel))}.cx-it.on{background:rgba(8,122,75,.1)}.cx-it b{font-size:14px;font-weight:600}.cx-it.un b{font-weight:800}.cx-it.un .cx-last{color:rgb(var(--fg));font-weight:600}
+.cx-av{width:50px;height:50px;border-radius:50%;overflow:hidden;flex:none;display:block}.cx-av img{width:100%;height:100%;object-fit:cover}.cx-av.sm{width:40px;height:40px}.cx-av.pt{box-shadow:0 0 0 2px rgb(var(--bg)),0 0 0 3.5px #D9B45A}
+.cx-time{font-size:11px;color:rgb(var(--muted));white-space:nowrap}.cx-it.un .cx-time{color:#087A4B;font-weight:700}.cx-last{font-size:12.5px;color:rgb(var(--muted))}.cx-sub{display:block;font-size:10.5px;color:#087A4B;margin-top:1px}.cx-un{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#087A4B;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.cx-none{padding:40px 20px;text-align:center;font-size:13px;color:rgb(var(--muted));display:flex;flex-direction:column;gap:8px;align-items:center}
+.cx-head{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgb(var(--line));background:rgb(var(--bg))}.cx-back{color:#087A4B;margin-right:-4px}.cx-hb{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgb(var(--muted))}.cx-hb:hover{background:rgb(var(--panel));color:rgb(var(--fg))}
+.cx-list{flex:1;overflow-y:auto;min-height:0;overscroll-behavior:contain;padding:14px 16px 10px;background:rgb(var(--panel));background-image:radial-gradient(rgba(127,127,127,.09) 1px,transparent 1px);background-size:18px 18px}
+.cx-day{display:flex;justify-content:center;margin:14px 0 10px}.cx-day span{font-size:11px;font-weight:600;color:rgb(var(--muted));background:rgb(var(--bg));border:1px solid rgb(var(--line));padding:3px 10px;border-radius:99px}
+.cx-row{display:flex;align-items:flex-end;gap:6px;margin-top:2px}.cx-row.first{margin-top:10px}.cx-row.me{flex-direction:row-reverse}
+.cx-b{position:relative;max-width:min(76%,520px);padding:8px 12px 6px;font-size:14px;line-height:1.42;overflow-wrap:anywhere;border-radius:18px;box-shadow:0 1px 1.5px rgba(0,0,0,.08)}
+.cx-row.th .cx-b{background:rgb(var(--bg));border:1px solid rgb(var(--line));color:rgb(var(--fg))}.cx-row.me .cx-b{background:linear-gradient(160deg,#0B8A55,#087A4B);color:#fff}
+.cx-row.th:not(.first) .cx-b{border-top-left-radius:6px}.cx-row.th:not(.last) .cx-b{border-bottom-left-radius:6px}.cx-row.th.last .cx-b{border-bottom-left-radius:6px}
+.cx-row.me:not(.first) .cx-b{border-top-right-radius:6px}.cx-row.me:not(.last) .cx-b{border-bottom-right-radius:6px}.cx-row.me.last .cx-b{border-bottom-right-radius:6px}
+.cx-b.med{padding:4px 4px 6px}.cx-b.med .cx-t{display:block;padding:4px 8px 0}.cx-b.med .cx-m{padding:0 8px}
+.cx-b.gone{background:transparent!important;border:1px dashed rgb(var(--line))!important;color:rgb(var(--muted))!important;font-style:italic;box-shadow:none;font-size:13px}
+.cx-t{white-space:normal}.cx-m{float:right;margin:6px 0 -2px 10px;font-size:10.5px;opacity:.72;white-space:nowrap}.cx-r{letter-spacing:-3px;margin-left:2px}.cx-r.on{color:#9BE8C3;opacity:1}
+.cx-b .chat-media{max-width:280px;border-radius:14px}.cx-b .chat-aud{max-width:240px}
+.cx-comp{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;border-top:1px solid rgb(var(--line));background:rgb(var(--bg))}.cx-pill{flex:1;min-width:0;display:flex;align-items:center;gap:2px;min-height:46px;padding:3px 6px;border-radius:24px;background:rgb(var(--panel));border:1px solid rgb(var(--line))}.cx-pill:focus-within{border-color:#087A4B;box-shadow:0 0 0 3px rgba(8,122,75,.12)}
+.cx-pill input{flex:1;min-width:0;background:transparent;border:0;outline:0;font-size:14.5px;padding:8px 4px;color:rgb(var(--fg))}
+.cx-ib{width:38px;height:38px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgb(var(--muted));cursor:pointer}.cx-ib:hover{background:rgba(127,127,127,.12);color:rgb(var(--fg))}
+.cx-send{width:46px;height:46px;flex:none;border-radius:50%;background:#087A4B;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px -6px rgba(8,122,75,.7);transition:transform .12s}.cx-send:hover{filter:brightness(1.08)}.cx-send:active{transform:scale(.94)}
+.cx-note{font-size:10.5px;color:rgb(var(--muted));text-align:center;padding:0 12px 8px;background:rgb(var(--bg))}
+.cx-pick{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;text-align:center;font-size:13.5px;color:rgb(var(--muted));background:rgb(var(--panel))}.cx-pick b{font-family:var(--serif,Georgia),serif;font-size:22px;color:rgb(var(--fg));font-weight:500}.cx-pickic{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;background:rgba(8,122,75,.12);margin-bottom:4px}
+.cx-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:40px 16px;text-align:center;font-size:13px;color:rgb(var(--muted))}.cx-empty b{color:rgb(var(--fg));font-size:16px}.cx-emav{width:76px;height:76px;border-radius:50%;overflow:hidden;display:block;margin-bottom:4px}.cx-emav img{width:100%;height:100%;object-fit:cover}.cx-chip{font-size:12.5px;padding:6px 12px;border-radius:99px;border:1px solid rgb(var(--line));background:rgb(var(--bg));color:rgb(var(--fg))}.cx-chip:hover{border-color:#087A4B}
+</style></head>
 <body>
 <script>/* ===== Start-Animation: Lichtpunkt schreibt „closing“, „HUB“ zündet wie Neon, Linie + Slogan, dann auf ===== */
 function chSplash(force){
@@ -1811,7 +1848,7 @@ function fAv(x){ return x.avatar_url?`<img src="${esc(x.avatar_url)}" class="w-f
 function threadReal(){
   const cat=S.thread; if(!(cat in S.fl)){ S.fl[cat]=null; forumList(cat); }
   const list=S.fl[cat];
-  return `<div class="max-w-3xl mx-auto px-4 py-6">
+  return `<div class="ch-left px-4 py-6">
     <button onclick="S.thread=null;render()" class="text-sm text-muted mb-4">← Forum</button>
     <div class="flex justify-between items-center mb-4 gap-3"><h1 class="font-serif text-2xl">${esc(cat)}</h1>${S.user&&cat!=='ClosingHub'?`<button class="btn-gold text-sm" onclick="newThread('${cat}')">+ Neues Thema</button>`:''}</div>
     ${list===null?'<p class="text-sm text-muted">Lädt …</p>':list.length?list.map(t=>`<div id="fq${t.id}" class="card p-5 mb-3"><div class="flex items-center gap-2 mb-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block ${t.member_id?'cursor-pointer':''}" ${t.member_id?`onclick="memberModal(${t.member_id})"`:''}>${fAv(t)}</span>${nameRank(esc(String(t.name).split(' ')[0]),t.member_id?RANKS[(t.rang||1)-1]:'Team')}<span class="text-[11px] text-muted ml-auto">${cTime(t.created_at)}</span></div>
@@ -2261,7 +2298,7 @@ async function shareToChat(chat,pid,b){ b.disabled=true; const j=await rpc('nach
 // ===== Suche: Mitglieder, Jobs, Marktplatz =====
 S.sq=S.sq||'';
 function search(){ setTimeout(()=>{ const i=document.getElementById('srIn'); if(i){ i.focus(); if(S.sq) srRun(); } },0);
-  return `<div class="max-w-lg mx-auto px-4 py-6 space-y-4"><h1 class="font-serif text-2xl">Suche</h1>
+  return `<div class="ch-left sm px-4 py-6 space-y-4"><h1 class="font-serif text-2xl">Suche</h1>
     <input id="srIn" class="input" placeholder="Name, Rolle, Job oder Angebot …" value="${esc(S.sq)}" oninput="S.sq=this.value;clearTimeout(S._srT);S._srT=setTimeout(srRun,250)" autocomplete="off">
     <div id="srRes"><p class="text-sm text-muted">Tipp mindestens 2 Buchstaben ein.</p></div></div>`; }
 async function srRun(){ const q=(S.sq||'').trim(), box=document.getElementById('srRes'); if(!box) return;
@@ -2746,7 +2783,7 @@ function create(){
 }
 function statusCreate(){
   const f=S.sf||(S.sf={text:'',farbe:0,file:null,prev:null,typ:null,vorlage:'schwarz'});
-  const shared=S.mdShared||[], meds=(ME.medals||[]).filter(m=>m[1]>0);
+  const shared=S.mdShared||[], meds=S.mdShared===null?(mdSharedLoad().then(()=>{ if(route()==='create'&&S.cmode==='status'&&!(document.activeElement&&document.activeElement.value)) render(); }),[]):(ME.medals||[]).filter(m=>m[1]>0&&!(S.mdShared||[]).includes(m[0]));
   const preview=f.prev?`<div class="relative rounded-xl overflow-hidden mx-auto bg-black" style="width:min(62%,250px);aspect-ratio:9/16">${f.typ==='video'?`<video src="${f.prev}" class="w-full h-full" style="object-fit:cover" controls playsinline></video>`:`<img src="${f.prev}" class="w-full h-full" style="object-fit:cover">`}${f.text?`<p class="absolute inset-x-3 bottom-3 text-sm text-center" style="background:rgba(0,0,0,.55);color:#fff;border-radius:10px;padding:6px 8px">${esc(f.text)}</p>`:''}</div>`
     :`<div id="sfPrev" class="relative rounded-xl overflow-hidden mx-auto" style="width:min(62%,250px);aspect-ratio:9/16;box-shadow:0 12px 28px -14px rgba(0,0,0,.5)">${tplHtml(f.vorlage,f.text||'Dein Text erscheint hier.','story')}</div>`;
   return `<div class="max-w-lg mx-auto px-4 py-6 space-y-4">${postTabs()}
@@ -2859,6 +2896,133 @@ function tplHtml(id,text,fmt){ const t=TPLS.find(x=>x.id===id)||TPLS[0], txt=Str
     ${t.svg?`<svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">${t.svg}</svg>`:''}${t.html||''}
     <div style="position:absolute;inset:0;display:flex;align-items:${t.notiz?'flex-start':'center'};justify-content:${align==='left'?'flex-start':'center'};padding:${pad}${t.up?(story?';padding-bottom:44%':';padding-bottom:32%'):''}${t.notiz?';padding-left:22%;padding-top:calc(var(--L) * 2)':''}">
       <p lang="de" style="margin:0;position:relative;${TPL_FONT[t.f]};font-size:${fs.toFixed(2)}cqw;line-height:${bold?1.02:t.notiz?'var(--L)':1.34};text-align:${align};${col};white-space:pre-line;overflow-wrap:break-word;hyphens:manual">${TPL_ESC(txt)}</p></div></div>`; }
+
+// ===== Runde 12: Kategorien verwalten, Kategorie-Auswahl vor dem Posten, Marktplatz-Suche, Chat-Design =====
+const KAT_DEF=[
+  {n:'Erfolg',d:'Abschluss, Umsatz, Provision, Meilenstein',i:'🏆'},
+  {n:'Tipp',d:'Konkreter Praxistipp, oft als kurzes Video',i:'💡'},
+  {n:'Wissen',d:'Psychologie, Verkaufstechnik, Fakten',i:'🧠'},
+  {n:'Mindset',d:'Einstellung, Disziplin, Motivation',i:'🔥'},
+  {n:'Zitat',d:'Kurzer Spruch, Text im Vordergrund',i:'❝'},
+  {n:'Story',d:'Persönliche Geschichte, Erlebnis',i:'📖'},
+  {n:'Lifestyle',d:'Alltag, Reisen, Freiheit durch Vertrieb',i:'🌴'},
+  {n:'Comedy',d:'Lustiges aus dem Vertriebsalltag',i:'😂'},
+  {n:'Meme',d:'Meme-Bild oder -Video',i:'🤣'},
+  {n:'Gedicht',d:'Verse, Reime, Lyrik',i:'✒️'},
+  {n:'Achtsamkeit',d:'Ruhe, Pause, Gesundheit, Balance',i:'🧘'},
+  {n:'Seminar-Ausschnitt',d:'Bühne, Vortrag, Webinar',i:'🎤'},
+  {n:'Film-Ausschnitt',d:'Szene aus Film oder Serie',i:'🎬'}];
+let KATS=KAT_DEF.slice();
+const KAT_ALT={Intelligenz:'Wissen','Member-Video':'Tipp'};
+const katIc=n=>(KATS.find(k=>k.n===n)||KAT_DEF.find(k=>k.n===n)||{}).i||'✦';
+function katsApply(l){
+  if(Array.isArray(l)&&l.length) KATS=l.filter(k=>k&&k.n).map(k=>({n:k.n,d:k.d||'',i:k.i||(KAT_DEF.find(x=>x.n===k.n)||{}).i||'✦'}));
+  const names=KATS.map(k=>k.n);
+  try{ POST_KATS.length=0; names.forEach(n=>POST_KATS.push(n)); }catch(e){}
+  try{ FTOPICS.length=0; names.forEach(n=>FTOPICS.push(n)); }catch(e){}
+  try{ (POSTS||[]).forEach(p=>{ if(KAT_ALT[p.k]) p.k=KAT_ALT[p.k]; if(p.k&&!names.includes(p.k)) p.k=names[0]; }); }catch(e){}
+  ['topics','ptopics'].forEach(k=>{ if(Array.isArray(S[k])){ const v=[...new Set(S[k].map(t=>KAT_ALT[t]||t).filter(t=>names.includes(t)))]; S[k]=v.length&&v.length<names.length?v:null; } });
+}
+setTimeout(async()=>{ katsApply();
+  try{ const r=await fetch(`${SB_URL}/rest/v1/settings?select=value&key=eq.kategorien`,{headers:{apikey:SB_KEY}}); const j=await r.json(); const l=j&&j[0]&&j[0].value&&j[0].value.liste; if(l&&l.length){ katsApply(l); if(['feed','create'].includes(route())&&!(document.activeElement&&document.activeElement.value)) render(); } }catch(e){}
+},0);
+
+// --- Posten: Kategorie erst beim Absenden in einer Übersicht wählen ---
+function create(){
+  if(!S.member) return `<div class="max-w-lg mx-auto px-4 py-8"><div class="card p-8 text-center space-y-3"><p class="font-serif text-xl">Melde dich an, um zu teilen</p><a href="#login" class="btn-gold inline-block" style="padding:8px 16px">Anmelden</a></div></div>`;
+  if(S.cmode==='status') return statusCreate();
+  const f=S.cf||(S.cf={kat:null,ki:null,kiLoad:false,file:null,prev:null,typ:null,frames:[],thumb:null,thumbPrev:null,thumbIdx:-1,vorlage:'papier'});
+  const preview=f.prev?`<div class="relative rounded-xl overflow-hidden bg-black">${f.typ==='video'?`<video id="cfVid" src="${f.prev}" class="w-full object-contain" style="max-height:360px" controls playsinline></video>`:`<img src="${f.prev}" class="w-full object-contain" style="max-height:360px">`}</div>`
+    :`<div id="cfPrev" class="relative rounded-xl overflow-hidden mx-auto" style="width:100%;max-width:360px;aspect-ratio:1;box-shadow:0 12px 28px -14px rgba(0,0,0,.45)">${tplHtml(f.vorlage,f.text||'Dein Text erscheint hier.','sq')}</div>`;
+  return `<div class="max-w-lg mx-auto px-4 py-6 space-y-4">${postTabs()}
+    ${PSEC('Inhalt',`${preview}
+      <textarea id="cfText" class="input" style="min-height:84px" maxlength="1000" placeholder="${f.file?'Text zum Beitrag (optional) …':'Was willst du teilen?'}" oninput="S.cf.text=this.value;document.getElementById('cfCnt').textContent=this.value.length;clearTimeout(S._kiT);S._kiT=setTimeout(()=>cfKi(),1300);clearTimeout(S._tvT);S._tvT=setTimeout(()=>tplPrev('cf'),180)">${esc(f.text||'')}</textarea>
+      <div class="flex items-center justify-between gap-2"><div class="flex gap-2">${f.file?`<button style="${PBTN}" onclick="cfClear()">✕ ${f.typ==='video'?'Video':'Bild'} entfernen</button>`:`<label style="${PBTN}">🖼 Bild<input type="file" accept="image/*" class="hidden" onchange="cfFile(this,'bild')"></label><label style="${PBTN}">🎬 Video<input type="file" accept="video/mp4,video/quicktime,video/webm" class="hidden" onchange="cfFile(this,'video')"></label>`}</div><span class="text-[11px] text-muted"><span id="cfCnt">${(f.text||'').length}</span>/1000</span></div>`)}
+    ${f.file?PSEC('Vorschaubild <span class="normal-case tracking-normal font-normal">· fürs Profil, nicht im Feed</span>',cfThumbBox(f).replace(/^<div class="card p-3">[\s\S]*?<div class="flex gap-2 overflow-x-auto mt-2 pb-1">/,'<div class="flex gap-2 overflow-x-auto pb-1">').replace(/<\/div>$/,'')):PSEC('Hintergrund',tplStrip('cf',f.vorlage,'sq'))}
+    <section class="card p-4"><label class="flex items-center justify-between gap-3 text-sm cursor-pointer"><span>In meinem Profil zeigen<span class="block text-[11px] text-muted">Aus = Beitrag läuft nur im Feed</span></span><input type="checkbox" ${f.noProf?'':'checked'} onchange="S.cf.noProf=!this.checked" style="width:20px;height:20px;accent-color:#087A4B"></label></section>
+    <p id="cfErr" class="text-sm" style="color:#e5484d;min-height:1.1em;margin:0"></p>
+    <button class="btn-gold w-full" style="padding:12px" id="cfBtn" onclick="cfKatOpen()">Weiter</button>
+    <p class="text-[11px] text-muted text-center">🛡️ Nur Inhalte zu Vertrieb, Closing & Setting – keine Politik, nichts Anstößiges.</p></div>`;
+}
+function cfKatOpen(){ const f=S.cf, t=(document.getElementById('cfText')||{}).value||''; f.text=t; const err=document.getElementById('cfErr');
+  if(!t.trim()&&!f.file){ err.textContent='Schreib etwas oder füge ein Bild oder Video hinzu.'; return; }
+  err.textContent=''; f.kat=f.kat||f.ki||null;
+  document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 flex justify-center ks-wrap" style="background:rgba(4,8,14,.62);backdrop-filter:blur(3px)" onclick="closeModal()">
+    <div class="w-full bg-panel ks-sheet" onclick="event.stopPropagation()">
+      <div class="flex items-start justify-between gap-3 mb-3"><div><p class="font-serif text-xl leading-tight">Worum geht's in deinem Beitrag?</p><p class="text-xs text-muted mt-1">Wähl eine Kategorie – so landet dein Beitrag bei den richtigen Leuten.</p></div><button onclick="closeModal()" class="text-muted text-xl leading-none" aria-label="Schließen">✕</button></div>
+      <div id="cfCat">${cfCatHtml(f)}</div>
+      <button id="cfGo" class="btn-gold w-full mt-4" style="padding:12px" ${f.kat?'':'disabled'} onclick="cfKatGo()">${f.kat?'Jetzt posten':'Kategorie wählen'}</button></div></div>`;
+  if(!f.ki&&!f.kiLoad) cfKi(); }
+function cfCatHtml(f){
+  const ki=f.ki?KATS.find(k=>k.n===f.ki):null;
+  return `${f.kiLoad?`<div class="ks-ki"><span class="ks-spin"></span><span><b>KI liest mit …</b><span class="block text-[11px] opacity-75">Gleich kommt ein Vorschlag</span></span></div>`
+      :ki?`<button class="ks-ki ${f.kat===ki.n?'on':''}" onclick="cfKat('${ki.n}')"><span class="ks-ic">${ki.i}</span><span class="flex-1 text-left"><span class="block text-[10px] uppercase tracking-wider font-bold" style="color:#B8892E">✨ KI-Vorschlag</span><b>${esc(ki.n)}</b><span class="block text-[11px] opacity-75">${esc(ki.d)}</span></span><span class="ks-chk">${f.kat===ki.n?'✓':''}</span></button>`:''}
+    <div class="ks-grid">${KATS.filter(k=>!ki||k.n!==ki.n).map(k=>`<button class="ks-t ${f.kat===k.n?'on':''}" onclick="cfKat('${k.n.replace(/'/g,'')}')"><span class="ks-ic">${k.i}</span><span class="min-w-0"><b class="block truncate">${esc(k.n)}</b><span class="block text-[10.5px] opacity-70 leading-snug">${esc(k.d)}</span></span></button>`).join('')}</div>`; }
+function cfCatDraw(){ const e=document.getElementById('cfCat'); if(e&&S.cf){ if(!S.cf.manual&&S.cf.ki) S.cf.kat=S.cf.ki; e.innerHTML=cfCatHtml(S.cf); const g=document.getElementById('cfGo'); if(g){ g.disabled=!S.cf.kat; g.textContent=S.cf.kat?'Jetzt posten':'Kategorie wählen'; } } }
+function cfKat(k){ S.cf.kat=k; S.cf.manual=true; cfCatDraw(); }
+function cfKatGo(){ if(!S.cf.kat) return; closeModal(); cfPost(); }
+// KI bekommt die aktuelle Kategorienliste mit
+const _fetch0=window.fetch.bind(window);
+window.fetch=function(u,o){ try{ if(typeof u==='string'&&u.includes('/functions/v1/ki-kategorie')&&o&&o.body){ const b=JSON.parse(o.body); b.kategorien=KATS.map(k=>({n:k.n,d:k.d})); o={...o,body:JSON.stringify(b)}; } }catch(e){} return _fetch0(u,o); };
+
+// --- Marktplatz: Suchfeld + Auswahlliste statt langer Leiste ---
+S.mq=S.mq||'';
+const mqHit=o=>{ const q=(S.mq||'').trim().toLowerCase(); return !q||[o.t,o.cat,o.desc,o.full,o.s,o.name,o.seller].join(' ').toLowerCase().includes(q); };
+function mqBar(cats){ return `<div class="mq-bar mb-5"><label class="mq-in"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="mqIn" placeholder="Dienstleistung suchen, z. B. Closing-Coaching …" value="${esc(S.mq||'')}" oninput="S.mq=this.value;mqDraw()" autocomplete="off"></label>
+  <div class="mq-sel"><select onchange="S.mcat=this.value;render()" aria-label="Dienstleistung wählen">${cats.map(c=>`<option value="${esc(c)}" ${S.mcat===c?'selected':''}>${c==='Alle'?'Alle Dienstleistungen':esc(c)}</option>`).join('')}</select></div></div>`; }
+function mqDraw(){ const g=document.getElementById('mkGrid'); if(!g) return; const d=document.createElement('div'); d.innerHTML=markt(); const n=d.querySelector('#mkGrid'); if(n) g.innerHTML=n.innerHTML; }
+
+// --- Chat: neues Design ---
+const cDay=d=>{ const x=new Date(d), n=new Date(), y=new Date(n-864e5); return x.toDateString()===n.toDateString()?'Heute':x.toDateString()===y.toDateString()?'Gestern':x.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'}); };
+const cHm=d=>new Date(d).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+function msgsHtml(){
+  if(S.cmsg===null) return '<p class="text-sm text-muted p-4 text-center">Lädt …</p>';
+  if(!S.cmsg.length){ const h=convHead()||{}; return `<div class="cx-empty"><span class="cx-emav">${h.av?`<img src="${esc(h.av)}">`:initAv(h.name||'?')}</span><b>${esc(h.name||'')}</b><span>Sag Hallo – schreib die erste Nachricht.</span><div class="flex gap-2 flex-wrap justify-center mt-2">${['Hey! 👋','Lust auf einen Austausch?','Danke fürs Folgen!'].map(t=>`<button class="cx-chip" onclick="const i=document.getElementById('cminput');i.value='${t}';i.focus()">${t}</button>`).join('')}</div></div>`; }
+  const member=S.cur[0]==='m'; let day='', prev=null;
+  return S.cmsg.map((m,i)=>{ const dl=cDay(m.created_at), sep=dl!==day?`<div class="cx-day"><span>${dl}</span></div>`:''; day=dl;
+    const nx=S.cmsg[i+1], first=!prev||prev.mine!==m.mine||sep, last=!nx||nx.mine!==m.mine||cDay(nx.created_at)!==dl; prev=m;
+    const cls=`cx-row ${m.mine?'me':'th'} ${first?'first':''} ${last?'last':''}`;
+    if(m.zurueckgerufen) return `${sep}<div class="${cls}"><span class="cx-b gone">↩︎ ${m.mine?'Du hast diese Nachricht zurückgerufen':'Nachricht wurde zurückgerufen'}</span></div>`;
+    const x=msgText(m.text), cached=m.media_pfad&&S.surl[m.media_pfad], med=m.media_pfad||m.abgelaufen||x.lk;
+    return `${sep}<div class="${cls} cm-row"><span class="cx-b ${med?'med':''}">
+      ${m.media_pfad?(cached?mediaHtml(cached,m.media_typ):`<span data-cmedia="${esc(m.media_pfad)}" data-typ="${m.media_typ}" class="block text-xs opacity-70" style="min-height:${m.media_typ==='audio'?40:160}px">Lädt …</span>`):''}${m.abgelaufen?'<span class="text-xs opacity-70">Medium nach 30 Tagen gelöscht</span>':''}
+      ${x.lk?linkCard(x.lk[0],x.lk[1]):''}${x.txt?`<span class="cx-t">${esc(x.txt).replace(/\n/g,'<br>')}</span>`:''}<span class="cx-m">${cHm(m.created_at)}${m.mine?(m.gelesen?' <span class="cx-r on" title="Gelesen">✓✓</span>':' <span class="cx-r" title="Gesendet">✓</span>'):''}</span></span>
+      <span class="cm-act">${m.mine?`<button onclick="msgRecall(${m.id})" title="Für beide zurückrufen">↩︎ Zurückrufen</button>`:member?`<button onclick="reportMsg(${m.id})">Melden</button>`:''}</span></div>`; }).join('');
+}
+function listHtml(){
+  const cl=S.cl||{chats:[],partner:[]}, q=(S.cq||'').trim().toLowerCase();
+  const items=[...(cl.chats||[]).map(c=>({k:'m'+c.id,name:c.name,av:c.avatar_url,last:c.letzte,at:c.last_at,un:c.ungelesen,sub:RANKS[(c.rang||1)-1]})),...(cl.partner||[]).map(p=>({k:'p'+p.partner_id,name:p.name,av:p.img,last:p.letzte,at:p.last_at,un:p.ungelesen,sub:'Partner',pt:1}))].sort((a,b)=>new Date(b.at)-new Date(a.at)).filter(x=>!q||(x.name||'').toLowerCase().includes(q));
+  return `<div class="cx-lh"><p class="font-serif text-2xl">Nachrichten</p><label class="cx-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input placeholder="Chats durchsuchen" value="${esc(S.cq||'')}" oninput="S.cq=this.value;cxListDraw()" autocomplete="off"></label></div>
+    <div id="cxItems">${cxItems(items)}</div>`;
+}
+function cxItems(items){
+  if(S.cl===null) return '<p class="text-sm text-muted px-5">Lädt …</p>';
+  if(!items.length) return `<div class="cx-none"><span style="font-size:30px">💬</span>${(S.cq||'').trim()?'Kein Chat gefunden.':'Noch keine Chats.<br>Öffne ein Profil und tippe auf „Nachricht schreiben“.'}</div>`;
+  return items.map(x=>`<button onclick="openConv('${x.k}')" class="cx-it ${x.k===S.cur?'on':''} ${x.un?'un':''}">
+      <span class="cx-av ${x.pt?'pt':''}">${x.av?`<img src="${esc(x.av)}">`:initAv(x.name)}</span>
+      <span class="flex-1 min-w-0"><span class="flex justify-between items-baseline gap-2"><b class="truncate">${esc(x.name)}</b><span class="cx-time">${cTime(x.at)}</span></span>
+        <span class="flex justify-between items-center gap-2 mt-0.5"><span class="cx-last truncate">${cLast(x.last)}</span>${x.un?`<span class="cx-un">${x.un}</span>`:''}</span>
+        <span class="cx-sub">${x.sub}</span></span></button>`).join(''); }
+function cxListDraw(){ const e=document.getElementById('cxItems'); if(!e) return; const d=document.createElement('div'); d.innerHTML=listHtml(); e.innerHTML=d.querySelector('#cxItems').innerHTML; }
+function convHtml(){
+  if(!S.cur) return `<div class="cx-pick"><span class="cx-pickic">💬</span><b>Deine Nachrichten</b><span>Wähl links einen Chat aus oder schreib jemandem aus der Community.</span><a href="#search" class="btn-gold text-sm" style="padding:8px 16px">Mitglied suchen</a></div>`;
+  const h=convHead(), media=S.cur[0]==='m', A='width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
+  const rk=h.rang?RANKS[(h.rang||1)-1]:'';
+  return `<div class="cx-head"><button class="cm-back cx-back" onclick="S.cur=null;drawMsgs()" aria-label="Zurück zu allen Chats"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <span class="cx-av sm ${h.partner?'pt':''} ${h.mid?'cursor-pointer':''}" ${h.mid?`onclick="openProfile(${h.mid})"`:''}>${h.av?`<img src="${esc(h.av)}">`:initAv(h.name)}</span>
+      <span class="flex-1 min-w-0 ${h.mid?'cursor-pointer':''}" ${h.mid?`onclick="openProfile(${h.mid})"`:''}><b class="block truncate" style="font-size:15px">${esc(h.name)}</b><span class="text-muted" style="font-size:12px">${h.partner?'<span style="color:#B8892E">Partner</span> · Antwort meist in 24 h':rk?`${rk}${h.mid?' · Profil ansehen':''}`:h.mid?'Profil ansehen':''}</span></span>
+      ${h.mid?`<button class="cx-hb" onclick="openProfile(${h.mid})" title="Profil ansehen" aria-label="Profil ansehen"><svg ${A}><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button>`:''}</div>
+    <div id="cmlist" class="cx-list" data-at-bottom="1" onscroll="this.dataset.atBottom=(this.scrollHeight-this.scrollTop-this.clientHeight<80)?'1':'0'"></div>
+    <p id="cmerr" class="chat-err" style="display:none"></p>
+    ${S.crec?`<div class="cx-comp"><div class="cx-pill"><button type="button" class="cx-ib" onclick="cRecStop(true)" title="Verwerfen" aria-label="Aufnahme verwerfen"><svg ${A}><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button><span class="chat-recbar flex-1"><span class="chat-dot"></span>Aufnahme läuft <b id="crt">0:00</b></span></div><button type="button" class="cx-send" onclick="cRecStop(false)" aria-label="Sprachnachricht senden"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1 6.2L14 12 3.1 13.2l-1 6.2c-.1.7.6 1.3 1.3 1z"/></svg></button></div>`
+    :`<form class="cx-comp" onsubmit="event.preventDefault();cSend()"><div class="cx-pill">
+      <button type="button" class="cx-ib" onclick="emoQuick('cminput',this)" title="Emoji" aria-label="Emoji" style="font-size:18px">😊</button>
+      <input id="cminput" autocomplete="off" maxlength="2000" placeholder="${h.partner?'Deine Anfrage …':'Nachricht schreiben …'}" oninput="S.cdraft=this.value">
+      ${media?`<label class="cx-ib" title="Bild oder Video senden"><svg ${A}><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 15.5l-5-5L6 20"/></svg><input type="file" accept="image/*,video/*" class="hidden" onchange="cFile(this)"></label>
+      <button type="button" class="cx-ib" onclick="cRec()" title="Sprachnachricht aufnehmen" aria-label="Sprachnachricht"><svg ${A}><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg></button>`:''}</div>
+      <button class="cx-send" aria-label="Senden"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1 6.2L14 12 3.1 13.2l-1 6.2c-.1.7.6 1.3 1.3 1z"/></svg></button></form>`}
+    ${media?'<p class="cx-note">Medien werden nach 30 Tagen gelöscht · Werbung und fremde Links werden blockiert</p>':''}`;
+}
 
 function feed(){
   const ft = S.ptopics || S.topics;
@@ -3066,7 +3230,7 @@ function jobs(){
         <p class="text-xs text-muted">Noch <b>${5-(S.apps??2)}</b> von 5 Bewerbungen diesen Monat. Mit Premium: 10.</p></div>`;
   if(S.jopen && innerWidth<768) return `<div class="px-4 py-4 max-w-2xl mx-auto"><button onclick="S.jopen=0;render()" class="text-sm text-gold mb-3">← Alle Jobs</button>${jobDetail(j,S.member&&j.live?memberJobAction(j):action)}</div>`;
   return `<div class="px-4 py-6 max-w-6xl mx-auto">
-    <div class="flex gap-2 mb-5"><span class="btn-gold">Jobs</span><a href="#forum" class="btn-ghost">Forum</a><a href="#markt" class="btn-ghost">Marktplatz</a></div>
+    <div class="flex gap-2 mb-5 hubtabs"><span class="btn-gold">Jobs</span><a href="#forum" class="btn-ghost">Forum</a><a href="#markt" class="btn-ghost">Marktplatz</a></div>
     <div class="grid md:grid-cols-[340px_1fr] gap-5">
       <div class="space-y-3">
         <div class="flex gap-2 flex-wrap pb-1">${JROLES.map(r=>`<button onclick="S.jrole=S.jrole==='${r}'?null:'${r}';render()" class="px-3.5 py-1.5 rounded-full border text-sm ${S.jrole===r?'text-black font-semibold':'text-muted'}" style="${S.jrole===r?'background:linear-gradient(135deg,#7FD1A8,#087A4B 50%,#06603B);border-color:#087A4B':'border-color:rgb(var(--line))'}">${r}</button>`).join('')}</div>
@@ -3180,7 +3344,7 @@ document.addEventListener('touchend',e=>{ if(hY===null) return; const dy=hY-e.ch
 
 function forum(){
   if(S.thread) return thread();
-  return `<div class="px-4 py-6 max-w-6xl mx-auto"><div class="max-w-3xl"><div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><span class="btn-gold">Forum</span><a href="#markt" class="btn-ghost">Marktplatz</a></div>
+  return `<div class="px-4 py-6 max-w-6xl mx-auto"><div class="max-w-3xl"><div class="flex gap-2 mb-5 hubtabs"><a href="#jobs" class="btn-ghost">Jobs</a><span class="btn-gold">Forum</span><a href="#markt" class="btn-ghost">Marktplatz</a></div>
     <div class="flex justify-between items-center mb-4"><h1 class="font-serif text-2xl">Forum</h1>${S.user?'<button class="btn-gold text-sm" onclick="newThread()">+ Neues Thema</button>':'<a href="#login" class="btn-gold text-sm">Anmelden zum Mitreden</a>'}</div>
     ${FCATS.map(([g,cs])=>`<p class="text-xs uppercase tracking-wider text-gold mt-6 mb-3">${g}</p><div class="space-y-3">${cs.map(([i,n,c])=>`<div onclick="S.thread='${n}';render()" class="card p-4 flex justify-between items-center hover:border-gold" style="cursor:pointer"><span>${i} <b class="ml-1">${n}</b></span><span class="text-sm text-muted">${(k=>k?k+(k===1?' Frage':' Fragen'):'Noch keine Fragen')(fCount(n))}</span></div>`).join('')}</div>`).join('')}
     <p class="text-xs text-muted mt-6">🛡️ KI filtert Spam vorab · Beiträge melden möglich · Moderatoren ab Rang 4 Dealmaker</p></div></div>`;
@@ -3188,7 +3352,7 @@ function forum(){
 function thread(){
   if(S.fdb!==false) return threadReal();
   const cat=S.thread, list=FTHREADS.filter(t=>t.cat===cat);
-  return `<div class="max-w-3xl mx-auto px-4 py-6">
+  return `<div class="ch-left px-4 py-6">
     <button onclick="S.thread=null;render()" class="text-sm text-muted mb-4">← Forum</button>
     <div class="flex justify-between items-center mb-4 gap-3"><h1 class="font-serif text-2xl">${cat}</h1>${S.user?`<button class="btn-gold text-sm" onclick="newThread('${cat}')">+ Neues Thema</button>`:''}</div>
     ${list.length?list.map(t=>`<div class="card p-5 mb-3"><div class="flex items-center gap-2 mb-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block">${avatar(t.a||'ClosingHub')}</span>${nameRank(t.a||'ClosingHub',t.r||'Rainmaker')}</div>
@@ -3441,28 +3605,28 @@ function markt(){
   const pool = (useRealOffers() ? _ro : OFFERS.filter(inRegion).filter(o=>MCATS.includes(o.cat)&&!partnerOf(o.cat))).filter((o,i,a)=>a.findIndex(x=>x.cat===o.cat)===i);
   const pt = S.mcat!=='Alle' ? partnerOf(S.mcat) : null;
   const cats = ['Alle',...MCATS];
-  const shown = S.mcat==='Alle'?pool:pool.filter(o=>o.cat===S.mcat);
+  const shown = (S.mcat==='Alle'?pool:pool.filter(o=>o.cat===S.mcat)).filter(mqHit);
   const slots = c => OFFERS.filter(o=>o.cat===c && o.reg===S.region).length;
   return `<div class="px-4 py-6 max-w-6xl mx-auto">
-    <div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><a href="#forum" class="btn-ghost">Forum</a><span class="btn-gold">Marktplatz</span></div>
+    <div class="flex gap-2 mb-5 hubtabs"><a href="#jobs" class="btn-ghost">Jobs</a><a href="#forum" class="btn-ghost">Forum</a><span class="btn-gold">Marktplatz</span></div>
     <div class="flex flex-wrap justify-between items-end gap-3 mb-4">
       <div><h1 class="font-serif text-3xl">Marktplatz</h1><p class="text-muted text-sm">Coaching, Training, Analysen und Skripte von Membern für Member – buche Experten oder verdiene mit deinem Wissen.</p></div>
       ${S.member?'<button class="btn-gold" onclick="angebotModal()">Angebot einreichen</button>':'<a href="mailto:info@getclosinghub.com?subject=Marktplatz-Angebot%20einreichen" class="btn-gold">Angebot einreichen</a>'}
     </div>
     ${partnersRow()}${myOffersCard()}
     ${S.member?'':'<p class="text-xs text-muted mb-4">Eigenes Angebot? Reich es per Mail oder telefonisch bei uns ein. Wir prüfen jedes Angebot persönlich.</p>'}
-    <div class="flex gap-2 overflow-x-auto noscroll mb-5">${cats.map(c=>`<button onclick="S.mcat='${c}';render()" class="${S.mcat===c?'btn-gold':'btn-ghost'} text-xs whitespace-nowrap" style="padding:.4rem .8rem;border-radius:999px">${c}</button>`).join('')}</div>
+    ${mqBar(cats)}
     ${S.mcat!=='Alle'&&!pt&&!shown.length?`<div class="card p-4 mb-4 flex flex-wrap items-center justify-between gap-3" style="border-color:#06603B"><span class="text-sm"><b class="text-gold">Diese Leistung ist noch frei.</b> Jede Leistung gibt es nur einmal – sichere sie dir als einziger Anbieter.</span>${S.member?'<button class="btn-gold text-sm" onclick="angebotModal()">Jetzt sichern</button>':''}</div>`:''}
     ${pt?`<button onclick="personModal('${pt.n}')" class="card w-full text-left p-4 mb-4 flex items-center gap-4" style="border-color:#087A4B;box-shadow:0 0 0 1px #06603B inset">
       <span class="w-14 h-14 rounded-full gold-bg p-[2px] shrink-0"><span class="block w-full h-full rounded-full overflow-hidden bg-panel">${avatar(pt.n)}</span></span>
       <span class="flex-1 min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">Partner für ${pt.s}</span><span class="block mt-0.5">${nameRank(pt.n,pt.r)}</span><span class="block text-xs text-muted truncate">${pt.bio}</span></span>
       <span class="btn-ghost text-sm whitespace-nowrap">Profil ansehen</span></button>`:''}
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div id="mkGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
       ${shown.length?shown.map(o=>o.real?realOfferCard(o):`<div class="card p-4 flex flex-col gap-3">
         <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">${o.cat}</span><p class="font-semibold leading-snug mt-0.5">${o.t}</p></div><span class="font-serif text-xl text-gold whitespace-nowrap leading-none mt-1">${o.pr} €</span></div>
         <button onclick="personModal('${o.s}')" class="flex items-center gap-2 text-sm text-left min-w-0"><span class="w-7 h-7 rounded-full overflow-hidden shrink-0">${avatar(o.s)}</span><span class="font-medium truncate">${o.s}</span>${rkChip(o.r)}</button>
         <div class="flex items-center justify-between gap-3 border-t border-line pt-3"><span class="text-xs text-muted truncate">⭐ <b class="text-[rgb(var(--fg))] font-semibold">${o.st.toFixed(1).replace('.',',')}</b> · ${o.n} Bewertungen · ${o.reg}</span><button onclick="${S.user?`buyModal('${o.t.replace(/'/g,'')}',${o.pr})`:`go('login')`}" class="btn-gold text-xs whitespace-nowrap" style="padding:.4rem .9rem">Kaufen</button></div>
-      </div>`).join(''):(useRealOffers()?`<div class="card p-6 text-muted text-sm">Noch keine Angebote${S.mcat!=='Alle'?' in dieser Kategorie':''}. ${S.member?'Jede Leistung gibt es nur einmal – reich dein Angebot ein und sei der einzige Anbieter!':''}</div>`:`<div class="card p-6 text-muted text-sm">Noch keine Angebote in ${S.region}. ${S.user?'Sei der Erste – jede Leistung gibt es nur einmal!':''} Tipp: „Ganzes Land durchsuchen“ aktivieren.</div>`)}
+      </div>`).join(''):(useRealOffers()?`<div class="card p-6 text-muted text-sm">${(S.mq||'').trim()?'Nichts gefunden für „'+esc(S.mq.trim())+'“.':'Noch keine Angebote'+(S.mcat!=='Alle'?' in dieser Kategorie':'')+'.'} ${S.member?'Jede Leistung gibt es nur einmal – reich dein Angebot ein und sei der einzige Anbieter!':''}</div>`:`<div class="card p-6 text-muted text-sm">Noch keine Angebote in ${S.region}. ${S.user?'Sei der Erste – jede Leistung gibt es nur einmal!':''} Tipp: „Ganzes Land durchsuchen“ aktivieren.</div>`)}
     </div>
     <p class="text-xs text-muted mt-6">${useRealOffers()?'Anfragen landen als Nachricht im Chat mit dem Anbieter. Jedes Angebot wird von ClosingHub geprüft. Unpassende Angebote kannst du melden.':'Käufe laufen sicher über ClosingHub. Verkäufer werden nach jedem Kauf bewertet. ClosingHub-Gebühr: 9,9 % pro Verkauf.'}</p>
   </div>`;
@@ -3579,7 +3743,7 @@ function render(){
   if(_same && !S._forceR && _ae && _ae.closest && _ae.closest('#app') && _ae.matches && _ae.matches('input:not([type=file]):not([type=checkbox]):not([type=radio]):not([type=range]),textarea') && _ae.value && Date.now()-(S._act||0)>1500){ S._deferR=true; return; }
   S._forceR=false; S._deferR=false; if(!_same&&r!=='feed') S.onePost=null;
   document.getElementById('app').innerHTML = shell(fn());
-  S._lastR=r; if(_same) window.scrollTo(0,_y); else window.scrollTo(0,0); try{ markBell(); }catch(e){} try{ navSync(); }catch(e){}
+  const _vk=[S.thread||'',S.fq||'',S.jopen&&innerWidth<768?S.jopen:'',S.mpid||''].join('|'), _sv=S._lastV===_vk; S._lastR=r; S._lastV=_vk; if(_same&&_sv) window.scrollTo(0,_y); else window.scrollTo(0,0); try{ markBell(); }catch(e){} try{ navSync(); }catch(e){}
 }
 render();
 </script>
