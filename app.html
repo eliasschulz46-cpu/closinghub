@@ -708,7 +708,7 @@ function partnerModal(p,offers,r,rt){
         <div class="flex items-end gap-4 -mt-6">
           <div class="relative shrink-0"><div class="w-16 h-16 rounded-full overflow-hidden" style="box-shadow:0 0 0 3px rgb(var(--panel))">${avatar(n)}</div>${SEAL}</div>
           <div class="min-w-0 pt-8"><div class="text-lg leading-tight">${nameRank(n,r)}</div></div></div>
-        ${p.role||p.meta?`<p class="text-sm mt-3"><b>${p.role||''}</b>${p.role&&p.meta?', ':''}<span class="text-muted">${p.meta||''}</span></p>`:''}<p class="text-sm text-muted ${p.role||p.meta?'mt-1':'mt-3'}">${p.bio}</p>
+        ${p.role||p.meta?`<p class="text-sm mt-3"><b>${p.role||''}</b>${p.role&&p.meta?', ':''}<span class="text-muted">${p.meta||''}</span></p>`:''}<p class="text-sm text-muted ${p.role||p.meta?'mt-1':'mt-3'}">${p.bio}</p>${p.mid?`<button onclick="closeModal();memberModal(${p.mid})" class="text-sm font-semibold mt-2 inline-flex items-center gap-1" style="color:#087A4B">Profil in der App ansehen →</button>`:''}
         <div class="mt-4"><p class="text-xs uppercase tracking-wide text-muted mb-2">Abzeichen</p><div class="flex flex-wrap items-center gap-2">${p.link?`<a href="${p.link}" target="_blank" rel="noopener" title="Profil von ${n} öffnen" class="inline-flex items-center gap-2 h-11 pl-1.5 pr-4 rounded-full text-sm font-semibold whitespace-nowrap transition hover:opacity-90" style="background:#087A4B;color:#fff"><span class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(255,255,255,.18)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></span>Profil</a><span class="w-px h-7 mx-1" style="background:rgb(var(--line))"></span>`:''}${memberBadges(n).map(b=>badgeIcon(b,`openBadges('${String(n).replace(/[^\p{L}\p{N} .-]/gu,'')}')`)).join('')}</div></div>
         <div class="grid grid-cols-3 mt-4 border-y border-line text-center text-[11px] text-muted">
           <div class="py-2"><b class="block text-base" style="color:rgb(var(--fg))">${rt?rt.replace('.',','):'Neu'}</b>${rt?`★ aus ${nr}`:'dabei'}</div>
@@ -913,7 +913,9 @@ const MNAV = [['jobs','globe'],['feed','play'],['profile','user']];
 // Eigenes Routing: funktioniert auch in Vorschau-Fenstern, die Link-Klicks blockieren
 S.route = (location.hash||'').replace('#','') || 'feed';
 const route = () => S.route || 'feed';
-const go = h => { S.route = h; try{ if(location.hash!=='#'+h) history.replaceState(null,'','#'+h); }catch(e){} render(); };
+const go = h => { S.route = h; try{ if(location.hash!=='#'+h) history.pushState(null,'','#'+h); }catch(e){} render(); };
+['click','submit'].forEach(ev=>document.addEventListener(ev,()=>{ S._act=Date.now(); },true)); document.addEventListener('keydown',e=>{ if(e.key==='Enter') S._act=Date.now(); },true);
+document.addEventListener('focusout',()=>{ if(S._deferR) setTimeout(()=>{ if(S._deferR){ S._deferR=false; render(); } },60); },true);
 window.addEventListener('hashchange', ()=>{ const h=(location.hash||'').replace('#','')||'feed'; if(h!==S.route){ S.route=h; render(); } });
 document.addEventListener('click', e=>{
   const a = e.target.closest && e.target.closest('a[href^="#"]');
@@ -1380,7 +1382,7 @@ function battleCard(anim=true){
 function bRedraw(){ const e=document.getElementById('battle'); if(e) e.outerHTML=battleCard(false); }
 function bSend(i){ const el=document.getElementById('btIn'), t=(el&&el.value||'').trim(); if(t.length<3) return; if(S.member&&S.bsrv){ rpc('battle_antworten_neu',{p_text:t}).then(bAfter).catch(()=>{}); return; } const d=bData(i); d.ans.push({id:Date.now(),n:ME.name,t,l:0,mine:true}); BST.put(bId(i),d); bRedraw(); }
 function bLike(i,id){ if(!S.user){ go('login'); return; } if(S.member&&S.bsrv){ const x=S.bsrv.d[i]; if(x){ const l=new Set(x.liked||[]); l.has(id)?l.delete(id):l.add(id); x.liked=[...l]; const a=(x.antworten||[]).find(a=>a.id===id); if(a) a.likes+=l.has(id)?1:-1; bRedraw(); } rpc('battle_like',{p_antwort:id}).then(bAfter).catch(()=>{}); return; } const d=bData(i); d.liked[id]=!d.liked[id]; BST.put(bId(i),d); bRedraw(); }
-function bVote(i,k){ const d=bData(i); if(d.vote!==null||!S.user) return; if(d.srv){ const x=S.bsrv.d[i], id=d.top[k]; x.stimme=id; x.stimmen={...(x.stimmen||{}),[id]:((x.stimmen||{})[id]||0)+1}; bRedraw(); rpc('battle_stimme',{p_antwort:id}).then(bAfter).catch(()=>{}); return; } d.vote=k; d.v[k]++; BST.put(bId(i),d); bRedraw(); }
+function bVote(i,k){ const d=bData(i); if(d.vote!==null||!S.user) return; if(d.srv){ const x=S.bsrv.d[i], id=d.top[k]; x.stimme=id; x.stimmen={...(x.stimmen||{}),[id]:((x.stimmen||{})[id]||0)+1}; bRedraw(); rpc('battle_stimme',{p_antwort:id}).then(j=>{ if(!j||!j.ok) alert(j&&j.grund==='phase'?'Die Abstimmung ist gerade nicht offen.':j&&j.grund==='konto'?'Mit diesem Konto kannst du gerade nicht abstimmen.':'Deine Stimme konnte nicht gespeichert werden. Versuch es gleich nochmal.'); bAfter(); }).catch(()=>{ alert('Keine Verbindung – deine Stimme wurde nicht gespeichert.'); bAfter(); }); return; } d.vote=k; d.v[k]++; BST.put(bId(i),d); bRedraw(); }
 let _bPhase=null;
 setInterval(()=>{ const b=bState(); const key=b?b.phase+b.i:'x'; if(_bPhase!==null && key!==_bPhase && route()==='feed'){ _bPhase=key; bRedraw(); return; } _bPhase=key;
   const t=document.getElementById('btT'); if(t&&b&&b.end) t.textContent=bFmt(b.end-new Date()); },1000);
@@ -1468,7 +1470,7 @@ function toggleLike(id,ctx){
   if(id>=1e6 && S.member){ const p=(S.rp||[]).find(x=>x.id===id); rpc('post_like',{p_post:id-1e6}).then(j=>{ if(j&&j.ok&&j.liked!==S.liked[id]){ S.liked[id]=j.liked; ctx==='feed'?render():drawPlayer(); } }).catch(()=>{}); }
 }
 function delPost(id){ if(!confirm('Diesen Beitrag wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return; rpc('post_loeschen',{p_post:id-1e6}).then(()=>{ S.rp=(S.rp||[]).filter(p=>p.id!==id); S.myPosts=null; closeModal(); render(); feedLoad(); }); }
-async function commentsReal(id){
+async function commentsRealOld(id){
   sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Kommentare</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div><p class="text-sm text-muted">Lädt …</p>`);
   let list=[]; try{ list=await rpc('kommentare_laden',{p_post:id-1e6})||[]; }catch(e){}
   const p=(S.rp||[]).find(x=>x.id===id); if(p) p.c=list.length;
@@ -1477,7 +1479,7 @@ async function commentsReal(id){
     ${S.member?`<form class="flex gap-2 pt-2" onsubmit="event.preventDefault();const v=this.c.value.trim();if(!v)return;this.querySelector('button').disabled=true;rpc('kommentar_neu',{p_post:${id-1e6},p_text:v}).then(j=>{if(j&&j.grund==='tempo')alert('Kurz durchatmen – du kommentierst gerade sehr schnell.');commentsReal(${id});if(route()==='feed')feedLoad();})"><input name="c" class="input" maxlength="500" placeholder="Kommentar schreiben…" autocomplete="off"><button class="btn-gold">Senden</button></form>`:`<a href="#login" onclick="closeSheet();closeModal()" class="btn-gold block">Anmelden zum Kommentieren</a>`}`);
   const inp=document.querySelector('#psheet input'); if(inp) inp.focus();
 }
-function shareReal(id){
+function shareRealOld(id){
   const url=`https://www.getclosinghub.com/app#p${id-1e6}`;
   if(navigator.share){ navigator.share({title:'ClosingHub',text:'Schau dir diesen Beitrag auf ClosingHub an',url}).catch(()=>{}); return; }
   sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Teilen</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
@@ -1623,9 +1625,9 @@ const N_IC={like:'❤️',kommentar:'💬',folgen:'👤',bewerbung:'💼'};
 S.notes=null;
 async function notesLoad(){ if(!S.member) return; try{ S.notes=await rpc('mitteilungen_laden'); }catch(e){ S.notes=[]; } if(route()==='notifications'){ S.unread=0; render(); rpc('mitteilungen_gelesen').then(()=>{ S.unread=0; markBell(); }).catch(()=>{}); } }
 async function unreadLoad(){ if(!S.member) return; try{ S.unread=await rpc('mitteilungen_ungelesen')||0; }catch(e){} markBell(); }
-function markBell(){ markMsgs(); document.querySelectorAll('a[href="#notifications"]').forEach(a=>{ let d=a.querySelector('.nbadge'); if(S.unread>0){ if(!d){ d=document.createElement('span'); d.className='nbadge'; d.style.cssText='position:absolute;top:2px;right:2px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#e5484d;color:#fff;font:700 10px/17px Archivo,sans-serif;text-align:center;pointer-events:none'; a.style.position='relative'; a.appendChild(d); } d.textContent=S.unread>9?'9+':S.unread; } else if(d) d.remove(); }); }
-function markMsgs(){ document.querySelectorAll('a[href="#messages"]').forEach(a=>{ let d=a.querySelector('.mbadge'); if(S.unreadMsg>0){ if(!d){ d=document.createElement('span'); d.className='mbadge'; d.style.cssText='position:absolute;top:2px;right:2px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#087A4B;color:#fff;font:700 10px/17px Archivo,sans-serif;text-align:center;pointer-events:none'; a.style.position='relative'; a.appendChild(d); } d.textContent=S.unreadMsg>9?'9+':S.unreadMsg; } else if(d) d.remove(); }); }
-function noteHref(n){ const l=n.link||'feed'; if(/^chat:/.test(l)) return `href="#messages" onclick="openConv('${/^chat:p/.test(l)?'p'+l.slice(6):'m'+l.slice(5)}')"`; return `href="#${l}"`; }
+function markBell(){ markMsgs(); document.querySelectorAll('a[href="#notifications"]').forEach(a=>{ let d=a.querySelector('.nbadge'); if(S.unread>0){ if(!d){ d=document.createElement('span'); d.className='nbadge'; d.style.cssText='position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#e5484d;color:#fff;font:700 10px/17px Archivo,sans-serif;text-align:center;pointer-events:none;box-shadow:0 0 0 2px rgb(var(--bg))'; const _h=(a.querySelector('svg')&&a.querySelector('svg').parentElement!==a)?a.querySelector('svg').parentElement:a; _h.style.position='relative'; _h.appendChild(d); } d.textContent=S.unread>9?'9+':S.unread; } else if(d) d.remove(); }); }
+function markMsgs(){ document.querySelectorAll('a[href="#messages"]').forEach(a=>{ let d=a.querySelector('.mbadge'); if(S.unreadMsg>0){ if(!d){ d=document.createElement('span'); d.className='mbadge'; d.style.cssText='position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#087A4B;color:#fff;font:700 10px/17px Archivo,sans-serif;text-align:center;pointer-events:none'; const _h=(a.querySelector('svg')&&a.querySelector('svg').parentElement!==a)?a.querySelector('svg').parentElement:a; _h.style.position='relative'; _h.appendChild(d); } d.textContent=S.unreadMsg>9?'9+':S.unreadMsg; } else if(d) d.remove(); }); }
+function noteHref(n){ const l=n.link||'feed'; if(/^(post|mitglied):/.test(l)) return `href="javascript:void(0)" onclick="noteGo('${esc(l)}')"`; if(/^chat:/.test(l)) return `href="#messages" onclick="openConv('${/^chat:p/.test(l)?'p'+l.slice(6):'m'+l.slice(5)}')"`; return `href="#${l}"`; }
 function notesReal(){
   if(S.notes===null){ notesLoad(); return `<div class="max-w-lg mx-auto px-4 py-8"><h1 class="font-serif text-2xl mb-2">Mitteilungen</h1><p class="text-sm text-muted">Lädt …</p></div>`; }
   return `<div class="max-w-lg mx-auto px-4 py-8 space-y-3"><h1 class="font-serif text-2xl mb-2">Mitteilungen</h1>
@@ -1637,7 +1639,7 @@ setInterval(()=>{ if(document.visibilityState==='visible') unreadLoad(); },45000
 /* ===== Nachrichten: echte Chats (Mitglieder + Partner-Anfragen) ===== */
 S.cl=null; S.cur=null; S.cmsg=null; S.surl={}; S.unreadMsg=0; S.cerr='';
 async function chatsLoad(){ if(!S.member) return; try{ S.cl=await rpc('chats_laden'); }catch(e){ S.cl=S.cl||{chats:[],partner:[]}; }
-  S.unreadMsg=((S.cl.chats||[]).reduce((a,c)=>a+(+c.ungelesen||0),0))+((S.cl.partner||[]).reduce((a,c)=>a+(+c.ungelesen||0),0)); markBell(); const h=document.querySelector('#chathandle'); if(h&&route()!=='messages') render();
+  S.unreadMsg=((S.cl.chats||[]).reduce((a,c)=>a+(+c.ungelesen||0),0))+((S.cl.partner||[]).reduce((a,c)=>a+(+c.ungelesen||0),0)); markBell(); const h=document.querySelector('#chathandle'); if(h&&route()!=='messages'){ const n=unread(); let c=h.querySelector('span'); if(n){ if(!c){ c=document.createElement('span'); c.className='absolute left-1/2 ml-[72px] text-[10px] gold-bg text-black rounded-full px-1.5 leading-4'; h.appendChild(c); } c.textContent=n; } else if(c) c.remove(); }
   if(route()==='messages') drawMsgs(); }
 async function convLoad(){ if(!S.cur) return; const k=S.cur;
   try{ const r = k[0]==='m' ? await rpc('nachrichten_laden',{p_chat:+k.slice(1)}) : await rpc('partner_chat_laden',{p_partner:+k.slice(1)}); if(S.cur===k){ S.cmsg=r||[]; drawMsgs(true); } }catch(e){} }
@@ -1674,6 +1676,7 @@ function drawMsgs(scroll){
   box.innerHTML=msgsInner(); fillMedia();
   const ni=document.getElementById('cminput'); if(ni&&keep){ ni.value=keep.v; if(keep.f){ ni.focus(); try{ ni.setSelectionRange(keep.a,keep.b); }catch(e){} } } const m=document.getElementById('cmlist'); if(m&&(scroll||m.dataset.atBottom!=='0')) m.scrollTop=m.scrollHeight;
   const i=document.getElementById('cminput'); if(i&&S._keepFocus){ i.focus(); S._keepFocus=false; }
+  try{ navSync(); }catch(e){}
 }
 function msgsInner(){
   const cl=S.cl||{chats:[],partner:[]}, items=[...(cl.chats||[]).map(c=>({k:'m'+c.id,name:c.name,av:c.avatar_url,last:c.letzte,at:c.last_at,un:c.ungelesen,sub:RANKS[(c.rang||1)-1]})),...(cl.partner||[]).map(p=>({k:'p'+p.partner_id,name:p.name,av:p.img,last:p.letzte,at:p.last_at,un:p.ungelesen,sub:'Partner'}))].sort((a,b)=>new Date(b.at)-new Date(a.at));
@@ -1685,8 +1688,8 @@ function msgsInner(){
       :'<div class="p-4 text-sm text-muted">Noch keine Chats. Öffne ein Profil im Feed und tippe auf „Nachricht schreiben“.</div>'}</div>`;
   if(!S.cur) return list+`<div class="hidden md:flex items-center justify-center text-sm text-muted">Wähle einen Chat aus.</div>`;
   const media=S.cur[0]==='m';
-  return list+`<div class="flex flex-col" style="min-height:0"><div class="p-3 border-b border-line flex items-center gap-3"><button class="md:hidden text-2xl px-1 leading-none" onclick="S.cur=null;drawMsgs()">‹</button>
-      <span class="w-9 h-9 rounded-full overflow-hidden shrink-0 ${h.mid?'cursor-pointer':''}" ${h.mid?`onclick="memberModal(${h.mid})"`:''}>${h.av?`<img src="${esc(h.av)}" class="w-full h-full object-cover">`:initAv(h.name)}</span><b class="text-sm">${esc(h.name)}</b>${h.partner?'<span class="text-[10px] text-gold">Partner · Antwort meist in 24 h</span>':''}</div>
+  return list+`<div class="flex flex-col" style="min-height:0"><div class="p-3 border-b border-line flex items-center gap-3"><button class="inline-flex items-center gap-1 text-sm font-semibold pr-2 mr-1 border-r border-line" style="color:#087A4B" onclick="S.cur=null;drawMsgs()" aria-label="Zurück zu allen Chats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="md:hidden">Chats</span></button>
+      <span style="width:36px;height:36px" class="rounded-full overflow-hidden shrink-0 inline-block ${h.mid?'cursor-pointer':''}" ${h.mid?`onclick="memberModal(${h.mid})"`:''}>${h.av?`<img src="${esc(h.av)}" class="w-full h-full object-cover">`:initAv(h.name)}</span><b class="text-sm">${esc(h.name)}</b>${h.partner?'<span class="text-[10px] text-gold">Partner · Antwort meist in 24 h</span>':''}</div>
     <div id="cmlist" class="flex-1 overflow-y-auto p-4 space-y-2" style="min-height:0" onscroll="this.dataset.atBottom=(this.scrollHeight-this.scrollTop-this.clientHeight<60)?'1':'0'">${msgsHtml()}</div>
     ${S.cerr?`<p class="chat-err">${esc(S.cerr)}</p>`:''}
     <form class="p-3 border-t border-line flex gap-2 items-center" onsubmit="event.preventDefault();cSend()">
@@ -1732,6 +1735,7 @@ function reportMsg(id){ const g=prompt('Warum meldest du diese Nachricht? (z. B.
 function reportPost(id){ const g=prompt('Warum meldest du diesen Beitrag?'); if(g===null) return; rpc('melden',{p_typ:'beitrag',p_ref:id-1e6,p_grund:g}).then(()=>alert('Danke! Das ClosingHub-Team schaut es sich an.')); }
 function sendPersonMsg(n,pid){
   const t=document.getElementById('pmtxt'); if(!t||!t.value.trim()){ if(t) t.focus(); return; }
+  const _pp=(PARTNERS||[]).find(x=>x.pid===pid); if(S.member&&_pp&&_pp.mid&&_pp.mid!==S.member.id) return partnerAppMsg(n,_pp.mid,t.value.trim());
   if(S.member&&pid){ const v=t.value.trim(); rpc('partner_nachricht',{p_partner:pid,p_text:v}).then(j=>{ if(j&&j.ok){ document.getElementById('pmsg').innerHTML=`<p class="text-center text-sm" style="color:#087A4B">✓ Nachricht an ${esc(n)} gesendet. Die Antwort findest du unter <a href="#messages" onclick="closeModal();openConv('p${pid}')" class="underline">Nachrichten</a>.</p>`; chatsLoad(); } else alert(j&&j.text?j.text:'Senden hat nicht geklappt.'); }); return; }
   document.getElementById('pmsg').innerHTML=`<p class="text-emerald-400 text-center text-sm">✓ Nachricht an ${esc(n)} gesendet. Die Antwort findest du unter Nachrichten.</p>`;
 }
@@ -1754,10 +1758,10 @@ function threadReal(){
       <h2 class="font-serif text-xl mb-2">${esc(t.titel)}</h2>${t.text?`<p class="text-sm text-muted">${esc(t.text)}</p>`:''}
       ${t.antworten.map(a=>`<div class="border-t border-line mt-3 pt-3" ${a.beste?'style="border-color:#087A4B"':''}>${a.beste?'<p class="text-[11px] uppercase tracking-wider text-gold mb-1">✓ Beste Antwort</p>':''}<div class="flex items-center gap-2 mb-1"><span class="w-7 h-7 rounded-full overflow-hidden inline-block cursor-pointer" onclick="memberModal(${a.member_id})">${skAv(String(a.name).split(' ')[0],28,fAv(a))}</span>${nameRank(esc(String(a.name).split(' ')[0]),RANKS[(a.rang||1)-1])}</div>
         <p class="text-sm">${esc(a.text).replace(/\n/g,'<br>')}</p>
-        <div class="flex gap-4 mt-2 text-xs">${S.member&&!a.mine?`<button onclick="fHelp(${a.id},'${cat}')" class="${a.ich_hilfreich?'text-gold':'text-muted'}">👍 Hilfreich · ${a.hilfreich}</button>`:`<span class="text-muted">👍 ${a.hilfreich}</span>`}
+        <div class="flex gap-4 mt-2 text-xs">${S.member&&!a.mine?`<button onclick="fHelp(${a.id},'${cat}')" class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-semibold ${a.ich_hilfreich?'text-gold':'text-muted border-line'}" style="${a.ich_hilfreich?'border-color:#087A4B;background:rgba(8,122,75,.08)':''}">👍 ${a.ich_hilfreich?'Gefällt dir':'Gefällt mir'} · ${a.hilfreich}</button>`:`<span class="text-muted inline-flex items-center gap-1 px-1 py-1" title="${a.mine?'Deine eigene Antwort':''}">👍 ${a.hilfreich} ${a.hilfreich===1?'Like':'Likes'}</span>`}
           ${t.mine&&!a.beste?`<button class="text-muted" onclick="rpc('forum_beste_antwort',{p_antwort:${a.id}}).then(()=>forumList('${cat}'))">Als beste Antwort markieren</button>`:''}
           ${S.member&&!a.mine?`<button class="text-muted" onclick="fReport('forum',${a.id})">Melden</button>`:''}</div></div>`).join('')}
-      ${S.member?`<form class="flex gap-2 mt-4" onsubmit="event.preventDefault();fAnswer(${t.id},this,'${cat}')"><input name="a" class="input" maxlength="1000" placeholder="Deine Antwort…" autocomplete="off"><button class="btn-gold">Senden</button></form>`:S.user?'':`<a href="#login" class="text-sm text-gold block mt-3">Anmelden zum Antworten</a>`}
+      ${S.member?`<form class="mt-4 space-y-2" onsubmit="event.preventDefault();fAnswer(${t.id},this,'${cat}')"><div id="femo${t.id}" class="hidden">${emoBar('#fin'+t.id)}</div><div class="flex gap-2"><button type="button" class="text-xl px-1" onclick="document.getElementById('femo${t.id}').classList.toggle('hidden')" aria-label="Emojis">😊</button><input id="fin${t.id}" name="a" class="input" maxlength="1000" placeholder="Deine Antwort…" autocomplete="off"><button class="btn-gold">Senden</button></div></form>`:S.user?'':`<a href="#login" class="text-sm text-gold block mt-3">Anmelden zum Antworten</a>`}
       ${S.member&&!t.mine&&t.member_id?`<button class="text-[11px] text-muted mt-2" onclick="fReport('forumfrage',${t.id})">Frage melden</button>`:''}</div>`).join('')
       :`<div class="card p-5 text-sm"><p class="font-semibold mb-1">Hier steht noch keine Frage.</p><p class="text-muted">${cat==='ClosingHub'?'Hier stellt das ClosingHub-Team Fragen an die Community.':'Stell die erste Frage – die Community hilft dir.'}</p></div>`}
   </div>`;
@@ -1780,12 +1784,13 @@ async function saveThreadReal(f){
 S.mo=null; S.myOffers=null;
 async function marktLoad(){ try{ S.mo=await rpc('markt_liste'); }catch(e){ S.mo=[]; } if(S.member){ try{ S.myOffers=await rpc('meine_angebote'); }catch(e){ S.myOffers=[]; } } if(route()==='markt') render(); }
 function realOffers(){ if(S.mo===null){ S.mo=[]; S._moLoading=true; marktLoad().finally(()=>S._moLoading=false); }
-  return (S.mo||[]).map(o=>({real:1,id:o.id,cat:o.kategorie,t:esc(o.titel),desc:o.beschreibung,pr:(+o.preis).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:2}),s:esc(String(o.name).split(' ')[0]),full:o.name,r:RANKS[(o.rang||1)-1],av:o.avatar_url,mid:o.member_id,mine:o.mine,ab:o.abzeichen||[],bis:o.laeuft_bis})); }
+  return (S.mo||[]).map(o=>({real:1,id:o.id,cat:o.kategorie,t:esc(o.titel),desc:o.beschreibung,pr:(+o.preis).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:2}),s:esc(String(o.name).split(' ')[0]),full:o.name,r:RANKS[(o.rang||1)-1],av:o.avatar_url,mid:o.member_id,mine:o.mine,ab:o.abzeichen||[],bis:o.laeuft_bis,med:Array.isArray(o.medien)?o.medien:[]})); }
 function useRealOffers(){ return S.member || (S.mo&&S.mo.length); }
 function realOfferCard(o){
   return `<div class="card p-4 flex flex-col gap-3">
     <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">${esc(o.cat)}</span><p class="font-semibold leading-snug mt-0.5">${o.t}</p></div><span class="font-serif text-xl text-gold whitespace-nowrap leading-none mt-1">${o.pr} €</span></div>
     ${o.desc?`<p class="text-xs text-muted">${esc(o.desc).slice(0,160)}${o.desc.length>160?' …':''}</p>`:''}
+    ${(o.med||[]).length?`<div class="flex gap-2 overflow-x-auto">${o.med.map(m=>m.typ==='video'?`<video src="${esc(m.url)}#t=0.1" class="h-24 rounded-xl border border-line shrink-0" controls playsinline preload="metadata"></video>`:`<img src="${esc(m.url)}" class="h-24 rounded-xl border border-line object-cover shrink-0 cursor-pointer" onclick="window.open(this.src,'_blank')">`).join('')}</div>`:''}
     <button onclick="memberModal(${o.mid})" class="flex items-center gap-2 text-sm text-left min-w-0"><span class="w-7 h-7 rounded-full overflow-hidden shrink-0">${skAv(o.s,28,o.av?`<img src="${esc(o.av)}" class="w-full h-full object-cover">`:initAv(o.full))}</span><span class="font-medium truncate">${o.s}</span>${rkChip(o.r)}</button>
     <div class="flex items-center justify-between gap-3 border-t border-line pt-3"><span class="text-xs text-muted truncate">${o.ab.length?o.ab.slice(0,2).map(a=>'🏅 '+esc(a)).join(' · '):'Neu im Marktplatz'}</span>
       ${o.mine?'<span class="text-xs text-gold">Dein Angebot</span>':`<button onclick="${S.member?`anfrageModal(${o.id})`:`go('login')`}" class="btn-gold text-xs whitespace-nowrap" style="padding:.4rem .9rem">Anfragen</button>`}</div></div>`;
@@ -1801,23 +1806,33 @@ async function anfrageSend(id,f){ f.querySelector('button.btn-gold').disabled=tr
   closeModal(); openConv('m'+j.chat); }
 function catTaken(c){ return realOffers().some(o=>o.cat===c) || PARTNERS.some(p=>p.real&&p.s===c); }
 function freeCats(){ return MCATS.filter(c=>!catTaken(c)); }
-function angebotModal(){
+S.aoFiles=[];
+function aoAdd(inp){ for(const f of inp.files){ if(S.aoFiles.length>=5) break; if(!/^(image|video)\//.test(f.type)) continue; if(f.size>50*1024*1024){ alert(f.name+' ist größer als 50 MB.'); continue; } S.aoFiles.push({f,u:URL.createObjectURL(f),typ:/^video/.test(f.type)?'video':'bild'}); } inp.value=''; aoDraw(); }
+function aoDraw(){ const b=document.getElementById('aoMed'); if(!b) return; b.innerHTML=S.aoFiles.map((x,i)=>`<span class="relative w-20 h-20 rounded-xl overflow-hidden border border-line inline-block">${x.typ==='video'?`<video src="${x.u}" class="w-full h-full object-cover" muted></video><span class="absolute text-[10px] bg-black/70 text-white rounded px-1" style="bottom:4px;left:4px">▶</span>`:`<img src="${x.u}" class="w-full h-full object-cover">`}<button type="button" class="absolute w-5 h-5 rounded-full bg-black/70 text-white text-xs" style="top:2px;right:2px;line-height:20px" onclick="S.aoFiles.splice(${i},1);aoDraw()">✕</button></span>`).join(''); }
+function angebotModal(){ S.aoFiles=[];
   document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()"><form class="card w-full max-w-md p-5 space-y-3 relative max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()" onsubmit="event.preventDefault();angebotSend(this)">
     <button type="button" onclick="closeModal()" class="absolute top-3 right-4 text-muted text-xl">✕</button><h3 class="font-serif text-xl">Angebot einreichen</h3>
     <p class="text-xs text-muted">Wir prüfen jedes Angebot persönlich. Nach der Freigabe ist es 6 Monate im Marktplatz sichtbar. Jede Leistung gibt es nur einmal: Du bist dann der einzige Anbieter. Du kannst bis zu 3 Angebote haben.</p>
     ${freeCats().length?`<label class="block text-sm">Leistung (nur freie)<select name="k" class="input mt-1">${freeCats().map(c=>`<option ${c===S.mcat?'selected':''}>${esc(c)}</option>`).join('')}</select></label>`:'<p class="text-sm text-gold">Gerade sind alle Leistungen vergeben.</p>'}
     <label class="block text-sm">Titel<input name="t" class="input mt-1" maxlength="80" required placeholder="z. B. 60 Min. Call-Analyse mit Feedback"></label>
-    <label class="block text-sm">Beschreibung<textarea name="d" class="input mt-1 h-24" maxlength="600" placeholder="Was bekommt man genau? Für wen ist es?"></textarea></label>
+    <label class="block text-sm">Beschreibung<textarea id="aoD" name="d" class="input mt-1 h-24" maxlength="600" placeholder="Was bekommt man genau? Für wen ist es?"></textarea></label>
+    <div><button type="button" class="text-sm text-muted" onclick="document.getElementById('aoEmo').classList.toggle('hidden')">😊 Emoji einfügen</button><div id="aoEmo" class="hidden mt-1">${emoBar('#aoD')}</div></div>
+    <div><p class="text-sm">Bilder oder Videos <span class="text-muted">(optional, bis zu 5)</span></p><div id="aoMed" class="flex flex-wrap gap-2 mt-2"></div>
+      <label class="btn-ghost text-sm inline-block mt-2 cursor-pointer">+ Bild oder Video<input type="file" accept="image/*,video/*" multiple class="hidden" onchange="aoAdd(this)"></label></div>
     <label class="block text-sm">Preis in €<input name="p" type="number" min="0" max="100000" step="1" class="input mt-1" required></label>
     <p id="aoErr" class="text-sm" style="color:#e5484d"></p><button class="btn-gold w-full">Zur Prüfung einreichen</button></form></div>`; }
 async function angebotSend(f){ f.querySelector('button.btn-gold').disabled=true;
   const j=await rpc('markt_angebot_beantragen',{p_kat:f.k.value,p_titel:f.t.value,p_text:f.d.value,p_preis:+f.p.value}).catch(()=>null);
   if(!j||!j.ok){ document.getElementById('aoErr').textContent=j&&j.text?j.text:j&&j.grund==='limit'?'Du hast schon 3 Angebote (aktiv oder in Prüfung).':j&&j.grund==='vergeben'?'Diese Leistung hat schon einen Anbieter.':j&&j.grund==='doppelt'?'Für diese Leistung hast du schon einen Antrag in Prüfung.':'Bitte fülle Titel (mind. 5 Zeichen) und Preis aus.'; f.querySelector('button.btn-gold').disabled=false; return; }
-  closeModal(); S.mo=null; render(); alert('Danke! Dein Angebot ist eingereicht. Du bekommst eine Mitteilung, sobald es freigegeben ist.'); }
-const AO_ST={beantragt:'In Prüfung',aktiv:'Aktiv',abgelehnt:'Nicht freigegeben',beendet:'Beendet'};
+  if(S.aoFiles.length&&j.id){ const btn=f.querySelector('button.btn-gold'); const med=[];
+    for(let k=0;k<S.aoFiles.length;k++){ const x=S.aoFiles[k]; try{ btn.textContent=`Lädt hoch … ${k+1}/${S.aoFiles.length}`; med.push({url:await upload(x.f),typ:x.typ}); }catch(e){ alert('Ein Medium konnte nicht hochgeladen werden: '+e.message); } }
+    if(med.length) await rpc('markt_angebot_medien',{p_id:j.id,p_medien:med}).catch(()=>null); }
+  S.aoFiles=[]; closeModal(); S.mo=null; S.myOffers=null; render(); alert('Danke! Dein Angebot ist eingereicht. Du bekommst eine Mitteilung, sobald es freigegeben ist.'); }
+const AO_ST={beantragt:'⏳ In Prüfung',aktiv:'✓ Veröffentlicht',abgelehnt:'✕ Nicht freigegeben',beendet:'Beendet'};
+const AO_PILL={beantragt:'background:#FFF1C9;color:#7a5a00',aktiv:'background:#087A4B;color:#fff',abgelehnt:'background:#FCEBEB;color:#A32D2D',beendet:'background:rgba(120,120,130,.15);color:rgb(var(--muted))'};
 function myOffersCard(){ const l=S.myOffers||[]; if(!S.member||!l.length) return '';
   return `<div class="card p-4 mb-4"><p class="text-xs uppercase tracking-wider text-muted mb-2">Meine Angebote</p>${l.map(o=>`<div class="flex justify-between items-center gap-3 py-2 border-t border-line text-sm"><span class="min-w-0"><span class="block font-medium truncate">${esc(o.titel)} · ${(+o.preis).toLocaleString('de-DE')} €</span><span class="block text-xs text-muted">${esc(o.kategorie)}${o.status==='aktiv'&&o.laeuft_bis?' · sichtbar bis '+new Date(o.laeuft_bis).toLocaleDateString('de-DE'):''}${o.anfragen?' · '+o.anfragen+' Anfragen':''}${o.notiz?' · '+esc(o.notiz):''}</span></span>
-    <span class="flex items-center gap-2 whitespace-nowrap"><span class="text-xs ${o.status==='aktiv'?'text-gold':'text-muted'}">${AO_ST[o.status]||o.status}</span>${o.status==='aktiv'||o.status==='beantragt'?`<button class="text-xs text-muted underline" onclick="if(confirm('Angebot beenden?'))rpc('markt_angebot_beenden',{p_id:${o.id}}).then(()=>{S.mo=null;render();})">beenden</button>`:''}</span></div>`).join('')}</div>`; }
+    <span class="flex items-center gap-2 whitespace-nowrap"><span class="text-[11px] font-bold uppercase tracking-wide rounded-full px-2.5 py-1" style="${AO_PILL[o.status]||''}">${AO_ST[o.status]||o.status}</span>${o.status==='aktiv'||o.status==='beantragt'?`<button class="text-xs text-muted underline" onclick="if(confirm('Angebot beenden?'))rpc('markt_angebot_beenden',{p_id:${o.id}}).then(()=>{S.mo=null;render();})">beenden</button>`:''}</span></div>`).join('')}</div>`; }
 
 // ===== Job-Details: attraktive Darstellung wie im Demo-Handy =====
 function jdNum(s){ return String(s||'').match(/\d{1,3}(?:\.\d{3})+|\d+/g)?.map(x=>+x.replace(/\./g,''))||[]; }
@@ -1870,7 +1885,7 @@ const MK_DEMO={
   uf:{id:'d4',typ:'uf',demo:1,daten:{frage:'Wann closed ihr am besten?',a:['☀️ Vormittags','🥪 Nach der Mittagspause','🌆 Abends ab 18 Uhr','🦉 Nachts, wenn alle schlafen']},stats:{n:2031,wahl:{0:447,1:630,2:772,3:182}}}
 };
 const GR_DEMO=['+1 Bewerbung','50 Punkte','1 Tag Premium','Morgen-Call Shoutout','+100 Punkte','Partner-Rabatt','Abzeichen „Glückspilz“','Nächste Woche nochmal'];
-S.mk=S.mk||null; S.mkDemoAns=S.mkDemoAns||{}; S.gr=S.gr||null;
+S.mk=S.mk||null; S.mkDemoAns=(()=>{ try{ return JSON.parse(localStorage.getItem('ch_mk_demo'))||{}; }catch(e){ return {}; } })(); S.gr=S.gr||null;
 
 (function mkCss(){ if(document.getElementById('mkcss')) return; const st=document.createElement('style'); st.id='mkcss'; st.textContent=`
 .mk{overflow:hidden}
@@ -1966,7 +1981,7 @@ function mkHtml(c){
   return '';
 }
 async function mkPick(id,typ,v){
-  if(typeof id==='string'){ const c=MK_DEMO[typ]; S.mkDemoAns[typ]=v; c.stats=JSON.parse(JSON.stringify(c.stats)); if(typ!=='sd'){ c.stats.wahl[v]=(+c.stats.wahl[v]||0)+1; c.stats.n++; } return mkFly(typ); }
+  if(typeof id==='string'){ const c=MK_DEMO[typ]; S.mkDemoAns[typ]=v; try{ localStorage.setItem('ch_mk_demo',JSON.stringify(S.mkDemoAns)); }catch(e){} c.stats=JSON.parse(JSON.stringify(c.stats)); if(typ!=='sd'){ c.stats.wahl[v]=(+c.stats.wahl[v]||0)+1; c.stats.n++; } return mkFly(typ); }
   if(!S.member){ go('login'); return; }
   const j=await rpc('mitmach_antworten_senden',typ==='sd'?{p_karte:id,p_wert:v}:{p_karte:id,p_wahl:v}).catch(()=>null);
   if(!j||!j.ok){ alert('Das hat gerade nicht geklappt. Versuch es gleich nochmal.'); return; }
@@ -2079,14 +2094,129 @@ function isPartnerName(n){ if(!n) return false; if(S.member&&S.member.partner&&(
 function partnerFem(n){ if(S.member&&S.member.partner&&(n===ME.name||n===ME.fullName)) return !!S.member.partner.fem; const p=PARTNERS.find(p=>p.real&&p.mid&&(p.n===n||String(p.n).split(' ')[0]===n)); return !!(p&&p.fem); }
 function partnerChip(n){ return `<span class="rk" style="color:#1a1405;border-color:#B8913A;background:linear-gradient(135deg,#F1D58A,#D9B45A)">${partnerFem(n)?'Partnerin':'Partner'}</span>`; }
 function partnerBanner(){ const p=S.member&&S.member.partner; if(!p) return '';
-  return `<div class="rounded-2xl mb-5 px-5 py-4 flex items-center justify-between gap-3" style="background:#0E1A2B;color:#fff;border:1px solid #B8913A">
+  return `<div class="rounded-2xl mb-5 px-5 flex items-center justify-between gap-3" style="background:#0E1A2B;color:#fff;border:1px solid #B8913A;padding-top:14px;padding-bottom:14px">
     <div class="min-w-0"><p class="text-xs" style="color:#C9D3E3">Offizielle${p.fem?' Partnerin':'r Partner'} von ClosingHub</p><p class="font-semibold mt-0.5" style="font-family:Archivo,sans-serif">${esc(p.s||'')}</p></div>
     <div class="relative shrink-0" style="width:44px;height:44px">${SEAL.replace('width="26" height="26"','width="44" height="44"').replace('position:absolute;right:-6px;bottom:-2px','position:absolute;inset:0')}</div></div>`; }
 
+// ===== Navigation: Zurück-Taste bleibt in der App =====
+function navLayers(){ return (document.getElementById('psheet')?'s':'')+((document.getElementById('modal')||{}).innerHTML?'m':'')+(S.cur&&route()==='messages'?'c':'')+(S.thread&&route()==='forum'?'t':'')+(S.jopen&&route()==='jobs'?'j':'')+(S.player?'p':'')+(S.onePost&&route()==='feed'?'o':''); }
+let _navL='';
+function navSync(){ const l=navLayers(); if(l.length>_navL.length){ try{ history.pushState({chl:l},'',location.href); }catch(e){} } _navL=l; }
+function navCloseTop(){
+  if(document.getElementById('psheet')){ closeSheet(); return true; }
+  const m=document.getElementById('modal'); if(m&&m.innerHTML){ closeModal(); return true; }
+  if(S.player){ try{ stopPlayer(); }catch(e){} S.player=null; render(); return true; }
+  if(S.cur&&route()==='messages'){ S.cur=null; drawMsgs(); return true; }
+  if(S.thread&&route()==='forum'){ S.thread=null; render(); return true; }
+  if(S.jopen&&route()==='jobs'){ S.jopen=0; render(); return true; }
+  if(S.onePost&&route()==='feed'){ S.onePost=null; render(); return true; }
+  return false;
+}
+window.addEventListener('popstate',e=>{ const h=(location.hash||'').replace('#','')||'feed';
+  if(h!==S.route) return;            // normaler Seitenwechsel: übernimmt hashchange
+  if(navCloseTop()){ _navL=navLayers(); return; }
+});
+new MutationObserver(()=>navSync()).observe(document.body,{childList:true,subtree:false});
+setTimeout(()=>{ const m=document.getElementById('modal'); if(m) new MutationObserver(()=>navSync()).observe(m,{childList:true}); },0);
+
+// ===== Einzelner Beitrag, Mitteilungs-Links, schnelle Aktualisierung =====
+async function openPost(pid,withC){ pid=+pid; if(!pid) return;
+  let row=null; try{ row=await rpc('post_laden',{p_id:pid}); }catch(e){}
+  if(!row){ alert('Dieser Beitrag ist nicht mehr verfügbar.'); return; }
+  S.onePost=mapPost(row); closeModal(); if(route()!=='feed') go('feed'); else render(); window.scrollTo(0,0);
+  if(withC) setTimeout(()=>commentsReal(1e6+pid),250); }
+function onePostView(posts){ return `<div class="max-w-lg mx-auto px-4 py-6"><button onclick="S.onePost=null;render()" class="inline-flex items-center gap-1 text-sm font-semibold mb-4" style="color:#087A4B"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zum Feed</button>${posts}</div>`; }
+function noteGo(l){ if(!l) return; let m;
+  if((m=/^post:(\d+)(:k)?$/.exec(l))) return openPost(m[1],!!m[2]);
+  if((m=/^mitglied:(\d+)$/.exec(l))) return memberModal(+m[1]); }
+// Geteilter Link #p123 öffnet den Beitrag
+(()=>{ const m=/^#p(\d+)$/.exec(location.hash||''); if(m){ S.route='feed'; try{ history.replaceState(null,'',location.pathname+'#feed'); }catch(e){} setTimeout(()=>openPost(m[1]),900); } })();
+// Schnelle Aktualisierung: Zähler alle 8 s, Chat offen alle 3 s – ohne die Seite neu aufzubauen
+S._lastNm=-1;
+setInterval(async()=>{ if(!S.member||document.visibilityState!=='visible') return;
+  try{ const n=await rpc('mitteilungen_ungelesen')||0; if(n!==S.unread){ const more=n>(S.unread||0); S.unread=n; markBell(); if(more&&route()==='notifications') notesLoad(); } }catch(e){}
+  try{ const u=await rpc('nachrichten_ungelesen'); const n=+(u&&u.anzahl!=null?u.anzahl:u)||0; if(n!==S._lastNm){ S._lastNm=n; chatsLoad(); } }catch(e){}
+},8000);
+setInterval(()=>{ if(!S.member||document.visibilityState!=='visible') return; if(route()==='messages'&&S.cur&&!S.crec) convLoad(); },3000);
+
+// ===== Kommentare: Antworten + Emojis =====
+const EMO=['😀','😂','😍','🔥','💪','👏','🙌','👍','❤️','🎯','🚀','💯','🤝','😅','🤔','😎'];
+function emoBar(target){ return `<div class="flex flex-wrap gap-1">${EMO.map(e=>`<button type="button" class="text-lg leading-none rounded-lg px-1.5 py-1 hover:bg-panel" onmousedown="event.preventDefault()" onclick="emoIns('${target}','${e}')">${e}</button>`).join('')}</div>`; }
+function emoIns(sel,e){ const i=document.querySelector(sel); if(!i) return; const a=i.selectionStart??i.value.length, z=i.selectionEnd??a; i.value=i.value.slice(0,a)+e+i.value.slice(z); i.focus(); try{ i.setSelectionRange(a+e.length,a+e.length); }catch(x){} }
+S.cmx={};
+async function commentsReal(id,keep){
+  const box=document.querySelector('#psheet .cmwrap');
+  if(!box||!keep){ sheet(`<div class="cmwrap space-y-4"><div class="flex justify-between items-center"><p class="font-semibold">Kommentare</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div><p class="text-sm text-muted">Lädt …</p></div>`); S.cmx={id,reply:null,emo:false}; }
+  let list=[]; try{ list=await rpc('kommentare_laden',{p_post:id-1e6})||[]; }catch(e){}
+  const p=(S.rp||[]).find(x=>x.id===id); if(p) p.c=list.length; if(S.onePost&&S.onePost.id===id) S.onePost.c=list.length;
+  S.cmx.list=list; cmDraw();
+}
+function cmItem(k,small){ const n=String(k.name||'').split(' ')[0];
+  return `<div class="flex gap-3" style="${small?'margin-left:44px':''}"><button type="button" class="${small?'w-7 h-7':'w-8 h-8'} rounded-full overflow-hidden shrink-0" onclick="closeSheet();memberModal(${k.member_id})">${k.avatar_url?`<img src="${esc(k.avatar_url)}" class="w-full h-full object-cover">`:initAv(k.name)}</button>
+    <div class="min-w-0 flex-1"><div class="text-sm">${nameRank(esc(n),RANKS[(k.rang||1)-1])} <span class="text-[11px] text-muted">${cTime(k.created_at)}</span></div><p class="text-sm" style="white-space:pre-line;overflow-wrap:anywhere">${esc(k.text)}</p>
+    ${S.member?`<button type="button" class="text-xs text-muted mt-0.5" onclick="cmReply(${k.parent_id||k.id},'${esc(n).replace(/'/g,'')}')">Antworten</button>`:''}</div></div>`; }
+function cmDraw(){ const box=document.querySelector('#psheet .cmwrap'); if(!box) return; const id=S.cmx.id, list=S.cmx.list||[];
+  const inp=document.getElementById('cmIn'), keepV=inp?inp.value:'', focus=inp&&document.activeElement===inp;
+  const top=list.filter(k=>!k.parent_id), kids=pid=>list.filter(k=>k.parent_id===pid);
+  box.innerHTML=`<div class="flex justify-between items-center"><p class="font-semibold">Kommentare${list.length?` <span class="text-muted font-normal">(${list.length})</span>`:''}</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
+    <div class="space-y-4">${top.length?top.map(k=>cmItem(k)+kids(k.id).map(r=>cmItem(r,true)).join('')).join(''):'<p class="text-sm text-muted">Noch keine Kommentare. Schreib den ersten!</p>'}</div>
+    ${S.member?`<form class="space-y-2 pt-2 border-t border-line" onsubmit="event.preventDefault();cmSend(this)">
+      ${S.cmx.reply?`<div class="flex items-center justify-between text-xs rounded-lg px-3 py-1.5" style="background:rgba(8,122,75,.1);color:#087A4B"><span>Antwort an <b>${esc(S.cmx.reply.n)}</b></span><button type="button" onclick="S.cmx.reply=null;cmDraw()">✕</button></div>`:''}
+      ${S.cmx.emo?emoBar('#cmIn'):''}
+      <div class="flex gap-2"><button type="button" class="text-xl px-1" onclick="S.cmx.emo=!S.cmx.emo;cmDraw()" aria-label="Emojis">😊</button><input id="cmIn" name="c" class="input" maxlength="500" placeholder="${S.cmx.reply?'Deine Antwort …':'Kommentar schreiben …'}" autocomplete="off"><button class="btn-gold">Senden</button></div></form>`
+      :`<a href="#login" onclick="closeSheet();closeModal()" class="btn-gold block text-center">Anmelden zum Kommentieren</a>`}`;
+  const ni=document.getElementById('cmIn'); if(ni){ ni.value=keepV; if(focus||S.cmx.focus){ ni.focus(); S.cmx.focus=false; } }
+}
+function cmReply(pid,n){ S.cmx.reply={pid,n}; S.cmx.focus=true; cmDraw(); const i=document.getElementById('cmIn'); if(i&&!i.value) { i.value='@'+n+' '; i.setSelectionRange(i.value.length,i.value.length); } }
+async function cmSend(f){ const v=f.c.value.trim(); if(!v) return; const btn=f.querySelector('.btn-gold'); btn.disabled=true;
+  const j=await rpc('kommentar_antwort',{p_post:S.cmx.id-1e6,p_text:v,p_parent:S.cmx.reply?S.cmx.reply.pid:null}).catch(()=>null);
+  if(j&&j.grund==='tempo'){ btn.disabled=false; alert('Kurz durchatmen – du kommentierst gerade sehr schnell.'); return; }
+  if(!j||!j.ok){ btn.disabled=false; alert('Das hat nicht geklappt. Versuch es gleich nochmal.'); return; }
+  const i=document.getElementById('cmIn'); if(i) i.value=''; S.cmx.reply=null; S.cmx.emo=false; await commentsReal(S.cmx.id,true);
+  const p=(S.rp||[]).find(x=>x.id===S.cmx.id); if(p&&route()==='feed') render(); }
+
+// ===== Teilen (eigene Ansicht statt Windows-/System-Fenster) =====
+function shareReal(id){ const pid=id-1e6, url=`https://www.getclosinghub.com/app#p${pid}`, txt='Schau dir diesen Beitrag auf ClosingHub an: '+url;
+  const chats=((S.cl&&S.cl.chats)||[]).slice(0,8), mobile=window.matchMedia&&matchMedia('(pointer:coarse)').matches&&navigator.share;
+  sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Beitrag teilen</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
+    ${S.member?`<div><p class="text-xs uppercase tracking-wider text-muted mb-2">An Kontakte in ClosingHub</p>${chats.length?`<div class="flex gap-3 overflow-x-auto pb-1">${chats.map(c=>`<button class="flex flex-col items-center gap-1 shrink-0 w-16" onclick="shareToChat(${c.id},${pid},this)"><span class="w-11 h-11 rounded-full overflow-hidden">${c.avatar_url?`<img src="${esc(c.avatar_url)}" class="w-full h-full object-cover">`:initAv(c.name)}</span><span class="text-[11px] truncate w-full text-center">${esc(String(c.name).split(' ')[0])}</span></button>`).join('')}</div>`:'<p class="text-sm text-muted">Noch keine Chats. Öffne ein Profil und tippe auf „Nachricht schreiben“.</p>'}</div>`:''}
+    <div><p class="text-xs uppercase tracking-wider text-muted mb-2">Nach draußen</p><div class="grid grid-cols-3 gap-2 text-sm">
+      <a class="btn-ghost text-center" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(txt)}">WhatsApp</a>
+      <a class="btn-ghost text-center" target="_blank" rel="noopener" href="https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent('Schau dir diesen Beitrag auf ClosingHub an')}">Telegram</a>
+      <a class="btn-ghost text-center" href="mailto:?subject=${encodeURIComponent('Beitrag auf ClosingHub')}&body=${encodeURIComponent(txt)}">E-Mail</a></div></div>
+    <div class="flex gap-2"><input class="input text-sm" readonly value="${url}" onclick="this.select()"><button class="btn-gold whitespace-nowrap" onclick="copyTxt('${url}',this)">Link kopieren</button></div>
+    ${mobile?`<button class="text-sm text-muted w-full" onclick="navigator.share({title:'ClosingHub',text:'Schau dir diesen Beitrag auf ClosingHub an',url:'${url}'}).catch(()=>{})">Weitere Apps …</button>`:''}`); }
+function copyTxt(t,b){ const done=()=>{ b.textContent='✓ Kopiert'; setTimeout(()=>b.textContent='Link kopieren',1800); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done).catch(()=>{ prompt('Link kopieren:',t); });
+  else prompt('Link kopieren:',t); }
+async function shareToChat(chat,pid,b){ b.disabled=true; const j=await rpc('nachricht_senden',{p_chat:chat,p_text:'Schau dir diesen Beitrag an: https://www.getclosinghub.com/app#p'+pid,p_media_pfad:null,p_media_typ:null}).catch(()=>null);
+  if(j&&j.ok){ b.style.opacity='.5'; b.querySelector('span:last-child').textContent='✓ Gesendet'; } else { b.disabled=false; alert('Senden hat nicht geklappt.'); } }
+// ===== Suche: Mitglieder, Jobs, Marktplatz =====
+S.sq=S.sq||'';
+function search(){ setTimeout(()=>{ const i=document.getElementById('srIn'); if(i){ i.focus(); if(S.sq) srRun(); } },0);
+  return `<div class="max-w-lg mx-auto px-4 py-6 space-y-4"><h1 class="font-serif text-2xl">Suche</h1>
+    <input id="srIn" class="input" placeholder="Name, Rolle, Job oder Angebot …" value="${esc(S.sq)}" oninput="S.sq=this.value;clearTimeout(S._srT);S._srT=setTimeout(srRun,250)" autocomplete="off">
+    <div id="srRes"><p class="text-sm text-muted">Tipp mindestens 2 Buchstaben ein.</p></div></div>`; }
+async function srRun(){ const q=(S.sq||'').trim(), box=document.getElementById('srRes'); if(!box) return;
+  if(q.length<2){ box.innerHTML='<p class="text-sm text-muted">Tipp mindestens 2 Buchstaben ein.</p>'; return; }
+  box.innerHTML='<p class="text-sm text-muted">Sucht …</p>';
+  let mem=[]; if(S.member){ try{ mem=await rpc('mitglieder_suchen',{p_q:q})||[]; }catch(e){} }
+  if((S.sq||'').trim()!==q) return;
+  const ql=q.toLowerCase(), jobs=(JOBS||[]).filter(j=>(j.live||!S.member)&&[j.t,j.ind,j.p,j.reg,j.roles].join(' ').toLowerCase().includes(ql)).slice(0,6);
+  const offs=(typeof realOffers==='function'&&S.member?realOffers():[]).filter(o=>[o.t,o.cat,o.desc,o.full].join(' ').toLowerCase().includes(ql)).slice(0,6);
+  const sec=(t,h)=>`<p class="text-xs uppercase tracking-wider text-muted mt-5 mb-2">${t}</p>${h}`;
+  box.innerHTML=(S.member?sec('Mitglieder',mem.length?mem.map(m=>`<button class="w-full flex items-center gap-3 text-left p-3 rounded-xl hover:bg-panel" onclick="memberModal(${m.id})"><span class="w-11 h-11 rounded-full overflow-hidden shrink-0">${m.avatar_url?`<img src="${esc(m.avatar_url)}" class="w-full h-full object-cover">`:initAv(m.name)}</span><span class="min-w-0"><span class="block text-sm">${nameRank(esc(m.name),RANKS[(m.rang||1)-1])}</span><span class="text-xs text-muted">${esc([m.rolle,m.land].filter(Boolean).join(' · '))}</span></span></button>`).join(''):'<p class="text-sm text-muted">Kein Mitglied gefunden.</p>'):sec('Mitglieder','<p class="text-sm text-muted"><a href="#login" class="text-gold">Melde dich an</a>, um Mitglieder zu finden.</p>'))
+    +sec('Jobs',jobs.length?jobs.map(j=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="S.job=${j.id};S.jopen=1;go('jobs')"><b class="text-sm block">${esc(j.t)}</b><span class="text-xs text-muted">${esc([j.ind,j.reg,j.pay].filter(Boolean).join(' · '))}</span></button>`).join(''):'<p class="text-sm text-muted">Kein Job gefunden.</p>')
+    +(S.member?sec('Marktplatz',offs.length?offs.map(o=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="S.mcat='${esc(o.cat).replace(/'/g,'')}';go('markt')"><b class="text-sm block">${o.t}</b><span class="text-xs text-muted">${esc(o.cat)} · ${esc(o.full||'')}</span></button>`).join(''):'<p class="text-sm text-muted">Kein Angebot gefunden.</p>'):''); }
+
+async function partnerAppMsg(n,mid,v){ const box=document.getElementById('pmsg');
+  try{ const c=await rpc('chat_starten',{p_member:mid}); if(!c||!c.ok) throw 0; const j=await rpc('nachricht_senden',{p_chat:c.chat,p_text:v,p_media_pfad:null,p_media_typ:null}); if(!j||!j.ok){ alert(j&&j.text?j.text:'Senden hat nicht geklappt.'); return; }
+    box.innerHTML=`<p class="text-center text-sm" style="color:#087A4B">✓ Nachricht an ${esc(n)} gesendet. <a href="javascript:void(0)" onclick="closeModal();openConv('m${c.chat}')" class="underline font-semibold">Zum Chat</a></p>`; chatsLoad();
+  }catch(e){ alert('Senden hat nicht geklappt. Versuch es gleich nochmal.'); } }
 function feed(){
   const ft = S.ptopics || S.topics;
   const fp=feedPool(); const pool = fp ? (ft ? fp.filter(p=>ft.includes(p.k)) : fp) : (ft ? POSTS.filter(p=>ft.includes(p.k)) : POSTS);
-  const list = S.user ? pool : pool.slice(0,GUEST); S.feedList = list;
+  const list = S.onePost ? [S.onePost] : (S.user ? pool : pool.slice(0,GUEST)); S.feedList = list;
   const posts = list.map((p,i)=>`
     <article class="card overflow-hidden">
       <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2 ${p.real?'cursor-pointer':''}" ${p.real?`onclick="memberModal(${p.mid})"`:''}>${p.a==='ClosingHub'?'<span class="w-8 h-8 rounded-full overflow-hidden inline-block"><span class="w-full h-full flex items-center justify-center" style="background:#0E1A2B;color:#fff;font:400 13px/1 Bebas Neue,Arial Narrow,sans-serif;letter-spacing:.02em;padding-top:2px">HUB</span></span>':skAv(p.a,34,pAv(p))}${nameRank(p.a,p.r)}</span><span class="inline-flex items-center gap-2"><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span>${p.mine?`<button onclick="event.stopPropagation();delPost(${p.id})" class="text-muted text-xs" aria-label="Beitrag löschen">Löschen</button>`:''}${p.real&&!p.mine&&S.member?`<button onclick="event.stopPropagation();reportPost(${p.id})" class="text-muted text-xs">Melden</button>`:''}</span></div>
@@ -2100,6 +2230,7 @@ function feed(){
         ${actionBar(p,'feed')}
         ${p.tg?`<p class="text-xs text-muted mt-3">${p.tg.map(t=>'#'+t).join(' ')}</p>`:''}
       </div></article>`+mkSlot(i,list.length)).join('');
+  if(S.onePost) return onePostView(posts.replace(/<\/article>[\s\S]*$/,'</article>'));
   const guest = S.user?'':`<div class="card p-6 text-center space-y-3"><p class="font-serif text-xl">Du willst mehr sehen?</p><p class="text-muted text-sm">Melde dich kostenlos an – Feed, Jobs, Forum und dein Rang warten.</p><a href="#login" class="btn-gold">Kostenlos anmelden</a></div>`;
   return `<div class="flex justify-center gap-10 px-4">
     <section class="w-full max-w-[480px] py-6 space-y-6">
@@ -2675,7 +2806,7 @@ function markt(){
         <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">${o.cat}</span><p class="font-semibold leading-snug mt-0.5">${o.t}</p></div><span class="font-serif text-xl text-gold whitespace-nowrap leading-none mt-1">${o.pr} €</span></div>
         <button onclick="personModal('${o.s}')" class="flex items-center gap-2 text-sm text-left min-w-0"><span class="w-7 h-7 rounded-full overflow-hidden shrink-0">${avatar(o.s)}</span><span class="font-medium truncate">${o.s}</span>${rkChip(o.r)}</button>
         <div class="flex items-center justify-between gap-3 border-t border-line pt-3"><span class="text-xs text-muted truncate">⭐ <b class="text-[rgb(var(--fg))] font-semibold">${o.st.toFixed(1).replace('.',',')}</b> · ${o.n} Bewertungen · ${o.reg}</span><button onclick="${S.user?`buyModal('${o.t.replace(/'/g,'')}',${o.pr})`:`go('login')`}" class="btn-gold text-xs whitespace-nowrap" style="padding:.4rem .9rem">Kaufen</button></div>
-      </div>`).join(''):(useRealOffers()?`<div class="card p-6 text-muted text-sm">Noch keine Angebote${S.mcat!=='Alle'?' in dieser Kategorie':''}. ${S.member?'Sichere dir einen der 10 Plätze und reich dein eigenes Angebot ein!':''}</div>`:`<div class="card p-6 text-muted text-sm">Noch keine Angebote in ${S.region}. ${S.user?'Sei der Erste und sichere dir einen der 10 Plätze!':''} Tipp: „Ganzes Land durchsuchen“ aktivieren.</div>`)}
+      </div>`).join(''):(useRealOffers()?`<div class="card p-6 text-muted text-sm">Noch keine Angebote${S.mcat!=='Alle'?' in dieser Kategorie':''}. ${S.member?'Jede Leistung gibt es nur einmal – reich dein Angebot ein und sei der einzige Anbieter!':''}</div>`:`<div class="card p-6 text-muted text-sm">Noch keine Angebote in ${S.region}. ${S.user?'Sei der Erste – jede Leistung gibt es nur einmal!':''} Tipp: „Ganzes Land durchsuchen“ aktivieren.</div>`)}
     </div>
     <p class="text-xs text-muted mt-6">${useRealOffers()?'Anfragen landen als Nachricht im Chat mit dem Anbieter. Jedes Angebot wird von ClosingHub geprüft. Unpassende Angebote kannst du melden.':'Käufe laufen sicher über ClosingHub. Verkäufer werden nach jedem Kauf bewertet. ClosingHub-Gebühr: 9,9 % pro Verkauf.'}</p>
   </div>`;
@@ -2774,7 +2905,7 @@ function vorteile(){
   return `<div class="max-w-3xl mx-auto px-4 py-8"><h1 class="font-serif text-2xl mb-1">Member-Vorteile</h1><div class="flex justify-between items-start gap-3 mb-6"><p class="text-muted text-sm">Exklusive Deals – für alle Member, manche erst ab Rang 3 Performer. Alle Angebote sind Anzeigen.</p><a href="#werbung" class="btn-ghost text-sm whitespace-nowrap">Werbung schalten</a></div>
   <div class="grid sm:grid-cols-2 gap-4">${PERKS.map(p=>`<div class="card p-5"><span class="text-[10px] uppercase tracking-wide ${p[2]==='Anzeige'?'text-muted':'text-gold'}">${p[2]}</span><p class="font-semibold mt-1">${p[0]}</p><p class="text-gold text-sm">${p[1]}</p>${p[3]&&S.user?`<a class="btn-ghost text-sm mt-3 inline-block" href="${p[3]}" target="_blank" rel="noopener sponsored">Deal holen ↗</a>`:`<button class="btn-ghost text-sm mt-3">${S.user?'Deal holen':'Anmelden zum Freischalten'}</button>`}</div>`).join('')}</div></div>`;
 }
-function search(){ return `<div class="max-w-lg mx-auto px-4 py-8"><input class="input" placeholder="Member, Jobs, Marktplatz durchsuchen…"></div>`; }
+
 
 
 
@@ -2787,8 +2918,11 @@ function render(){
   if(r==='zentrale'){ document.getElementById('app').innerHTML=zentrale(); return; }
   const fn = PAGES[r] || feed;
   if(S.member&&S.chs){ if(r==='markt') setTimeout(()=>chEv('markt'),300); if(r==='feed'&&Date.now()-(S._chT||0)>15000){ S._chT=Date.now(); setTimeout(chLoad,1500); } }
+  const _same=S._lastR===r, _y=window.scrollY, _ae=document.activeElement;
+  if(_same && !S._forceR && _ae && _ae.closest && _ae.closest('#app') && _ae.matches && _ae.matches('input:not([type=file]):not([type=checkbox]):not([type=radio]):not([type=range]),textarea') && _ae.value && Date.now()-(S._act||0)>1500){ S._deferR=true; return; }
+  S._forceR=false; S._deferR=false; if(!_same&&r!=='feed') S.onePost=null;
   document.getElementById('app').innerHTML = shell(fn());
-  window.scrollTo(0,0); try{ markBell(); }catch(e){}
+  S._lastR=r; if(_same) window.scrollTo(0,_y); else window.scrollTo(0,0); try{ markBell(); }catch(e){} try{ navSync(); }catch(e){}
 }
 render();
 </script>
