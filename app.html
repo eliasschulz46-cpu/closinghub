@@ -1812,6 +1812,30 @@ const FCATS=[['Vertrieb-Basics',[['💬','Einwandbehandlung',128],['📞','Setti
 // Forum-Fragen. Zum Start leer: Elias stellt die ersten drei Fragen selbst.
 // Eintrag: {cat:'Einwandbehandlung', q:'Titel der Frage', t:'Text dazu', a:'ClosingHub', r:'Rainmaker'}  (cat = Name der Kategorie aus FCATS)
 const FTHREADS=[];
+// Selbst gestellte Fragen bleiben vorerst nur im Browser dieses Geräts (bis es Member-Konten gibt).
+try{ JSON.parse(localStorage.getItem('ch_fthreads')||'[]').forEach(t=>{ if(t&&t.cat&&t.q) FTHREADS.push({cat:String(t.cat),q:String(t.q),t:String(t.t||''),a:t.a,r:t.r,own:1}); }); }catch(e){}
+function newThread(cat){
+  if(!S.user){ go('login'); return; }
+  const cats=FCATS.flatMap(g=>g[1].map(c=>c[1]));
+  document.getElementById('modal').innerHTML = `
+  <div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()">
+    <form class="card w-full max-w-md p-5 relative max-h-[86vh] overflow-y-auto space-y-3" onclick="event.stopPropagation()" onsubmit="event.preventDefault();saveThread(this)">
+      <button type="button" onclick="closeModal()" class="absolute top-3 right-4 text-muted hover:text-white text-xl" aria-label="Schließen">✕</button>
+      <h3 class="font-serif text-xl">Neues Thema</h3>
+      <label class="block text-sm">Kategorie<select name="cat" class="input mt-1">${cats.map(c=>`<option ${c===cat?'selected':''}>${c}</option>`).join('')}</select></label>
+      <label class="block text-sm">Deine Frage<input name="q" class="input mt-1" maxlength="140" placeholder="Zum Beispiel: Wie startest du in einen Call?" autocomplete="off" required></label>
+      <label class="block text-sm">Mehr dazu (optional)<textarea name="t" class="input mt-1" rows="3" maxlength="600" placeholder="Hintergrund, damit andere gut antworten können"></textarea></label>
+      <p id="ntErr" class="text-xs" style="color:#c0392b;display:none">Bitte gib deine Frage ein.</p>
+      <button class="btn-gold w-full">Frage veröffentlichen</button>
+    </form></div>`;
+  const i=document.querySelector('#modal input[name=q]'); if(i) i.focus();
+}
+function saveThread(f){
+  const q=f.q.value.trim(); if(!q){ document.getElementById('ntErr').style.display='block'; return; }
+  FTHREADS.unshift({cat:f.cat.value,q,t:f.t.value.trim(),a:ME.name,r:ME.rank,own:1});
+  try{ localStorage.setItem('ch_fthreads',JSON.stringify(FTHREADS.filter(t=>t.own))); }catch(e){}
+  closeModal(); S.thread=f.cat.value; render();
+}
 S.helpful={};
 
 
@@ -1859,7 +1883,7 @@ document.addEventListener('touchend',e=>{ if(hY===null) return; const dy=hY-e.ch
 function forum(){
   if(S.thread) return thread();
   return `<div class="px-4 py-6 max-w-6xl mx-auto"><div class="max-w-3xl"><div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><span class="btn-gold">Forum</span><a href="#markt" class="btn-ghost">Marktplatz</a></div>
-    <div class="flex justify-between items-center mb-4"><h1 class="font-serif text-2xl">Forum</h1>${S.user?'<button class="btn-gold text-sm">+ Neues Thema</button>':'<a href="#login" class="btn-gold text-sm">Anmelden zum Mitreden</a>'}</div>
+    <div class="flex justify-between items-center mb-4"><h1 class="font-serif text-2xl">Forum</h1>${S.user?'<button class="btn-gold text-sm" onclick="newThread()">+ Neues Thema</button>':'<a href="#login" class="btn-gold text-sm">Anmelden zum Mitreden</a>'}</div>
     ${FCATS.map(([g,cs])=>`<p class="text-xs uppercase tracking-wider text-gold mt-6 mb-3">${g}</p><div class="space-y-3">${cs.map(([i,n,c])=>`<div onclick="S.thread='${n}';render()" class="card p-4 flex justify-between items-center hover:border-gold" style="cursor:pointer"><span>${i} <b class="ml-1">${n}</b></span><span class="text-sm text-muted">${(k=>k?k+(k===1?' Frage':' Fragen'):'Noch keine Fragen')(FTHREADS.filter(t=>t.cat===n).length)}</span></div>`).join('')}</div>`).join('')}
     <p class="text-xs text-muted mt-6">🛡️ KI filtert Spam vorab · Beiträge melden möglich · Moderatoren ab Rang 4 Dealmaker</p></div></div>`;
 }
@@ -1867,7 +1891,7 @@ function thread(){
   const cat=S.thread, list=FTHREADS.filter(t=>t.cat===cat);
   return `<div class="max-w-3xl mx-auto px-4 py-6">
     <button onclick="S.thread=null;render()" class="text-sm text-muted mb-4">← Forum</button>
-    <h1 class="font-serif text-2xl mb-4">${cat}</h1>
+    <div class="flex justify-between items-center mb-4 gap-3"><h1 class="font-serif text-2xl">${cat}</h1>${S.user?`<button class="btn-gold text-sm" onclick="newThread('${cat}')">+ Neues Thema</button>`:''}</div>
     ${list.length?list.map(t=>`<div class="card p-5 mb-3"><div class="flex items-center gap-2 mb-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block">${avatar(t.a||'ClosingHub')}</span>${nameRank(t.a||'ClosingHub',t.r||'Rainmaker')}</div>
       <h2 class="font-serif text-xl mb-2">${esc(t.q)}</h2>${t.t?`<p class="text-sm text-muted">${esc(t.t)}</p>`:''}
       ${S.user?'<div class="flex gap-2 mt-4"><input class="input" placeholder="Deine Antwort…"><button class="btn-gold">Senden</button></div>':''}</div>`).join(''):`<div class="card p-5 text-sm"><p class="font-semibold mb-1">Hier steht noch keine Frage.</p><p class="text-muted">Zum Start stellt ClosingHub die ersten drei Fragen. Danach bist du dran.</p></div>`}
