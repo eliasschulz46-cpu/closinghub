@@ -1472,7 +1472,7 @@ S.rp=null; S.rpMore=true;
 function mapPost(p){
   const first=String(p.name||'').split(' ')[0]; S.skMap=S.skMap||{}; S.skMap[first]=p.streak;
   const id=1e6+p.id; S.liked[id]=!!p.liked;
-  return {hl:!!p.highlight, imp:p.im_profil!==false, thumb:p.thumb_url||null, id, rid:p.id, real:true, mid:p.member_id, k:p.kategorie, a:esc(first), full:p.name, r:RANKS[(p.rang||1)-1]||'Starter', av:p.avatar_url,
+  return {vor:p.vorlage||null, raw:p.text||'', hl:!!p.highlight, imp:p.im_profil!==false, thumb:p.thumb_url||null, id, rid:p.id, real:true, mid:p.member_id, k:p.kategorie, a:esc(first), full:p.name, r:RANKS[(p.rang||1)-1]||'Starter', av:p.avatar_url,
     t:esc(p.text).replace(/\n/g,'<br>'), l:p.likes-(p.liked?1:0), c:p.kommentare, img:p.media_typ==='bild'?p.media_url:null, video:p.media_typ==='video'?p.media_url:null,
     mine:p.mine, folge:p.folge, at:p.created_at};
 }
@@ -1558,7 +1558,7 @@ function postGrid(list,owner){
   if(!list) return '<p class="mt-8 text-sm text-muted text-center">Lädt …</p>';
   if(!list.length) return owner?`<div class="mt-8 card p-8 text-center space-y-3"><p class="font-serif text-xl">Noch keine Beiträge</p><p class="text-sm text-muted">Teile deinen ersten Deal, Tipp oder Fail mit der Community.</p><a href="#create" class="btn-gold inline-block" style="padding:8px 16px">＋ Ersten Beitrag teilen</a></div>`:'<p class="mt-8 text-sm text-muted text-center">Noch keine Beiträge.</p>';
   S.plistReal=list;
-  return `<div class="mt-8 grid grid-cols-3 gap-1">${list.map((p,i)=>`<div onclick="closeModal();S.plist=S.plistReal;S.plMk=0;startPlayer(${i})" class="relative aspect-square bg-panel border border-line overflow-hidden cursor-pointer">${p.hl?'<span class="absolute z-10" style="top:4px;right:6px;font-size:15px;color:#F1D58A;text-shadow:0 1px 3px rgba(0,0,0,.8)">★</span>':''}${owner&&p.imp===false?'<span class="absolute z-10 text-[10px] rounded px-1" style="bottom:4px;left:4px;background:rgba(0,0,0,.65);color:#fff">nur Feed</span>':''}${p.thumb?`<img src="${esc(p.thumb)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">${p.video?'<span class="absolute top-1.5 right-2 text-white text-xs">▶</span>':''}`:p.img?`<img src="${esc(p.img)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:p.video?`<video src="${esc(p.video)}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted preload="metadata"></video><span class="absolute top-1.5 right-2 text-white text-xs">▶</span>`:`<div class="p-3 text-[11px] font-serif">${p.t}</div>`}</div>`).join('')}</div>`;
+  return `<div class="mt-8 grid grid-cols-3 gap-1">${list.map((p,i)=>`<div onclick="closeModal();S.plist=S.plistReal;S.plMk=0;startPlayer(${i})" class="relative aspect-square bg-panel border border-line overflow-hidden cursor-pointer">${p.hl?'<span class="absolute z-10" style="top:4px;right:6px;font-size:15px;color:#F1D58A;text-shadow:0 1px 3px rgba(0,0,0,.8)">★</span>':''}${owner&&p.imp===false?'<span class="absolute z-10 text-[10px] rounded px-1" style="bottom:4px;left:4px;background:rgba(0,0,0,.65);color:#fff">nur Feed</span>':''}${p.thumb?`<img src="${esc(p.thumb)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">${p.video?'<span class="absolute top-1.5 right-2 text-white text-xs">▶</span>':''}`:p.img?`<img src="${esc(p.img)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:p.video?`<video src="${esc(p.video)}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted preload="metadata"></video><span class="absolute top-1.5 right-2 text-white text-xs">▶</span>`:p.vor?tplHtml(p.vor,p.raw,'sq'):`<div class="p-3 text-[11px] font-serif">${p.t}</div>`}</div>`).join('')}</div>`;
 }
 async function memberModal(mid){
   if(S.member&&mid===S.member.id){ go('profile'); return; }
@@ -2451,14 +2451,14 @@ function stPrev(){ const s=S.sv; if(!s) return; if(s.i>0) s.i--; else { let n=-1
 function stDraw(){
   const s=S.sv, g=S.st[s.g], it=g.items[s.i]; clearInterval(S.svT);
   if(!it.gesehen&&!g.ich){ it.gesehen=true; g.ungesehen=g.items.some(x=>!x.gesehen); rpc('story_gesehen_setzen',{p_id:it.id}).catch(()=>{}); }
-  const media=it.medaille?mdStage(it.medaille,+it.medaille_n||1,it.text):it.media_url?(it.media_typ==='video'?`<video id="stv" src="${esc(it.media_url)}" autoplay playsinline style="width:100%;height:100%;object-fit:contain;background:#000"></video>`:`<img src="${esc(it.media_url)}" alt="" style="width:100%;height:100%;object-fit:contain;background:#000">`):'';
+  const media=it.medaille?mdStage(it.medaille,+it.medaille_n||1,it.text):(!it.media_url&&it.vorlage)?tplHtml(it.vorlage,it.text,'story'):it.media_url?(it.media_typ==='video'?`<video id="stv" src="${esc(it.media_url)}" autoplay playsinline style="width:100%;height:100%;object-fit:contain;background:#000"></video>`:`<img src="${esc(it.media_url)}" alt="" style="width:100%;height:100%;object-fit:contain;background:#000">`):'';
   document.getElementById('modal').innerHTML=`<div class="dark-zone fixed inset-0 z-50 flex items-center justify-center" style="background:#000">
     <div class="relative w-full h-full md:h-[90vh] md:rounded-2xl overflow-hidden" style="max-width:440px;background:${it.media_url?'#000':ST_BG[it.farbe||0]};color:#fff">
       <div class="absolute top-2 inset-x-2 flex gap-1" style="z-index:3">${g.items.map((_,j)=>`<div class="flex-1 rounded" style="height:3px;background:rgba(255,255,255,.3)"><div id="stb${j}" class="h-full rounded" style="background:#fff;width:${j<s.i?100:0}%"></div></div>`).join('')}</div>
       <div class="absolute left-3 right-3 flex items-center gap-2" style="top:16px;z-index:3"><button onclick="stClose();openProfile(${g.id})" class="flex items-center gap-2 min-w-0 text-left"><span class="rounded-full overflow-hidden shrink-0" style="width:34px;height:34px">${g.avatar_url?`<img src="${esc(g.avatar_url)}" class="w-full h-full object-cover">`:initAv(g.name)}</span><span class="min-w-0"><b class="text-sm block truncate" style="color:#fff">${esc(g.ich?'Dein Status':g.name)}</b><span class="text-[11px]" style="color:rgba(255,255,255,.75)">${agoTxt(it.created_at)}</span></span></button>
         <span class="ml-auto flex items-center gap-3">${g.ich?`<span class="text-xs" style="color:rgba(255,255,255,.85)">👁 ${it.aufrufe||0}</span><button class="text-xs underline" style="color:#fff" onclick="stDel(${it.id})">Löschen</button>`:`<button class="text-xs" style="color:rgba(255,255,255,.8)" onclick="stReport(${it.id})">Melden</button>`}<button onclick="stClose()" class="text-2xl leading-none" style="color:#fff" aria-label="Schließen">✕</button></span></div>
       <div class="absolute inset-0" style="z-index:1">${media}</div>
-      ${it.text&&!it.medaille?`<div class="absolute inset-x-0 flex items-center justify-center p-8 text-center pointer-events-none" style="z-index:2;${it.media_url?'bottom:80px':'top:0;bottom:0'}"><p class="${it.media_url?'text-base':'font-serif text-3xl leading-snug'}" style="${it.media_url?'background:rgba(0,0,0,.55);padding:8px 12px;border-radius:12px':''};white-space:pre-line;overflow-wrap:anywhere">${esc(it.text)}</p></div>`:''}
+      ${it.text&&!it.medaille&&!(it.vorlage&&!it.media_url)?`<div class="absolute inset-x-0 flex items-center justify-center p-8 text-center pointer-events-none" style="z-index:2;${it.media_url?'bottom:80px':'top:0;bottom:0'}"><p class="${it.media_url?'text-base':'font-serif text-3xl leading-snug'}" style="${it.media_url?'background:rgba(0,0,0,.55);padding:8px 12px;border-radius:12px':''};white-space:pre-line;overflow-wrap:anywhere">${esc(it.text)}</p></div>`:''}
       <div class="absolute inset-x-0 flex" style="top:60px;bottom:76px;z-index:2"><button class="flex-1" onclick="stPrev()" aria-label="Zurück"></button><button class="flex-1" onclick="stNext()" aria-label="Weiter"></button></div>
       ${g.ich?'':`<form class="absolute bottom-0 inset-x-0 p-3 flex gap-2" style="z-index:3;background:linear-gradient(transparent,rgba(0,0,0,.6))" onsubmit="event.preventDefault();stReply(this)"><input id="stIn" class="input" placeholder="Antworten an ${esc(String(g.name).split(' ')[0])} …" maxlength="500" onfocus="S.sv&&(S.sv.hold=Date.now()-S.sv.t0)" onblur="S.sv&&S.sv.hold!=null&&(S.sv.t0=Date.now()-S.sv.hold,S.sv.hold=null)" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.35)"><button class="btn-gold">Senden</button></form>`}
     </div></div>`;
@@ -2478,14 +2478,14 @@ S.cmode=S.cmode||'beitrag';
 function postMode(m){ S.cmode=m; if(route()!=='create') go('create'); else render(); }
 function postTabs(){ return `<h1 class="font-serif text-2xl">Posten</h1><div class="grid grid-cols-2 gap-2 p-1 rounded-full border border-line"><button class="${S.cmode==='beitrag'?'btn-gold':'text-muted'} rounded-full text-sm py-2" onclick="postMode('beitrag')">Beitrag im Feed</button><button class="${S.cmode==='status'?'btn-gold':'text-muted'} rounded-full text-sm py-2" onclick="postMode('status')">Status · 24 Std.</button></div>`; }
 function statusCreate(){
-  const f=S.sf||(S.sf={text:'',farbe:0,file:null,prev:null,typ:null});
+  const f=S.sf||(S.sf={text:'',farbe:0,file:null,prev:null,typ:null,vorlage:'schwarz'});
   return `<div class="max-w-lg mx-auto px-4 py-8 space-y-4">${postTabs()}
     ${(ME.medals||[]).some(m=>m[1]>0)?`<div class="card p-3"><p class="text-xs uppercase tracking-wider text-muted mb-2">Medaille teilen</p><div class="flex gap-3 overflow-x-auto pb-1">${ME.medals.filter(m=>m[1]>0).map(([n,c])=>`<button class="shrink-0 flex flex-col items-center gap-1" style="width:72px" onclick="medalShare('${n.replace(/'/g,'')}')">${CHMedal(n,52)}<span class="text-[10px] text-center leading-tight">${esc(n)}</span></button>`).join('')}</div></div>`:''}
     <p class="text-sm text-muted">Dein Status erscheint 24 Stunden oben im Feed in der Statusleiste. Perfekt für den Erfolg des Tages, einen Call-Rekord oder einen kurzen Einblick.</p>
-    <div class="relative rounded-2xl overflow-hidden flex items-center justify-center" style="aspect-ratio:9/12;max-height:420px;background:${f.prev?'#000':ST_BG[f.farbe]}">
-      ${f.prev?(f.typ==='video'?`<video src="${f.prev}" class="w-full h-full" style="object-fit:contain" controls playsinline></video>`:`<img src="${f.prev}" class="w-full h-full" style="object-fit:contain">`)+`<button class="absolute top-2 right-2 rounded-full px-2.5 py-1 text-xs" style="background:rgba(0,0,0,.6);color:#fff" onclick="sfClear()">✕ Entfernen</button>`:''}
-      <textarea id="sfText" maxlength="280" oninput="S.sf.text=this.value" placeholder="${f.prev?'Text zum Bild (optional) …':'Was hast du heute geschafft?'}" class="${f.prev?'absolute inset-x-3 bottom-3 text-sm':'font-serif text-2xl text-center'}" style="background:${f.prev?'rgba(0,0,0,.55)':'transparent'};color:#fff;border:0;outline:0;resize:none;width:${f.prev?'auto':'85%'};${f.prev?'border-radius:10px;padding:8px;height:64px':'height:60%'}">${esc(f.text)}</textarea></div>
-    ${f.prev?'':`<div class="flex gap-2 justify-center">${ST_BG.map((b,i)=>`<button aria-label="Farbe ${i+1}" onclick="S.sf.text=document.getElementById('sfText').value;S.sf.farbe=${i};render()" class="rounded-full" style="width:30px;height:30px;background:${b};box-shadow:${f.farbe===i?'0 0 0 2px rgb(var(--bg)),0 0 0 4px #087A4B':'none'}"></button>`).join('')}</div>`}
+    ${f.prev?`<div class="relative rounded-2xl overflow-hidden flex items-center justify-center" style="aspect-ratio:9/12;max-height:420px;background:#000">
+      ${f.typ==='video'?`<video src="${f.prev}" class="w-full h-full" style="object-fit:contain" controls playsinline></video>`:`<img src="${f.prev}" class="w-full h-full" style="object-fit:contain">`}<button class="absolute top-2 right-2 rounded-full px-2.5 py-1 text-xs" style="background:rgba(0,0,0,.6);color:#fff" onclick="sfClear()">✕ Entfernen</button>
+      <textarea id="sfText" maxlength="280" oninput="S.sf.text=this.value" placeholder="Text zum Bild (optional) …" class="absolute inset-x-3 bottom-3 text-sm" style="background:rgba(0,0,0,.55);color:#fff;border:0;outline:0;resize:none;border-radius:10px;padding:8px;height:64px">${esc(f.text)}</textarea></div>`
+    :`<textarea id="sfText" class="input h-24" maxlength="280" placeholder="Was hast du heute geschafft?" oninput="S.sf.text=this.value;clearTimeout(S._tvT);S._tvT=setTimeout(()=>tplPrev('sf'),180)">${esc(f.text)}</textarea>${tplPicker('sf',f.vorlage,'story')}`}
     <div class="grid grid-cols-2 gap-2 text-sm"><label class="btn-ghost text-center cursor-pointer">🖼️ Bild<input type="file" accept="image/*" class="hidden" onchange="sfFile(this,'bild')"></label><label class="btn-ghost text-center cursor-pointer">🎬 Video ≤ 1 Min.<input type="file" accept="video/*" class="hidden" onchange="sfFile(this,'video')"></label></div>
     <p id="sfErr" class="text-sm" style="color:#e5484d;min-height:1.2em"></p>
     <button class="btn-gold w-full" id="sfBtn" onclick="sfPost()">Status posten</button></div>`;
@@ -2502,6 +2502,7 @@ async function sfPost(){ const b=document.getElementById('sfBtn'), err=document.
   try{ let url=null; if(f.file) url=await upload(f.file,pr=>{ b.textContent='Lädt hoch … '+Math.round(pr*100)+' %'; });
     const j=await rpc('story_neu',{p_text:t,p_media_url:url,p_media_typ:url?f.typ:null,p_farbe:f.farbe});
     if(!j||!j.ok) throw new Error(j&&j.grund==='limit'?'Du hast heute schon 10 Status gepostet.':'Posten hat nicht geklappt.');
+    if(j.id&&!f.file&&f.vorlage) await rpc('vorlage_setzen',{p_art:'story',p_id:j.id,p_vorlage:f.vorlage}).catch(()=>null);
     if(f.prev) URL.revokeObjectURL(f.prev); S.sf=null; S.cmode='beitrag'; S.st=undefined; go('feed'); }
   catch(e){ err.textContent=e.message; b.disabled=false; b.textContent='Status posten'; } }
 
@@ -2620,10 +2621,11 @@ function drawMkSlide(p,post){ const card=typeof mitmachCard==='function'?mitmach
 function create(){
   if(!S.member) return `<div class="max-w-lg mx-auto px-4 py-8"><div class="card p-8 text-center space-y-3"><p class="font-serif text-xl">Melde dich an, um zu teilen</p><a href="#login" class="btn-gold inline-block" style="padding:8px 16px">Anmelden</a></div></div>`;
   if(S.cmode==='status') return statusCreate();
-  const f=S.cf||(S.cf={kat:null,ki:null,kiLoad:false,file:null,prev:null,typ:null,frames:[],thumb:null,thumbPrev:null,thumbIdx:-1});
+  const f=S.cf||(S.cf={kat:null,ki:null,kiLoad:false,file:null,prev:null,typ:null,frames:[],thumb:null,thumbPrev:null,thumbIdx:-1,vorlage:'papier'});
   const kb=k=>{ const on=f.kat===k, ki=f.ki===k; return `<button class="${on?'btn-gold':'btn-ghost'} text-sm" style="padding:6px 12px;position:relative" onclick="cfKat('${k}')">${k}${ki?`<span style="position:absolute;top:-8px;right:-6px;font-size:9px;font-weight:700;background:#D9B45A;color:#1a1405;border-radius:99px;padding:1px 6px">KI</span>`:''}</button>`; };
   return `<div class="max-w-lg mx-auto px-4 py-8 space-y-4">${postTabs()}
-    <textarea id="cfText" class="input h-32" maxlength="1000" placeholder="Was willst du teilen? z. B. „Erster Abschluss über 3.000 €!“" oninput="S.cf.text=this.value;clearTimeout(S._kiT);S._kiT=setTimeout(()=>cfKi(),1300)">${esc(f.text||'')}</textarea>
+    <textarea id="cfText" class="input h-32" maxlength="1000" placeholder="Was willst du teilen? z. B. „Erster Abschluss über 3.000 €!“" oninput="S.cf.text=this.value;clearTimeout(S._kiT);S._kiT=setTimeout(()=>cfKi(),1300);clearTimeout(S._tvT);S._tvT=setTimeout(()=>tplPrev('cf'),180)">${esc(f.text||'')}</textarea>
+    ${f.file?'':tplPicker('cf',f.vorlage,'sq')}
     ${f.prev?`<div class="relative rounded-xl overflow-hidden border border-line">${f.typ==='video'?`<video id="cfVid" src="${f.prev}" class="w-full max-h-80 object-contain bg-black" controls playsinline></video>`:`<img src="${f.prev}" class="w-full max-h-80 object-contain bg-black">`}<button class="absolute top-2 right-2 bg-black/70 text-white rounded-full w-8 h-8" onclick="cfClear()">✕</button></div>`
       :`<div class="grid grid-cols-2 gap-2 text-sm"><label class="btn-ghost text-center cursor-pointer">🖼️ Bild<input type="file" accept="image/*" class="hidden" onchange="cfFile(this,'bild')"></label><label class="btn-ghost text-center cursor-pointer">🎬 Video ≤ 1 Min.<input type="file" accept="video/mp4,video/quicktime,video/webm" class="hidden" onchange="cfFile(this,'video')"></label></div>`}
     ${f.file?cfThumbBox(f):''}
@@ -2684,6 +2686,7 @@ async function cfPost(){
     let th=null; if(f.thumb){ b.textContent='Vorschaubild …'; const tf=f.thumb instanceof File?f.thumb:new File([f.thumb],'thumb.jpg',{type:'image/jpeg'}); th=await upload(tf).catch(()=>null); }
     if(j.id&&(th||f.ki)) await rpc('post_meta_setzen',{p_id:j.id,p_thumb:th,p_ki:f.ki}).catch(()=>null);
     if(j.id&&f.noProf) await rpc('post_im_profil',{p_id:j.id,p_an:false}).catch(()=>null);
+    if(j.id&&!f.file&&f.vorlage) await rpc('vorlage_setzen',{p_art:'post',p_id:j.id,p_vorlage:f.vorlage}).catch(()=>null);
     if(f.prev) URL.revokeObjectURL(f.prev); (f.frames||[]).forEach(u=>URL.revokeObjectURL(u)); S.cf=null; S.myPosts=null; go('feed'); feedLoad();
   }catch(e){ err.textContent=e.message; b.disabled=false; b.textContent='Posten'; }
 }
@@ -2707,6 +2710,107 @@ async function profToggle(id,btn){ const pid=id-1e6, p=[...(S.rp||[]),...(S.myPo
   [...(S.rp||[]),...(S.myPosts||[]),...(S.plist||[])].forEach(x=>{ if(x&&x.id===id){ x.imp=on; if(!on) x.hl=false; } }); delete S.hl[S.member.id];
   if(S.player) drawPlayer(); else render(); }
 
+// ===== Vorlagen-Auswahl (Beitrag und Status) =====
+function tplPicker(k,cur,fmt){ const story=fmt==='story';
+  return `<div><p class="text-xs uppercase tracking-wider text-muted mb-2">Hintergrund</p>
+    <div class="flex gap-2 overflow-x-auto pb-2" style="scrollbar-width:thin">${TPLS.map(t=>`<button type="button" onclick="tplSet('${k}','${t.id}')" title="${t.n}" class="shrink-0 relative rounded-lg overflow-hidden" style="width:${story?50:62}px;height:${story?88:62}px;box-shadow:${t.id===cur?'0 0 0 2px rgb(var(--bg)),0 0 0 4px #087A4B':'0 0 0 1px rgb(var(--line))'}">${tplHtml(t.id,'Aa',fmt)}</button>`).join('')}</div>
+    <p class="text-[11px] text-muted mt-1">${esc((TPLS.find(t=>t.id===cur)||{}).n||'')} · Vorschau:</p>
+    <div id="${k}Prev" class="relative rounded-xl overflow-hidden mt-2 mx-auto" style="width:${story?'min(62%,240px)':'min(100%,340px)'};aspect-ratio:${story?'9/16':'1'};box-shadow:0 10px 26px -12px rgba(0,0,0,.45)">${tplHtml(cur,(k==='cf'?(S.cf&&S.cf.text):(S.sf&&S.sf.text))||'Dein Text erscheint hier.',fmt)}</div></div>`; }
+function tplSet(k,id){ const o=k==='cf'?S.cf:S.sf, ta=document.getElementById(k+'Text'); if(ta) o.text=ta.value; o.vorlage=id; render(); }
+function tplPrev(k){ const o=k==='cf'?S.cf:S.sf, el=document.getElementById(k+'Prev'); if(!o||!el) return; el.innerHTML=tplHtml(o.vorlage,o.text||'Dein Text erscheint hier.',k==='cf'?'sq':'story'); }
+
+// ===== ClosingHub · 15 Hintergrund-Vorlagen für Textbeiträge und Status (Runde 2: realistischer) =====
+// Jede Vorlage: Hintergrund (CSS), SVG-Ebene (Texturen, Motive), HTML-Ebene (Ränder, Löcher), Schrift.
+const TPL_ESC=s=>String(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+// Wiederverwendbare Texturen (SVG-Filter)
+const TPL_TX={
+  papier:`<filter id="fxPap" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" seed="3"/><feColorMatrix values="0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .28 0 0 0 .22 0"/></filter>
+          <filter id="fxFas" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".012 .2" numOctaves="2" seed="9"/><feColorMatrix values="0 0 0 0 .5 0 0 0 0 .44 0 0 0 0 .34 0 0 0 .18 -.04"/></filter>`,
+  korn:`<filter id="fxKorn" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0"/></filter>`,
+  marmor:`<filter id="fxMar" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".0065 .011" numOctaves="5" seed="21" result="n"/><feColorMatrix in="n" type="luminanceToAlpha" result="l"/><feComponentTransfer in="l"><feFuncA type="table" tableValues="0 0 0 0 .05 .55 .05 0 0 0 0"/></feComponentTransfer><feColorMatrix values="0 0 0 0 .38 0 0 0 0 .41 0 0 0 0 .47 0 0 0 1 0"/><feGaussianBlur stdDeviation=".35"/></filter>
+          <filter id="fxMar2" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".014 .02" numOctaves="4" seed="4" result="n"/><feColorMatrix in="n" type="luminanceToAlpha" result="l"/><feComponentTransfer in="l"><feFuncA type="table" tableValues="0 0 0 0 0 .28 0 0 0 0 0"/></feComponentTransfer><feColorMatrix values="0 0 0 0 .55 0 0 0 0 .57 0 0 0 0 .62 0 0 0 1 0"/></filter>
+          <filter id="fxMarC" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".02" numOctaves="3" seed="8"/><feColorMatrix values="0 0 0 0 .8 0 0 0 0 .8 0 0 0 0 .82 0 0 0 .18 0"/></filter>`,
+  stein:`<filter id="fxStein" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".035 .09" numOctaves="5" seed="13"/><feColorMatrix values="0 0 0 0 .6 0 0 0 0 .64 0 0 0 0 .7 0 0 0 .32 -.08"/></filter>`,
+  leder:`<filter id="fxLed" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency=".09" numOctaves="3" seed="2" result="t"/><feColorMatrix in="t" values="0 0 0 0 .1 0 0 0 0 .05 0 0 0 0 .02 0 0 0 .55 0" result="c"/><feDiffuseLighting in="t" surfaceScale="1.6" lighting-color="#d9a77a" result="d"><feDistantLight azimuth="225" elevation="55"/></feDiffuseLighting><feComposite in="d" in2="SourceGraphic" operator="arithmetic" k1="0" k2=".22" k3=".9" k4="0"/></filter>`,
+  beton:`<filter id="fxBet" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".6" numOctaves="4" seed="17" result="t"/><feDiffuseLighting in="t" surfaceScale="1.2" lighting-color="#e9e7e2"><feDistantLight azimuth="135" elevation="62"/></feDiffuseLighting></filter>
+          <filter id="fxBet2" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".012" numOctaves="3" seed="6"/><feColorMatrix values="0 0 0 0 .35 0 0 0 0 .35 0 0 0 0 .34 0 0 0 .22 -.05"/></filter>`,
+  kreide:`<filter id="fxKre" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".015 .05" numOctaves="4" seed="31"/><feColorMatrix values="0 0 0 0 .85 0 0 0 0 .9 0 0 0 0 .88 0 0 0 .14 -.02"/></filter>`,
+  glow:`<filter id="fxGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter><filter id="fxSoft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>`
+};
+const TPL_R=n=>{ let x=Math.sin(n*99.73)*43758.5453; return x-Math.floor(x); };
+function skylineSvg(){ let b='', w=''; const layers=[[290,'#1B3050',.9,0],[315,'#122440',1,40],[340,'#0A1628',1,80]];
+  layers.forEach(([base,col,op,seed],li)=>{ let x=-10; while(x<410){ const bw=18+TPL_R(seed+x)*34, bh=30+TPL_R(seed+x*1.7)*(li===2?70:110)+(li===0?40:0); b+=`<rect x="${x.toFixed(1)}" y="${(base+20-bh).toFixed(1)}" width="${bw.toFixed(1)}" height="${(bh+80).toFixed(1)}" fill="${col}" fill-opacity="${op}"/>`;
+      if(li>0) for(let yy=base+26-bh;yy<base+20;yy+=9) for(let xx=x+4;xx<x+bw-4;xx+=7) if(TPL_R(xx*3.1+yy)>.72) w+=`<rect x="${xx.toFixed(1)}" y="${yy.toFixed(1)}" width="3" height="4" fill="${TPL_R(xx+yy)>.5?'#FFD98A':'#FFF1C9'}" fill-opacity="${(.35+TPL_R(xx*yy)*.6).toFixed(2)}"/>`;
+      x+=bw+1; } });
+  return `<rect width="400" height="400" fill="url(#skyG)"/><ellipse cx="200" cy="300" rx="260" ry="70" fill="#F0A35A" fill-opacity=".22" filter="url(#fxSoft)"/>${[...Array(40)].map((_,i)=>`<circle cx="${(TPL_R(i)*400).toFixed(1)}" cy="${(TPL_R(i+50)*180).toFixed(1)}" r="${(TPL_R(i+9)*1.1+.2).toFixed(2)}" fill="#fff" fill-opacity="${(TPL_R(i+3)*.7+.2).toFixed(2)}"/>`).join('')}${b}${w}<rect y="340" width="400" height="60" fill="#070F1C"/>`; }
+function bokehSvg(){ const C=['#FFB25C','#FF6B6B','#FFD98A','#7FD1FF','#F5F5F5','#FF9F43']; return [...Array(26)].map((_,i)=>{ const r=8+TPL_R(i*7)*38, x=TPL_R(i*3)*420-10, y=TPL_R(i*5)*420-10, o=.12+TPL_R(i*11)*.35; return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${C[i%C.length]}" fill-opacity="${o.toFixed(2)}" filter="url(#fxGlow)"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r*.92).toFixed(1)}" fill="none" stroke="${C[i%C.length]}" stroke-opacity="${(o*.9).toFixed(2)}" stroke-width="1.2"/>`; }).join(''); }
+function sterneSvg(){ let s=''; for(let i=0;i<220;i++){ const x=TPL_R(i*1.3)*400, y=TPL_R(i*2.7)*400, band=Math.abs((y-(400-x*0.9))/80); const r=(TPL_R(i*5)*.9+.15)*(band<1?1.2:1); s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(2)}" fill="#fff" fill-opacity="${(TPL_R(i*7)*.7+.25).toFixed(2)}"/>`; }
+  return `<path d="M-40 460 L460 -60 L460 60 L40 520Z" fill="#9FB7E6" fill-opacity=".14" filter="url(#fxSoft)"/><path d="M-20 440 L440 -40" stroke="#E8D9FF" stroke-opacity=".18" stroke-width="40" filter="url(#fxSoft)"/>${s}<circle cx="318" cy="96" r="1.8" fill="#fff"/><circle cx="318" cy="96" r="7" fill="#fff" fill-opacity=".25" filter="url(#fxGlow)"/>`; }
+const TPLS=[
+ {id:'papier', n:'Papier', f:'serif', c:'#1E2A3B', bg:'radial-gradient(130% 100% at 30% 20%,#FBF7EE,#F2EBDB 60%,#E6DCC6)',
+  svg:`<defs>${TPL_TX.papier}</defs><rect width="400" height="400" filter="url(#fxPap)"/><rect width="400" height="400" filter="url(#fxFas)"/><path d="M175 366h50" stroke="#087A4B" stroke-width="2"/>`,
+  html:`<i style="position:absolute;inset:0;box-shadow:inset 0 0 70px rgba(120,95,55,.22)"></i>`},
+ {id:'skyline', n:'Skyline', f:'sans', c:'#FFFFFF', up:1, bg:'#0B1628',
+  svg:`<defs><linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060D1A"/><stop offset=".55" stop-color="#14284A"/><stop offset=".78" stop-color="#3A3F63"/><stop offset=".9" stop-color="#7A5A6A"/></linearGradient>${TPL_TX.glow}</defs>${skylineSvg()}`},
+ {id:'chart', n:'Wachstum', f:'sans', c:'#FFFFFF', up:1, bg:'radial-gradient(120% 90% at 20% 100%,#0B4A33,#06291D 55%,#02130D)',
+  svg:`<defs>${TPL_TX.glow}<linearGradient id="chF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3FBF86" stop-opacity=".35"/><stop offset="1" stop-color="#3FBF86" stop-opacity="0"/></linearGradient></defs>
+   <g stroke="#FFFFFF" stroke-opacity=".05">${[...Array(9)].map((_,i)=>`<path d="M${i*50} 0V400"/><path d="M0 ${i*50}H400"/>`).join('')}</g>
+   <path d="M0 360L45 348 85 354 125 330 165 336 205 306 245 312 285 270 325 250 365 214 400 190V400H0Z" fill="url(#chF)"/>
+   <path d="M0 360L45 348 85 354 125 330 165 336 205 306 245 312 285 270 325 250 365 214 400 190" fill="none" stroke="#3FBF86" stroke-width="6" stroke-opacity=".45" filter="url(#fxGlow)"/>
+   <path d="M0 360L45 348 85 354 125 330 165 336 205 306 245 312 285 270 325 250 365 214 400 190" fill="none" stroke="#7FF0BC" stroke-width="2"/>
+   ${[[85,354],[165,336],[245,312],[325,250]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.5" fill="#06291D" stroke="#7FF0BC" stroke-width="1.6"/>`).join('')}<circle cx="365" cy="214" r="5" fill="#7FF0BC"/><circle cx="365" cy="214" r="14" fill="#7FF0BC" fill-opacity=".25" filter="url(#fxGlow)"/>`},
+ {id:'marmor', n:'Marmor', f:'serif', c:'#17202C', bg:'linear-gradient(155deg,#FDFDFC,#F1F1EF 55%,#E5E6E8)',
+  svg:`<defs>${TPL_TX.marmor}</defs><rect width="400" height="400" filter="url(#fxMarC)"/><rect width="400" height="400" filter="url(#fxMar2)"/><rect width="400" height="400" filter="url(#fxMar)"/><path d="M155 345h90" stroke="#B8913A" stroke-width="1.4"/>`,
+  html:`<i style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(255,255,255,.55),transparent 40%,transparent 70%,rgba(255,255,255,.25))"></i>`},
+ {id:'schiefer', n:'Schiefer', f:'bold', c:'#F3F4F6', bg:'linear-gradient(160deg,#454C55,#2C3138 55%,#1C2025)',
+  svg:`<defs>${TPL_TX.stein}${TPL_TX.korn}</defs><rect width="400" height="400" filter="url(#fxStein)"/><rect width="400" height="400" filter="url(#fxKorn)"/><rect x="52" y="52" width="40" height="5" fill="#3FBF86"/>`,
+  html:`<i style="position:absolute;inset:0;background:radial-gradient(90% 70% at 25% 15%,rgba(255,255,255,.12),transparent 60%)"></i>`},
+ {id:'sonne', n:'Sonnenaufgang', f:'serif', c:'#FFFFFF', up:1, bg:'linear-gradient(180deg,#2B3A67 0%,#7A4C7E 28%,#E0726A 52%,#F7A65B 68%,#FCD58E 80%)',
+  svg:`<defs>${TPL_TX.glow}<radialGradient id="snG"><stop offset="0" stop-color="#FFF7DF"/><stop offset=".35" stop-color="#FFE3A0" stop-opacity=".9"/><stop offset="1" stop-color="#FFB86B" stop-opacity="0"/></radialGradient></defs>
+   <circle cx="200" cy="318" r="150" fill="url(#snG)"/><circle cx="200" cy="318" r="34" fill="#FFF8E4"/>
+   ${[...Array(9)].map((_,i)=>`<path d="M200 318L${200+Math.cos((i/8)*Math.PI+Math.PI)*420} ${318+Math.sin((i/8)*Math.PI+Math.PI)*420}" stroke="#FFF1D0" stroke-opacity=".07" stroke-width="18"/>`).join('')}
+   <path d="M0 330C60 318 110 334 170 324S290 312 400 326V400H0Z" fill="#6E4A6E" fill-opacity=".75"/><path d="M0 352C80 338 150 360 230 346S340 340 400 350V400H0Z" fill="#3D2C4E"/><path d="M0 376C90 366 180 382 270 370S360 368 400 372V400H0Z" fill="#221A33"/>
+   <ellipse cx="200" cy="330" rx="230" ry="18" fill="#FFE3B0" fill-opacity=".25" filter="url(#fxSoft)"/>`},
+ {id:'schwarz', n:'Minimal Schwarz', f:'bold', c:'#FFFFFF', bg:'radial-gradient(110% 80% at 50% 0%,#1A1A1A,#080808 55%,#000)',
+  svg:`<defs>${TPL_TX.korn}</defs><rect width="400" height="400" filter="url(#fxKorn)"/>`,
+  html:`<i style="position:absolute;left:13%;bottom:12%;width:14%;height:1.3%;background:#087A4B"></i>`},
+ {id:'notiz', n:'Notizbuch', f:'hand', c:'#1F2E55', bg:'linear-gradient(180deg,#FFFDF7,#FBF6EA)', notiz:1,
+  svg:`<defs>${TPL_TX.papier}</defs><rect width="400" height="400" filter="url(#fxPap)" opacity=".7"/>`,
+  html:`<i style="position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 calc(var(--L) - 1px),rgba(70,110,170,.3) calc(var(--L) - 1px) var(--L))"></i><i style="position:absolute;left:15%;top:0;bottom:0;width:1px;background:rgba(214,74,74,.6)"></i><i style="position:absolute;left:16%;top:0;bottom:0;width:1px;background:rgba(214,74,74,.3)"></i>${[16,38,62,84].map(t=>`<i style="position:absolute;left:4.5%;top:${t}%;width:5.5cqw;height:5.5cqw;border-radius:50%;background:radial-gradient(circle at 40% 35%,#d8d2c4,#efe9db 70%);box-shadow:inset 1px 1px 2px rgba(0,0,0,.25)"></i>`).join('')}<i style="position:absolute;inset:0;box-shadow:inset 0 0 40px rgba(120,100,60,.12)"></i>`},
+ {id:'zitat', n:'Zitat-Karte', f:'serif', c:'#F4EFE2', bg:'radial-gradient(120% 90% at 30% 20%,#1B2C47,#0F1C30 60%,#09121F)',
+  svg:`<defs>${TPL_TX.korn}<linearGradient id="qG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6E3A6"/><stop offset=".45" stop-color="#D9B45A"/><stop offset="1" stop-color="#8A6A22"/></linearGradient></defs><rect width="400" height="400" filter="url(#fxKorn)"/>`,
+  html:`<i style="position:absolute;left:7%;top:1%;font:700 40cqw/1 Georgia,serif;background:linear-gradient(135deg,#F6E3A6,#D9B45A 45%,#8A6A22);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))">“</i><i style="position:absolute;right:7%;bottom:-14%;font:700 40cqw/1 Georgia,serif;background:linear-gradient(135deg,#F6E3A6,#D9B45A 45%,#8A6A22);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:.45">”</i>`},
+ // ---- 6 neue ----
+ {id:'leder', n:'Leder & Gold', f:'serif', c:'gold', bg:'linear-gradient(150deg,#4A2C1A,#2E1A0F 60%,#1E1109)',
+  svg:`<defs>${TPL_TX.leder}</defs><rect width="400" height="400" fill="#3A2214" filter="url(#fxLed)"/>`,
+  html:`<i style="position:absolute;inset:6%;border:1.5px solid rgba(217,180,90,.55);border-radius:3px;box-shadow:0 1px 0 rgba(255,255,255,.06),inset 0 1px 2px rgba(0,0,0,.5)"></i><i style="position:absolute;inset:7.5%;border:1px dashed rgba(217,180,90,.28);border-radius:2px"></i><i style="position:absolute;inset:0;box-shadow:inset 0 0 80px rgba(0,0,0,.55)"></i>`},
+ {id:'beton', n:'Beton', f:'bold', c:'#24272B', bg:'#C9C6C0',
+  svg:`<defs>${TPL_TX.beton}</defs><rect width="400" height="400" filter="url(#fxBet)"/><rect width="400" height="400" filter="url(#fxBet2)"/>${[[60,90],[340,90],[60,310],[340,310]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="6" fill="#9C9891"/><circle cx="${x}" cy="${y}" r="3.5" fill="#7F7B74"/>`).join('')}`,
+  html:`<i style="position:absolute;inset:0;background:radial-gradient(100% 80% at 30% 10%,rgba(255,255,255,.25),transparent 60%),linear-gradient(180deg,transparent 70%,rgba(0,0,0,.12))"></i>`},
+ {id:'bokeh', n:'Lichter der Stadt', f:'serif', c:'#FFFFFF', bg:'radial-gradient(120% 90% at 50% 60%,#1D2238,#0C0F1C 60%,#05060C)',
+  svg:`<defs>${TPL_TX.glow}</defs>${bokehSvg()}`, html:`<i style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,6,12,.15),rgba(5,6,12,.45))"></i>`},
+ {id:'kreide', n:'Kreidetafel', f:'kreide', c:'#F2F2EA', bg:'radial-gradient(120% 90% at 40% 30%,#3E5247,#2A3A31 60%,#1C2822)',
+  svg:`<defs>${TPL_TX.kreide}</defs><rect width="400" height="400" filter="url(#fxKre)"/><defs>${TPL_TX.glow}</defs><ellipse cx="130" cy="95" rx="110" ry="22" fill="#F2F2EA" fill-opacity=".07" filter="url(#fxSoft)"/><ellipse cx="270" cy="315" rx="120" ry="26" fill="#F2F2EA" fill-opacity=".06" filter="url(#fxSoft)"/>`,
+  html:`<i style="position:absolute;inset:0;border:2.6cqw solid #6B4A2E;box-shadow:inset 0 0 0 1px rgba(0,0,0,.35),inset 0 0 40px rgba(0,0,0,.35)"></i><i style="position:absolute;left:62%;bottom:2.6cqw;width:12%;height:2.2cqw;border-radius:1px;background:#F4F1E6;transform:translateY(-40%);box-shadow:0 2px 2px rgba(0,0,0,.3)"></i>`},
+ {id:'milchglas', n:'Milchglas', f:'sans', c:'#FFFFFF', bg:'radial-gradient(60% 60% at 20% 25%,#0FA466 0%,transparent 60%),radial-gradient(55% 55% at 85% 30%,#D9B45A 0%,transparent 60%),radial-gradient(70% 60% at 60% 95%,#1F4E79 0%,transparent 65%),#0E1A2B',
+  html:`<i style="position:absolute;inset:12%;border-radius:5cqw;background:rgba(255,255,255,.12);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);border:1px solid rgba(255,255,255,.28);box-shadow:0 20px 40px -18px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.35)"></i>`},
+ {id:'sterne', n:'Sternenhimmel', f:'serif', c:'#FFFFFF', bg:'radial-gradient(120% 100% at 70% 20%,#1A2550,#0B1230 50%,#04060F)',
+  svg:`<defs>${TPL_TX.glow}</defs>${sterneSvg()}`, html:`<i style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(4,6,15,.6))"></i>`}
+];
+const TPL_FONT={serif:"font-family:Lora,Georgia,'Times New Roman',serif;font-weight:500",sans:"font-family:Archivo,Inter,system-ui,sans-serif;font-weight:600;letter-spacing:-.01em",bold:"font-family:'Bebas Neue',Archivo,Impact,sans-serif;font-weight:400;letter-spacing:.01em;text-transform:uppercase",hand:"font-family:'Bradley Hand','Segoe Print',Parisienne,cursive;font-weight:500",kreide:"font-family:'Chalkboard SE','Chalkduster','Bradley Hand','Comic Sans MS',cursive;font-weight:400;text-shadow:0 0 1px rgba(255,255,255,.5),0 0 6px rgba(255,255,255,.12);letter-spacing:.02em"};
+// Rendert eine Vorlage als Fläche (füllt das Elternelement). fmt: 'sq' (Feed, quadratisch) oder 'story' (9:16)
+function tplHtml(id,text,fmt){ const t=TPLS.find(x=>x.id===id)||TPLS[0], txt=String(text||''), L=txt.length, story=fmt==='story';
+  const longest=Math.max(4,...txt.split(/\s+/).map(w=>w.length)), bold=t.f==='bold', hand=t.f==='hand'||t.f==='kreide';
+  const base=bold?(L<30?74:L<70?58:L<140?44:34):(L<40?46:L<90?37:L<160?29:23);
+  const fit=(story?76:74)/(longest*(bold?0.47:hand?0.6:0.56)), fs=t.notiz?(story?8.4:6.2):Math.min(base*(story?1.55:1)/4, fit, t.id==='milchglas'?base*(story?1.2:.85)/4:99);
+  const col=t.c==='gold'?'background:linear-gradient(100deg,#B8913A,#F6E3A6 30%,#D9B45A 50%,#FFF3CF 62%,#C49A3E);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))':`color:${t.c}`;
+  const align=bold||t.notiz?'left':'center';
+  const pad=t.id==='milchglas'?(story?'26% 20%':'22% 20%'):story?'20% 12%':'15% 13%';
+  return `<div class="tpl tpl-${t.id}" style="position:absolute;inset:0;overflow:hidden;container-type:inline-size;--L:${story?11:7.6}cqw;background:${t.bg}">
+    ${t.svg?`<svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">${t.svg}</svg>`:''}${t.html||''}
+    <div style="position:absolute;inset:0;display:flex;align-items:${t.notiz?'flex-start':'center'};justify-content:${align==='left'?'flex-start':'center'};padding:${pad}${t.up?(story?';padding-bottom:44%':';padding-bottom:32%'):''}${t.notiz?';padding-left:22%;padding-top:calc(var(--L) * 2)':''}">
+      <p lang="de" style="margin:0;position:relative;${TPL_FONT[t.f]};font-size:${fs.toFixed(2)}cqw;line-height:${bold?1.02:t.notiz?'var(--L)':1.34};text-align:${align};${col};white-space:pre-line;overflow-wrap:break-word;hyphens:manual">${TPL_ESC(txt)}</p></div></div>`; }
+
 function feed(){
   const ft = S.ptopics || S.topics;
   const fp=feedPool(); const pool = fp ? (ft ? fp.filter(p=>ft.includes(p.k)) : fp) : (ft ? POSTS.filter(p=>ft.includes(p.k)) : POSTS);
@@ -2717,9 +2821,9 @@ function feed(){
       <div class="relative aspect-square bg-bg flex items-center justify-center p-8 cursor-pointer border-y border-line overflow-hidden" onclick="S.plist=S.feedList;S.plMk=1;startPlayer(${i})" style="${p.v&&p.vid===undefined?'background:radial-gradient(circle at 50% 40%,#1c1a14,#0A0A0B 70%)':''}">
         ${p.video?`<video src="${p.video}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted playsinline loop preload="metadata"></video>`:''}${p.img?`<img src="${p.img}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:''}${(p.img||p.video)&&p.t?`<span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}${p.video?`<span class="absolute top-3 right-3 text-white text-lg">▶</span>`:''}
         ${p.vid!==undefined?`<img src="${VIDS[p.vid]}" class="absolute inset-0 w-full h-full object-cover"><span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}
-        ${p.bg?bgSvg(p.bg):''}
+        ${p.bg?bgSvg(p.bg):''}${p.vor?tplHtml(p.vor,p.raw,'sq'):''}
         ${p.v?`<span class="absolute bottom-3 right-3 text-xs bg-black/70 rounded px-2 py-0.5" style="color:#fff">▶ ${p.v}</span>`:''}
-        ${(p.vid!==undefined||p.img||p.video)?`<p class="absolute left-4 right-20 bottom-3 text-sm" style="position:absolute;color:#fff">${p.t}</p>`:`<p class="font-serif text-xl leading-relaxed text-center relative" style="${p.v?'color:#F2F4F1':''}">${p.t}</p>`}</div>
+        ${(p.vid!==undefined||p.img||p.video)?`<p class="absolute left-4 right-20 bottom-3 text-sm" style="position:absolute;color:#fff">${p.t}</p>`:p.vor?'':`<p class="font-serif text-xl leading-relaxed text-center relative" style="${p.v?'color:#F2F4F1':''}">${p.t}</p>`}</div>
       <div class="p-4">
         ${actionBar(p,'feed')}
         ${p.tg?`<p class="text-xs text-muted mt-3">${p.tg.map(t=>'#'+t).join(' ')}</p>`:''}
@@ -2732,7 +2836,7 @@ function feed(){
       ${wheelCard()}
       ${battleCard()}
       ${challengeCard()}
-      <div class="flex items-center justify-between gap-3"><button onclick="playerMenu()" class="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-sm font-semibold" aria-label="Feed-Einstellungen">${svg('gearplay',16)}Feed-Einstellungen<span class="text-xs text-muted font-normal">${S.ptopics?S.ptopics.length+' Arten':''}${S.timerMin?' · '+S.timerMin+' Min.':''}</span></button><a href="#${S.user?'create':'login'}" class="btn-gold text-sm" style="padding:8px 14px">＋ Teilen</a></div>
+      <div class="flex items-center justify-between gap-3"><button onclick="playerMenu()" class="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-sm font-semibold" aria-label="Feed-Einstellungen">${svg('gearplay',16)}Feed-Einstellungen<span class="text-xs text-muted font-normal">${S.ptopics?S.ptopics.length+' Arten':''}${S.timerMin?' · '+S.timerMin+' Min.':''}</span></button></div>
       ${posts}${!list.length?mitmachCard(0):''}${fp&&!fp.length?feedEmpty():''}${S.rp&&S.rp.length&&S.rpMore?`<button class="btn-ghost w-full" onclick="this.textContent='Lädt …';feedLoad(true)">Mehr laden</button>`:''}${guest}
     </section>${rightRail()}</div>`;
 }
@@ -2830,11 +2934,11 @@ function drawPlayer(){
   const p=S.player, post=PL()[p.i];
   if(post&&post.mk&&p.i<limit()) return drawMkSlide(p,post);
   const inner = p.i>=limit() ? `<div class="h-full flex flex-col items-center justify-center gap-4 p-8 text-center"><p class="font-serif text-2xl">Mehr sehen?</p><p class="text-muted">Melde dich kostenlos an, um weiterzuschauen.</p><a href="#login" onclick="closeModal()" class="btn-gold">Kostenlos anmelden</a></div>` : `
-    ${post.bg?bgSvg(post.bg):''}
+    ${post.bg?bgSvg(post.bg):''}${post.vor?tplHtml(post.vor,post.raw,'story'):''}
     ${post.video?`<video src="${post.video}" class="absolute inset-0 w-full h-full object-cover" autoplay playsinline loop ${S.muted===false?'':'muted'} onclick="S.muted=!this.muted?true:false;this.muted=!this.muted"></video>`:''}${post.img?`<img src="${post.img}" class="absolute inset-0 w-full h-full object-contain bg-black">`:''}
     ${post.vid!==undefined?`<img src="${VIDS[post.vid]}" class="vidimg absolute inset-0 w-full h-full object-cover ${p.paused?'':'kb'}">`:''}
     <div class="relative h-full flex items-center justify-center p-10 select-none" onclick="togglePause()">
-      ${(post.vid!==undefined||post.img||post.video)?'':`<p class="font-serif text-2xl leading-relaxed text-center">${post.t}</p>`}</div>
+      ${(post.vid!==undefined||post.img||post.video||post.vor)?'':`<p class="font-serif text-2xl leading-relaxed text-center">${post.t}</p>`}</div>
     ${p.paused?`<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><svg width="64" height="64" viewBox="0 0 64 64" style="filter:drop-shadow(0 2px 10px rgba(0,0,0,.45))" aria-label="Pausiert"><rect x="17" y="12" width="10" height="40" rx="3" fill="#fff"/><rect x="37" y="12" width="10" height="40" rx="3" fill="#fff"/></svg></div>`:''}
     <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
       <div ${post.real?`onclick="memberModal(${post.mid})" class="cursor-pointer"`:''}>${nameRank(post.a,post.r)}</div>${post.real&&S.member?(post.mine?`<span class="flex gap-4 mt-1"><button onclick="event.stopPropagation();hlToggle(${post.id},this)" class="text-xs font-semibold" style="color:${post.hl?'#F1D58A':'rgba(255,255,255,.85)'}">${post.hl?'★ Highlight':'☆ Highlight'}</button><button onclick="event.stopPropagation();profToggle(${post.id},this)" class="text-xs" style="color:rgba(255,255,255,.75)">${post.imp===false?'Im Profil zeigen':'Nur im Feed'}</button><button onclick="event.stopPropagation();delPost(${post.id})" class="text-xs" style="color:rgba(255,255,255,.75)">Zurückziehen</button></span>`:`<button onclick="event.stopPropagation();reportPost(${post.id})" class="text-xs mt-1" style="color:rgba(255,255,255,.75)">Melden</button>`):''}${(post.vid!==undefined||post.img||post.video)?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
