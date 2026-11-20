@@ -1092,6 +1092,7 @@ async function loadMember(){
   if(!SES) return;
   let m=null;
   try{ m=await rpc('member_ich'); }catch(e){ if(!SES) render(); return; }
+  if(m&&m.status&&m.status!=='aktiv'){ dropSes(); save(); S.loginErr=m.status==='gesperrt'?'Dein Konto ist gesperrt. Wenn du denkst, das ist ein Fehler, schreib uns an info@getclosinghub.com.':'Dein Konto ist nicht mehr aktiv. Bei Fragen schreib uns an info@getclosinghub.com.'; S.member=null; S.user=false; S.route='login'; try{ history.replaceState(null,'',location.pathname+'#login'); }catch(e){} render(); return; }
   if(!m){ let adm=false; try{ adm=await rpc('is_admin'); }catch(e){}
     if(!adm){ dropSes(); save(); S.loginErr='Für diese E-Mail gibt es noch kein Mitgliedskonto. Nutze deinen persönlichen Einladungslink.'; S.route='login'; try{ history.replaceState(null,'',location.pathname+'#login'); }catch(e){} render(); return; }
     S.adminPreview=true; }
@@ -1675,7 +1676,7 @@ S.fz=null; S.fl={}; S.fdb=null;
 async function forumCounts(){ try{ S.fz=await rpc('forum_zaehlen'); S.fdb=true; }catch(e){ S.fdb=false; } if(route()==='forum') render(); }
 async function forumList(cat){ try{ S.fl[cat]=await rpc('forum_laden',{p_kat:cat}); S.fdb=true; }catch(e){ S.fl[cat]=[]; S.fdb=false; } if(route()==='forum'&&S.thread===cat) render(); }
 function fCount(n){ if(S.fz===null){ S.fz={}; forumCounts(); } if(S.fdb===false) return FTHREADS.filter(t=>t.cat===n).length; return +(S.fz[n]||0); }
-function fAv(x){ return x.avatar_url?`<img src="${esc(x.avatar_url)}" class="w-full h-full object-cover">`:(x.member_id?initAv(x.name):`<span class="w-full h-full flex items-center justify-center gold-bg font-serif italic text-black text-xs">CH</span>`); }
+function fAv(x){ return x.avatar_url?`<img src="${esc(x.avatar_url)}" class="w-full h-full object-cover">`:(x.member_id?initAv(x.name):`<span class="w-full h-full flex items-center justify-center" style="background:#0E1A2B;color:#fff;font:900 15px Arial,sans-serif;border-radius:inherit">H</span>`); }
 function threadReal(){
   const cat=S.thread; if(!(cat in S.fl)){ S.fl[cat]=null; forumList(cat); }
   const list=S.fl[cat];
@@ -1807,7 +1808,7 @@ S.mk=S.mk||null; S.mkDemoAns=S.mkDemoAns||{}; S.gr=S.gr||null;
 (function mkCss(){ if(document.getElementById('mkcss')) return; const st=document.createElement('style'); st.id='mkcss'; st.textContent=`
 .mk{overflow:hidden}
 .mk-hd{display:flex;align-items:center;gap:10px;padding:14px 16px 0}
-.mk-logo{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#087A4B,#06603B);display:grid;place-items:center;color:#fff;font:600 15px Lora,serif;flex:none}
+.mk-logo{width:34px;height:34px;border-radius:50%;background:#0E1A2B;display:grid;place-items:center;color:#fff;font:900 17px Arial,sans-serif;flex:none}
 .mk-n{font-weight:700;font-size:14px;line-height:1.2}.mk-t{font-size:12px;color:rgb(var(--muted))}
 .mk-chip{margin-left:auto;font:800 10px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:999px;background:rgba(8,122,75,.1);color:#087A4B;white-space:nowrap}
 html:not(.light) .mk-chip{color:#7FD1A8;background:rgba(8,122,75,.2)}
@@ -1872,7 +1873,7 @@ function mitmachCard(slot){ const l=mkCards(); if(!l.length) return ''; return m
 function mkRefresh(t){ document.querySelectorAll('[data-mk]').forEach(e=>{ if(t&&e.dataset.mk!==t) return; const c=mkCards().find(x=>x.typ===e.dataset.mk); if(c) e.outerHTML=mkHtml(c); }); }
 function mkAns(c){ if(c.demo){ const a=S.mkDemoAns[c.typ]; return a==null?null:a; } return c.typ==='sd'?(c.mein_wert!=null?+c.mein_wert:null):(c.wahl!=null?c.wahl:null); }
 function mkPct(c,i){ const w=(c.stats&&c.stats.wahl)||{}, tot=Object.values(w).reduce((a,b)=>a+(+b),0)||1; return Math.round((+(w[i]||0))/tot*100); }
-function mkHead(c,sub){ return `<div class="mk-hd"><div class="mk-logo">C</div><div><div class="mk-n">ClosingHub${c.demo?'<span class="mk-demo">Beispiel</span>':''}</div><div class="mk-t">${sub}</div></div><span class="mk-chip">${MK_NAME[c.typ]}${c.typ==='dc'&&!c.demo?' #'+c.id:''}</span></div>`; }
+function mkHead(c,sub){ return `<div class="mk-hd"><div class="mk-logo">H</div><div><div class="mk-n">ClosingHub${c.demo?'<span class="mk-demo">Beispiel</span>':''}</div><div class="mk-t">${sub}</div></div><span class="mk-chip">${MK_NAME[c.typ]}${c.typ==='dc'&&!c.demo?' #'+c.id:''}</span></div>`; }
 function mkHtml(c){
   const d=c.daten||{}, a=mkAns(c), done=a!=null, n=c.stats&&c.stats.n?(+c.stats.n).toLocaleString('de-DE'):'', id=JSON.stringify(c.id);
   const wrap=(sub,body)=>`<article class="card mk" data-mk="${c.typ}">${mkHead(c,sub)}<div class="mk-bd">${body}</div></article>`;
@@ -1928,7 +1929,7 @@ function wheelCard(){
   const grad=f.map((x,i)=>`${cols[i%4]} ${i*seg}deg ${(i+1)*seg}deg`).join(',');
   const labs=f.map((x,i)=>{ const dark=cols[i%4]==='#F4EFE2'; return `<div class="gr-lab" style="transform:rotate(${i*seg+seg/2-90}deg);color:${dark?'#0E1A2B':'#fff'}"><span>${esc(x.t)}</span></div>`; }).join('');
   const lines=f.map((x,i)=>`<div style="position:absolute;left:50%;top:0;width:2px;height:50%;margin-left:-1px;background:rgba(217,180,90,.9);transform-origin:50% 100%;transform:rotate(${i*seg}deg)"></div>`).join('');
-  return `<article class="card mk" id="grcard"><div class="mk-hd"><div class="mk-logo">C</div><div><div class="mk-n">ClosingHub${demo?'<span class="mk-demo">Beispiel</span>':''}</div><div class="mk-t">Freitag · 1 Dreh pro Woche</div></div><span class="mk-chip" style="background:rgba(217,180,90,.2);color:#8a6a12">Glücksrad</span></div>
+  return `<article class="card mk" id="grcard"><div class="mk-hd"><div class="mk-logo">H</div><div><div class="mk-n">ClosingHub${demo?'<span class="mk-demo">Beispiel</span>':''}</div><div class="mk-t">Freitag · 1 Dreh pro Woche</div></div><span class="mk-chip" style="background:rgba(217,180,90,.2);color:#8a6a12">Glücksrad</span></div>
     <div class="mk-bd" style="text-align:center"><p class="mk-q">${won?'Dein Freitags-Gewinn 🎉':'Dein Freitags-Dreh wartet 🎡'}</p><p class="mk-t" style="margin-top:4px">${won?'Nächsten Freitag ab 8 Uhr geht\'s weiter.':'Einmal pro Woche, nur heute bis 23:59 Uhr.'}</p>
     <div class="gr-wrap"><div class="gr-pin"></div><div class="gr-wheel" id="grw" style="background:conic-gradient(${grad})">${lines}${labs}</div><button class="gr-hub" ${won?'disabled':'onclick="grSpin(this)"'}>${won?'🎉':'DREHEN'}</button></div>
     <div class="gr-win" id="grwin" style="${won?'':'display:none'}"><span class="mk-t">Dein Gewinn</span><b>${esc(won||'')}</b><span class="mk-t">${demo?'Beispiel – echte Gewinne kommen bald.':'Wird deinem Konto gutgeschrieben.'}</span></div></div></article>`;
@@ -2012,7 +2013,7 @@ function feed(){
   const list = S.user ? pool : pool.slice(0,GUEST); S.feedList = list;
   const posts = list.map((p,i)=>`
     <article class="card overflow-hidden">
-      <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2 ${p.real?'cursor-pointer':''}" ${p.real?`onclick="memberModal(${p.mid})"`:''}>${p.a==='ClosingHub'?'<span class="w-8 h-8 rounded-full overflow-hidden inline-block gold-bg"><span class="w-full h-full flex items-center justify-center font-serif italic text-black text-sm">CH</span></span>':skAv(p.a,34,pAv(p))}${nameRank(p.a,p.r)}</span><span class="inline-flex items-center gap-2"><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span>${p.mine?`<button onclick="event.stopPropagation();delPost(${p.id})" class="text-muted text-xs" aria-label="Beitrag löschen">Löschen</button>`:''}${p.real&&!p.mine&&S.member?`<button onclick="event.stopPropagation();reportPost(${p.id})" class="text-muted text-xs">Melden</button>`:''}</span></div>
+      <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2 ${p.real?'cursor-pointer':''}" ${p.real?`onclick="memberModal(${p.mid})"`:''}>${p.a==='ClosingHub'?'<span class="w-8 h-8 rounded-full overflow-hidden inline-block"><span class="w-full h-full flex items-center justify-center" style="background:#0E1A2B;color:#fff;font:900 16px Arial,sans-serif">H</span></span>':skAv(p.a,34,pAv(p))}${nameRank(p.a,p.r)}</span><span class="inline-flex items-center gap-2"><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span>${p.mine?`<button onclick="event.stopPropagation();delPost(${p.id})" class="text-muted text-xs" aria-label="Beitrag löschen">Löschen</button>`:''}${p.real&&!p.mine&&S.member?`<button onclick="event.stopPropagation();reportPost(${p.id})" class="text-muted text-xs">Melden</button>`:''}</span></div>
       <div class="relative aspect-square bg-bg flex items-center justify-center p-8 cursor-pointer border-y border-line overflow-hidden" onclick="S.plist=S.feedList;startPlayer(${i})" style="${p.v&&p.vid===undefined?'background:radial-gradient(circle at 50% 40%,#1c1a14,#0A0A0B 70%)':''}">
         ${p.video?`<video src="${p.video}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted playsinline loop preload="metadata"></video>`:''}${p.img?`<img src="${p.img}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:''}${(p.img||p.video)&&p.t?`<span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}${p.video?`<span class="absolute top-3 right-3 text-white text-lg">▶</span>`:''}
         ${p.vid!==undefined?`<img src="${VIDS[p.vid]}" class="absolute inset-0 w-full h-full object-cover"><span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}
