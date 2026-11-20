@@ -310,7 +310,7 @@ async function loadAll(){
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at, quelle:w.quelle||'', token:w.invite_token||null, member:w.member_id||null }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
-  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.gate=S.app_gate||{}; fxLoad(S); setTimeout(()=>{ mxLoad(); meldLoad(); },600); D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.gate=S.app_gate||{}; fxLoad(S); setTimeout(()=>{ mxLoad(); meldLoad(); ptzLoad(); },600); D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
@@ -353,6 +353,7 @@ const NAV = [
   ['moderation','Prüfen & Meldungen','shield', ()=>D.queue.length+D.reports.length],
   ['marktx','Marktplatz & Forum','users', ()=>(D.mx||[]).filter(x=>x.status==='beantragt').length],
   ['mitmachx','Mitmach-Karten','flame', ()=>0],
+  ['punktex','Punktesystem','shield', ()=>{ const P=D.ptz; if(!P||!P.gutscheine) return 0; const tb=(P.medaillen||[]).find(m=>m.code==='top_beitrag'); return P.gutscheine.filter(g=>g.status==='eingeloest').length+((P.mitglieder>=500&&tb&&tb.schwelle<50)?1:0); }],
   ['feedx','Feed & Battle','flame', ()=>{ try{ const b=D.battle; if(!b||!b.on||!b.start) return 0; const i=bxInfo().i; return (b.queue.length-i-1)<=7?'!':0; }catch(e){ return 0; } }],
   ['System'],
   ['inhalte','Website & App','pen'],
@@ -1539,8 +1540,51 @@ function grzPage(){ const g=D.grz||{}, l=g.gewinne||[], tot=l.filter(x=>x.aktiv)
 async function grzSave(id,b){ const t=mkzVal('gz-t'+id); if(!t) return toast('Bitte einen Gewinn eintragen'); b.disabled=true;
   try{ await q('rpc/gluecksrad_admin_speichern',{method:'POST',body:{p_id:id||null,p_text:t,p_gewicht:+mkzVal('gz-g'+id)||0,p_punkte:+mkzVal('gz-p'+id)||0,p_aktiv:$('gz-a'+id).checked}}); toast('Gespeichert'); D.mkz=undefined; render(); }catch(e){ b.disabled=false; toast('Speichern hat nicht geklappt'); } }
 async function grzDone(id,b){ b.disabled=true; try{ await q('rpc/gluecksrad_admin_erledigt',{method:'POST',body:{p_id:id}}); D.mkz=undefined; render(); }catch(e){ b.disabled=false; } }
+/* ===== Punktesystem ===== */
+async function ptzLoad(){ try{ D.ptz=(await q('rpc/punkte_admin',{method:'POST',body:{}}))||{}; if(!D.ptz.regeln) throw 0; D.ptzErr=0; }catch(e){ D.ptz={}; D.ptzErr=1; } if((location.hash||'').includes('punktex')) render(); }
+function punktex(){
+  if(D.ptz===undefined){ D.ptz=null; ptzLoad(); }
+  const head=`<h1 class="h1">Punktesystem</h1><p class="sub">Punkte pro Aktion, Medaillen und Partner-Call-Gutscheine. Punkte zählen nicht in die Ränge. Änderungen gelten ab sofort für neue Aktionen.</p>`;
+  if(D.ptz===null) return head+'<p class="muted">Lade …</p>';
+  if(D.ptzErr) return head+'<div class="card"><div class="empty">Fehlt noch: closinghub-punkte.sql in Supabase ausführen.</div></div>';
+  const P=D.ptz, tb=(P.medaillen||[]).find(m=>m.code==='top_beitrag');
+  const hint=(P.mitglieder>=500&&tb&&tb.schwelle<50)?`<div class="card" style="border-color:#D9B45A;margin-bottom:16px"><div class="row between"><span>🔔 <b>Ihr habt ${P.mitglieder} Mitglieder.</b> Wie besprochen: Medaille „Top-Beitrag“ jetzt von ${tb.schwelle} auf 50 Likes erhöhen.</span><button class="btn sm gold-b" onclick="mdzSave('top_beitrag',this,50)">Auf 50 setzen</button></div></div>`:'';
+  const rr=r=>`<tr><td><b>${esc(r.name)}</b>${r.automatisch?'':'<div class="muted" style="font-size:11.5px">vergibst du oben per Hand</div>'}</td>
+    <td><input class="in" style="width:80px" type="number" id="pr-p-${r.aktion}" value="${r.punkte}"></td><td><input class="in" style="width:70px" type="number" min="0" id="pr-t-${r.aktion}" value="${r.tageslimit||''}" placeholder="–"></td>
+    <td><input class="in" style="width:70px" type="number" min="0" id="pr-m-${r.aktion}" value="${r.monatslimit||''}" placeholder="–"></td><td style="text-align:center"><input type="checkbox" id="pr-a-${r.aktion}" ${r.aktiv?'checked':''}></td>
+    <td><button class="btn sm" onclick="prSave('${r.aktion}',this)">Speichern</button></td></tr>`;
+  const mr=m=>`<tr><td><b>🏅 ${esc(m.name)}</b><div class="muted" style="font-size:11.5px">${m.typ==='monat'?'max. 1× im Monat':'je Ereignis'} · ${m.vergeben}× vergeben</div></td><td><input class="in" style="width:90px" type="number" min="1" id="md-s-${m.code}" value="${m.schwelle}"></td><td class="muted" style="font-size:12.5px">${esc(m.beschreibung||'')}</td>
+    <td style="text-align:center"><input type="checkbox" id="md-a-${m.code}" ${m.aktiv?'checked':''}></td><td><button class="btn sm" onclick="mdzSave('${m.code}',this)">Speichern</button></td></tr>`;
+  const mem=(D.members||[]).slice().sort((a,b)=>String(a.name).localeCompare(b.name));
+  const man=(P.regeln||[]).filter(r=>r.aktion!=='medaille');
+  return head+hint+`
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><h3>Punkte vergeben</h3><p class="muted" style="font-size:12.5px">Für Morgen-Calls, Vorträge, Battle-Finale und -Sieg, Werben, Challenge und Bewertungen, solange die App das noch nicht selbst erkennt. Zählt auch für die Medaillen. „Manuell“ für frei gewählte Punkte (auch minus).</p>
+      <label class="f">Mitglied<select class="in" id="pm-m">${mem.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select></label>
+      <label class="f" style="margin-top:10px">Aktion<select class="in" id="pm-a" onchange="$('pm-pw').style.display=this.value==='manuell'?'':'none'">${man.map(r=>`<option value="${r.aktion}" ${r.aktion==='morgen_call'?'selected':''}>${esc(r.name)}${r.aktion==='manuell'?'':' ('+r.punkte+')'}</option>`).join('')}</select></label>
+      <label class="f" id="pm-pw" style="margin-top:10px;display:none">Punkte<input class="in" type="number" id="pm-p" placeholder="z. B. 50 oder -100"></label>
+      <label class="f" style="margin-top:10px">Notiz (sieht das Mitglied)<input class="in" id="pm-n" maxlength="200" placeholder="z. B. Morgen-Call 20.11."></label>
+      <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn gold-b" onclick="pmSend(this)">Vergeben</button></div></div>
+    <div class="card"><h3>Partner-Call-Gutscheine</h3>
+      <div class="row" style="gap:8px;align-items:flex-end"><label class="f" style="flex:1">Gutschein alle … Punkte (gesamt)<input class="in" type="number" min="100" id="pc-g" value="${P.cfg?P.cfg.gutschein_punkte:1500}"></label><button class="btn sm" style="margin-bottom:4px" onclick="pcSave(this)">Speichern</button></div>
+      <p class="muted" style="font-size:12.5px;margin-top:8px">Eingelöste Gutscheine landen als Nachricht beim Partner. Hier hakst du ab, wenn der Call stattgefunden hat.</p>
+      ${(P.gutscheine||[]).map(g=>`<div class="item"><div class="ico">🎟️</div><div style="flex:1"><b>${esc(g.name)}</b><div class="muted" style="font-size:12.5px">${g.status==='offen'?'noch nicht eingelöst · seit '+new Date(g.created_at).toLocaleDateString('de-DE'):'eingelöst bei '+esc(g.partner||'Partner')+' · '+new Date(g.eingeloest_at).toLocaleDateString('de-DE')}</div></div>${g.status==='eingeloest'?`<button class="btn sm gold-b" onclick="gzDone(${g.id},this)">Call erledigt</button>`:''}</div>`).join('')||'<div class="empty">Noch keine Gutscheine.</div>'}</div>
+  </div>
+  <div class="card" style="margin-bottom:16px"><h3>Punkte pro Aktion</h3><p class="muted" style="font-size:12.5px">Limit leer = kein Limit. Über dem Limit zählt die Aktion trotzdem für Medaillen, bringt aber keine Punkte mehr.</p>
+    <div class="tw"><table><thead><tr><th>Aktion</th><th>Punkte</th><th>pro Tag</th><th>pro Monat</th><th>Aktiv</th><th></th></tr></thead><tbody>${(P.regeln||[]).filter(r=>r.aktion!=='manuell').map(rr).join('')}</tbody></table></div></div>
+  <div class="card" style="margin-bottom:16px"><h3>Medaillen</h3><p class="muted" style="font-size:12.5px">„Grenze“ = ab wann es die Medaille gibt. Jede Medaille bringt die Punkte aus „Medaille erhalten“ (oben).</p>
+    <div class="tw"><table><thead><tr><th>Medaille</th><th>Grenze</th><th>wofür</th><th>Aktiv</th><th></th></tr></thead><tbody>${(P.medaillen||[]).map(mr).join('')}</tbody></table></div></div>
+  <div class="grid g2"><div class="card"><h3>Top 10 diesen Monat</h3>${(P.top||[]).map((m,i)=>`<div class="row between" style="padding:6px 0;border-top:1px solid var(--line)"><span>${i+1}. ${esc(m.name)}</span><b>${Number(m.punkte_monat).toLocaleString('de-DE')}</b></div>`).join('')||'<div class="empty">Noch keine Punkte.</div>'}</div>
+    <div class="card"><h3>Letzte Punkte</h3>${(P.verlauf||[]).slice(0,25).map(l=>`<div class="row between" style="padding:6px 0;border-top:1px solid var(--line);font-size:13px"><span>${esc(l.member)} · <span class="muted">${esc(l.name)}${l.notiz&&!/^post:/.test(l.notiz)?' · '+esc(l.notiz):''}</span></span><b style="color:${l.punkte<0?'#e5484d':'inherit'}">${l.punkte>0?'+':''}${l.punkte}</b></div>`).join('')||'<div class="empty">Noch nichts passiert.</div>'}</div></div>`;
+}
+async function prSave(a,b){ b.disabled=true; try{ await q('rpc/punkte_regel_speichern',{method:'POST',body:{p_aktion:a,p_punkte:+$('pr-p-'+a).value||0,p_tageslimit:+$('pr-t-'+a).value||0,p_monatslimit:+$('pr-m-'+a).value||0,p_aktiv:$('pr-a-'+a).checked}}); toast('Gespeichert'); D.ptz=undefined; render(); }catch(e){ b.disabled=false; toast('Speichern hat nicht geklappt'); } }
+async function mdzSave(c,b,val){ b.disabled=true; try{ await q('rpc/medaille_speichern',{method:'POST',body:{p_code:c,p_schwelle:val||+$('md-s-'+c).value||1,p_aktiv:$('md-a-'+c)?$('md-a-'+c).checked:true}}); toast('Gespeichert'); D.ptz=undefined; render(); }catch(e){ b.disabled=false; toast('Speichern hat nicht geklappt'); } }
+async function pcSave(b){ b.disabled=true; try{ await q('rpc/punkte_cfg_speichern',{method:'POST',body:{p_gutschein:+$('pc-g').value||1500}}); toast('Gespeichert'); D.ptz=undefined; render(); }catch(e){ b.disabled=false; } }
+async function pmSend(b){ const a=$('pm-a').value, p=+$('pm-p').value||0; if(!$('pm-m').value) return toast('Bitte ein Mitglied wählen'); if(a==='manuell'&&!p) return toast('Bitte Punkte eintragen');
+  b.disabled=true; try{ const j=await q('rpc/punkte_manuell',{method:'POST',body:{p_member:+$('pm-m').value,p_aktion:a,p_punkte:a==='manuell'?p:null,p_notiz:$('pm-n').value}}); toast(j&&j.ok?(j.punkte?'Vergeben: '+(j.punkte>0?'+':'')+j.punkte:'Gezählt – Tageslimit erreicht, 0 Punkte'):'Hat nicht geklappt'); $('pm-n').value=''; D.ptz=undefined; render(); }catch(e){ b.disabled=false; } }
+async function gzDone(id,b){ b.disabled=true; try{ await q('rpc/gutschein_erledigt',{method:'POST',body:{p_id:id}}); D.ptz=undefined; render(); }catch(e){ b.disabled=false; } }
 
-const PAGES={feedx,marktx,mitmachx,partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
+const PAGES={feedx,marktx,mitmachx,punktex,partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
 async function reload(){ LOADED=false; await render(); toast('Aktualisiert'); }
 async function render(){
   const logged=!!SESSION;
