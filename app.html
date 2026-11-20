@@ -1076,9 +1076,10 @@ function applyMember(m){
   // Echtes Konto: alles Beispielhafte raus, nur echte Daten
   Object.assign(ME,{ name:m.name.split(' ')[0], fullName:m.name, rank:RANKS[(m.rang||1)-1]||'Starter', role:m.rolle||'Closer',
     years:m.erfahrung||null, country:m.land||'', langs:m.sprachen||'', bio:m.bio||'', followers:m.follower||0, following:m.gefolgt||0, rating:null, ref:'m'+m.id, invited:0,
-    badges:[...(m.day_one?['Day One']:[]),...(m.abo==='premium'?['Premium']:[])], medals:[] });
+    badges:Array.isArray(m.abzeichen)?m.abzeichen:[...(m.day_one?['Day One']:[]),...(m.abo==='premium'?['Premium']:[])], medals:[] });
+  S.badgesShown=ME.badges.slice();
   S.avatar=m.avatar_url||null;
-  if(!S._memberInit){ S._memberInit=true; S.badgesShown=ME.badges.slice(); S.ch={day:1,done:[]}; }
+  if(!S._memberInit){ S._memberInit=true; S.ch={day:1,done:[]}; }
 }
 function myInitials(){ const n=(ME.fullName||ME.name||'?').trim().split(/\s+/); return ((n[0]||'')[0]||'?').toUpperCase()+(n.length>1?(n[n.length-1][0]||'').toUpperCase():''); }
 function meAvatar(){ return `<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,#1B2B42,#0E1A2B);color:#C9D3E3;font-weight:800;font-size:clamp(9px,38%,40px);letter-spacing:.02em;container-type:size"><span style="font-size:40cqh">${myInitials()}</span></span>`; }
@@ -1091,7 +1092,7 @@ async function loadMember(){
   if(!m){ let adm=false; try{ adm=await rpc('is_admin'); }catch(e){}
     if(!adm){ dropSes(); save(); S.loginErr='Für diese E-Mail gibt es noch kein Mitgliedskonto. Nutze deinen persönlichen Einladungslink.'; S.route='login'; try{ history.replaceState(null,'',location.pathname+'#login'); }catch(e){} render(); return; }
     S.adminPreview=true; }
-  applyMember(m); render();
+  applyMember(m); render(); if(m){ mbLoad(); unreadLoad(); }
 }
 async function doLogin(){
   const e=(document.getElementById('lgE')||{}).value||'', p=(document.getElementById('lgP')||{}).value||'', er=document.getElementById('lgErr'), b=document.getElementById('lgBtn');
@@ -1340,17 +1341,17 @@ async function shrinkImg(file,max=1600){
   c.getContext('2d').drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(url);
   return await new Promise(ok=>c.toBlob(b=>ok(b||file),'image/jpeg',.85));
 }
-async function upload(file,onProgress){
+async function upload(file,onProgress,bucket='medien'){
   const t=await sesToken(), uid=jwtSub(); if(!t||!uid) throw new Error('Bitte melde dich erneut an.');
-  const isImg=/^image\//.test(file.type), body=isImg?await shrinkImg(file):file;
+  const isImg=/^image\/(jpeg|png|webp)$/.test(file.type), body=isImg?await shrinkImg(file,bucket==='nachweise'?2400:1600):file;
   if(body.size>50*1024*1024) throw new Error('Die Datei ist größer als 50 MB.');
-  const ext=isImg?'jpg':(file.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const ext=isImg?'jpg':(file.name.split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'');
   const path=`${uid}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
-  await new Promise((ok,no)=>{ const x=new XMLHttpRequest(); x.open('POST',`${SB_URL}/storage/v1/object/medien/${path}`);
+  await new Promise((ok,no)=>{ const x=new XMLHttpRequest(); x.open('POST',`${SB_URL}/storage/v1/object/${bucket}/${path}`);
     x.setRequestHeader('apikey',SB_KEY); x.setRequestHeader('Authorization','Bearer '+t); x.setRequestHeader('Content-Type',isImg?'image/jpeg':file.type); x.setRequestHeader('x-upsert','false');
     x.upload.onprogress=e=>{ if(onProgress&&e.lengthComputable) onProgress(e.loaded/e.total); };
     x.onload=()=>x.status<300?ok():no(new Error('Hochladen fehlgeschlagen ('+x.status+').')); x.onerror=()=>no(new Error('Keine Verbindung.')); x.send(body); });
-  return MEDIA_BASE+path;
+  return bucket==='medien'?MEDIA_BASE+path:path;
 }
 
 /* Profil */
@@ -1476,6 +1477,89 @@ function followToggle(mid,btn){ btn.disabled=true; rpc('folgen_umschalten',{p_me
 
 feedLoad();
 setInterval(()=>{ if(route()==='feed'&&document.visibilityState==='visible'&&!S.player&&!document.getElementById('psheet')&&window.scrollY<200) feedLoad(); },60000);
+
+/* Nachweise einreichen */
+const PROOF_ART={ausweis:'Ausweis (Identität)',abrechnung:'Provisionsabrechnung',high_ticket:'High-Ticket-Abschluss (ab 5.000 €)',ausbildung:'Ausbildungszertifikat',dauer:'Nachweis über Dauer im Vertrieb',sonstiges:'Sonstiges'};
+const PROOF_ST={offen:['In Prüfung','text-muted'],bestaetigt:['Bestätigt ✓','text-gold'],abgelehnt:['Abgelehnt','']};
+S.proofs=null;
+async function proofsLoad(){ try{ S.proofs=await rpc('meine_nachweise')||[]; }catch(e){ S.proofs=[]; } if(route()==='einstellungen') render(); }
+function nachweiseCard(){
+  if(!S.member) return '';
+  if(S.proofs===null){ S.proofs=undefined; proofsLoad(); }
+  const l=S.proofs||[];
+  return `<div class="card p-4 space-y-3"><div><p class="font-semibold">Nachweise</p><p class="text-xs text-muted">Lade Abrechnungen, Zertifikate oder deinen Ausweis hoch. Wir prüfen sie und geben sie frei. Damit steigt dein Rang, du bekommst Abzeichen, und Auftraggeber sehen eine geschwärzte Version – deine Daten bleiben geschützt.</p></div>
+    ${l.length?`<div>${l.map(p=>`<div class="flex justify-between items-center gap-3 py-2 border-t border-line text-sm"><span class="min-w-0"><span class="block font-medium truncate">${esc(PROOF_ART[p.art]||p.art)}${p.monate?' · '+p.monate+' Monate':''}</span>${p.titel?`<span class="block text-xs text-muted truncate">${esc(p.titel)}</span>`:''}</span><span class="text-xs whitespace-nowrap ${(PROOF_ST[p.status]||['',''])[1]}" style="${p.status==='abgelehnt'?'color:#e5484d':''}">${(PROOF_ST[p.status]||[p.status])[0]}</span></div>`).join('')}</div>`:''}
+    <div class="grid grid-cols-2 gap-2"><label class="text-xs text-muted col-span-2">Art<select id="nwArt" class="input text-sm mt-1" onchange="document.getElementById('nwMonW').style.display=this.value==='abrechnung'?'':'none'">${Object.entries(PROOF_ART).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
+      <label class="text-xs text-muted">Beschreibung<input id="nwTitel" maxlength="120" class="input text-sm mt-1" placeholder="z. B. Provision Solar"></label>
+      <label class="text-xs text-muted" id="nwMonW" style="display:none">Zeitraum (Monate)<input id="nwMon" type="number" min="1" max="60" class="input text-sm mt-1" value="1"></label></div>
+    <p id="nwErr" class="text-sm" style="color:#e5484d;min-height:1em"></p>
+    <label class="btn-gold w-full block text-center cursor-pointer" id="nwBtn">Datei auswählen & einreichen<input type="file" accept="image/*,application/pdf" class="hidden" onchange="nwSend(this)"></label>
+    <p class="text-[11px] text-muted">Bild oder PDF, max. 15 MB. Das Original sieht nur das ClosingHub-Team.</p></div>`;
+}
+async function nwSend(inp){
+  const f=inp.files[0], err=document.getElementById('nwErr'), btn=document.getElementById('nwBtn'); if(!f) return;
+  if(f.size>15*1024*1024){ err.textContent='Die Datei ist größer als 15 MB.'; return; }
+  btn.firstChild.textContent='Lädt hoch …';
+  try{ const path=await upload(f,null,'nachweise'); const art=document.getElementById('nwArt').value;
+    const j=await rpc('nachweis_einreichen',{p_art:art,p_titel:document.getElementById('nwTitel').value,p_monate:+document.getElementById('nwMon').value||null,p_pfad:path});
+    if(!j||!j.ok) throw new Error(j&&j.grund==='limit'?'Du hast schon 10 Nachweise in Prüfung. Warte kurz auf unsere Rückmeldung.':'Einreichen hat nicht geklappt.');
+    S.proofs=null; await proofsLoad(); alert('Danke! Dein Nachweis ist eingereicht. Wir prüfen ihn und geben dir Bescheid.'); }
+  catch(e){ err.textContent=e.message; btn.firstChild.textContent='Datei auswählen & einreichen'; }
+}
+
+/* ===== Jobs für echte Mitglieder: bewerben, Status, Mitteilungen ===== */
+S.mb=null; S.unread=0;
+async function mbLoad(){ if(!S.member) return; try{ S.mb=await rpc('meine_bewerbungen'); }catch(e){ S.mb=null; } if(route()==='jobs') render(); }
+const MB_ST={neu:['Gesendet','Der Auftraggeber hat deine Bewerbung noch nicht geöffnet.'],angesehen:['Angesehen','Der Auftraggeber hat deine Bewerbung angesehen.'],
+  freigeschaltet:['Freigeschaltet 🎉','Der Auftraggeber hat deinen Kontakt freigeschaltet und meldet sich per E-Mail bei dir.'],abgelehnt:['Nicht dabei','Diesmal hat es nicht gepasst. Dranbleiben!'],
+  eingestellt:['Eingestellt 🏆','Glückwunsch, du wurdest eingestellt!'],zurueckgezogen:['Zurückgezogen','Du hast diese Bewerbung zurückgezogen.']};
+function myApp(j){ return S.mb&&j.live ? (S.mb.liste||[]).find(a=>a.job_id===j.id-100000) : null; }
+function jobsEmpty(){ return `<div class="px-4 py-6 max-w-2xl mx-auto"><div class="card p-8 text-center space-y-3"><p class="font-serif text-2xl">Gerade keine offenen Jobs</p><p class="text-sm text-muted">Neue Jobs mit klarer Provision kommen laufend dazu. Du bekommst eine Mitteilung, sobald etwas Passendes online ist.</p></div>${myAppsCard()}</div>`; }
+function myAppsCard(){
+  const l=(S.mb&&S.mb.liste)||[]; if(!l.length) return '';
+  return `<div class="card p-4 mt-4"><p class="text-xs uppercase tracking-wider text-muted mb-2">Meine Bewerbungen</p>${l.map(a=>`<button class="w-full flex justify-between items-center gap-3 py-2 border-t border-line text-left first:border-0" onclick="S.job=${100000+a.job_id};render()"><span class="min-w-0"><span class="block text-sm font-medium truncate">${esc(a.titel||'Job')}</span><span class="block text-xs text-muted">${new Date(a.created_at).toLocaleDateString('de-DE')}</span></span><span class="text-xs whitespace-nowrap ${a.status==='freigeschaltet'||a.status==='eingestellt'?'text-gold font-semibold':'text-muted'}">${MB_ST[a.status]?MB_ST[a.status][0]:a.status}</span></button>`).join('')}</div>`;
+}
+function memberJobAction(j){
+  const a=myApp(j);
+  if(a){
+    const steps=['neu','angesehen','freigeschaltet','eingestellt'], idx=a.status==='abgelehnt'||a.status==='zurueckgezogen'?-1:steps.indexOf(a.status);
+    return `<div class="space-y-3"><div class="card p-4"><p class="font-semibold">${MB_ST[a.status][0]}</p><p class="text-sm text-muted mt-1">${MB_ST[a.status][1]}</p>
+      ${idx>=0?`<div class="flex items-center gap-1 mt-3">${['Gesendet','Angesehen','Freigeschaltet','Eingestellt'].map((t,i)=>`<div class="flex-1"><div style="height:4px;border-radius:2px;background:${i<=idx?'#087A4B':'rgb(var(--line))'}"></div><p class="text-[10px] mt-1 ${i<=idx?'text-gold':'text-muted'}">${t}</p></div>`).join('')}</div>`:''}</div>
+      ${a.status==='neu'||a.status==='angesehen'?`<button class="btn-ghost text-sm" onclick="if(confirm('Bewerbung wirklich zurückziehen?'))rpc('bewerbung_zurueckziehen',{p_id:${a.id}}).then(mbLoad)">Bewerbung zurückziehen</button>`:''}
+      ${a.status==='freigeschaltet'&&!a.member_meldet_at?`<button class="btn-gold text-sm" onclick="rpc('bewerbung_eingestellt_melden',{p_id:${a.id}}).then(()=>{alert('Danke! Wir haben es vermerkt. Viel Erfolg im neuen Job!');mbLoad();})">Ich wurde eingestellt</button>`:''}
+      ${a.member_meldet_at&&a.status!=='eingestellt'?`<p class="text-xs text-muted">✓ Du hast gemeldet, dass du eingestellt wurdest.</p>`:''}</div>`;
+  }
+  const lim=S.mb?S.mb.limit:5, used=S.mb?S.mb.genutzt:0, left=Math.max(0,lim-used), fr=j.fragen&&j.fragen.length?j.fragen:[];
+  if(!left) return `<div class="card p-4 text-sm"><p class="font-semibold">Bewerbungen für diesen Monat aufgebraucht</p><p class="text-muted mt-1">Du hast ${lim} von ${lim} genutzt. Am 1. geht es weiter${S.member.abo!=='premium'?' – mit Premium hast du 10 pro Monat':''}.</p></div>`;
+  return `<div class="space-y-3">
+    ${fr.length?`<p class="text-sm text-muted">Fragen des Auftraggebers:</p>${fr.map((f,i)=>`<label class="block text-xs text-muted">${i+1}. ${esc(f)}<input id="jq${i}" maxlength="500" class="input text-sm mt-1"></label>`).join('')}`:''}
+    <textarea id="amsg" maxlength="300" oninput="document.getElementById('cnt').textContent=this.value.length" class="input h-24 text-sm placeholder:text-xs" placeholder="Kurze Nachricht an den Auftraggeber (max. 300 Zeichen)"></textarea>
+    <p id="aerr" class="text-sm" style="color:#e5484d;min-height:1em"></p>
+    <div class="flex justify-between items-center gap-3"><span class="text-xs text-muted"><span id="cnt">0</span>/300 · Kontaktdaten werden automatisch entfernt</span><button id="abtn" onclick="applyReal(${j.id},${fr.length})" class="btn-gold text-sm whitespace-nowrap" style="padding:9px 14px">Jetzt bewerben</button></div>
+    <p class="text-xs text-muted">Noch <b>${left}</b> von ${lim} Bewerbungen diesen Monat.${S.member.abo!=='premium'?' Mit Premium: 10.':''} Dein Profil bleibt anonym, bis der Auftraggeber dich freischaltet.</p></div>`;
+}
+async function applyReal(jid,n){
+  const b=document.getElementById('abtn'), err=document.getElementById('aerr'), ans=[...Array(n)].map((_,i)=>document.getElementById('jq'+i).value.trim());
+  if(ans.some(x=>!x)){ err.textContent='Bitte beantworte alle Fragen des Auftraggebers.'; return; }
+  b.disabled=true; b.textContent='Wird gesendet …';
+  try{ const r=await rpc('bewerbung_neu',{p_job:jid-100000,p_antworten:ans,p_nachricht:document.getElementById('amsg').value});
+    if(!r||!r.ok) throw new Error({doppelt:'Du hast dich hier schon beworben.',limit:'Deine Bewerbungen für diesen Monat sind aufgebraucht.',job:'Dieser Job ist nicht mehr online.'}[r&&r.grund]||'Senden hat nicht geklappt.');
+    await mbLoad(); }
+  catch(e){ err.textContent=e.message; b.disabled=false; b.textContent='Jetzt bewerben'; }
+}
+/* Mitteilungen */
+const N_IC={like:'❤️',kommentar:'💬',folgen:'👤',bewerbung:'💼'};
+S.notes=null;
+async function notesLoad(){ if(!S.member) return; try{ S.notes=await rpc('mitteilungen_laden'); }catch(e){ S.notes=[]; } if(route()==='notifications'){ S.unread=0; render(); rpc('mitteilungen_gelesen').then(()=>{ S.unread=0; markBell(); }).catch(()=>{}); } }
+async function unreadLoad(){ if(!S.member) return; try{ S.unread=await rpc('mitteilungen_ungelesen')||0; }catch(e){} markBell(); }
+function markBell(){ document.querySelectorAll('a[href="#notifications"]').forEach(a=>{ let d=a.querySelector('.nbadge'); if(S.unread>0){ if(!d){ d=document.createElement('span'); d.className='nbadge'; d.style.cssText='position:absolute;top:2px;right:2px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#e5484d;color:#fff;font:700 10px/17px Archivo,sans-serif;text-align:center;pointer-events:none'; a.style.position='relative'; a.appendChild(d); } d.textContent=S.unread>9?'9+':S.unread; } else if(d) d.remove(); }); }
+function notesReal(){
+  if(S.notes===null){ notesLoad(); return `<div class="max-w-lg mx-auto px-4 py-8"><h1 class="font-serif text-2xl mb-2">Mitteilungen</h1><p class="text-sm text-muted">Lädt …</p></div>`; }
+  return `<div class="max-w-lg mx-auto px-4 py-8 space-y-3"><h1 class="font-serif text-2xl mb-2">Mitteilungen</h1>
+    ${S.notes.length?S.notes.map(n=>`<a href="#${n.link||'feed'}" class="card p-4 text-sm flex gap-3 items-start ${n.gelesen?'':'border-gold'}" style="${n.gelesen?'':'border-color:#087A4B'}"><span class="text-lg leading-none">${N_IC[n.typ]||'🔔'}</span><span class="min-w-0"><span class="block">${esc(n.text)}</span><span class="block text-xs text-muted mt-1">${new Date(n.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></span></a>`).join('')
+      :'<div class="card p-8 text-center text-sm text-muted">Noch keine Mitteilungen. Sobald jemand deinen Beitrag liked, dir folgt oder sich bei deiner Bewerbung etwas tut, siehst du es hier.</div>'}</div>`;
+}
+setInterval(()=>{ if(document.visibilityState==='visible') unreadLoad(); },45000);
 
 function feed(){
   const ft = S.ptopics || S.topics;
@@ -1664,7 +1748,8 @@ function jobSubBar(){
     <div class="flex gap-1.5 flex-wrap">${JROLES.map(c=>`<button onclick="S.jsubs=${'S.jsubs.includes(\''+c+'\')?S.jsubs.filter(x=>x!==\''+c+'\'):[...S.jsubs,\''+c+'\']'};render()" class="text-xs px-2.5 py-1 rounded-full border" style="${on(c)?'background:#087A4B;border-color:#087A4B;color:#fff':'border-color:rgb(var(--line))'}">${on(c)?'✓ ':'+ '}${c}</button>`).join('')}</div></div>`;
 }
 function jobs(){
-  const j = JOBS.find(x=>x.id===S.job)||JOBS[0];
+  if(S.member && !JOBS.some(x=>x.live)) return jobsEmpty();
+  const j = JOBS.find(x=>x.id===S.job)||JOBS.find(x=>x.live)||JOBS[0];
   const list = JOBS.filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4 ${x.id===j.id?'!border-gold':''}" style="${x.id===j.id?'border-color:#087A4B':''}">
     <p class="font-semibold">${x.t}</p><p class="text-sm text-muted">${x.ind} · ${x.reg}</p><p class="text-sm text-gold mt-1">${x.pay}</p><p class="text-xs text-muted mt-1">${x.d===0?'Heute':'vor '+x.d+' Tagen'}</p></button>`).join('');
   const action = !S.user ? `<a href="#login" class="btn-gold">🔒 Anmelden zum Bewerben</a>`
@@ -1681,6 +1766,7 @@ function jobs(){
       <div class="space-y-3">
         <div class="flex gap-2 flex-wrap pb-1">${JROLES.map(r=>`<button onclick="S.jrole=S.jrole==='${r}'?null:'${r}';render()" class="px-3.5 py-1.5 rounded-full border text-sm ${S.jrole===r?'text-black font-semibold':'text-muted'}" style="${S.jrole===r?'background:linear-gradient(135deg,#7FD1A8,#087A4B 50%,#06603B);border-color:#087A4B':'border-color:rgb(var(--line))'}">${r}</button>`).join('')}</div>
         ${jobSubBar()}
+        ${S.member?myAppsCard():''}
         <p class="text-xs uppercase tracking-wider text-gold font-semibold">★ Top-Jobs</p>
         ${JOBS.filter(x=>x.top).filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="w-full text-left rounded-2xl p-[1.5px]" style="background:linear-gradient(135deg,#D9B45A,#087A4B 55%,#06603B)"><span class="block rounded-[15px] p-4 relative overflow-hidden" style="background:linear-gradient(135deg,rgba(217,180,90,.14),rgba(8,122,75,.10) 60%),rgb(var(--panel))">
           <span class="flex items-center justify-between gap-2"><span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style="background:#087A4B;color:#fff">★ Top-Job</span><span class="text-[10px] text-muted">Anzeige</span></span>
@@ -1700,7 +1786,7 @@ function jobs(){
         </dl>
         ${j.desc?`<p class="text-sm mb-4">${esc(j.desc)}</p>`:''}
         ${j.req?`<div class="text-sm mb-6"><p class="text-muted mb-1">Das bringst du mit</p><p style="white-space:pre-line">${esc(j.req)}</p></div>`:''}
-        ${action}</div></div></div>`;
+        ${S.member&&j.live?memberJobAction(j):action}</div></div></div>`;
 }
 
 const CONTACT_RE = /(\+?\d[\d\s\/\-().]{6,}\d)|([\w.+-]+@[\w-]+\.[\w.]+)|(@[\w.]{3,})|((https?:\/\/|www\.)\S+)|(\b(insta(gram)?|whats ?app|telegram|tiktok|linkedin)\b[:\s]*\S*)/gi;
@@ -1723,6 +1809,9 @@ function applyJob(){
   S.sent=true; render();
 }
 const FCATS=[['Vertrieb-Basics',[['💬','Einwandbehandlung',128],['📞','Setting & Terminierung',94],['🎯','High-Ticket Closing',76]]],['Mindset & Routinen',[['🧠','Motivation & Absagen',61],['🗓️','Tagesplanung',38]]],['Tools & Erfolge',[['🛠️','CRM & Dialer',40],['🏆','Erfolge feiern',152]]]];
+// Forum-Fragen. Zum Start leer: Elias stellt die ersten drei Fragen selbst.
+// Eintrag: {cat:'Einwandbehandlung', q:'Titel der Frage', t:'Text dazu', a:'ClosingHub', r:'Rainmaker'}  (cat = Name der Kategorie aus FCATS)
+const FTHREADS=[];
 S.helpful={};
 
 
@@ -1771,23 +1860,17 @@ function forum(){
   if(S.thread) return thread();
   return `<div class="px-4 py-6 max-w-6xl mx-auto"><div class="max-w-3xl"><div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><span class="btn-gold">Forum</span><a href="#markt" class="btn-ghost">Marktplatz</a></div>
     <div class="flex justify-between items-center mb-4"><h1 class="font-serif text-2xl">Forum</h1>${S.user?'<button class="btn-gold text-sm">+ Neues Thema</button>':'<a href="#login" class="btn-gold text-sm">Anmelden zum Mitreden</a>'}</div>
-    ${FCATS.map(([g,cs])=>`<p class="text-xs uppercase tracking-wider text-gold mt-6 mb-3">${g}</p><div class="space-y-3">${cs.map(([i,n,c])=>`<div onclick="S.thread=1;render()" class="card p-4 flex justify-between items-center hover:border-gold" style="cursor:pointer"><span>${i} <b class="ml-1">${n}</b></span><span class="text-sm text-muted">${c} Themen</span></div>`).join('')}</div>`).join('')}
+    ${FCATS.map(([g,cs])=>`<p class="text-xs uppercase tracking-wider text-gold mt-6 mb-3">${g}</p><div class="space-y-3">${cs.map(([i,n,c])=>`<div onclick="S.thread='${n}';render()" class="card p-4 flex justify-between items-center hover:border-gold" style="cursor:pointer"><span>${i} <b class="ml-1">${n}</b></span><span class="text-sm text-muted">${(k=>k?k+(k===1?' Frage':' Fragen'):'Noch keine Fragen')(FTHREADS.filter(t=>t.cat===n).length)}</span></div>`).join('')}</div>`).join('')}
     <p class="text-xs text-muted mt-6">🛡️ KI filtert Spam vorab · Beiträge melden möglich · Moderatoren ab Rang 4 Dealmaker</p></div></div>`;
 }
 function thread(){
-  const ans=[{n:'Lena',r:'Dealmaker',t:'Frag zurück: „Zu teuer im Vergleich wozu?“ – dann redet der Kunde über seinen echten Maßstab.',h:24,best:1},{n:'Jonas',r:'Performer',t:'Ich rechne den Preis auf den Tag runter. 3.000 € = 8 € am Tag – weniger als sein Mittagessen.',h:11},{n:'Felix',r:'Performer',t:'Wichtig: erst Wert bestätigen lassen, dann über Preis sprechen. Sonst diskutierst du nur Zahlen.',h:7}];
+  const cat=S.thread, list=FTHREADS.filter(t=>t.cat===cat);
   return `<div class="max-w-3xl mx-auto px-4 py-6">
-    <button onclick="S.thread=null;render()" class="text-sm text-muted mb-4">← Einwandbehandlung</button>
-    <div class="card p-5 mb-4"><div class="flex items-center gap-2 mb-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block">${avatar('Marco')}</span>${nameRank('Marco','Rising')}</div>
-      <h1 class="font-serif text-2xl mb-2">Wie reagiert ihr auf „Das ist mir zu teuer“?</h1><p class="text-sm text-muted">Bekomme den Einwand fast in jedem zweiten Call bei 3.000 €-Angeboten. Was funktioniert bei euch?</p>
-      <div class="mt-4 border-t border-line pt-4"><p class="text-sm font-semibold mb-2">📊 Umfrage: Was ist euer häufigster Einwand?</p>
-        ${[['Zu teuer',58],['Keine Zeit',22],['Muss mit Partner sprechen',20]].map(([o,v])=>`<div class="mb-2"><div class="flex justify-between text-xs mb-1"><span>${o}</span><span class="text-gold">${v} %</span></div><div class="h-2 bg-line rounded"><div class="h-2 rounded gold-bg" style="width:${v}%"></div></div></div>`).join('')}</div></div>
-    ${ans.map((a,i)=>`<div class="card p-4 mb-3" style="${a.best?'border-color:#087A4B':''}">
-      ${a.best?'<p class="text-[11px] uppercase tracking-wider text-gold mb-2">✓ Beste Antwort</p>':''}
-      <div class="flex items-center gap-2 mb-2"><span class="w-7 h-7 rounded-full overflow-hidden inline-block">${avatar(a.n)}</span>${nameRank(a.n,a.r)}</div>
-      <p class="text-sm">${a.t}</p>
-      <div class="flex gap-4 mt-3 text-xs"><button onclick="S.helpful[${i}]=!S.helpful[${i}];render()" class="${S.helpful[i]?'text-gold':'text-muted'}">👍 Hilfreich · ${a.h+(S.helpful[i]?1:0)}</button><button class="text-muted">Antworten</button><button class="text-muted">Melden</button></div></div>`).join('')}
-    ${S.user?'<div class="flex gap-2 mt-4"><input class="input" placeholder="Deine Antwort…"><button class="btn-gold">Senden</button></div>':''}
+    <button onclick="S.thread=null;render()" class="text-sm text-muted mb-4">← Forum</button>
+    <h1 class="font-serif text-2xl mb-4">${cat}</h1>
+    ${list.length?list.map(t=>`<div class="card p-5 mb-3"><div class="flex items-center gap-2 mb-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block">${avatar(t.a||'ClosingHub')}</span>${nameRank(t.a||'ClosingHub',t.r||'Rainmaker')}</div>
+      <h2 class="font-serif text-xl mb-2">${esc(t.q)}</h2>${t.t?`<p class="text-sm text-muted">${esc(t.t)}</p>`:''}
+      ${S.user?'<div class="flex gap-2 mt-4"><input class="input" placeholder="Deine Antwort…"><button class="btn-gold">Senden</button></div>':''}</div>`).join(''):`<div class="card p-5 text-sm"><p class="font-semibold mb-1">Hier steht noch keine Frage.</p><p class="text-muted">Zum Start stellt ClosingHub die ersten drei Fragen. Danach bist du dran.</p></div>`}
   </div>`;
 }
 
@@ -1888,7 +1971,7 @@ function settings(){
     <div class="card p-4"><p class="font-semibold mb-1">Member einladen</p><p class="text-xs text-muted mb-3">Schick deinen Link an Closer, Setter und Vertriebler, die du kennst. Die erste Person, die darüber beitritt, bekommt ein Jahr lang 25&nbsp;% Rabatt auf Plus und Premium. Alle weiteren kannst du ohne Rabatt einladen. Jede wird dir zugeordnet. Ab 3 geworbenen Membern bekommst du das Abzeichen „Recruiter“.</p>
       <div class="flex gap-2"><input id="invLink" readonly value="${inviteLink()}" onclick="this.select()" class="flex-1 min-w-0 rounded-lg border border-line bg-panel px-3 py-2 text-sm"><button onclick="copyInvite(this)" class="btn-gold text-sm whitespace-nowrap">Kopieren</button></div>
       <div class="flex items-center justify-between gap-3 mt-3 flex-wrap"><a class="btn-ghost text-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('Schau dir ClosingHub an, die Plattform für Closer, Setter und Vertriebler. Hier ist mein Einladungslink: '+inviteLink())}">Per WhatsApp teilen</a><span class="text-xs text-muted">Bisher geworben: <b>${ME.invited} von 3</b></span></div></div>
-    ${profilFelderCard()}<div class="card p-4"><p class="font-semibold mb-1">Profiltext</p><p class="text-xs text-muted mb-3">Steht unter deinem Namen im Profil. Erzähl kurz, was du machst und wofür du stehst.</p>
+    ${profilFelderCard()}${nachweiseCard()}<div class="card p-4"><p class="font-semibold mb-1">Profiltext</p><p class="text-xs text-muted mb-3">Steht unter deinem Namen im Profil. Erzähl kurz, was du machst und wofür du stehst.</p>
       <textarea id="bioIn" maxlength="300" class="input h-24 text-sm" oninput="document.getElementById('bioCnt').textContent=this.value.length+' / 300'">${ME.bio}</textarea>
       <div class="flex items-center justify-between mt-2"><span id="bioCnt" class="text-xs text-muted">${ME.bio.length} / 300</span><button class="btn-gold text-sm" onclick="ME.bio=document.getElementById('bioIn').value.trim().slice(0,300);saveProfil();this.textContent='✓ Gespeichert';setTimeout(()=>render(),900)">Speichern</button></div></div>
     ${notifCard()}
@@ -1900,6 +1983,7 @@ function toggleTopic(t){ let cur=S.topics||[...FTOPICS]; cur=cur.includes(t)?cur
 function toggleBadge(b){ S.badgesShown = S.badgesShown.includes(b)?S.badgesShown.filter(x=>x!==b):[...S.badgesShown,b]; }
 
 function notifications(){
+  if(S.member){ if(S.unread>0) S.notes=null; return notesReal(); }
   return `<div class="max-w-lg mx-auto px-4 py-8 space-y-3"><h1 class="font-serif text-2xl mb-2">Mitteilungen</h1>
     <div class="card p-4 text-sm" id="rev">⭐ <b>Neue Bewertung verfügbar</b><br><span class="text-muted">„Top Closer, sehr strukturiert!“ – 5 Sterne</span>
       <div class="flex gap-2 mt-3"><button class="btn-gold text-xs" onclick="this.parentElement.innerHTML='<span class=text-emerald-400>✓ Im Profil angezeigt</span>'">Im Profil anzeigen</button><button class="btn-ghost text-xs" onclick="this.parentElement.innerHTML='<span class=text-muted>Nicht angezeigt</span>'">Nicht anzeigen</button></div></div>
@@ -2159,7 +2243,7 @@ function render(){
   if(r==='zentrale'){ document.getElementById('app').innerHTML=zentrale(); return; }
   const fn = PAGES[r] || feed;
   document.getElementById('app').innerHTML = shell(fn());
-  window.scrollTo(0,0);
+  window.scrollTo(0,0); try{ markBell(); }catch(e){}
 }
 render();
 </script>
