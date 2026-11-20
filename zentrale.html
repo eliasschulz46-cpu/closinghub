@@ -1596,6 +1596,53 @@ async function pcSave(b){ b.disabled=true; try{ await q('rpc/punkte_cfg_speicher
 async function pmSend(b){ const a=$('pm-a').value, p=+$('pm-p').value||0; if(!$('pm-m').value) return toast('Bitte ein Mitglied wählen'); if(a==='manuell'&&!p) return toast('Bitte Punkte eintragen');
   b.disabled=true; try{ const j=await q('rpc/punkte_manuell',{method:'POST',body:{p_member:+$('pm-m').value,p_aktion:a,p_punkte:a==='manuell'?p:null,p_notiz:$('pm-n').value}}); toast(j&&j.ok?(j.punkte?'Vergeben: '+(j.punkte>0?'+':'')+j.punkte:'Gezählt – Tageslimit erreicht, 0 Punkte'):'Hat nicht geklappt'); $('pm-n').value=''; D.ptz=undefined; render(); }catch(e){ b.disabled=false; } }
 async function gzDone(id,b){ b.disabled=true; try{ await q('rpc/gutschein_erledigt',{method:'POST',body:{p_id:id}}); D.ptz=undefined; render(); }catch(e){ b.disabled=false; } }
+/* ===== Lebenslauf schwärzen: Elias zieht schwarze Balken über Name, Telefon, E-Mail, Adresse, Foto ===== */
+PROOF_ART.lebenslauf='Lebenslauf';
+const _zProofApprove0=zProofApprove;
+zProofApprove=async function(pid,btn){ const p=(D.proofs||[]).find(x=>x.id===pid); if(p&&p.art==='lebenslauf') return cvEditor(pid); return _zProofApprove0(pid,btn); };
+let CV=null;
+async function cvPdfLib(){ if(window.pdfjsLib) return window.pdfjsLib;
+  await new Promise((ok,no)=>{ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'; s.onload=ok; s.onerror=no; document.head.appendChild(s); });
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; return window.pdfjsLib; }
+async function cvEditor(pid){
+  const p=(D.proofs||[]).find(x=>x.id===pid); if(!p) return;
+  const ov=document.createElement('div'); ov.id='cvov'; ov.style.cssText='position:fixed;inset:0;z-index:200;background:rgba(14,26,43,.85);display:flex;flex-direction:column;align-items:center;padding:16px;overflow:auto';
+  ov.innerHTML=`<div style="background:#fff;border-radius:14px;padding:14px 16px;max-width:960px;width:100%;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2">
+    <div><b>Lebenslauf schwärzen</b><div class="muted" style="font-size:12.5px">Zieh mit der Maus schwarze Balken über Name, Foto, Telefon, E-Mail, Adresse und Links. Der Auftraggeber sieht nur diese Version.</div></div>
+    <div class="row" style="gap:8px"><button class="btn sm" onclick="cvUndo()">↶ Rückgängig</button><button class="btn sm" onclick="document.getElementById('cvov').remove()">Abbrechen</button><button class="btn sm gold-b" id="cvOk" onclick="cvSave(${pid},this)">Fertig & bestätigen</button></div></div>
+    <div id="cvwrap" style="margin-top:14px;position:relative;max-width:960px;width:100%;background:#fff;border-radius:6px;overflow:hidden"><p style="padding:30px;text-align:center" class="muted">Lädt Dokument …</p></div>`;
+  document.body.appendChild(ov);
+  try{
+    const b=await zProofBlob(p); if(!b) throw new Error('Kein Dokument');
+    const W=900, base=document.createElement('canvas'), x=base.getContext('2d');
+    if(/pdf/.test(b.type)||/\.pdf$/i.test(p.datei_url||'')){
+      const lib=await cvPdfLib(), doc=await lib.getDocument({data:new Uint8Array(await b.arrayBuffer())}).promise, n=Math.min(doc.numPages,4), pages=[];
+      for(let i=1;i<=n;i++){ const pg=await doc.getPage(i), vp0=pg.getViewport({scale:1}), vp=pg.getViewport({scale:W/vp0.width}), c=document.createElement('canvas'); c.width=W; c.height=Math.round(vp.height); await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise; pages.push(c); }
+      base.width=W; base.height=pages.reduce((s,c)=>s+c.height+(pages.length>1?12:0),0); x.fillStyle='#E9EEF3'; x.fillRect(0,0,W,base.height); let y=0; pages.forEach(c=>{ x.drawImage(c,0,y); y+=c.height+(pages.length>1?12:0); });
+    } else { const bmp=await createImageBitmap(b); base.width=W; base.height=Math.round(W*bmp.height/bmp.width); x.drawImage(bmp,0,0,W,base.height); }
+    CV={base,boxes:[],cur:null};
+    const wrap=document.getElementById('cvwrap'); wrap.innerHTML=''; const c=document.createElement('canvas'); c.id='cvc'; c.width=base.width; c.height=base.height; c.style.cssText='width:100%;display:block;cursor:crosshair;touch-action:none'; wrap.appendChild(c); cvDraw();
+    const pos=e=>{ const r=c.getBoundingClientRect(); return [(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]; };
+    c.onpointerdown=e=>{ c.setPointerCapture(e.pointerId); const [a,b2]=pos(e); CV.cur=[a,b2,a,b2]; };
+    c.onpointermove=e=>{ if(!CV.cur) return; const [a,b2]=pos(e); CV.cur[2]=a; CV.cur[3]=b2; cvDraw(); };
+    c.onpointerup=()=>{ if(CV.cur){ const [a,b2,c2,d]=CV.cur; if(Math.abs(c2-a)>4&&Math.abs(d-b2)>4) CV.boxes.push([Math.min(a,c2),Math.min(b2,d),Math.abs(c2-a),Math.abs(d-b2)]); CV.cur=null; cvDraw(); } };
+  }catch(e){ document.getElementById('cvwrap').innerHTML=`<p style="padding:30px;color:#c0392b">Dokument konnte nicht geöffnet werden: ${esc(e.message||'Fehler')}</p>`; }
+}
+function cvDraw(final){ const c=final||document.getElementById('cvc'); if(!c||!CV) return; const x=c.getContext('2d'); x.drawImage(CV.base,0,0); x.fillStyle='#0E1A2B';
+  CV.boxes.forEach(b=>x.fillRect(...b)); if(CV.cur&&!final){ const [a,b,cc,d]=CV.cur; x.fillStyle='rgba(14,26,43,.7)'; x.fillRect(Math.min(a,cc),Math.min(b,d),Math.abs(cc-a),Math.abs(d-b)); } }
+function cvUndo(){ if(CV&&CV.boxes.length){ CV.boxes.pop(); cvDraw(); } }
+async function cvSave(pid,btn){ if(!CV) return;
+  if(!CV.boxes.length&&!confirm('Du hast noch nichts geschwärzt. Trotzdem so bestätigen?')) return;
+  btn.disabled=true; btn.textContent='Speichert …';
+  try{ const c=document.createElement('canvas'); c.width=CV.base.width; c.height=CV.base.height+34; const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height);
+    const t=document.createElement('canvas'); t.width=CV.base.width; t.height=CV.base.height; cvDraw(t); x.drawImage(t,0,0);
+    x.fillStyle='#0E1A2B'; x.fillRect(0,CV.base.height,c.width,34); x.fillStyle='#fff'; x.font='600 14px Archivo,system-ui,sans-serif'; x.fillText('Geschwärzte Version · geprüft von ClosingHub · Kontaktdaten nach Freischaltung',14,CV.base.height+22);
+    const blob=await new Promise(ok=>c.toBlob(ok,'image/jpeg',.85)), path=`${zUid()}/geschwaerzt/cv-${pid}-${Date.now()}.jpg`;
+    const r=await fetch(`${SB_URL}/storage/v1/object/medien/${path}`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+await zToken(),'Content-Type':'image/jpeg'},body:blob});
+    if(!r.ok) throw new Error('Hochladen fehlgeschlagen ('+r.status+')');
+    document.getElementById('cvov').remove(); CV=null;
+    await mbProofSet(pid,{status:'bestaetigt',geprueft_at:new Date().toISOString(),vorschau_url:`${SB_URL}/storage/v1/object/public/medien/${path}`},'Lebenslauf bestätigt – geschwärzte Version ist beim Auftraggeber sichtbar');
+  }catch(e){ btn.disabled=false; btn.textContent='Fertig & bestätigen'; toast('⚠️ '+e.message); } }
 
 async function mbDel(id){ const m=mbById(id); if(!m) return; const t=prompt(m.name+' endgültig löschen?\n\nDas löscht das Konto mit ALLEM: Beiträge, Kommentare, Chats, Bewerbungen, Punkte, Nachweise und den Einladungslink. Das kann man nicht rückgängig machen.\n\nZum Bestätigen tippe: LÖSCHEN'); if(t===null) return; if(t.trim().toUpperCase()!=='LÖSCHEN') return toast('Nicht gelöscht – Bestätigung falsch'); try{ const j=await q('rpc/member_loeschen',{method:'POST',body:{p_id:id}}); if(!j||!j.ok) throw 0; D.members=(D.members||[]).filter(x=>x.id!==id); mbSel=null; toast('Endgültig gelöscht'); location.hash='#member'; render(); }catch(e){ toast('Fehlt noch: closinghub-mitglieder.sql in Supabase ausführen'); } }
 const PAGES={feedx,marktx,mitmachx,punktex,partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};

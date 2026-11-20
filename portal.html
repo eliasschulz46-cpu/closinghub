@@ -273,7 +273,7 @@ const gross = i => (+i.net)*(1+(+i.vat)/100);
 const days = j => j.expires_at ? Math.max(0, Math.ceil((new Date(j.expires_at)-Date.now())/864e5)) : null;
 
 /* ===== Daten ===== */
-let ME=null, JOBS=[], INVS=[], PRICES={unlock:25,topJob:19,jobFee:0,vat:21}, LOADED=false;
+let ME=null, JOBS=[], INVS=[], PRICES={unlock:25,hire:250,topJob:19,jobFee:0,vat:21}, LOADED=false;
 const fee = k => { const m={fee_job:'jobFee',fee_top:'topJob',fee_unlock:'unlock'}; return (ME && ME[k]!==null && ME[k]!==undefined) ? +ME[k] : +PRICES[m[k]]||0; };
 async function loadAll(){
   let rows = await q(`clients?select=*&user_id=eq.${SESSION.uid}`);
@@ -287,7 +287,7 @@ async function loadAll(){
     q(`invoices?select=*&client_id=eq.${ME.id}&order=created_at.desc`),
     api('settings?select=key,value&key=eq.preise').catch(()=>[])
   ]);
-  JOBS=jobs; INVS=invs; if(st[0]) PRICES={...PRICES,...st[0].value};
+  JOBS=jobs; INVS=invs; await loadBewerbungsZahlen(); if(st[0]) PRICES={...PRICES,...st[0].value};
   LOADED=true;
 }
 
@@ -352,6 +352,7 @@ function dashboard(){
   return `<div class="row between"><div><h1 class="h1">${greet}${ME.kontakt_name?', '+esc(ME.kontakt_name.split(' ')[0]):''}</h1><p class="sub">${esc(ME.firma)} · Kunde seit ${dt(ME.created_at)}</p></div>
     ${ME.status==='aktiv'?`<button class="btn gold-b" onclick="jobForm()">${ic('plus',15)} Stellenangebot einreichen</button>`:''}</div>
   ${closedNote()}
+  ${bNeu()?`<div class="card" style="border-color:var(--gold);margin-bottom:14px"><div class="row between"><div><b class="gold">${bNeu()} neue Bewerbung${bNeu()>1?'en':''}</b><div class="muted" style="font-size:12.5px">Schau sie dir an und schalte die besten Kandidaten frei.</div></div><a class="btn gold-b sm" href="#jobs">Ansehen</a></div></div>`:''}
   ${ME.status==='aktiv'?JOBS.filter(j=>j.status==='freigabe').map(j=>`<div class="card" style="border-color:var(--gold);margin-bottom:14px"><div class="row between"><div><b class="gold">Deine Anzeige ist bereit</b><div style="margin-top:2px">${esc(j.titel||'Stellenangebot')}</div><div class="muted" style="font-size:12.5px">Bitte kurz prüfen. Danach kannst du sie mit einem Klick veröffentlichen.</div></div><button class="btn gold-b" onclick="reviewJob(${j.id})">Anzeige prüfen & veröffentlichen</button></div></div>`).join(''):''}
   <div class="grid g4">
     ${kpi('Jobs online', live.length, soon.length?soon.length+' laufen bald aus':'alles im grünen Bereich', soon.length?'down':'')}
@@ -364,7 +365,7 @@ function dashboard(){
       ${JOBS.slice(0,5).map(j=>`<div class="item" style="padding:10px 0"><div style="flex:1"><b>${esc(j.titel||'Neue Anfrage')}</b><div class="muted" style="font-size:12px">${esc([j.rolle,j.provision,j.region].filter(Boolean).join(' · ')||'eingereicht am '+dt(j.created_at))}</div></div>
         <div style="text-align:right">${pill(...ST[j.status])}${j.status==='live'&&days(j)!==null?`<div class="muted" style="font-size:11px;margin-top:3px">noch ${days(j)} Tage</div>`:''}</div></div>`).join('')||`<p class="muted">Du hast noch kein Stellenangebot eingereicht. Leg direkt los – wir prüfen es und veröffentlichen es anonym für geprüfte Closer und Setter.</p>`}</div>
     <div class="card"><h3>Deine Konditionen</h3>
-      ${[['Veröffentlichung pro Job',fee('fee_job')],['Aufpreis Top-Job (oben, gold markiert)',fee('fee_top')],['Freischaltung pro Kandidat',fee('fee_unlock')]].map(([l,v])=>`<div class="row between" style="padding:9px 0;border-top:1px solid var(--line)"><span>${l}</span><b class="gold">${v>0?eur(v):'kostenlos'}</b></div>`).join('')}
+      ${[['Veröffentlichung pro Job',fee('fee_job')],['Aufpreis Top-Job (oben, gold markiert)',fee('fee_top')],['Freischaltung pro Kandidat',fee('fee_unlock')],['Einstellung eines Kandidaten (einmalig)',+PRICES.hire||250]].map(([l,v])=>`<div class="row between" style="padding:9px 0;border-top:1px solid var(--line)"><span>${l}</span><b class="gold">${v>0?eur(v):'kostenlos'}</b></div>`).join('')}
       <p class="muted" style="font-size:12px;margin-top:10px">Alle Preise netto zzgl. ${PRICES.vat} % IVA. Kein Abo, keine Grundgebühr.</p>
       <h3 style="margin-top:18px">So läuft's ab</h3>
       ${['Du reichst dein Stellenangebot ein.','Wir prüfen es und bereiten es auf (meist innerhalb von 24 Stunden).','Dein Job geht anonym online, Bewerbungen kommen über ClosingHub.','Du schaltest nur die Kandidaten frei, die dich überzeugen.'].map((t,i)=>`<div class="row" style="padding:5px 0;align-items:flex-start;flex-wrap:nowrap"><span class="pill p-gold">${i+1}</span><span style="font-size:13px">${t}</span></div>`).join('')}</div>
@@ -392,7 +393,7 @@ function jobsPage(){
     <div class="row" style="margin-top:8px;gap:6px">${[j.rolle,j.provision,j.region,j.modell,j.umfang].filter(Boolean).map(x=>pill(x)).join('')}</div>
     ${j.beschreibung||j.anfrage_text?`<p class="muted" style="margin-top:10px;white-space:pre-wrap;max-height:90px;overflow:hidden">${esc(j.beschreibung||j.anfrage_text)}</p>`:''}
     <div class="row between" style="margin-top:12px"><span class="muted" style="font-size:12px">Eingereicht am ${dt(j.created_at)}${j.status==='live'?` · online seit ${dt(j.published_at)}${days(j)!==null?` · noch ${days(j)} Tage`:''}`:''}${j.status==='abgelehnt'?' · Bei Fragen melde dich gern bei uns.':''}</span>
-      ${j.status==='freigabe'&&ME.status==='aktiv'?`<button class="btn gold-b sm" onclick="reviewJob(${j.id})">Prüfen & veröffentlichen</button>`:j.status==='anfrage'&&ME.status==='aktiv'?`<button class="btn sm" onclick="jobForm(${j.id})">${ic('pen',13)} Bearbeiten</button>`:j.status==='live'||j.status==='beendet'?`<button class="btn sm" onclick="jobForm(0,${j.id})">Als Vorlage nutzen</button>`:''}</div></div>`).join('')
+      ${j.status==='freigabe'&&ME.status==='aktiv'?`<button class="btn gold-b sm" onclick="reviewJob(${j.id})">Prüfen & veröffentlichen</button>`:j.status==='anfrage'&&ME.status==='aktiv'?`<button class="btn sm" onclick="jobForm(${j.id})">${ic('pen',13)} Bearbeiten</button>`:j.status==='live'||j.status==='beendet'?`${bewBtn(j)} <button class="btn sm" onclick="jobForm(0,${j.id})">Als Vorlage nutzen</button>`:''}</div></div>`).join('')
     ||`<div class="card empty">Noch keine Stellenangebote. Klick oben rechts auf „Neues Stellenangebot“.</div>`}</div>`;
 }
 function reviewJob(id){
@@ -416,6 +417,21 @@ function reviewJob(id){
     <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn" onclick="$('rvChg').style.display='none';$('rvBtns').style.display=''">Zurück</button><button class="btn gold-b" onclick="changeJob(${j.id},this)">Änderung senden</button></div></div>
   <p id="rvErr" class="down" style="display:none;font-size:13px;margin-top:8px"></p>
   <div class="row" id="rvBtns" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Später</button><button class="btn" onclick="$('rvChg').style.display='';$('rvBtns').style.display='none';$('rvNote').focus()">Änderung anfragen</button><button class="btn gold-b" onclick="publishJob(${j.id},this)">Jetzt veröffentlichen</button></div>`);
+}
+function reportHire(id){
+  const j=JOBS.find(x=>x.id===id)||{};
+  openModal(`<h3 style="font-size:18px">Einstellung melden</h3>
+  <p class="muted" style="font-size:13px;margin:4px 0 14px">Glückwunsch! Du hast über „${esc(j.titel||'Stellenangebot')}“ jemanden eingestellt oder beauftragt? Melde es hier, dann erhältst du die Rechnung über einmalig <b class="gold">${eur(+PRICES.hire||250)} netto</b>. Danach könnt ihr euch gegenseitig bewerten.</p>
+  <label class="f">Name des Kandidaten<input class="in" id="hrName" maxlength="120"></label>
+  <label class="f" style="margin-top:10px">Startdatum<input class="in" id="hrStart" type="date"></label>
+  <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="sendHire(${id})">Einstellung melden</button></div>`);
+}
+function sendHire(id){
+  const j=JOBS.find(x=>x.id===id)||{}, n=$('hrName').value.trim(), d=$('hrStart').value;
+  if(!n){ $('hrName').focus(); return; }
+  const body=`Firma: ${ME.firma||''}\nJob: ${j.titel||''} (ID ${id})\nKandidat: ${n}\nStartdatum: ${d||'offen'}`;
+  location.href='mailto:info@getclosinghub.com?subject='+encodeURIComponent('Einstellung melden – Job '+id)+'&body='+encodeURIComponent(body);
+  closeModal(); toast('Danke! Deine Mail-App öffnet sich.');
 }
 const rvFail = m => { const e=$('rvErr'); e.textContent=m; e.style.display='block'; };
 async function publishJob(id,b){
@@ -445,7 +461,7 @@ function jobForm(id, copyId){
   <label class="card" style="display:flex;gap:12px;align-items:flex-start;margin-top:14px;padding:14px;cursor:pointer;border-color:var(--gold,#087A4B)">
     <input type="checkbox" id="jTop" ${src.top_wunsch||src.top?'checked':''} onchange="jobCost()" style="width:20px;height:20px;margin-top:2px;flex:none;accent-color:#087A4B">
     <span><b>★ Als Top-Job buchen <span class="gold">+ ${eur(ft)} netto</span></b><br><span class="muted" style="font-size:12.5px">Dein Job steht ganz oben in der Jobbörse und ist gold markiert. So sehen ihn die meisten Closer und Setter zuerst.</span></span></label>
-  <p class="muted" style="font-size:12.5px;margin-top:12px">Kosten bei Veröffentlichung: <b class="gold" id="jCost" data-f="${f}" data-t="${ft}"></b> · Freischaltung pro Kandidat: <b class="gold">${eur(fee('fee_unlock'))} netto</b></p>
+  <p class="muted" style="font-size:12.5px;margin-top:12px">Kosten bei Veröffentlichung: <b class="gold" id="jCost" data-f="${f}" data-t="${ft}"></b> · Freischaltung pro Kandidat: <b class="gold">${eur(fee('fee_unlock'))} netto</b> · Bei Einstellung: <b class="gold">${eur(+PRICES.hire||250)} netto</b></p>
   <p id="jErr" class="down" style="display:none;font-size:13px;margin-top:8px"></p>
   <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="saveJob(${id||0},this)">${id?'Änderungen speichern':'Zur Prüfung einreichen'}</button></div>`);
   jobCost();
@@ -522,6 +538,70 @@ async function saveProfil(b){
 
 /* ===== Render ===== */
 const PAGES={dashboard,jobs:jobsPage,rechnungen,profil};
+
+/* ===== Bewerbungen: ansehen, freischalten, ablehnen, Einstellung melden ===== */
+let BCOUNT={};
+async function loadBewerbungsZahlen(){ try{ BCOUNT=(await api('rpc/client_bewerbungen_zaehlen',{method:'POST',body:{}}))||{}; }catch(e){ BCOUNT={}; } }
+const bNeu = () => Object.values(BCOUNT).reduce((a,x)=>a+(x.neu||0),0);
+function bewBtn(j){ const c=BCOUNT[j.id]; if(!c||!c.gesamt) return `<span class="muted" style="font-size:12px">Noch keine Bewerbungen</span>`;
+  return `<button class="btn gold-b sm" onclick="openBewerbungen(${j.id})">Bewerbungen (${c.gesamt})${c.neu?` · <b>${c.neu} neu</b>`:''}</button>`; }
+const B_ST={neu:['Neu','p-gold'],angesehen:['Angesehen',''],freigeschaltet:['Freigeschaltet','p-ok'],abgelehnt:['Abgelehnt','p-bad'],eingestellt:['Eingestellt ✓','p-ok']};
+const RANG=['Starter','Rising','Performer','Dealmaker','Rainmaker'];
+async function openBewerbungen(jobId){
+  const j=JOBS.find(x=>x.id===jobId)||{};
+  openModal('<p class="muted">Lade Bewerbungen …</p>');
+  let list=[]; try{ list=(await api('rpc/client_bewerbungen',{method:'POST',body:{p_job:jobId}}))||[]; }catch(e){ openModal(`<p>Bewerbungen konnten nicht geladen werden: ${esc(e.message)}</p>`); return; }
+  const neu=list.filter(b=>b.status==='neu');
+  if(neu.length && ME.status==='aktiv'){ neu.forEach(b=>api('rpc/client_bewerbung_ansehen',{method:'POST',body:{p_id:b.id}}).catch(()=>{})); }
+  const unl=fee('fee_unlock'), hire=+PRICES.hire||250, fr=j.fragen||[];
+  openModal(`<div class="row between"><h3 style="font-size:18px;margin:0">Bewerbungen · ${esc(j.titel||'Stellenangebot')}</h3><button class="btn sm" onclick="closeModal();LOADED=false;render()">Schließen</button></div>
+    <p class="muted" style="font-size:12.5px;margin:6px 0 14px">Bewerber sind anonym, bis du sie freischaltest (${eur(unl)} netto pro Kandidat). Danach siehst du Name und E-Mail. Stellst du jemanden ein, meldest du es hier: einmalig ${eur(hire)} netto. Rechnungen kommen automatisch unter „Rechnungen“.</p>
+    <div style="display:grid;gap:12px;max-height:62vh;overflow:auto;padding-right:4px">${list.length?list.map((b,i)=>{
+      const offen=b.status==='neu'||b.status==='angesehen', frei=b.status==='freigeschaltet'||b.status==='eingestellt';
+      const facts=[b.rolle, RANG[(b.rang||1)-1], b.erfahrung?b.erfahrung+' Jahre Erfahrung':null, b.land, b.sprachen, b.streak?'🔥 '+b.streak+' Tage aktiv':null, b.einstellungen?b.einstellungen+'× über ClosingHub eingestellt':null].filter(Boolean);
+      return `<div class="card" style="padding:14px"><div class="row between"><div class="row"><b>${frei?esc(b.name):'Kandidat '+(i+1)}</b>${b.day_one?pill('Day One','p-gold'):''}</div>${pill(...(B_ST[b.status]||[b.status,'']))}</div>
+        <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${facts.map(f=>pill(f)).join('')}</div>
+        ${(b.antworten||[]).length?`<div style="margin-top:10px;font-size:13.5px">${b.antworten.map((a,k)=>`<p style="margin:4px 0"><span class="muted">${esc(fr[k]||('Frage '+(k+1)))}</span><br>${esc(a)||'<span class="muted">–</span>'}</p>`).join('')}</div>`:''}
+        ${b.nachricht?`<p style="margin-top:8px;font-size:13.5px;white-space:pre-wrap">„${esc(b.nachricht)}“</p>`:''}
+        ${frei?`<div style="margin-top:10px;padding:10px;border-radius:8px;background:rgba(8,122,75,.07);font-size:13.5px"><b>Kontakt:</b> <a class="gold" href="mailto:${esc(b.email)}?subject=${encodeURIComponent('Deine Bewerbung: '+(j.titel||''))}">${esc(b.email)}</a>${b.bio?`<br><span class="muted">${esc(b.bio)}</span>`:''}</div>`:''}
+        <div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn sm" onclick="openKandidat(${b.id},${jobId},${i+1})">Profil ansehen</button>
+          ${offen&&ME.status==='aktiv'?`<button class="btn sm" onclick="bAblehnen(${b.id},${jobId},this)">Ablehnen</button><button class="btn gold-b sm" onclick="bFreischalten(${b.id},${jobId},this)">Freischalten · ${eur(unl)}</button>`:''}
+          ${b.status==='freigeschaltet'&&ME.status==='aktiv'?`<input class="in" type="date" id="hs${b.id}" style="width:auto"><button class="btn gold-b sm" onclick="bEinstellen(${b.id},${jobId},this)">Einstellung melden · ${eur(hire)}</button>`:''}
+          ${b.status==='eingestellt'?`<span class="muted" style="font-size:12.5px">Eingestellt${b.eingestellt_start?' ab '+dt(b.eingestellt_start):''}</span>`:''}</div></div>`;
+    }).join(''):'<div class="card empty">Noch keine Bewerbungen. Sobald sich jemand bewirbt, siehst du ihn hier.</div>'}</div>`);
+}
+async function bFreischalten(id,jobId,btn){ if(!confirm(`Kandidat für ${eur(fee('fee_unlock'))} netto freischalten? Die Rechnung wird automatisch erstellt.`)) return; btn.disabled=true;
+  try{ const j=await api('rpc/client_freischalten',{method:'POST',body:{p_id:id}}); if(!j||!j.ok) throw new Error('Freischalten nicht möglich'); toast('Freigeschaltet – Kontakt ist jetzt sichtbar'); await loadBewerbungsZahlen(); openBewerbungen(jobId); }catch(e){ toast('⚠️ '+e.message); btn.disabled=false; } }
+async function bAblehnen(id,jobId,btn){ if(!confirm('Diese Bewerbung ablehnen? Der Bewerber bekommt eine freundliche Absage.')) return; btn.disabled=true;
+  try{ await api('rpc/client_ablehnen',{method:'POST',body:{p_id:id}}); await loadBewerbungsZahlen(); openBewerbungen(jobId); }catch(e){ toast('⚠️ '+e.message); btn.disabled=false; } }
+async function bEinstellen(id,jobId,btn){ const d=$('hs'+id).value; if(!d){ $('hs'+id).focus(); toast('Bitte das Startdatum wählen'); return; }
+  if(!confirm(`Einstellung melden? Es wird einmalig eine Rechnung über ${eur(+PRICES.hire||250)} netto erstellt.`)) return; btn.disabled=true;
+  try{ const j=await api('rpc/client_einstellung',{method:'POST',body:{p_id:id,p_start:d}}); if(!j||!j.ok) throw new Error('Melden nicht möglich'); toast('Glückwunsch zur Einstellung! 🎉'); openBewerbungen(jobId); }catch(e){ toast('⚠️ '+e.message); btn.disabled=false; } }
+/* Kandidaten-Profil: anonym bis zur Freischaltung */
+const P_ART={lebenslauf:'Lebenslauf (geschwärzt)',ausweis:'Ausweis (Identität)',abrechnung:'Provisionsabrechnung',high_ticket:'High-Ticket-Abschluss (ab 5.000 €)',ausbildung:'Ausbildungszertifikat',dauer:'Nachweis über Dauer im Vertrieb',sonstiges:'Sonstiges'};
+const SILHOUETTE=`<svg viewBox="0 0 64 64" width="64" height="64" style="border-radius:50%;background:#E3E8EF"><circle cx="32" cy="25" r="11" fill="#B7C1CE"/><path d="M12 56c2-11 10-17 20-17s18 6 20 17" fill="#B7C1CE"/></svg>`;
+async function openKandidat(bid,jobId,nr){
+  openModal('<p class="muted">Lade Profil …</p>');
+  let k=null; try{ k=await api('rpc/client_kandidat_profil',{method:'POST',body:{p_bewerbung:bid}}); }catch(e){}
+  if(!k){ openModal('<p>Profil nicht verfügbar.</p><div class="row" style="justify-content:flex-end"><button class="btn" onclick="openBewerbungen('+jobId+')">Zurück</button></div>'); return; }
+  const facts=[k.rolle, RANG[(k.rang||1)-1]+' (Rang '+(k.rang||1)+')', k.erfahrung?k.erfahrung+' Jahre Erfahrung':null, k.land, k.sprachen, k.streak?'🔥 '+k.streak+' Tage aktiv':null, k.einstellungen?k.einstellungen+'× über ClosingHub eingestellt':null, 'dabei seit '+dt(k.dabei_seit)].filter(Boolean);
+  const nw=k.nachweise||[];
+  openModal(`<div class="row between"><button class="btn sm" onclick="openBewerbungen(${jobId})">← Alle Bewerbungen</button>${pill(...(B_ST[k.status]||[k.status,'']))}</div>
+    <div class="row" style="gap:14px;margin-top:14px;align-items:center">${k.frei&&k.avatar_url?`<img src="${esc(k.avatar_url)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover">`:SILHOUETTE}
+      <div><h3 style="font-size:19px;margin:0">${k.frei?esc(k.name):'Kandidat '+nr}</h3><div class="muted" style="font-size:12.5px">${k.frei?`<a class="gold" href="mailto:${esc(k.email)}">${esc(k.email)}</a>${k.follower!=null?' · '+k.follower+' Follower':''}`:'Name, Bild, Beiträge und Kontakt werden nach der Freischaltung sichtbar.'}</div></div></div>
+    <div class="row" style="gap:6px;margin-top:12px;flex-wrap:wrap">${facts.map(f=>pill(f)).join('')}</div>
+    ${(k.abzeichen||[]).length?`<div style="margin-top:12px"><b style="font-size:13px">Abzeichen</b><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">${k.abzeichen.map(a=>pill('🏅 '+a,'p-gold')).join('')}</div></div>`:''}
+    ${k.frei&&k.bio?`<p style="margin-top:12px;font-size:13.5px">${esc(k.bio)}</p>`:''}
+    <div style="margin-top:14px"><b style="font-size:13px">Geprüfte Nachweise (${nw.length})</b>
+      ${nw.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px">${nw.map(n=>`<div class="card" style="padding:8px"><div style="aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:#0E1A2B;display:flex;align-items:center;justify-content:center;color:#C9D3E3;font-size:12px;font-weight:700">${n.vorschau_url?`<a href="${esc(n.vorschau_url)}" target="_blank" rel="noopener" title="Groß ansehen" style="display:block;width:100%;height:100%"><img src="${esc(n.vorschau_url)}" style="width:100%;height:100%;object-fit:cover;object-position:top"></a>`:'▮▮▮ geschwärzt'}</div><div style="font-size:12.5px;margin-top:6px"><b>${esc(P_ART[n.art]||n.art)}</b>${n.monate?' · '+n.monate+' Mon.':''}</div><div class="muted" style="font-size:11.5px">✓ von ClosingHub geprüft${n.gegengeprueft?' · gegengeprüft':''}</div></div>`).join('')}</div>`:'<p class="muted" style="font-size:13px;margin-top:4px">Noch keine geprüften Nachweise.</p>'}</div>
+    ${k.frei?`<div style="margin-top:14px"><b style="font-size:13px">Beiträge</b>${(k.beitraege||[]).length?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px">${k.beitraege.map(p=>`<div style="aspect-ratio:1;border:1px solid var(--line);border-radius:6px;overflow:hidden;font-size:11px;padding:${p.media_typ==='bild'?0:6}px">${p.media_typ==='bild'?`<img src="${esc(p.media_url)}" style="width:100%;height:100%;object-fit:cover">`:p.media_typ==='video'?`<video src="${esc(p.media_url)}#t=0.1" muted preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>`:esc(p.text).slice(0,120)}</div>`).join('')}</div>`:'<p class="muted" style="font-size:13px">Noch keine Beiträge.</p>'}</div>`:''}
+    ${!k.frei&&ME.status==='aktiv'&&(k.status==='neu'||k.status==='angesehen')?`<div class="row" style="justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn gold-b" onclick="kFrei(${bid},${jobId},${nr},this)">Freischalten · ${eur(fee('fee_unlock'))}</button></div>`:''}`);
+}
+
+async function kFrei(bid,jobId,nr,btn){ if(!confirm(`Kandidat für ${eur(fee('fee_unlock'))} netto freischalten? Die Rechnung wird automatisch erstellt.`)) return; btn.disabled=true;
+  try{ const j=await api('rpc/client_freischalten',{method:'POST',body:{p_id:bid}}); if(!j||!j.ok) throw new Error('Freischalten nicht möglich'); toast('Freigeschaltet – das komplette Profil ist jetzt sichtbar'); await loadBewerbungsZahlen(); openKandidat(bid,jobId,nr); }catch(e){ toast('⚠️ '+e.message); btn.disabled=false; } }
+
 async function render(){
   const on=!!SESSION;
   document.querySelector('.layout').style.gridTemplateColumns = on ? '' : '1fr';
