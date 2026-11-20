@@ -1472,7 +1472,7 @@ S.rp=null; S.rpMore=true;
 function mapPost(p){
   const first=String(p.name||'').split(' ')[0]; S.skMap=S.skMap||{}; S.skMap[first]=p.streak;
   const id=1e6+p.id; S.liked[id]=!!p.liked;
-  return {thumb:p.thumb_url||null, id, rid:p.id, real:true, mid:p.member_id, k:p.kategorie, a:esc(first), full:p.name, r:RANKS[(p.rang||1)-1]||'Starter', av:p.avatar_url,
+  return {hl:!!p.highlight, imp:p.im_profil!==false, thumb:p.thumb_url||null, id, rid:p.id, real:true, mid:p.member_id, k:p.kategorie, a:esc(first), full:p.name, r:RANKS[(p.rang||1)-1]||'Starter', av:p.avatar_url,
     t:esc(p.text).replace(/\n/g,'<br>'), l:p.likes-(p.liked?1:0), c:p.kommentare, img:p.media_typ==='bild'?p.media_url:null, video:p.media_typ==='video'?p.media_url:null,
     mine:p.mine, folge:p.folge, at:p.created_at};
 }
@@ -1558,7 +1558,7 @@ function postGrid(list,owner){
   if(!list) return '<p class="mt-8 text-sm text-muted text-center">Lädt …</p>';
   if(!list.length) return owner?`<div class="mt-8 card p-8 text-center space-y-3"><p class="font-serif text-xl">Noch keine Beiträge</p><p class="text-sm text-muted">Teile deinen ersten Deal, Tipp oder Fail mit der Community.</p><a href="#create" class="btn-gold inline-block" style="padding:8px 16px">＋ Ersten Beitrag teilen</a></div>`:'<p class="mt-8 text-sm text-muted text-center">Noch keine Beiträge.</p>';
   S.plistReal=list;
-  return `<div class="mt-8 grid grid-cols-3 gap-1">${list.map((p,i)=>`<div onclick="closeModal();S.plist=S.plistReal;S.plMk=0;startPlayer(${i})" class="relative aspect-square bg-panel border border-line overflow-hidden cursor-pointer">${p.thumb?`<img src="${esc(p.thumb)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">${p.video?'<span class="absolute top-1.5 right-2 text-white text-xs">▶</span>':''}`:p.img?`<img src="${esc(p.img)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:p.video?`<video src="${esc(p.video)}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted preload="metadata"></video><span class="absolute top-1.5 right-2 text-white text-xs">▶</span>`:`<div class="p-3 text-[11px] font-serif">${p.t}</div>`}</div>`).join('')}</div>`;
+  return `<div class="mt-8 grid grid-cols-3 gap-1">${list.map((p,i)=>`<div onclick="closeModal();S.plist=S.plistReal;S.plMk=0;startPlayer(${i})" class="relative aspect-square bg-panel border border-line overflow-hidden cursor-pointer">${p.hl?'<span class="absolute z-10" style="top:4px;right:6px;font-size:15px;color:#F1D58A;text-shadow:0 1px 3px rgba(0,0,0,.8)">★</span>':''}${owner&&p.imp===false?'<span class="absolute z-10 text-[10px] rounded px-1" style="bottom:4px;left:4px;background:rgba(0,0,0,.65);color:#fff">nur Feed</span>':''}${p.thumb?`<img src="${esc(p.thumb)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">${p.video?'<span class="absolute top-1.5 right-2 text-white text-xs">▶</span>':''}`:p.img?`<img src="${esc(p.img)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:p.video?`<video src="${esc(p.video)}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted preload="metadata"></video><span class="absolute top-1.5 right-2 text-white text-xs">▶</span>`:`<div class="p-3 text-[11px] font-serif">${p.t}</div>`}</div>`).join('')}</div>`;
 }
 async function memberModal(mid){
   if(S.member&&mid===S.member.id){ go('profile'); return; }
@@ -1643,7 +1643,7 @@ function memberJobAction(j){
     <p id="aerr" class="text-sm" style="color:#e5484d;min-height:1em"></p>
     <div class="flex justify-between items-center gap-3"><span class="text-xs text-muted"><span id="cnt">0</span>/300 · Kontaktdaten werden automatisch entfernt</span><button id="abtn" onclick="applyReal(${j.id},${fr.length})" class="btn-gold text-sm whitespace-nowrap" style="padding:9px 14px">Jetzt bewerben</button></div>
     ${a0&&a0.status==='zurueckgezogen'?'<p class="text-xs text-muted">Du hattest deine Bewerbung zurückgezogen. Du kannst dich hier neu bewerben.</p>':''}
-    <p class="text-xs text-muted">Noch <b>${left}</b> von ${lim} Bewerbungen diesen Monat.${S.member.abo!=='premium'?' Mit Premium: 10.':''} Dein Profil bleibt anonym, bis der Auftraggeber dich freischaltet.</p></div>`;
+    <p class="text-xs text-muted">Noch <b>${left}</b> von ${lim} Bewerbungen diesen Monat.${S.member.abo!=='premium'?' Mit Premium: 10.':''} Dein Profil bleibt anonym, bis der Auftraggeber dich freischaltet. Danach sieht er deine ★ Highlights – pinne deine besten Beiträge im Profil.</p></div>`;
 }
 async function applyReal(jid,n){
   const b=document.getElementById('abtn'), err=document.getElementById('aerr'), ans=[...Array(n)].map((_,i)=>document.getElementById('jq'+i).value.trim());
@@ -2383,7 +2383,7 @@ function mitglied(){
       ${since?`<p class="text-xs text-muted mt-2">Dabei seit ${since}${p.streak?` · 🔥 ${p.streak} Tage Streak`:''}</p>`:''}
       ${mpStats(p)}${bm}${btns}
     </div>
-    <p class="text-xs uppercase tracking-wider text-muted mt-8 mb-1">Beiträge</p>${postGrid(S.mp.posts,false).replace('mt-8 ','mt-2 ')}</div>`;
+    ${profTabs(p.id,S.mp.posts,false)}</div>`;
 }
 function mpFollow(mid,btn){ btn.disabled=true; rpc('folgen_umschalten',{p_member:mid}).then(j=>{ btn.disabled=false; if(!j||!j.ok) return; btn.className=j.folge?'btn-ghost':'btn-gold'; btn.textContent=j.folge?'Gefolgt ✓':'Folgen'; const f=document.getElementById('mmF'); if(f) f.textContent=(+f.textContent)+(j.folge?1:-1); if(S.mp&&S.mp.p){ S.mp.p.folge=j.folge; S.mp.p.follower=(+S.mp.p.follower)+(j.folge?1:-1); } (S.rp||[]).forEach(p=>{ if(p.mid===mid) p.folge=j.folge; }); S.kontakte=null; loadMember(); }).catch(()=>{ btn.disabled=false; }); }
 
@@ -2418,7 +2418,7 @@ function partnerView(p,posts,self){ const pi=p.partner_info||{}, first=String(p.
       <div class="flex gap-2 mt-4">${badgeIcon('Partner',self?'openMedals()':`openMedalsFor(${p.id})`)}</div>
       ${btns}
       ${S.member&&!self?`<button class="text-[11px] mt-3" style="color:#8FA0B8" onclick="fReport('member',${p.id})">Profil melden</button>`:''}</div>
-    <p class="text-xs uppercase tracking-wider text-muted mt-8 mb-1">Beiträge</p>${postGrid(posts,self).replace('mt-8 ','mt-2 ')}`; }
+    ${profTabs(p.id,posts,self)}`; }
 S.mpSelf=null;
 function partnerSelf(){ const mid=S.member.id;
   if(!S.mpSelf||S.mpSelf.id!==mid){ S.mpSelf={id:mid}; Promise.all([rpc('profil_laden',{p_member:mid}),rpc('feed_laden',{p_vor:null,p_limit:60,p_kats:null,p_member:mid})]).then(([p,posts])=>{ S.mpSelf={id:mid,p,posts:(posts||[]).map(mapPost)}; if(route()==='profile') render(); }).catch(()=>{}); }
@@ -2629,6 +2629,7 @@ function create(){
     ${f.file?cfThumbBox(f):''}
     <div><div class="flex items-center justify-between mb-2"><p class="text-xs uppercase tracking-wider text-muted">Kategorie</p><span class="text-xs ${f.ki&&!f.manual?'text-gold':'text-muted'}">${f.kiLoad?'✨ KI liest mit …':f.ki?(f.manual&&f.kat!==f.ki?`KI hätte „${esc(f.ki)}“ gewählt`:'✨ Von der KI vorgeschlagen – passt?'):'Wähle, worum es geht'}</span></div>
       <div class="flex flex-wrap gap-2">${POST_KATS.map(kb).join('')}</div></div>
+    <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" ${f.noProf?'':'checked'} onchange="S.cf.noProf=!this.checked" style="width:18px;height:18px;accent-color:#087A4B"> In meinem Profil zeigen <span class="text-xs text-muted">· aus = nur im Feed</span></label>
     <p id="cfErr" class="text-sm" style="color:#e5484d;min-height:1.2em"></p>
     <div class="card p-3 text-xs text-muted flex gap-2"><span class="text-gold">🛡️</span> Nur Inhalte zu Vertrieb, Closing & Setting. Keine Politik, nichts Anstößiges, keine Beleidigungen – sonst wird der Beitrag entfernt.</div>
     <button class="btn-gold w-full" id="cfBtn" onclick="cfPost()">Posten</button></div>`;
@@ -2682,9 +2683,29 @@ async function cfPost(){
     if(!j||!j.ok) throw new Error(j&&j.grund==='limit'?'Du hast heute schon das Maximum an Beiträgen gepostet. Morgen geht es weiter!':'Posten hat nicht geklappt.');
     let th=null; if(f.thumb){ b.textContent='Vorschaubild …'; const tf=f.thumb instanceof File?f.thumb:new File([f.thumb],'thumb.jpg',{type:'image/jpeg'}); th=await upload(tf).catch(()=>null); }
     if(j.id&&(th||f.ki)) await rpc('post_meta_setzen',{p_id:j.id,p_thumb:th,p_ki:f.ki}).catch(()=>null);
+    if(j.id&&f.noProf) await rpc('post_im_profil',{p_id:j.id,p_an:false}).catch(()=>null);
     if(f.prev) URL.revokeObjectURL(f.prev); (f.frames||[]).forEach(u=>URL.revokeObjectURL(u)); S.cf=null; S.myPosts=null; go('feed'); feedLoad();
   }catch(e){ err.textContent=e.message; b.disabled=false; b.textContent='Posten'; }
 }
+
+// ===== Runde 9: Profil-Reiter „Beiträge“ / „Highlights“, Highlights pinnen, Beiträge nur im Feed =====
+S.ptab=S.ptab||{}; S.hl=S.hl||{};
+async function hlLoad(mid){ S.hl[mid]=null; try{ S.hl[mid]=((await rpc('highlights_laden',{p_member:mid}))||[]).map(mapPost); }catch(e){ S.hl[mid]=[]; } render(); }
+function profTabs(mid,posts,own){ const t=S.ptab[mid]||'alle'; if(t==='hl'&&S.hl[mid]===undefined){ S.hl[mid]=null; hlLoad(mid); }
+  const tab=(k,l)=>`<button onclick="S.ptab[${mid}]='${k}';render()" class="pb-2 text-sm font-semibold" style="border-bottom:2px solid ${t===k?'#087A4B':'transparent'};color:${t===k?'rgb(var(--fg))':'rgb(var(--muted))'}">${l}</button>`;
+  const hl=S.hl[mid];
+  return `<div class="flex gap-6 border-b border-line mt-8">${tab('alle','Beiträge')}${tab('hl','★ Highlights')}</div>
+    ${t==='hl'?`${own?`<p class="text-xs text-muted mt-3">Auftraggeber sehen nach der Freischaltung nur deine Highlights – maximal 6. Öffne einen Beitrag und tippe auf „☆ Highlight“, um ihn hier anzupinnen.</p>`:''}${hl===null?'<p class="mt-6 text-sm text-muted text-center">Lädt …</p>':hl&&hl.length?postGrid(hl,false).replace('mt-8 ','mt-3 '):`<p class="mt-6 text-sm text-muted text-center">${own?'Noch keine Highlights.':'Noch keine Highlights.'}</p>`}`
+      :postGrid(posts,own).replace('mt-8 ','mt-3 ')}`; }
+async function hlToggle(id,btn){ const pid=id>=1e6?id-1e6:id, p=[...(S.rp||[]),...(S.myPosts||[]),...((S.plist)||[])].find(x=>x&&x.id===id); const on=!(p&&p.hl);
+  if(btn) btn.disabled=true; const j=await rpc('post_highlight',{p_id:pid,p_an:on}).catch(()=>null); if(btn) btn.disabled=false;
+  if(!j||!j.ok){ alert(j&&j.grund==='max'?'Du hast schon 6 Highlights. Nimm erst eines raus.':'Das hat nicht geklappt.'); return; }
+  [...(S.rp||[]),...(S.myPosts||[]),...(S.plist||[])].forEach(x=>{ if(x&&x.id===id){ x.hl=on; if(on) x.imp=true; } }); delete S.hl[S.member.id];
+  if(S.player) drawPlayer(); else render(); }
+async function profToggle(id,btn){ const pid=id-1e6, p=[...(S.rp||[]),...(S.myPosts||[]),...(S.plist||[])].find(x=>x&&x.id===id), on=!(p&&p.imp!==false);
+  const j=await rpc('post_im_profil',{p_id:pid,p_an:on}).catch(()=>null); if(!j||!j.ok){ alert('Das hat nicht geklappt.'); return; }
+  [...(S.rp||[]),...(S.myPosts||[]),...(S.plist||[])].forEach(x=>{ if(x&&x.id===id){ x.imp=on; if(!on) x.hl=false; } }); delete S.hl[S.member.id];
+  if(S.player) drawPlayer(); else render(); }
 
 function feed(){
   const ft = S.ptopics || S.topics;
@@ -2816,7 +2837,7 @@ function drawPlayer(){
       ${(post.vid!==undefined||post.img||post.video)?'':`<p class="font-serif text-2xl leading-relaxed text-center">${post.t}</p>`}</div>
     ${p.paused?`<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><svg width="64" height="64" viewBox="0 0 64 64" style="filter:drop-shadow(0 2px 10px rgba(0,0,0,.45))" aria-label="Pausiert"><rect x="17" y="12" width="10" height="40" rx="3" fill="#fff"/><rect x="37" y="12" width="10" height="40" rx="3" fill="#fff"/></svg></div>`:''}
     <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-      <div ${post.real?`onclick="memberModal(${post.mid})" class="cursor-pointer"`:''}>${nameRank(post.a,post.r)}</div>${post.real&&S.member?(post.mine?`<button onclick="event.stopPropagation();delPost(${post.id})" class="text-xs mt-1" style="color:rgba(255,255,255,.75)">Zurückziehen</button>`:`<button onclick="event.stopPropagation();reportPost(${post.id})" class="text-xs mt-1" style="color:rgba(255,255,255,.75)">Melden</button>`):''}${(post.vid!==undefined||post.img||post.video)?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
+      <div ${post.real?`onclick="memberModal(${post.mid})" class="cursor-pointer"`:''}>${nameRank(post.a,post.r)}</div>${post.real&&S.member?(post.mine?`<span class="flex gap-4 mt-1"><button onclick="event.stopPropagation();hlToggle(${post.id},this)" class="text-xs font-semibold" style="color:${post.hl?'#F1D58A':'rgba(255,255,255,.85)'}">${post.hl?'★ Highlight':'☆ Highlight'}</button><button onclick="event.stopPropagation();profToggle(${post.id},this)" class="text-xs" style="color:rgba(255,255,255,.75)">${post.imp===false?'Im Profil zeigen':'Nur im Feed'}</button><button onclick="event.stopPropagation();delPost(${post.id})" class="text-xs" style="color:rgba(255,255,255,.75)">Zurückziehen</button></span>`:`<button onclick="event.stopPropagation();reportPost(${post.id})" class="text-xs mt-1" style="color:rgba(255,255,255,.75)">Melden</button>`):''}${(post.vid!==undefined||post.img||post.video)?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
       <div class="mt-3">${actionBar(post,'player')}</div>
     </div>`;
   document.getElementById('modal').innerHTML = `
@@ -3106,7 +3127,7 @@ function profile(){
     <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen und Medaillen</p>
       <div class="bm-row"><div class="bm-b">${(l=>l.length?l.map(b=>badgeIcon(b)).join(''):badgeQ())(S.badgesShown.filter(b=>ME.badges.includes(b)))}</div>${(r=>r?`<div class="bm-m">${r}</div>`:'')(medalRow(ME.medals))}</div>
       <button onclick="openMedals()" class="text-gold text-sm mt-3 hover:underline">Alle Abzeichen und Medaillen ansehen →</button></div>
-    ${S.member?postGrid(S.myPosts,true):''}<div class="mt-8 grid grid-cols-3 gap-1" ${S.member?'style="display:none"':''}>${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
+    ${S.member?profTabs(S.member.id,S.myPosts,true):''}<div class="mt-8 grid grid-cols-3 gap-1" ${S.member?'style="display:none"':''}>${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
     ${S.user?`<div class="mt-8 flex flex-wrap gap-3"><button onclick="doLogout()" class="btn-ghost">Abmelden</button></div>`:''}
     <p class="text-xs text-muted mt-6">${LEGAL()} · <button class="hover:underline" onclick="legalOpen('widerruf')">Widerruf</button></p>
   </div>`;

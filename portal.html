@@ -276,6 +276,7 @@ const days = j => j.expires_at ? Math.max(0, Math.ceil((new Date(j.expires_at)-D
 let ME=null, JOBS=[], INVS=[], PRICES={unlock:25,hire:250,topJob:19,jobFee:0,vat:21}, LOADED=false;
 const fee = k => { const m={fee_job:'jobFee',fee_top:'topJob',fee_unlock:'unlock'}; return (ME && ME[k]!==null && ME[k]!==undefined) ? +ME[k] : +PRICES[m[k]]||0; };
 async function loadAll(){
+  { const kt=await api('rpc/konto_typ',{method:'POST',body:{}}).catch(()=>null); if(kt&&!kt.admin&&(kt.mitglied||(kt.partner&&!kt.auftraggeber))){ keep(null); ME=null; LOADED=false; S_DENY=kt.mitglied?'mitglied':'partner'; render(); throw new Error('Kein Zugang'); } }
   let rows = await q(`clients?select=*&user_id=eq.${SESSION.uid}`);
   if(!rows.length){
     const m=SESSION.meta||{};
@@ -293,9 +294,11 @@ async function loadAll(){
 
 /* ===== Login & Registrierung ===== */
 let authMode='login';
+let S_DENY='';
 function authView(){
+  const deny=S_DENY?`<div class="card" style="border-color:#e5484d;margin-bottom:14px;font-size:14px">${S_DENY==='mitglied'?'Dieses Konto ist ein Mitgliedskonto. Mitglieder melden sich in der App an: <a href="/app" style="text-decoration:underline">getclosinghub.com/app</a>':'Dieses Konto ist ein Partnerkonto. Partner melden sich im Partnerportal an: <a href="/partner.html" style="text-decoration:underline">Partnerportal</a>'}</div>`:''; S_DENY='';
   const reg = authMode==='register';
-  return `<div style="max-width:420px;margin:6vh auto" class="card">
+  return `<div style="max-width:420px;margin:6vh auto" class="card">${deny}
     <div style="text-align:center;margin-bottom:16px"><span class="logo" style="font-size:36px"><span class="l1">closing</span><span class="l2">HUB</span></span>
       <div class="muted" style="font-size:11px;letter-spacing:.25em;text-transform:uppercase;margin-top:6px">Auftraggeber-Portal</div></div>
     <div class="tabs" style="justify-content:center"><button class="${reg?'':'on'}" onclick="authMode='login';render()">Anmelden</button><button class="${reg?'on':''}" onclick="authMode='register';render()">Registrieren</button></div>
@@ -595,7 +598,7 @@ async function openKandidat(bid,jobId,nr){
     ${k.frei&&k.bio?`<p style="margin-top:12px;font-size:13.5px">${esc(k.bio)}</p>`:''}
     <div style="margin-top:14px"><b style="font-size:13px">Geprüfte Nachweise (${nw.length})</b>
       ${nw.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px">${nw.map(n=>`<div class="card" style="padding:8px"><div style="aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:#0E1A2B;display:flex;align-items:center;justify-content:center;color:#C9D3E3;font-size:12px;font-weight:700">${n.vorschau_url?`<a href="${esc(n.vorschau_url)}" target="_blank" rel="noopener" title="Groß ansehen" style="display:block;width:100%;height:100%"><img src="${esc(n.vorschau_url)}" style="width:100%;height:100%;object-fit:cover;object-position:top"></a>`:'▮▮▮ geschwärzt'}</div><div style="font-size:12.5px;margin-top:6px"><b>${esc(P_ART[n.art]||n.art)}</b>${n.monate?' · '+n.monate+' Mon.':''}</div><div class="muted" style="font-size:11.5px">✓ von ClosingHub geprüft${n.gegengeprueft?' · gegengeprüft':''}</div></div>`).join('')}</div>`:'<p class="muted" style="font-size:13px;margin-top:4px">Noch keine geprüften Nachweise.</p>'}</div>
-    ${k.frei?`<div style="margin-top:14px"><b style="font-size:13px">Beiträge</b>${(k.beitraege||[]).length?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px">${k.beitraege.map(p=>`<div style="aspect-ratio:1;border:1px solid var(--line);border-radius:6px;overflow:hidden;font-size:11px;padding:${p.media_typ==='bild'?0:6}px">${p.media_typ==='bild'?`<img src="${esc(p.media_url)}" style="width:100%;height:100%;object-fit:cover">`:p.media_typ==='video'?`<video src="${esc(p.media_url)}#t=0.1" muted preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>`:esc(p.text).slice(0,120)}</div>`).join('')}</div>`:'<p class="muted" style="font-size:13px">Noch keine Beiträge.</p>'}</div>`:''}
+    ${k.frei?`<div style="margin-top:14px"><b style="font-size:13px">Highlights</b> <span class="muted" style="font-size:12px">· vom Kandidaten ausgewählt</span>${(k.beitraege||[]).length?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px">${k.beitraege.map(p=>`<div style="position:relative;aspect-ratio:1;border:1px solid var(--line);border-radius:6px;overflow:hidden;font-size:11px;padding:${p.thumb_url||p.media_typ?0:6}px">${p.media_typ==='video'?`<video src="${esc(p.media_url)}#t=0.1" ${p.thumb_url?`poster="${esc(p.thumb_url)}"`:''} controls playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>`:p.thumb_url||p.media_typ==='bild'?`<a href="${esc(p.media_url||p.thumb_url)}" target="_blank" rel="noopener"><img src="${esc(p.thumb_url||p.media_url)}" style="width:100%;height:100%;object-fit:cover"></a>`:esc(p.text).slice(0,140)}<span style="position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:4px;padding:1px 5px;font-size:10px">${esc(p.kategorie||'')}</span></div>`).join('')}</div>`:'<p class="muted" style="font-size:13px">Der Kandidat hat noch keine Highlights ausgewählt.</p>'}</div>`:''}
     ${!k.frei&&ME.status==='aktiv'&&(k.status==='neu'||k.status==='angesehen')?`<div class="row" style="justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn gold-b" onclick="kFrei(${bid},${jobId},${nr},this)">Freischalten · ${eur(fee('fee_unlock'))}</button></div>`:''}`);
 }
 
