@@ -1072,8 +1072,18 @@ async function rpc(fn,body={}){
 }
 function applyMember(m){
   S.member=m||null; S.user=!!SES;
-  if(m){ ME.name=m.name.split(' ')[0]; ME.fullName=m.name; ME.rank=RANKS[(m.rang||1)-1]||'Starter'; ME.role=m.rolle||ME.role; if(m.day_one && ME.badges && !ME.badges.includes('Day One')) ME.badges.unshift('Day One'); }
+  if(!m) return;
+  // Echtes Konto: alles Beispielhafte raus, nur echte Daten
+  Object.assign(ME,{ name:m.name.split(' ')[0], fullName:m.name, rank:RANKS[(m.rang||1)-1]||'Starter', role:m.rolle||'Closer',
+    years:null, country:'', langs:'', bio:'', followers:0, following:0, rating:null, ref:'m'+m.id, invited:0,
+    badges:[...(m.day_one?['Day One']:[]),...(m.abo==='premium'?['Premium']:[])], medals:[] });
+  try{ const p=JSON.parse(localStorage.getItem('ch_profil_'+m.id)||'{}'); if(p.bio) ME.bio=p.bio; S.avatar=p.avatar||null; }catch(e){ S.avatar=null; }
+  S.badgesShown=ME.badges.slice(); S.ch={day:1,done:[]}; S.liked={};
 }
+function myInitials(){ const n=(ME.fullName||ME.name||'?').trim().split(/\s+/); return ((n[0]||'')[0]||'?').toUpperCase()+(n.length>1?(n[n.length-1][0]||'').toUpperCase():''); }
+function meAvatar(){ return `<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,#1B2B42,#0E1A2B);color:#C9D3E3;font-weight:800;font-size:clamp(9px,38%,40px);letter-spacing:.02em;container-type:size"><span style="font-size:40cqh">${myInitials()}</span></span>`; }
+function profLine(){ const l=[ME.role+' ⭐']; if(ME.years) l.push(ME.years+' Jahre Erfahrung'); if(ME.country) l.push(ME.country); if(ME.langs) l.push(ME.langs); return l.join(' · '); }
+function saveProfil(){ if(!S.member) return; try{ localStorage.setItem('ch_profil_'+S.member.id,JSON.stringify({bio:ME.bio,avatar:S.avatar})); }catch(e){} }
 async function loadMember(){
   if(!SES) return;
   let m=null;
@@ -1703,19 +1713,19 @@ function profile(){
     <div class="flex items-center gap-5">
       ${skAv(ME.name,112,avatar(ME.name),'shrink-0')}
       <div class="flex-1 space-y-2 min-w-0">
-        <div class="flex items-center gap-3 flex-wrap text-xl">${nameRank(ME.name,ME.rank,ME.medals)} <button onclick="openReviews()" title="Bewertungen ansehen" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line pl-2.5 pr-2 py-1 text-sm leading-none transition hover:border-gold"><span style="color:#E0A82E">★</span><b>${String(ME.rating).replace('.',',')}</b><span class="text-muted">· ${REVIEWS.reduce((s,g)=>s+g.n,0)}</span><span class="text-muted text-xs">›</span></button></div>
+        <div class="flex items-center gap-3 flex-wrap text-xl">${nameRank(ME.name,ME.rank,ME.medals)} ${ME.rating==null?'':`<button onclick="openReviews()" title="Bewertungen ansehen" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line pl-2.5 pr-2 py-1 text-sm leading-none transition hover:border-gold"><span style="color:#E0A82E">★</span><b>${String(ME.rating).replace('.',',')}</b><span class="text-muted">· ${REVIEWS.reduce((s,g)=>s+g.n,0)}</span><span class="text-muted text-xs">›</span></button>`}</div>
         <div class="flex gap-5 text-sm flex-wrap"><span><b>${ME.followers}</b> Follower</span><span><b>${ME.following}</b> gefolgt</span></div>
       </div></div>
     ${streakCard()}
     <div class="mt-5 space-y-2 text-left">
-      <p class="text-sm">${ME.role} ⭐ · ${ME.years} Jahre Erfahrung · ${ME.country} · ${ME.langs}</p>
-      <p class="text-sm text-muted">${ME.bio}</p>
+      <p class="text-sm">${profLine()}</p>
+      <p class="text-sm text-muted">${ME.bio||(S.member?'Noch kein Profiltext. Schreib in den <a href="#einstellungen" class="text-gold">Einstellungen</a>, was du machst und wofür du stehst.':'')}</p>
       
     </div>
     <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen und Medaillen</p>
       <div class="bm-row"><div class="bm-b">${(l=>l.length?l.map(b=>badgeIcon(b)).join(''):badgeQ())(S.badgesShown.filter(b=>ME.badges.includes(b)))}</div>${(r=>r?`<div class="bm-m">${r}</div>`:'')(medalRow(ME.medals))}</div>
       <button onclick="openMedals()" class="text-gold text-sm mt-3 hover:underline">Alle Abzeichen und Medaillen ansehen →</button></div>
-    <div class="mt-8 grid grid-cols-3 gap-1">${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
+    ${S.member?`<div class="mt-8 card p-8 text-center space-y-3"><p class="font-serif text-xl">Noch keine Beiträge</p><p class="text-sm text-muted">Teile deinen ersten Deal, Tipp oder Fail mit der Community.</p><a href="#create" class="btn-gold inline-block" style="padding:8px 16px">＋ Ersten Beitrag teilen</a></div>`:''}<div class="mt-8 grid grid-cols-3 gap-1" ${S.member?'style="display:none"':''}>${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
     ${S.user?`<div class="mt-8 flex flex-wrap gap-3"><button onclick="doLogout()" class="btn-ghost">Abmelden</button></div>`:''}
   </div>`;
 }
@@ -1735,13 +1745,13 @@ function settings(){
       <div class="flex items-center justify-between gap-3 mt-3 flex-wrap"><a class="btn-ghost text-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('Schau dir ClosingHub an, die Plattform für Closer, Setter und Vertriebler. Hier ist mein Einladungslink: '+inviteLink())}">Per WhatsApp teilen</a><span class="text-xs text-muted">Bisher geworben: <b>${ME.invited} von 3</b></span></div></div>
     <div class="card p-4"><p class="font-semibold mb-1">Profiltext</p><p class="text-xs text-muted mb-3">Steht unter deinem Namen im Profil. Erzähl kurz, was du machst und wofür du stehst.</p>
       <textarea id="bioIn" maxlength="300" class="input h-24 text-sm" oninput="document.getElementById('bioCnt').textContent=this.value.length+' / 300'">${ME.bio}</textarea>
-      <div class="flex items-center justify-between mt-2"><span id="bioCnt" class="text-xs text-muted">${ME.bio.length} / 300</span><button class="btn-gold text-sm" onclick="ME.bio=document.getElementById('bioIn').value.trim().slice(0,300);this.textContent='✓ Gespeichert';setTimeout(()=>render(),900)">Speichern</button></div></div>
+      <div class="flex items-center justify-between mt-2"><span id="bioCnt" class="text-xs text-muted">${ME.bio.length} / 300</span><button class="btn-gold text-sm" onclick="ME.bio=document.getElementById('bioIn').value.trim().slice(0,300);saveProfil();this.textContent='✓ Gespeichert';setTimeout(()=>render(),900)">Speichern</button></div></div>
     ${notifCard()}
     <div class="card p-4 text-sm space-y-1"><p class="font-semibold">Konto</p><p class="text-muted">Sprache · Datenschutz · Lieblingsrolle</p></div></div>`;
 }
 const FTOPICS=['Zitat','Mindset','Intelligenz','Achtsamkeit','Seminar-Ausschnitt','Film-Ausschnitt','Member-Video'];
 function toggleTopic(t){ let cur=S.topics||[...FTOPICS]; cur=cur.includes(t)?cur.filter(x=>x!==t):[...cur,t]; S.topics=cur.length===FTOPICS.length?null:cur; render(); }
-function setAvatar(inp){ const f=inp.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ S.avatar=r.result; render(); }; r.readAsDataURL(f); }
+function setAvatar(inp){ const f=inp.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const c=document.createElement('canvas'), k=Math.min(1,400/Math.max(im.width,im.height)); c.width=im.width*k; c.height=im.height*k; c.getContext('2d').drawImage(im,0,0,c.width,c.height); S.avatar=c.toDataURL('image/jpeg',.85); saveProfil(); render(); }; im.src=r.result; }; r.readAsDataURL(f); }
 function toggleBadge(b){ S.badgesShown = S.badgesShown.includes(b)?S.badgesShown.filter(x=>x!==b):[...S.badgesShown,b]; }
 
 function notifications(){
@@ -1792,6 +1802,7 @@ function hashN(n){ let h=0; for(const c of n) h=(h*31+c.charCodeAt(0))>>>0; retu
 function avatar(n){
   const pp=PARTNERS.find(x=>x.n===n&&x.img); if(pp) return `<img src="${pp.img}" alt="" class="w-full h-full rounded-full object-cover">`;
   if(n===ME.name && S.avatar) return `<img src="${S.avatar}" class="w-full h-full rounded-full object-cover">`;
+  if(n===ME.name && S.member) return meAvatar();
   if(PROFIL.includes(n)) return `<img src="assets/app/profil/${n.toLowerCase()}.jpg" alt="" class="w-full h-full rounded-full object-cover">`;
   const pi = (n in PHOTO_OF) ? PHOTO_OF[n] : 10;
   if(pi!==undefined) return `<img src="${PHOTOS[pi]}" alt="" class="w-full h-full rounded-full object-cover">`;
