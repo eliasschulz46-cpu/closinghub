@@ -195,6 +195,7 @@ function portal(){
   const sec=(id,html)=>`<section class="sec ${TAB===id?'on':''}" data-sec="${id}">${html}</section>`;
   const send=`<div class="row" style="margin-top:16px"><button class="btn go" onclick="sendProfile(this)">Änderung zur Freigabe senden</button><span class="muted">Profil und Angebote werden zusammen gesendet.</span></div>`;
   return `<h1>Hallo ${esc((ME.profile&&ME.profile.n)||p.n||'')}</h1><p class="sub">Dein Partnerbereich bei ClosingHub.</p>
+  <div class="card" style="margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border-color:var(--seal,#087A4B)"><div style="min-width:0;flex:1"><b>Dein Konto in der App</b><p class="muted" style="margin-top:2px">Als Partner bekommst du ein Premium-Konto mit Partner-Design und dem Abzeichen „Partner“. Gleiches Login wie hier – kein neues Passwort nötig.</p></div><button class="btn go" onclick="partnerApp(this)">Zur App →</button></div>
   <div class="nav" id="nav">${navHtml()}</div>
   <div class="card" style="margin-top:10px"><div class="row" style="justify-content:space-between"><div style="min-width:0;flex:1"><b>Dein Empfehlungslink</b><p class="muted" style="overflow-wrap:anywhere">${myLink()}</p></div><button class="btn sm go" onclick="copyMyLink()">Link kopieren</button></div>
     <p class="muted" style="margin-top:6px">Wer sich über diesen Link bei ClosingHub anmeldet, wird dir dauerhaft zugeordnet und spart 10&nbsp;% auf seine Mitgliedschaft, monatlich wie jährlich. Teile ihn in Storys, Reels oder Nachrichten.</p>
@@ -210,7 +211,7 @@ function portal(){
     <div class="grid">
       ${fld('n','Name','Paul',p.n)}${fld('s','Wofür du Partner bist (steht groß im Profilkopf)','Morgen-Call',p.s)}
       ${fld('role','Beruf oder Rolle','Mindset-Coach',p.role)}${fld('meta','Erfahrung und Land (optional)','8 Jahre Vertrieb, Deutschland',p.meta)}
-      ${fld('bk','Text auf dem grünen Knopf','Coaching anfragen',p.bk)}${fld('live','Hinweis auf deine Live-Termine (optional)','Mo–Do, 7:30 Uhr live in der App',p.live)}
+      ${fld('bk','Text auf dem grünen Knopf','Coaching anfragen',p.bk)}${fld('live','Hinweis auf deine Live-Termine (optional)','Mo–Do, 7:30 Uhr live in der App',p.live)}${fld('link','Link zu deinem Profil (Instagram, LinkedIn oder Website)','https://instagram.com/deinname',p.link)}
       ${fld('k0','Zahl, mit der du überzeugst (optional)','312',k[0])}${fld('k1','Was die Zahl bedeutet','Calls analysiert',k[1])}
       ${fld('d0','Rabatt für Member (optional)','−20 % für Member',d[0])}${fld('d1','Worauf der Rabatt gilt','auf das erste Coaching',d[1])}
       ${fld('d2','Rabattcode','PAUL20',d[2])}
@@ -225,6 +226,15 @@ function portal(){
   ${sec('gaeste',`<div class="card"><h2>Deine Gäste</h2><p class="muted">Du kannst bis zu drei Personen einladen. Sie bekommen die Plus-Mitgliedschaft kostenlos, solange deine Partnerschaft besteht.</p>
     ${[1,2,3].map(guestRow).join('')}</div>`)}
   ${sec('kontakt',`<div class="card">${kontaktHtml()}</div>`)}`;
+}
+async function partnerApp(b){
+  b.disabled=true; b.textContent='Einen Moment …';
+  try{
+    const j=await api('rpc/partner_app_konto',{method:'POST',body:{}});
+    if(!j||!j.ok){ b.disabled=false; b.textContent='Zur App →'; return toast(j&&j.grund==='gesperrt'?'Dein App-Konto ist gesperrt. Schreib uns an support@getclosinghub.com.':'Das hat nicht geklappt. Versuch es gleich nochmal.'); }
+    const mail=(SESSION&&SESSION.email)||'';
+    location.href='/app?partnerlogin='+encodeURIComponent(mail)+'#login';
+  }catch(e){ b.disabled=false; b.textContent='Zur App →'; toast('Das hat nicht geklappt. Versuch es gleich nochmal.'); }
 }
 const myLink=()=>'https://www.getclosinghub.com/?partner='+ME.id;
 async function copyMyLink(){ try{ await navigator.clipboard.writeText(myLink()); toast('Empfehlungslink kopiert'); }catch(e){ prompt('Dein Empfehlungslink:',myLink()); } }
@@ -308,7 +318,7 @@ async function sendMsg(b){
 }
 function readProfile(){
   const g=k=>{ const el=document.querySelector(`[data-f="${k}"]`); return el?(el.type==='checkbox'?el.checked:clean(el.value)):''; };
-  const p={n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^(https:\/\/|data:image\/(jpeg|png|webp);base64,)/.test(g('img'))?g('img'):'',live:g('live').slice(0,90),fem:!!g('fem')};
+  const p={n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^(https:\/\/|data:image\/(jpeg|png|webp);base64,)/.test(g('img'))?g('img'):'',live:g('live').slice(0,90),link:/^https:\/\/\S+$/.test(g('link'))?g('link').slice(0,200):'',fem:!!g('fem')};
   if(g('k0')) p.k=[g('k0').slice(0,12),g('k1').slice(0,30)];
   if(g('d0')) p.deal=[g('d0').slice(0,40),g('d1').slice(0,60),g('d2').slice(0,20)];
   p.offers=readOffers().filter(o=>o.t).slice(0,MAXO);
