@@ -1075,15 +1075,15 @@ function applyMember(m){
   if(!m) return;
   // Echtes Konto: alles Beispielhafte raus, nur echte Daten
   Object.assign(ME,{ name:m.name.split(' ')[0], fullName:m.name, rank:RANKS[(m.rang||1)-1]||'Starter', role:m.rolle||'Closer',
-    years:null, country:'', langs:'', bio:'', followers:0, following:0, rating:null, ref:'m'+m.id, invited:0,
+    years:m.erfahrung||null, country:m.land||'', langs:m.sprachen||'', bio:m.bio||'', followers:m.follower||0, following:m.gefolgt||0, rating:null, ref:'m'+m.id, invited:0,
     badges:[...(m.day_one?['Day One']:[]),...(m.abo==='premium'?['Premium']:[])], medals:[] });
-  try{ const p=JSON.parse(localStorage.getItem('ch_profil_'+m.id)||'{}'); if(p.bio) ME.bio=p.bio; S.avatar=p.avatar||null; }catch(e){ S.avatar=null; }
-  S.badgesShown=ME.badges.slice(); S.ch={day:1,done:[]}; S.liked={};
+  S.avatar=m.avatar_url||null;
+  if(!S._memberInit){ S._memberInit=true; S.badgesShown=ME.badges.slice(); S.ch={day:1,done:[]}; }
 }
 function myInitials(){ const n=(ME.fullName||ME.name||'?').trim().split(/\s+/); return ((n[0]||'')[0]||'?').toUpperCase()+(n.length>1?(n[n.length-1][0]||'').toUpperCase():''); }
 function meAvatar(){ return `<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,#1B2B42,#0E1A2B);color:#C9D3E3;font-weight:800;font-size:clamp(9px,38%,40px);letter-spacing:.02em;container-type:size"><span style="font-size:40cqh">${myInitials()}</span></span>`; }
 function profLine(){ const l=[ME.role+' ⭐']; if(ME.years) l.push(ME.years+' Jahre Erfahrung'); if(ME.country) l.push(ME.country); if(ME.langs) l.push(ME.langs); return l.join(' · '); }
-function saveProfil(){ if(!S.member) return; try{ localStorage.setItem('ch_profil_'+S.member.id,JSON.stringify({bio:ME.bio,avatar:S.avatar})); }catch(e){} }
+
 async function loadMember(){
   if(!SES) return;
   let m=null;
@@ -1325,18 +1325,171 @@ setInterval(()=>{ const b=bState(); const key=b?b.phase+b.i:'x'; if(_bPhase!==nu
 bLoad().then(()=>{ if(route()==='feed') bRedraw(); });
 setInterval(()=>{ if(route()==='feed' && document.visibilityState==='visible' && !document.activeElement?.matches?.('#btIn')) bAfter(); },30000);
 
+/* ===== Profil + Feed über die Datenbank ===== */
+const MEDIA_BASE = `${SB_URL}/storage/v1/object/public/medien/`;
+function jwtSub(){ try{ return JSON.parse(atob(SES.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub; }catch(e){ return null; } }
+function initialsOf(n){ const p=String(n||'?').trim().split(/\s+/); return ((p[0]||'?')[0]+(p.length>1?(p[p.length-1][0]||''):'')).toUpperCase(); }
+function initAv(n){ return `<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,#1B2B42,#0E1A2B);color:#C9D3E3;font-weight:800;container-type:size"><span style="font-size:40cqh">${esc(initialsOf(n))}</span></span>`; }
+function pAv(p){ if(!p||!p.real) return avatar(p.a); return p.av?`<img src="${esc(p.av)}" alt="" class="w-full h-full rounded-full object-cover">`:initAv(p.full); }
+
+/* Datei hochladen (Bilder werden vorher verkleinert) */
+async function shrinkImg(file,max=1600){
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)) return file;
+  const url=URL.createObjectURL(file), im=await new Promise((ok,no)=>{ const i=new Image(); i.onload=()=>ok(i); i.onerror=no; i.src=url; });
+  const k=Math.min(1,max/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(url);
+  return await new Promise(ok=>c.toBlob(b=>ok(b||file),'image/jpeg',.85));
+}
+async function upload(file,onProgress){
+  const t=await sesToken(), uid=jwtSub(); if(!t||!uid) throw new Error('Bitte melde dich erneut an.');
+  const isImg=/^image\//.test(file.type), body=isImg?await shrinkImg(file):file;
+  if(body.size>50*1024*1024) throw new Error('Die Datei ist größer als 50 MB.');
+  const ext=isImg?'jpg':(file.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const path=`${uid}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  await new Promise((ok,no)=>{ const x=new XMLHttpRequest(); x.open('POST',`${SB_URL}/storage/v1/object/medien/${path}`);
+    x.setRequestHeader('apikey',SB_KEY); x.setRequestHeader('Authorization','Bearer '+t); x.setRequestHeader('Content-Type',isImg?'image/jpeg':file.type); x.setRequestHeader('x-upsert','false');
+    x.upload.onprogress=e=>{ if(onProgress&&e.lengthComputable) onProgress(e.loaded/e.total); };
+    x.onload=()=>x.status<300?ok():no(new Error('Hochladen fehlgeschlagen ('+x.status+').')); x.onerror=()=>no(new Error('Keine Verbindung.')); x.send(body); });
+  return MEDIA_BASE+path;
+}
+
+/* Profil */
+async function saveProfilDb(p){ const j=await rpc('profil_speichern',{p}); if(!j||!j.ok) throw new Error(j&&j.grund==='bild'?'Das Bild konnte nicht übernommen werden.':'Speichern hat nicht geklappt.'); await loadMember(); }
+function saveProfil(){ if(S.member) saveProfilDb({bio:ME.bio}).catch(e=>alert(e.message)); }
+function setAvatar(inp){ const f=inp.files[0]; if(!f) return;
+  if(!S.member){ const r=new FileReader(); r.onload=()=>{ S.avatar=r.result; render(); }; r.readAsDataURL(f); return; }
+  const lb=inp.closest('label'); if(lb) lb.firstChild.textContent='Lädt hoch …';
+  upload(f).then(u=>saveProfilDb({avatar_url:u})).catch(e=>{ alert(e.message); render(); }); }
+function profilFelderCard(){
+  if(!S.member) return '';
+  const m=S.member, rollen=['Closer','Setter','Closer & Setter','Vertriebler'];
+  return `<div class="card p-4 space-y-3"><p class="font-semibold">Über dich</p>
+    <div class="grid grid-cols-2 gap-2"><label class="text-xs text-muted">Rolle<select id="pfRolle" class="input text-sm mt-1">${rollen.map(r=>`<option ${m.rolle===r?'selected':''}>${r}</option>`).join('')}</select></label>
+    <label class="text-xs text-muted">Jahre Erfahrung<input id="pfErf" type="number" min="0" max="60" class="input text-sm mt-1" value="${m.erfahrung??''}"></label>
+    <label class="text-xs text-muted">Land<input id="pfLand" class="input text-sm mt-1" maxlength="60" value="${esc(m.land||'')}" placeholder="z. B. Deutschland"></label>
+    <label class="text-xs text-muted">Sprachen<input id="pfSpr" class="input text-sm mt-1" maxlength="60" value="${esc(m.sprachen||'')}" placeholder="z. B. DE, EN"></label></div>
+    <div class="flex justify-end"><button class="btn-gold text-sm" onclick="this.textContent='Speichert …';saveProfilDb({rolle:pfRolle.value,erfahrung:pfErf.value,land:pfLand.value,sprachen:pfSpr.value}).then(()=>{}).catch(e=>alert(e.message))">Speichern</button></div></div>`;
+}
+
+/* Feed */
+S.rp=null; S.rpMore=true;
+function mapPost(p){
+  const first=String(p.name||'').split(' ')[0]; S.skMap=S.skMap||{}; S.skMap[first]=p.streak;
+  const id=1e6+p.id; S.liked[id]=!!p.liked;
+  return {id, rid:p.id, real:true, mid:p.member_id, k:p.kategorie, a:esc(first), full:p.name, r:RANKS[(p.rang||1)-1]||'Starter', av:p.avatar_url,
+    t:esc(p.text).replace(/\n/g,'<br>'), l:p.likes-(p.liked?1:0), c:p.kommentare, img:p.media_typ==='bild'?p.media_url:null, video:p.media_typ==='video'?p.media_url:null,
+    mine:p.mine, folge:p.folge, at:p.created_at};
+}
+async function feedLoad(more){
+  try{
+    const kats=S.ptopics||S.topics||null, vor=more&&S.rp&&S.rp.length?S.rp[S.rp.length-1].at:null;
+    const rows=await rpc('feed_laden',{p_vor:vor,p_limit:20,p_kats:kats&&kats.length?kats:null,p_member:null});
+    const list=(rows||[]).map(mapPost); S.rp=more?[...(S.rp||[]),...list]:list; S.rpMore=list.length===20; S.rpErr=false;
+  }catch(e){ if(!S.rp) S.rp=null; S.rpErr=true; }
+  if(route()==='feed') render();
+}
+function feedPool(){ if(S.rp&&S.rp.length) return S.rp; if(S.rp&&S.member) return []; return null; }
+function feedEmpty(){ return `<div class="card p-8 text-center space-y-3"><p class="font-serif text-xl">Noch ist es ruhig hier</p><p class="text-sm text-muted">Sei der Erste und teile einen Deal, einen Tipp oder einen Fail mit der Community.</p><a href="#create" class="btn-gold inline-block" style="padding:8px 16px">＋ Beitrag teilen</a></div>`; }
+function toggleLike(id,ctx){
+  if(!S.user){ go('login'); return; }
+  S.liked[id]=!S.liked[id]; ctx==='feed'?render():drawPlayer();
+  if(id>=1e6 && S.member){ const p=(S.rp||[]).find(x=>x.id===id); rpc('post_like',{p_post:id-1e6}).then(j=>{ if(j&&j.ok&&j.liked!==S.liked[id]){ S.liked[id]=j.liked; ctx==='feed'?render():drawPlayer(); } }).catch(()=>{}); }
+}
+function delPost(id){ if(!confirm('Diesen Beitrag wirklich löschen? Das kann nicht rückgängig gemacht werden.')) return; rpc('post_loeschen',{p_post:id-1e6}).then(()=>{ S.rp=(S.rp||[]).filter(p=>p.id!==id); S.myPosts=null; closeModal(); render(); feedLoad(); }); }
+async function commentsReal(id){
+  sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Kommentare</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div><p class="text-sm text-muted">Lädt …</p>`);
+  let list=[]; try{ list=await rpc('kommentare_laden',{p_post:id-1e6})||[]; }catch(e){}
+  const p=(S.rp||[]).find(x=>x.id===id); if(p) p.c=list.length;
+  sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Kommentare</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
+    <div class="space-y-3">${list.length?list.map(k=>`<div class="flex gap-3"><span class="w-8 h-8 rounded-full overflow-hidden shrink-0">${k.avatar_url?`<img src="${esc(k.avatar_url)}" class="w-full h-full object-cover">`:initAv(k.name)}</span><div><div class="text-sm">${nameRank(esc(String(k.name).split(' ')[0]),RANKS[(k.rang||1)-1])}</div><p class="text-sm">${esc(k.text)}</p></div></div>`).join(''):'<p class="text-sm text-muted">Noch keine Kommentare. Schreib den ersten!</p>'}</div>
+    ${S.member?`<form class="flex gap-2 pt-2" onsubmit="event.preventDefault();const v=this.c.value.trim();if(!v)return;this.querySelector('button').disabled=true;rpc('kommentar_neu',{p_post:${id-1e6},p_text:v}).then(j=>{if(j&&j.grund==='tempo')alert('Kurz durchatmen – du kommentierst gerade sehr schnell.');commentsReal(${id});if(route()==='feed')feedLoad();})"><input name="c" class="input" maxlength="500" placeholder="Kommentar schreiben…" autocomplete="off"><button class="btn-gold">Senden</button></form>`:`<a href="#login" onclick="closeSheet();closeModal()" class="btn-gold block">Anmelden zum Kommentieren</a>`}`);
+  const inp=document.querySelector('#psheet input'); if(inp) inp.focus();
+}
+function shareReal(id){
+  const url=`https://www.getclosinghub.com/app#p${id-1e6}`;
+  if(navigator.share){ navigator.share({title:'ClosingHub',text:'Schau dir diesen Beitrag auf ClosingHub an',url}).catch(()=>{}); return; }
+  sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Teilen</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
+    <div class="flex gap-2"><input class="input text-sm" readonly value="${url}" onclick="this.select()"><button class="btn-gold" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='✓ Kopiert')">Kopieren</button></div>`);
+}
+
+/* Beitrag erstellen */
+const POST_KATS=['Erfolg','Member-Video','Mindset','Zitat','Intelligenz','Achtsamkeit','Seminar-Ausschnitt','Film-Ausschnitt'];
+S.cf=null;
+function create(){
+  if(!S.member) return `<div class="max-w-lg mx-auto px-4 py-8"><div class="card p-8 text-center space-y-3"><p class="font-serif text-xl">Melde dich an, um zu teilen</p><a href="#login" class="btn-gold inline-block" style="padding:8px 16px">Anmelden</a></div></div>`;
+  const f=S.cf||(S.cf={kat:'Erfolg',file:null,prev:null,typ:null});
+  return `<div class="max-w-lg mx-auto px-4 py-8 space-y-4"><h1 class="font-serif text-2xl">Teilen</h1>
+    <div class="flex flex-wrap gap-2">${POST_KATS.map(k=>`<button class="${f.kat===k?'btn-gold':'btn-ghost'} text-sm" style="padding:6px 12px" onclick="S.cf.kat='${k}';render()">${k}</button>`).join('')}</div>
+    <textarea id="cfText" class="input h-32" maxlength="1000" placeholder="${f.kat==='Erfolg'?'Was hast du erreicht? z. B. „Erster Abschluss über 3.000 €!“':'Was willst du teilen?'}">${esc(f.text||'')}</textarea>
+    ${f.prev?`<div class="relative rounded-xl overflow-hidden border border-line">${f.typ==='video'?`<video src="${f.prev}" class="w-full max-h-80 object-contain bg-black" controls playsinline></video>`:`<img src="${f.prev}" class="w-full max-h-80 object-contain bg-black">`}<button class="absolute top-2 right-2 bg-black/70 text-white rounded-full w-8 h-8" onclick="cfClear()">✕</button></div>`:''}
+    <div class="grid grid-cols-2 gap-2 text-sm"><label class="btn-ghost text-center cursor-pointer">🖼️ Bild<input type="file" accept="image/*" class="hidden" onchange="cfFile(this,'bild')"></label><label class="btn-ghost text-center cursor-pointer">🎬 Video ≤ 1 Min.<input type="file" accept="video/mp4,video/quicktime,video/webm" class="hidden" onchange="cfFile(this,'video')"></label></div>
+    <p id="cfErr" class="text-sm" style="color:#e5484d;min-height:1.2em"></p>
+    <div class="card p-3 text-xs text-muted flex gap-2"><span class="text-gold">🛡️</span> Nur Inhalte zu Vertrieb, Closing & Setting. Keine Politik, nichts Anstößiges, keine Beleidigungen – sonst wird der Beitrag entfernt.</div>
+    <button class="btn-gold w-full" id="cfBtn" onclick="cfPost()">Posten</button></div>`;
+}
+function cfClear(){ if(S.cf.prev) URL.revokeObjectURL(S.cf.prev); Object.assign(S.cf,{file:null,prev:null,typ:null,text:document.getElementById('cfText').value}); render(); }
+function cfFile(inp,typ){ const f=inp.files[0]; if(!f) return; const err=document.getElementById('cfErr');
+  if(f.size>50*1024*1024){ err.textContent='Die Datei ist größer als 50 MB.'; return; }
+  const set=()=>{ S.cf.text=document.getElementById('cfText').value; if(S.cf.prev) URL.revokeObjectURL(S.cf.prev); Object.assign(S.cf,{file:f,prev:URL.createObjectURL(f),typ}); render(); };
+  if(typ==='video'){ const v=document.createElement('video'); v.preload='metadata'; v.onloadedmetadata=()=>{ URL.revokeObjectURL(v.src); if(v.duration>61){ err.textContent='Das Video ist länger als 1 Minute. Kürz es bitte.'; return; } set(); }; v.onerror=set; v.src=URL.createObjectURL(f); }
+  else set(); }
+async function cfPost(){
+  const b=document.getElementById('cfBtn'), err=document.getElementById('cfErr'), t=document.getElementById('cfText').value.trim(), f=S.cf;
+  if(!t&&!f.file){ err.textContent='Schreib etwas oder füge ein Bild oder Video hinzu.'; return; }
+  b.disabled=true; b.textContent=f.file?'Lädt hoch … 0 %':'Wird gepostet …';
+  try{
+    let url=null; if(f.file) url=await upload(f.file,pr=>{ b.textContent='Lädt hoch … '+Math.round(pr*100)+' %'; });
+    const j=await rpc('post_neu',{p_kategorie:f.kat,p_text:t,p_media_url:url,p_media_typ:url?f.typ:null});
+    if(!j||!j.ok) throw new Error(j&&j.grund==='limit'?'Du hast heute schon das Maximum an Beiträgen gepostet. Morgen geht es weiter!':'Posten hat nicht geklappt.');
+    if(f.prev) URL.revokeObjectURL(f.prev); S.cf=null; S.myPosts=null; go('feed'); feedLoad();
+  }catch(e){ err.textContent=e.message; b.disabled=false; b.textContent='Posten'; }
+}
+
+/* Profile echter Mitglieder */
+S.myPosts=null;
+async function myPostsLoad(){ if(!S.member) return; try{ S.myPosts=((await rpc('feed_laden',{p_vor:null,p_limit:50,p_kats:null,p_member:S.member.id}))||[]).map(mapPost); }catch(e){ S.myPosts=[]; } if(route()==='profile') render(); }
+function postGrid(list,owner){
+  if(!list) return '<p class="mt-8 text-sm text-muted text-center">Lädt …</p>';
+  if(!list.length) return owner?`<div class="mt-8 card p-8 text-center space-y-3"><p class="font-serif text-xl">Noch keine Beiträge</p><p class="text-sm text-muted">Teile deinen ersten Deal, Tipp oder Fail mit der Community.</p><a href="#create" class="btn-gold inline-block" style="padding:8px 16px">＋ Ersten Beitrag teilen</a></div>`:'<p class="mt-8 text-sm text-muted text-center">Noch keine Beiträge.</p>';
+  S.plistReal=list;
+  return `<div class="mt-8 grid grid-cols-3 gap-1">${list.map((p,i)=>`<div onclick="closeModal();S.plist=S.plistReal;startPlayer(${i})" class="relative aspect-square bg-panel border border-line overflow-hidden cursor-pointer">${p.img?`<img src="${esc(p.img)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:p.video?`<video src="${esc(p.video)}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted preload="metadata"></video><span class="absolute top-1.5 right-2 text-white text-xs">▶</span>`:`<div class="p-3 text-[11px] font-serif">${p.t}</div>`}</div>`).join('')}</div>`;
+}
+async function memberModal(mid){
+  if(S.member&&mid===S.member.id){ go('profile'); return; }
+  document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()"><div class="card w-full max-w-md p-6 text-center text-sm text-muted">Lädt …</div></div>`;
+  let p=null, posts=[];
+  try{ [p,posts]=await Promise.all([rpc('profil_laden',{p_member:mid}),rpc('feed_laden',{p_vor:null,p_limit:30,p_kats:null,p_member:mid})]); }catch(e){}
+  if(!p){ document.getElementById('modal').innerHTML=''; return; }
+  const list=(posts||[]).map(mapPost), first=String(p.name).split(' ')[0]; S.skMap=S.skMap||{}; S.skMap[first]=p.streak;
+  const line=[p.rolle+' ⭐']; if(p.erfahrung) line.push(p.erfahrung+' Jahre Erfahrung'); if(p.land) line.push(esc(p.land)); if(p.sprachen) line.push(esc(p.sprachen));
+  const badges=[...(p.day_one?['Day One']:[]),...(p.premium?['Premium']:[])];
+  document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()">
+    <div class="card w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()"><button onclick="closeModal()" class="absolute top-3 right-4 text-muted text-xl">✕</button>
+      <div class="flex items-center gap-4">${skAv(first,80,p.avatar_url?`<img src="${esc(p.avatar_url)}" class="w-full h-full object-cover">`:initAv(p.name),'shrink-0')}
+        <div class="min-w-0"><div class="text-lg">${nameRank(esc(first),RANKS[(p.rang||1)-1])}</div><div class="flex gap-4 text-sm mt-1"><span><b id="mmF">${p.follower}</b> Follower</span><span><b>${p.gefolgt}</b> gefolgt</span><span><b>${p.beitraege}</b> Beiträge</span></div></div></div>
+      <p class="text-sm mt-4">${line.join(' · ')}</p>${p.bio?`<p class="text-sm text-muted mt-1">${esc(p.bio)}</p>`:''}
+      ${badges.length?`<div class="flex gap-2 mt-3">${badges.map(b=>badgeIcon(b)).join('')}</div>`:''}
+      ${S.member?`<button id="mmBtn" class="${p.folge?'btn-ghost':'btn-gold'} w-full mt-4" onclick="followToggle(${p.id},this)">${p.folge?'Gefolgt ✓':'Folgen'}</button>`:`<a href="#login" onclick="closeModal()" class="btn-gold block text-center mt-4">Anmelden zum Folgen</a>`}
+      ${postGrid(list,false)}</div></div>`;
+}
+function followToggle(mid,btn){ btn.disabled=true; rpc('folgen_umschalten',{p_member:mid}).then(j=>{ btn.disabled=false; if(!j||!j.ok) return; btn.className=(j.folge?'btn-ghost':'btn-gold')+' w-full mt-4'; btn.textContent=j.folge?'Gefolgt ✓':'Folgen'; const f=document.getElementById('mmF'); if(f) f.textContent=(+f.textContent)+(j.folge?1:-1); (S.rp||[]).forEach(p=>{ if(p.mid===mid) p.folge=j.folge; }); loadMember(); }).catch(()=>{ btn.disabled=false; }); }
+
+feedLoad();
+setInterval(()=>{ if(route()==='feed'&&document.visibilityState==='visible'&&!S.player&&!document.getElementById('psheet')&&window.scrollY<200) feedLoad(); },60000);
+
 function feed(){
   const ft = S.ptopics || S.topics;
-  const pool = ft ? POSTS.filter(p=>ft.includes(p.k)) : POSTS;
+  const fp=feedPool(); const pool = fp ? (ft ? fp.filter(p=>ft.includes(p.k)) : fp) : (ft ? POSTS.filter(p=>ft.includes(p.k)) : POSTS);
   const list = S.user ? pool : pool.slice(0,GUEST); S.feedList = list;
   const posts = list.map((p,i)=>`
     <article class="card overflow-hidden">
-      <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2">${p.a==='ClosingHub'?'<span class="w-8 h-8 rounded-full overflow-hidden inline-block gold-bg"><span class="w-full h-full flex items-center justify-center font-serif italic text-black text-sm">CH</span></span>':skAv(p.a,34,avatar(p.a))}${nameRank(p.a,p.r)}</span><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span></div>
+      <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2 ${p.real?'cursor-pointer':''}" ${p.real?`onclick="memberModal(${p.mid})"`:''}>${p.a==='ClosingHub'?'<span class="w-8 h-8 rounded-full overflow-hidden inline-block gold-bg"><span class="w-full h-full flex items-center justify-center font-serif italic text-black text-sm">CH</span></span>':skAv(p.a,34,pAv(p))}${nameRank(p.a,p.r)}</span><span class="inline-flex items-center gap-2"><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span>${p.mine?`<button onclick="event.stopPropagation();delPost(${p.id})" class="text-muted text-xs" aria-label="Beitrag löschen">Löschen</button>`:''}</span></div>
       <div class="relative aspect-square bg-bg flex items-center justify-center p-8 cursor-pointer border-y border-line overflow-hidden" onclick="S.plist=S.feedList;startPlayer(${i})" style="${p.v&&p.vid===undefined?'background:radial-gradient(circle at 50% 40%,#1c1a14,#0A0A0B 70%)':''}">
+        ${p.video?`<video src="${p.video}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted playsinline loop preload="metadata"></video>`:''}${p.img?`<img src="${p.img}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:''}${(p.img||p.video)&&p.t?`<span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}${p.video?`<span class="absolute top-3 right-3 text-white text-lg">▶</span>`:''}
         ${p.vid!==undefined?`<img src="${VIDS[p.vid]}" class="absolute inset-0 w-full h-full object-cover"><span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}
         ${p.bg?bgSvg(p.bg):''}
         ${p.v?`<span class="absolute bottom-3 right-3 text-xs bg-black/70 rounded px-2 py-0.5" style="color:#fff">▶ ${p.v}</span>`:''}
-        ${p.vid!==undefined?`<p class="absolute left-4 right-20 bottom-3 text-sm" style="position:absolute;color:#fff">${p.t}</p>`:`<p class="font-serif text-xl leading-relaxed text-center relative" style="${p.v?'color:#F2F4F1':''}">${p.t}</p>`}</div>
+        ${(p.vid!==undefined||p.img||p.video)?`<p class="absolute left-4 right-20 bottom-3 text-sm" style="position:absolute;color:#fff">${p.t}</p>`:`<p class="font-serif text-xl leading-relaxed text-center relative" style="${p.v?'color:#F2F4F1':''}">${p.t}</p>`}</div>
       <div class="p-4">
         ${actionBar(p,'feed')}
         ${p.tg?`<p class="text-xs text-muted mt-3">${p.tg.map(t=>'#'+t).join(' ')}</p>`:''}
@@ -1348,22 +1501,23 @@ function feed(){
       ${battleCard()}
       ${challengeCard()}
       <div class="flex items-center justify-between gap-3"><button onclick="playerMenu()" class="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-sm font-semibold" aria-label="Feed-Einstellungen">${svg('gearplay',16)}Feed-Einstellungen<span class="text-xs text-muted font-normal">${S.ptopics?S.ptopics.length+' Arten':''}${S.timerMin?' · '+S.timerMin+' Min.':''}</span></button><a href="#${S.user?'create':'login'}" class="btn-gold text-sm" style="padding:8px 14px">＋ Teilen</a></div>
-      ${posts}${guest}
+      ${posts}${fp&&!fp.length?feedEmpty():''}${S.rp&&S.rp.length&&S.rpMore?`<button class="btn-ghost w-full" onclick="this.textContent='Lädt …';feedLoad(true)">Mehr laden</button>`:''}${guest}
     </section>${rightRail()}</div>`;
 }
 function spotlightBanner(){
+  if(S.member) return '';
   return `<div class="card p-4 lg:hidden"><p class="text-xs uppercase tracking-wider text-muted mb-2">Spotlight des Monats</p>
   <div class="flex justify-between text-sm"><div><p class="text-xs text-muted">👑 Top-Profi</p>${nameRank('Lena','Dealmaker')}</div><div><p class="text-xs text-muted">🚀 Top-Starter</p>${nameRank('Marco','Rising')}</div></div></div>`;
 }
 function rightRail(){
   return `<aside class="hidden lg:block w-80 shrink-0 space-y-5 pt-6">
     ${S.user?'':`<a href="#login" class="btn-gold block">Kostenlos anmelden</a>`}
-    <div class="card p-4"><p class="text-xs uppercase tracking-wider text-muted mb-3">Spotlight des Monats</p>
+    <div class="card p-4" style="${S.member?'display:none':''}"><p class="text-xs uppercase tracking-wider text-muted mb-3">Spotlight des Monats</p>
       <p class="text-sm">👑 Top-Profi</p>${nameRank('Lena','Dealmaker')}<p class="text-xs text-muted mb-3">2.480 Punkte · meiste Punkte ab Rang 4 (Dealmaker, Rainmaker)</p>
       <p class="text-sm">🚀 Top-Starter</p>${nameRank('Marco','Rising')}<p class="text-xs text-muted">1.120 Punkte · meiste Punkte bis Rang 2 (Starter, Rising)</p></div>
     <div class="card p-4"><div class="flex justify-between mb-2"><p class="text-xs uppercase tracking-wider text-muted">Neueste Jobs</p><a href="#jobs" class="text-xs text-gold">Alle</a></div>
       ${JOBS.slice(0,3).map(j=>`<a href="#jobs" onclick="S.job=${j.id}" class="block py-2 border-t border-line first:border-0"><p class="text-sm font-medium">${j.t}</p><p class="text-xs text-gold">${j.pay}</p></a>`).join('')}</div>
-    <div class="card p-4"><p class="text-xs uppercase tracking-wider text-muted mb-3">Member, die du kennen solltest</p>
+    <div class="card p-4" style="${S.member?'display:none':''}"><p class="text-xs uppercase tracking-wider text-muted mb-3">Member, die du kennen solltest</p>
       ${NEARBY.slice(0,3).map(([n,r])=>`<div class="flex items-center justify-between py-1.5">${nameRank(n,r)}<button class="text-gold text-sm font-semibold" onclick="this.textContent=this.textContent==='Folgen'?'Gefolgt ✓':'Folgen'">Folgen</button></div>`).join('')}</div>
     <p class="text-xs text-muted">Impressum · Datenschutz · AGB · <a href="#werbung" class="text-gold">Werbung schalten</a> · © 2026 ClosingHub</p></aside>`;
 }
@@ -1401,7 +1555,7 @@ S.cm = {};
 function actionBar(p,ctx){
   const re = ctx==='feed' ? 'render()' : 'drawPlayer()';
   return `<div class="flex gap-4 items-center">
-    <button class="inline-flex items-center gap-2 ${S.liked[p.id]?'icon-on':''}" onclick="event.stopPropagation();S.liked[${p.id}]=!S.liked[${p.id}];${re}">${ic('heart')}<span class="text-sm">${p.l+(S.liked[p.id]?1:0)}</span></button>
+    <button class="inline-flex items-center gap-2 ${S.liked[p.id]?'icon-on':''}" onclick="event.stopPropagation();toggleLike(${p.id},'${ctx}')">${ic('heart')}<span class="text-sm">${p.l+(S.liked[p.id]?1:0)}</span></button>
     <button class="inline-flex items-center gap-2" onclick="event.stopPropagation();commentsP(${p.id})">${ic('chat')}<span class="text-sm">${p.c+(S.cm[p.id]||[]).length}</span></button>
     <button class="ml-auto" aria-label="Teilen" onclick="event.stopPropagation();shareP(${p.id})">${ic('share')}</button>
   </div>`;
@@ -1415,6 +1569,7 @@ function sheet(html){ const old=document.getElementById('psheet'); if(old) old.r
   d.onclick=closeSheet; document.body.appendChild(d); }
 function closeSheet(){ const d=document.getElementById('psheet'); if(d) d.remove(); if(S.player){ S.player.paused=false; drawPlayer(); } }
 function commentsP(id){
+  if(id>=1e6) return commentsReal(id);
   const base=[['Lena','Dealmaker','Genau so mache ich es auch 🔥'],['Jonas','Performer','Direkt im nächsten Call getestet – funktioniert!'],['Hannah','Rising','Danke für den Input!']];
   const mine=(S.cm[id]||[]).map(t=>[ME.name,ME.rank,t]);
   sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Kommentare</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
@@ -1423,6 +1578,7 @@ function commentsP(id){
   const inp=document.querySelector('#psheet input'); if(inp) inp.focus();
 }
 function shareP(id){
+  if(id>=1e6) return shareReal(id);
   const friends=['Lena','Jonas','Sofia','Felix','Hannah','Tobias'];
   sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Teilen mit Freunden</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
     <div class="grid grid-cols-3 gap-3">${friends.map(n=>`<label class="flex flex-col items-center gap-1 cursor-pointer"><input type="checkbox" class="peer hidden" value="${n}"><span class="w-14 h-14 rounded-full overflow-hidden ring-2 ring-transparent peer-checked:ring-[#087A4B]">${avatar(n)}</span><span class="text-xs">${n}</span></label>`).join('')}</div>
@@ -1441,12 +1597,13 @@ function drawPlayer(){
   const p=S.player, post=PL()[p.i];
   const inner = p.i>=limit() ? `<div class="h-full flex flex-col items-center justify-center gap-4 p-8 text-center"><p class="font-serif text-2xl">Mehr sehen?</p><p class="text-muted">Melde dich kostenlos an, um weiterzuschauen.</p><a href="#login" onclick="closeModal()" class="btn-gold">Kostenlos anmelden</a></div>` : `
     ${post.bg?bgSvg(post.bg):''}
+    ${post.video?`<video src="${post.video}" class="absolute inset-0 w-full h-full object-cover" autoplay playsinline loop ${S.muted===false?'':'muted'} onclick="S.muted=!this.muted?true:false;this.muted=!this.muted"></video>`:''}${post.img?`<img src="${post.img}" class="absolute inset-0 w-full h-full object-contain bg-black">`:''}
     ${post.vid!==undefined?`<img src="${VIDS[post.vid]}" class="vidimg absolute inset-0 w-full h-full object-cover ${p.paused?'':'kb'}">`:''}
     <div class="relative h-full flex items-center justify-center p-10 select-none" onclick="togglePause()">
-      ${post.vid!==undefined?'':`<p class="font-serif text-2xl leading-relaxed text-center">${post.t}</p>`}</div>
+      ${(post.vid!==undefined||post.img||post.video)?'':`<p class="font-serif text-2xl leading-relaxed text-center">${post.t}</p>`}</div>
     ${p.paused?`<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><span class="icbox" style="width:72px;height:72px">${svg('play',34)}</span></div>`:''}
     <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-      <div>${nameRank(post.a,post.r)}</div>${post.vid!==undefined?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
+      <div ${post.real?`onclick="memberModal(${post.mid})" class="cursor-pointer"`:''}>${nameRank(post.a,post.r)}</div>${(post.vid!==undefined||post.img||post.video)?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
       <div class="mt-3">${actionBar(post,'player')}</div>
     </div>`;
   document.getElementById('modal').innerHTML = `
@@ -1455,7 +1612,7 @@ function drawPlayer(){
       <div class="absolute top-0 inset-x-0 h-1 bg-line z-10"><div id="pbar" class="h-full gold-bg" style="width:${p.t/DUR*100}%"></div></div>
       <div class="absolute top-4 right-12 z-10 bg-black/80 rounded-full px-3 py-1 text-xs text-gold">⏱ <span id="ptime">${Math.ceil(DUR-p.t)}s</span></div>
       <button onclick="closeModal()" class="absolute top-3 right-4 z-10 text-xl">✕</button>
-      <button onclick="S.watch=${BREATH_AFTER-2}" class="absolute bottom-24 right-3 z-20 text-[10px] text-muted border border-line rounded-full px-2 py-1 bg-black/60">Demo: Atempause</button>
+      ${S.member?'':`<button onclick="S.watch=${BREATH_AFTER-2}" class="absolute bottom-24 right-3 z-20 text-[10px] text-muted border border-line rounded-full px-2 py-1 bg-black/60">Demo: Atempause</button>`}
       ${inner}
       ${p.i<limit()?`<p id="plabel" class="absolute z-10 pointer-events-none whitespace-nowrap" style="top:calc(16px + 1.5625%);left:calc(20px + 2.778%);font-family:'Plus Jakarta Sans',sans-serif;font-style:italic;font-weight:700;font-size:44px;line-height:1;letter-spacing:-.02em;white-space:nowrap;color:rgba(255,255,255,.45)">${post.k}</p>`:''}
     </div></div>`;
@@ -1691,23 +1848,11 @@ function messages(){
       <p class="chat-note">Bilder, Videos und Sprachnachrichten werden nach ${MEDIA_TAGE} Tagen automatisch gelöscht.</p></div></div>`;
 }
 
-function create(){
-  return `<div class="max-w-lg mx-auto px-4 py-8 space-y-4"><h1 class="font-serif text-2xl">Teilen</h1><p class="text-sm text-muted -mt-2">Eigene Marktplatz-Angebote reichst du per Mail oder telefonisch bei uns ein.</p>
-    <div class="grid grid-cols-2 gap-2 text-sm" id="ctype">
-      <button class="btn-gold" onclick="ctype(this,'story')">🏆 Erfolg als Story</button>
-      <button class="btn-ghost" onclick="ctype(this,'feed')">▶︎ Video für den Feed</button>
-      <a class="btn-ghost col-span-2" href="#forum">💬 Frage im Forum stellen</a></div>
-    <p id="chint" class="text-xs text-muted">Stories zeigen deine Fortschritte & Erfolge oben im Feed – 24 h sichtbar, danach im Profil.</p>
-    <textarea class="input h-32" placeholder="Was hast du erreicht? z. B. „Erster Abschluss über 3.000 €!“"></textarea>
-    <div class="grid grid-cols-2 gap-2 text-sm"><button class="btn-ghost">🖼️ Bild</button><button class="btn-ghost">🎬 Video ≤ 1 Min.</button></div>
-    <p class="text-xs text-muted">Feed-Beiträge heute: <span class="text-gold">0 von 3</span> genutzt · Stories unbegrenzt</p>
-    <div class="card p-3 text-xs text-muted flex gap-2"><span class="text-gold">🛡️</span> Jedes Video wird vor der Veröffentlichung von unserer KI geprüft, ob es zum Thema Vertrieb, Closing & Setting passt. Themenfremde Inhalte werden nicht veröffentlicht.</div>
-    <button class="btn-gold w-full" onclick="this.outerHTML='<div class=\'card p-4 text-sm space-y-1\'><p class=\'text-gold\'>⏳ KI-Prüfung läuft…</p><p class=\'text-emerald-400\'>✓ Passt zum Themenbereich – veröffentlicht!</p></div>'">Posten</button></div>`;
-}
 function ctype(el,t){ [...document.getElementById('ctype').children].forEach(b=>b.className='btn-ghost'); el.className='btn-gold';
   document.getElementById('chint').textContent = t==='story' ? 'Stories zeigen deine Fortschritte & Erfolge oben im Feed – 24 h sichtbar, danach im Profil.' : 'Feed-Beiträge: Zitate, Seminar-/Film-Ausschnitte oder dein eigenes Video (max. 1 Min.).'; }
 
 function profile(){
+  if(S.member&&S.myPosts===null&&!S._myLoad){ S._myLoad=true; myPostsLoad().finally(()=>S._myLoad=false); }
   return `<div class="max-w-3xl mx-auto px-4 py-8">
     ${S.user?'':`<div class="card p-3 mb-6 text-sm text-center">👀 Beispielprofil – <a href="#login" class="text-gold">melde dich an</a>, um dein eigenes zu erstellen.</div>`}
     <div class="flex items-center gap-5">
@@ -1725,7 +1870,7 @@ function profile(){
     <div class="mt-7"><p class="text-xs uppercase tracking-wider text-muted mb-3">Abzeichen und Medaillen</p>
       <div class="bm-row"><div class="bm-b">${(l=>l.length?l.map(b=>badgeIcon(b)).join(''):badgeQ())(S.badgesShown.filter(b=>ME.badges.includes(b)))}</div>${(r=>r?`<div class="bm-m">${r}</div>`:'')(medalRow(ME.medals))}</div>
       <button onclick="openMedals()" class="text-gold text-sm mt-3 hover:underline">Alle Abzeichen und Medaillen ansehen →</button></div>
-    ${S.member?`<div class="mt-8 card p-8 text-center space-y-3"><p class="font-serif text-xl">Noch keine Beiträge</p><p class="text-sm text-muted">Teile deinen ersten Deal, Tipp oder Fail mit der Community.</p><a href="#create" class="btn-gold inline-block" style="padding:8px 16px">＋ Ersten Beitrag teilen</a></div>`:''}<div class="mt-8 grid grid-cols-3 gap-1" ${S.member?'style="display:none"':''}>${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
+    ${S.member?postGrid(S.myPosts,true):''}<div class="mt-8 grid grid-cols-3 gap-1" ${S.member?'style="display:none"':''}>${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
     ${S.user?`<div class="mt-8 flex flex-wrap gap-3"><button onclick="doLogout()" class="btn-ghost">Abmelden</button></div>`:''}
   </div>`;
 }
@@ -1733,7 +1878,7 @@ function profile(){
 function settings(){
   return `<div class="max-w-lg mx-auto px-4 py-8 space-y-6"><h1 class="font-serif text-2xl">Einstellungen</h1>
     <div class="card p-4 flex items-center gap-4"><div class="w-20 h-20 rounded-full gold-bg p-[2px] shrink-0"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(ME.name)}</div></div>
-      <div><p class="font-semibold mb-2">Profilbild</p><div class="flex flex-wrap gap-2"><label class="btn-ghost text-sm cursor-pointer">Bild auswählen<input type="file" accept="image/*" class="hidden" onchange="setAvatar(this)"></label><button class="btn-ghost text-sm" onclick="this.outerHTML='<span class=\'text-xs text-gold\'>✨ KI-Profilbild wird erstellt… (in der Vorschau simuliert)</span>'">✨ KI-Profilbild erstellen</button></div></div></div>
+      <div><p class="font-semibold mb-2">Profilbild</p><div class="flex flex-wrap gap-2"><label class="btn-ghost text-sm cursor-pointer">Bild auswählen<input type="file" accept="image/*" class="hidden" onchange="setAvatar(this)"></label>${S.member?'':`<button class="btn-ghost text-sm" onclick="this.outerHTML='<span class=\'text-xs text-gold\'>✨ KI-Profilbild wird erstellt… (in der Vorschau simuliert)</span>'">✨ KI-Profilbild erstellen</button>`}</div></div></div>
     <div class="card p-4 flex justify-between items-center"><div><p class="font-semibold">Darstellung</p><p class="text-xs text-muted">Tag- oder Nacht-Modus</p></div>
       <div class="flex gap-2"><button onclick="if(isLight())toggleTheme()" class="${isLight()?'btn-ghost':'btn-gold'} text-sm">Nacht</button><button onclick="if(!isLight())toggleTheme()" class="${isLight()?'btn-gold':'btn-ghost'} text-sm">Tag</button></div></div>
     <div class="card p-4"><p class="font-semibold mb-1">Was willst du im Feed sehen?</p><p class="text-xs text-muted mb-3">Die KI ordnet jeden Beitrag einem Thema zu – du entscheidest, welche Themen bei dir erscheinen.</p>
@@ -1743,15 +1888,15 @@ function settings(){
     <div class="card p-4"><p class="font-semibold mb-1">Member einladen</p><p class="text-xs text-muted mb-3">Schick deinen Link an Closer, Setter und Vertriebler, die du kennst. Die erste Person, die darüber beitritt, bekommt ein Jahr lang 25&nbsp;% Rabatt auf Plus und Premium. Alle weiteren kannst du ohne Rabatt einladen. Jede wird dir zugeordnet. Ab 3 geworbenen Membern bekommst du das Abzeichen „Recruiter“.</p>
       <div class="flex gap-2"><input id="invLink" readonly value="${inviteLink()}" onclick="this.select()" class="flex-1 min-w-0 rounded-lg border border-line bg-panel px-3 py-2 text-sm"><button onclick="copyInvite(this)" class="btn-gold text-sm whitespace-nowrap">Kopieren</button></div>
       <div class="flex items-center justify-between gap-3 mt-3 flex-wrap"><a class="btn-ghost text-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('Schau dir ClosingHub an, die Plattform für Closer, Setter und Vertriebler. Hier ist mein Einladungslink: '+inviteLink())}">Per WhatsApp teilen</a><span class="text-xs text-muted">Bisher geworben: <b>${ME.invited} von 3</b></span></div></div>
-    <div class="card p-4"><p class="font-semibold mb-1">Profiltext</p><p class="text-xs text-muted mb-3">Steht unter deinem Namen im Profil. Erzähl kurz, was du machst und wofür du stehst.</p>
+    ${profilFelderCard()}<div class="card p-4"><p class="font-semibold mb-1">Profiltext</p><p class="text-xs text-muted mb-3">Steht unter deinem Namen im Profil. Erzähl kurz, was du machst und wofür du stehst.</p>
       <textarea id="bioIn" maxlength="300" class="input h-24 text-sm" oninput="document.getElementById('bioCnt').textContent=this.value.length+' / 300'">${ME.bio}</textarea>
       <div class="flex items-center justify-between mt-2"><span id="bioCnt" class="text-xs text-muted">${ME.bio.length} / 300</span><button class="btn-gold text-sm" onclick="ME.bio=document.getElementById('bioIn').value.trim().slice(0,300);saveProfil();this.textContent='✓ Gespeichert';setTimeout(()=>render(),900)">Speichern</button></div></div>
     ${notifCard()}
     <div class="card p-4 text-sm space-y-1"><p class="font-semibold">Konto</p><p class="text-muted">Sprache · Datenschutz · Lieblingsrolle</p></div></div>`;
 }
-const FTOPICS=['Zitat','Mindset','Intelligenz','Achtsamkeit','Seminar-Ausschnitt','Film-Ausschnitt','Member-Video'];
+const FTOPICS=['Erfolg','Zitat','Mindset','Intelligenz','Achtsamkeit','Seminar-Ausschnitt','Film-Ausschnitt','Member-Video'];
 function toggleTopic(t){ let cur=S.topics||[...FTOPICS]; cur=cur.includes(t)?cur.filter(x=>x!==t):[...cur,t]; S.topics=cur.length===FTOPICS.length?null:cur; render(); }
-function setAvatar(inp){ const f=inp.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const c=document.createElement('canvas'), k=Math.min(1,400/Math.max(im.width,im.height)); c.width=im.width*k; c.height=im.height*k; c.getContext('2d').drawImage(im,0,0,c.width,c.height); S.avatar=c.toDataURL('image/jpeg',.85); saveProfil(); render(); }; im.src=r.result; }; r.readAsDataURL(f); }
+
 function toggleBadge(b){ S.badgesShown = S.badgesShown.includes(b)?S.badgesShown.filter(x=>x!==b):[...S.badgesShown,b]; }
 
 function notifications(){
@@ -1765,6 +1910,7 @@ function notifications(){
 
 
 function storiesRow(){
+  if(S.member) return '';
   const own = '';
   return `<div class="storyrow flex gap-3 overflow-x-auto noscroll pt-1 pb-1 px-0.5">${own}${STORIES.map((st,i)=>st.ad?'':`
     <button onclick="openStory(${i})" class="flex flex-col items-center gap-1 shrink-0 w-[72px]">
