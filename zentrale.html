@@ -295,6 +295,7 @@ const LOADERR={jobs:'',clients:''};
 const loadNote=k=>LOADERR[k]?`<div class="card" style="border-color:#b4543c;margin-bottom:14px"><b>⚠️ Daten konnten nicht geladen werden:</b> ${esc(LOADERR[k])}</div>`:'';
 async function refreshData(b){ if(b) b.disabled=true; try{ await loadAll(); drawNav(); $('main').innerHTML=(PAGES[route()]||dashboard)(); toast('Aktualisiert'); }catch(e){ toast('⚠️ '+e.message); if(b) b.disabled=false; } }
 async function loadAll(){
+  { const adm=await api('rpc/is_admin',{method:'POST',body:{}}).catch(()=>null); if(adm!==true){ keepSession(null); LOADED=false; setTimeout(()=>{ render(); setTimeout(()=>{ const e=document.getElementById('lerr'); if(e){ e.innerHTML='Kein Zugang: Die Zentrale ist nur für das ClosingHub-Team. Mitglieder melden sich in der App an: <a href="/app" style="text-decoration:underline">getclosinghub.com/app</a>'; e.style.display='block'; } },50); },0); throw new Error('Kein Zugang'); } }
   { const pr=await api('partners?select=*&order=sort.asc,id.asc').catch(()=>null); ptSet(pr); D.guests = pr===null ? null : (await api('partner_guests?select=*&order=slot.asc').catch(()=>[])); }
   const [wl, cr, st, tk, inv, tix, ai, jb, cl] = await Promise.all([
     q('waitlist?select=*&order=created_at.desc'),
@@ -1692,6 +1693,23 @@ async function rdSave(pid,btn){ if(!RD) return;
     if(pr&&pr.status==='bestaetigt') await mbProofSet(pid,{vorschau_url:url},'Neue geschwärzte Version gespeichert – der Auftraggeber sieht ab jetzt diese');
     else await mbProofSet(pid,{status:'bestaetigt',geprueft_at:new Date().toISOString(),vorschau_url:url},'Bestätigt – geschwärzte Version ist beim Auftraggeber sichtbar');
   }catch(e){ btn.disabled=false; btn.textContent='Geprüft & bestätigen'; toast('⚠️ '+e.message); } }
+/* ===== Feed: Kategorie jedes Beitrags mit einem Klick ändern ===== */
+const FK=['Erfolg','Member-Video','Mindset','Zitat','Gedicht','Story','Intelligenz','Achtsamkeit','Seminar-Ausschnitt','Film-Ausschnitt'];
+D.fposts=undefined; D.fpFilter='';
+async function fpLoad(){ D.fposts=null; try{ D.fposts=await api('posts?select=id,kategorie,ki_kategorie,text,media_url,media_typ,thumb_url,created_at,member_id,versteckt&order=created_at.desc&limit=80')||[]; }catch(e){ D.fposts=[]; } if((location.hash||'').includes('feedx')) render(); }
+async function fpSet(id,k,sel){ sel.disabled=true; try{ await api(`posts?id=eq.${id}`,{method:'PATCH',body:{kategorie:k}}); const p=(D.fposts||[]).find(x=>x.id===id); if(p) p.kategorie=k; toast('Kategorie geändert: '+k); render(); }catch(e){ toast('⚠️ '+e.message); sel.disabled=false; } }
+function fpCard(){ if(D.fposts===undefined){ D.fposts=null; fpLoad(); }
+  const nm=id=>{ const m=(D.members||[]).find(x=>x.id===id); return m?m.name:'Mitglied #'+id; };
+  const l=(D.fposts||[]).filter(p=>!p.versteckt&&(!D.fpFilter||(D.fpFilter==='abw'?p.ki_kategorie&&p.ki_kategorie!==p.kategorie:p.kategorie===D.fpFilter)));
+  const abw=(D.fposts||[]).filter(p=>p.ki_kategorie&&p.ki_kategorie!==p.kategorie&&!p.versteckt).length;
+  return `<div class="card" style="margin-top:16px"><div class="row between"><h3 style="margin:0">Beiträge der Mitglieder · Kategorien</h3><div class="row" style="gap:8px"><select class="in" style="width:auto" onchange="D.fpFilter=this.value;render()"><option value="">Alle</option><option value="abw" ${D.fpFilter==='abw'?'selected':''}>KI ≠ Mitglied (${abw})</option>${FK.map(k=>`<option ${D.fpFilter===k?'selected':''}>${k}</option>`).join('')}</select><button class="btn sm" onclick="fpLoad()">Aktualisieren</button></div></div>
+    <p class="muted" style="font-size:12.5px;margin:6px 0 10px">Die KI schlägt beim Posten eine Kategorie vor, das Mitglied bestätigt oder ändert sie. Hier kannst du jede Kategorie mit einem Klick korrigieren. Die neuesten 80 Beiträge.</p>
+    ${D.fposts===null?'<p class="muted">Lädt …</p>':l.length?`<div style="display:grid;gap:8px">${l.map(p=>{ const pic=p.thumb_url||(p.media_typ==='bild'?p.media_url:null);
+      return `<div class="item" style="align-items:center"><div style="width:52px;height:52px;border-radius:8px;overflow:hidden;background:#0E1A2B;flex:none;display:flex;align-items:center;justify-content:center;color:#C9D3E3;font-size:18px">${pic?`<img src="${esc(pic)}" style="width:100%;height:100%;object-fit:cover">`:p.media_typ==='video'?'▶':'✎'}</div>
+        <div style="flex:1;min-width:0"><b>${esc(nm(p.member_id))}</b> <span class="muted" style="font-size:12px">${new Date(p.created_at).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})}</span><div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.text||'(ohne Text)')}</div>
+          ${p.ki_kategorie?`<div class="muted" style="font-size:11.5px">KI: ${esc(p.ki_kategorie)}${p.ki_kategorie!==p.kategorie?' · <span style="color:#B8860B">weicht ab</span>':' ✓'}</div>`:''}</div>
+        <select class="in" style="width:auto" onchange="fpSet(${p.id},this.value,this)">${FK.map(k=>`<option ${k===p.kategorie?'selected':''}>${k}</option>`).join('')}</select></div>`; }).join('')}</div>`:'<div class="empty">Keine Beiträge.</div>'}</div>`; }
+const _feedx0=feedx; feedx=function(){ return _feedx0()+fpCard(); };
 
 async function mbDel(id){ const m=mbById(id); if(!m) return; const t=prompt(m.name+' endgültig löschen?\n\nDas löscht das Konto mit ALLEM: Beiträge, Kommentare, Chats, Bewerbungen, Punkte, Nachweise und den Einladungslink. Das kann man nicht rückgängig machen.\n\nZum Bestätigen tippe: LÖSCHEN'); if(t===null) return; if(t.trim().toUpperCase()!=='LÖSCHEN') return toast('Nicht gelöscht – Bestätigung falsch'); try{ const j=await q('rpc/member_loeschen',{method:'POST',body:{p_id:id}}); if(!j||!j.ok) throw 0; D.members=(D.members||[]).filter(x=>x.id!==id); mbSel=null; toast('Endgültig gelöscht'); location.hash='#member'; render(); }catch(e){ toast('Fehlt noch: closinghub-mitglieder.sql in Supabase ausführen'); } }
 const PAGES={feedx,marktx,mitmachx,punktex,partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};

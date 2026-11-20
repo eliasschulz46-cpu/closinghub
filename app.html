@@ -379,7 +379,8 @@ window.tailwind=window.tailwind||{}; tailwind.config = { theme: { extend: {
 @keyframes mdtrack{from{opacity:0;letter-spacing:.9em}to{opacity:1;letter-spacing:.5em}}
 @keyframes mdfade{from{opacity:0}to{opacity:1}}@keyframes mdup{from{opacity:0;transform:translateY(12px);filter:blur(4px)}to{opacity:1;transform:none;filter:blur(0)}}
 @media (prefers-reduced-motion:reduce){.md-stage *{animation-duration:.01s!important;animation-iteration-count:1!important}}
-.mk-pl .mk{margin:0 auto;max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,.45)}.boot{min-height:100vh;display:flex;align-items:center;justify-content:center}@keyframes chpulse{50%{opacity:.35}}</style>
+.mk-pl .mk{margin:0 auto;max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,.45)}.pl-island{position:absolute;top:max(9px,calc(env(safe-area-inset-top) - 38px));left:50%;transform:translateX(-50%);z-index:30;height:36px;min-width:170px;padding:0 16px;border-radius:20px;background:#000;color:#3FBF86;display:flex;align-items:center;justify-content:space-between;font:600 13px/1 Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.pl-ios #plabel{top:56px!important}.boot{min-height:100vh;display:flex;align-items:center;justify-content:center}@keyframes chpulse{50%{opacity:.35}}</style>
 <style id="skglut">
 /* Feuerring: Glut mit Funken (dünn) */
 .sk .sk-r::before,.sk .sk-r::after{display:none!important}
@@ -1471,7 +1472,7 @@ S.rp=null; S.rpMore=true;
 function mapPost(p){
   const first=String(p.name||'').split(' ')[0]; S.skMap=S.skMap||{}; S.skMap[first]=p.streak;
   const id=1e6+p.id; S.liked[id]=!!p.liked;
-  return {id, rid:p.id, real:true, mid:p.member_id, k:p.kategorie, a:esc(first), full:p.name, r:RANKS[(p.rang||1)-1]||'Starter', av:p.avatar_url,
+  return {thumb:p.thumb_url||null, id, rid:p.id, real:true, mid:p.member_id, k:p.kategorie, a:esc(first), full:p.name, r:RANKS[(p.rang||1)-1]||'Starter', av:p.avatar_url,
     t:esc(p.text).replace(/\n/g,'<br>'), l:p.likes-(p.liked?1:0), c:p.kommentare, img:p.media_typ==='bild'?p.media_url:null, video:p.media_typ==='video'?p.media_url:null,
     mine:p.mine, folge:p.folge, at:p.created_at};
 }
@@ -1557,7 +1558,7 @@ function postGrid(list,owner){
   if(!list) return '<p class="mt-8 text-sm text-muted text-center">Lädt …</p>';
   if(!list.length) return owner?`<div class="mt-8 card p-8 text-center space-y-3"><p class="font-serif text-xl">Noch keine Beiträge</p><p class="text-sm text-muted">Teile deinen ersten Deal, Tipp oder Fail mit der Community.</p><a href="#create" class="btn-gold inline-block" style="padding:8px 16px">＋ Ersten Beitrag teilen</a></div>`:'<p class="mt-8 text-sm text-muted text-center">Noch keine Beiträge.</p>';
   S.plistReal=list;
-  return `<div class="mt-8 grid grid-cols-3 gap-1">${list.map((p,i)=>`<div onclick="closeModal();S.plist=S.plistReal;S.plMk=0;startPlayer(${i})" class="relative aspect-square bg-panel border border-line overflow-hidden cursor-pointer">${p.img?`<img src="${esc(p.img)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:p.video?`<video src="${esc(p.video)}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted preload="metadata"></video><span class="absolute top-1.5 right-2 text-white text-xs">▶</span>`:`<div class="p-3 text-[11px] font-serif">${p.t}</div>`}</div>`).join('')}</div>`;
+  return `<div class="mt-8 grid grid-cols-3 gap-1">${list.map((p,i)=>`<div onclick="closeModal();S.plist=S.plistReal;S.plMk=0;startPlayer(${i})" class="relative aspect-square bg-panel border border-line overflow-hidden cursor-pointer">${p.thumb?`<img src="${esc(p.thumb)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">${p.video?'<span class="absolute top-1.5 right-2 text-white text-xs">▶</span>':''}`:p.img?`<img src="${esc(p.img)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:p.video?`<video src="${esc(p.video)}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted preload="metadata"></video><span class="absolute top-1.5 right-2 text-white text-xs">▶</span>`:`<div class="p-3 text-[11px] font-serif">${p.t}</div>`}</div>`).join('')}</div>`;
 }
 async function memberModal(mid){
   if(S.member&&mid===S.member.id){ go('profile'); return; }
@@ -2300,7 +2301,7 @@ S.lkc=S.lkc||{};
 async function lkData(k,id){ const key=k+id; if(key in S.lkc) return S.lkc[key]; S.lkc[key]=null;
   let d=null;
   try{
-    if(k==='p'){ const r=await rpc('post_laden',{p_id:id}); if(r){ const p=mapPost(r); d={t:'Beitrag von '+String(r.name||'').split(' ')[0],s:(r.text||'').slice(0,140),img:r.media_typ==='bild'?r.media_url:null,vid:r.media_typ==='video'?r.media_url:null}; } }
+    if(k==='p'){ const r=await rpc('post_laden',{p_id:id}); if(r){ const p=mapPost(r); d={t:'Beitrag von '+String(r.name||'').split(' ')[0],s:(r.text||'').slice(0,140),img:r.thumb_url||(r.media_typ==='bild'?r.media_url:null),vid:!r.thumb_url&&r.media_typ==='video'?r.media_url:null}; } }
     else if(k==='m'){ const r=await rpc('profil_laden',{p_member:id}); if(r) d={t:r.name,s:[r.rolle,RANKS[(r.rang||1)-1]].filter(Boolean).join(' · '),av:r.avatar_url}; }
     else if(k==='f'){ const r=await rpc('forum_frage_info',{p_id:id}); if(r) d={t:r.titel,s:'Forum · '+r.kategorie}; }
     else if(k==='j'){ const j=(JOBS||[]).find(x=>x.id===id); if(j) d={t:j.t,s:[j.ind,j.pay].filter(Boolean).join(' · ')}; }
@@ -2615,6 +2616,76 @@ function drawMkSlide(p,post){ const card=typeof mitmachCard==='function'?mitmach
     </div></div>`;
   p.dir=null; }
 
+// ===== Runde 8: Posten mit KI-Kategorievorschlag und eigenem Vorschaubild =====
+function create(){
+  if(!S.member) return `<div class="max-w-lg mx-auto px-4 py-8"><div class="card p-8 text-center space-y-3"><p class="font-serif text-xl">Melde dich an, um zu teilen</p><a href="#login" class="btn-gold inline-block" style="padding:8px 16px">Anmelden</a></div></div>`;
+  if(S.cmode==='status') return statusCreate();
+  const f=S.cf||(S.cf={kat:null,ki:null,kiLoad:false,file:null,prev:null,typ:null,frames:[],thumb:null,thumbPrev:null,thumbIdx:-1});
+  const kb=k=>{ const on=f.kat===k, ki=f.ki===k; return `<button class="${on?'btn-gold':'btn-ghost'} text-sm" style="padding:6px 12px;position:relative" onclick="cfKat('${k}')">${k}${ki?`<span style="position:absolute;top:-8px;right:-6px;font-size:9px;font-weight:700;background:#D9B45A;color:#1a1405;border-radius:99px;padding:1px 6px">KI</span>`:''}</button>`; };
+  return `<div class="max-w-lg mx-auto px-4 py-8 space-y-4">${postTabs()}
+    <textarea id="cfText" class="input h-32" maxlength="1000" placeholder="Was willst du teilen? z. B. „Erster Abschluss über 3.000 €!“" oninput="S.cf.text=this.value;clearTimeout(S._kiT);S._kiT=setTimeout(()=>cfKi(),1300)">${esc(f.text||'')}</textarea>
+    ${f.prev?`<div class="relative rounded-xl overflow-hidden border border-line">${f.typ==='video'?`<video id="cfVid" src="${f.prev}" class="w-full max-h-80 object-contain bg-black" controls playsinline></video>`:`<img src="${f.prev}" class="w-full max-h-80 object-contain bg-black">`}<button class="absolute top-2 right-2 bg-black/70 text-white rounded-full w-8 h-8" onclick="cfClear()">✕</button></div>`
+      :`<div class="grid grid-cols-2 gap-2 text-sm"><label class="btn-ghost text-center cursor-pointer">🖼️ Bild<input type="file" accept="image/*" class="hidden" onchange="cfFile(this,'bild')"></label><label class="btn-ghost text-center cursor-pointer">🎬 Video ≤ 1 Min.<input type="file" accept="video/mp4,video/quicktime,video/webm" class="hidden" onchange="cfFile(this,'video')"></label></div>`}
+    ${f.file?cfThumbBox(f):''}
+    <div><div class="flex items-center justify-between mb-2"><p class="text-xs uppercase tracking-wider text-muted">Kategorie</p><span class="text-xs ${f.ki&&!f.manual?'text-gold':'text-muted'}">${f.kiLoad?'✨ KI liest mit …':f.ki?(f.manual&&f.kat!==f.ki?`KI hätte „${esc(f.ki)}“ gewählt`:'✨ Von der KI vorgeschlagen – passt?'):'Wähle, worum es geht'}</span></div>
+      <div class="flex flex-wrap gap-2">${POST_KATS.map(kb).join('')}</div></div>
+    <p id="cfErr" class="text-sm" style="color:#e5484d;min-height:1.2em"></p>
+    <div class="card p-3 text-xs text-muted flex gap-2"><span class="text-gold">🛡️</span> Nur Inhalte zu Vertrieb, Closing & Setting. Keine Politik, nichts Anstößiges, keine Beleidigungen – sonst wird der Beitrag entfernt.</div>
+    <button class="btn-gold w-full" id="cfBtn" onclick="cfPost()">Posten</button></div>`;
+}
+function cfKat(k){ S.cf.text=(document.getElementById('cfText')||{}).value||S.cf.text; S.cf.kat=k; S.cf.manual=true; render(); }
+function cfThumbBox(f){
+  return `<div class="card p-3"><p class="text-sm font-semibold">Vorschaubild <span class="text-xs text-muted font-normal">· für dein Profil und geteilte Links, nicht im Feed</span></p>
+    <div class="flex gap-2 overflow-x-auto mt-2 pb-1">
+      ${f.typ==='bild'?`<button onclick="cfThumbPick(-1)" class="shrink-0 rounded-lg overflow-hidden" style="width:64px;height:64px;box-shadow:${f.thumbIdx===-1&&!f.thumb?'0 0 0 2px #087A4B':'0 0 0 1px rgb(var(--line))'}"><img src="${f.prev}" style="width:100%;height:100%;object-fit:cover"></button>`:''}
+      ${(f.frames||[]).map((u,i)=>`<button onclick="cfThumbPick(${i})" class="shrink-0 rounded-lg overflow-hidden" style="width:64px;height:64px;box-shadow:${f.thumbIdx===i?'0 0 0 2px #087A4B':'0 0 0 1px rgb(var(--line))'}"><img src="${u}" style="width:100%;height:100%;object-fit:cover"></button>`).join('')}
+      ${f.thumbIdx===-2&&f.thumbPrev?`<span class="shrink-0 rounded-lg overflow-hidden" style="width:64px;height:64px;box-shadow:0 0 0 2px #087A4B"><img src="${f.thumbPrev}" style="width:100%;height:100%;object-fit:cover"></span>`:''}
+      <label class="shrink-0 rounded-lg flex flex-col items-center justify-center text-[10px] text-muted cursor-pointer text-center" style="width:64px;height:64px;border:1px dashed rgb(var(--line))">＋<br>Eigenes<input type="file" accept="image/*" class="hidden" onchange="cfThumbFile(this)"></label></div>
+    ${f.typ==='video'?'<p class="text-[11px] text-muted mt-1">Tipp: Wähle ein Bild aus dem Video oder lade ein eigenes hoch.</p>':''}</div>`; }
+function cfThumbPick(i){ const f=S.cf; S.cf.text=(document.getElementById('cfText')||{}).value||f.text; f.thumbIdx=i; f.thumb=i>=0?f.frameBlobs[i]:null; render(); }
+function cfThumbFile(inp){ const x=inp.files[0]; if(!x) return; const f=S.cf; S.cf.text=(document.getElementById('cfText')||{}).value||f.text; if(f.thumbPrev) URL.revokeObjectURL(f.thumbPrev); f.thumb=x; f.thumbPrev=URL.createObjectURL(x); f.thumbIdx=-2; render(); }
+function cfClear(){ const f=S.cf; if(f.prev) URL.revokeObjectURL(f.prev); (f.frames||[]).forEach(u=>URL.revokeObjectURL(u)); Object.assign(f,{file:null,prev:null,typ:null,frames:[],frameBlobs:[],thumb:null,thumbIdx:-1,text:document.getElementById('cfText').value}); if(!f.manual){ f.kat=null; f.ki=null; } render(); cfKi(); }
+function cfFile(inp,typ){ const x=inp.files[0]; if(!x) return; const err=document.getElementById('cfErr');
+  if(x.size>50*1024*1024){ err.textContent='Die Datei ist größer als 50 MB.'; return; }
+  const set=async()=>{ const f=S.cf; f.text=document.getElementById('cfText').value; if(f.prev) URL.revokeObjectURL(f.prev); Object.assign(f,{file:x,prev:URL.createObjectURL(x),typ,frames:[],frameBlobs:[],thumb:null,thumbIdx:typ==='bild'?-1:0}); render();
+    if(typ==='video'){ try{ const bl=await vidFrames(x,6); if(S.cf!==f) return; f.frameBlobs=bl; f.frames=bl.map(b=>URL.createObjectURL(b)); f.thumb=bl[0]||null; f.thumbIdx=bl.length?0:-1; render(); }catch(e){} }
+    cfKi(); };
+  if(typ==='video'){ const v=document.createElement('video'); v.preload='metadata'; v.onloadedmetadata=()=>{ URL.revokeObjectURL(v.src); if(v.duration>61){ err.textContent='Das Video ist länger als 1 Minute. Kürz es bitte.'; return; } set(); }; v.onerror=set; v.src=URL.createObjectURL(x); }
+  else set(); }
+// Standbilder aus einem Video schneiden (für Vorschaubild und KI)
+async function vidFrames(file,n){ const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.preload='auto'; v.src=URL.createObjectURL(file);
+  await new Promise((ok,no)=>{ v.onloadeddata=ok; v.onerror=no; setTimeout(ok,6000); });
+  const d=v.duration||1, out=[], c=document.createElement('canvas'), W=480; c.width=W; c.height=Math.round(W*(v.videoHeight||16)/(v.videoWidth||9));
+  for(let k=0;k<n;k++){ v.currentTime=Math.min(d-0.05,d*(k+0.5)/n); await new Promise(ok=>{ const h=()=>{ v.removeEventListener('seeked',h); ok(); }; v.addEventListener('seeked',h); setTimeout(ok,2500); });
+    c.getContext('2d').drawImage(v,0,0,c.width,c.height); const b=await new Promise(ok=>c.toBlob(ok,'image/jpeg',.82)); if(b) out.push(b); }
+  URL.revokeObjectURL(v.src); return out; }
+const b64=blob=>new Promise(ok=>{ const r=new FileReader(); r.onload=()=>ok(String(r.result)); r.readAsDataURL(blob); });
+async function imgSmall(blob,W=512){ const bmp=await createImageBitmap(blob), c=document.createElement('canvas'); c.width=Math.min(W,bmp.width); c.height=Math.round(c.width*bmp.height/bmp.width); c.getContext('2d').drawImage(bmp,0,0,c.width,c.height); return await new Promise(ok=>c.toBlob(ok,'image/jpeg',.8)); }
+async function cfKi(){ const f=S.cf; if(!f||route()!=='create') return; const t=(f.text||'').trim();
+  if(!f.file&&t.length<15) return; const key=[t,f.file&&f.file.name,f.frames&&f.frames.length].join('|'); if(f._kiKey===key) return; f._kiKey=key;
+  f.kiLoad=true; render();
+  try{ let imgs=[]; if(f.typ==='bild'&&f.file) imgs=[await imgSmall(f.file)]; else if(f.typ==='video'&&f.frameBlobs&&f.frameBlobs.length) imgs=await Promise.all([0,2,4,5].filter(i=>f.frameBlobs[i]).map(i=>imgSmall(f.frameBlobs[i],448)));
+    const bilder=await Promise.all(imgs.map(b64)), tok=await sesToken();
+    const r=await fetch(`${SB_URL}/functions/v1/ki-kategorie`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({text:t,bilder,typ:f.typ||'text'})});
+    const j=await r.json().catch(()=>({})); if(S.cf!==f) return;
+    if(r.ok&&j.kategorie&&POST_KATS.includes(j.kategorie)){ f.ki=j.kategorie; if(!f.manual) f.kat=j.kategorie; }
+  }catch(e){}
+  if(S.cf===f){ f.kiLoad=false; f.text=(document.getElementById('cfText')||{}).value??f.text; if(route()==='create') render(); } }
+async function cfPost(){
+  const b=document.getElementById('cfBtn'), err=document.getElementById('cfErr'), t=document.getElementById('cfText').value.trim(), f=S.cf;
+  if(!t&&!f.file){ err.textContent='Schreib etwas oder füge ein Bild oder Video hinzu.'; return; }
+  if(!f.kat){ err.textContent='Bitte wähle eine Kategorie aus.'; return; }
+  b.disabled=true; b.textContent=f.file?'Lädt hoch … 0 %':'Wird gepostet …';
+  try{
+    let url=null; if(f.file) url=await upload(f.file,pr=>{ b.textContent='Lädt hoch … '+Math.round(pr*100)+' %'; });
+    const j=await rpc('post_neu',{p_kategorie:f.kat,p_text:t,p_media_url:url,p_media_typ:url?f.typ:null});
+    if(!j||!j.ok) throw new Error(j&&j.grund==='limit'?'Du hast heute schon das Maximum an Beiträgen gepostet. Morgen geht es weiter!':'Posten hat nicht geklappt.');
+    let th=null; if(f.thumb){ b.textContent='Vorschaubild …'; const tf=f.thumb instanceof File?f.thumb:new File([f.thumb],'thumb.jpg',{type:'image/jpeg'}); th=await upload(tf).catch(()=>null); }
+    if(j.id&&(th||f.ki)) await rpc('post_meta_setzen',{p_id:j.id,p_thumb:th,p_ki:f.ki}).catch(()=>null);
+    if(f.prev) URL.revokeObjectURL(f.prev); (f.frames||[]).forEach(u=>URL.revokeObjectURL(u)); S.cf=null; S.myPosts=null; go('feed'); feedLoad();
+  }catch(e){ err.textContent=e.message; b.disabled=false; b.textContent='Posten'; }
+}
+
 function feed(){
   const ft = S.ptopics || S.topics;
   const fp=feedPool(); const pool = fp ? (ft ? fp.filter(p=>ft.includes(p.k)) : fp) : (ft ? POSTS.filter(p=>ft.includes(p.k)) : POSTS);
@@ -2685,6 +2756,7 @@ function startBreath(){
     if(t>=30){ clearInterval(id); l.outerHTML='<button onclick="endBreath()" class="btn-gold">Weiter schauen</button>'; } },100);
 }
 function endBreath(){ const o=document.getElementById('breath'); if(o) o.remove(); S.breath=null; }
+const IS_IPHONE=/iPhone/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1&&screen.width<500);
 const PL = () => mkPL(S.plist || POSTS);
 const limit = () => S.user ? PL().length : Math.min(GUEST,PL().length);
 function nextP(){ const p=S.player; if(p.i>=limit()) return; p.i=Math.min(p.i+1,limit()); p.t=0; p.dir='up'; drawPlayer(); }
@@ -2742,16 +2814,16 @@ function drawPlayer(){
     ${post.vid!==undefined?`<img src="${VIDS[post.vid]}" class="vidimg absolute inset-0 w-full h-full object-cover ${p.paused?'':'kb'}">`:''}
     <div class="relative h-full flex items-center justify-center p-10 select-none" onclick="togglePause()">
       ${(post.vid!==undefined||post.img||post.video)?'':`<p class="font-serif text-2xl leading-relaxed text-center">${post.t}</p>`}</div>
-    ${p.paused?`<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><span class="icbox" style="width:72px;height:72px">${svg('play',34)}</span></div>`:''}
+    ${p.paused?`<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><svg width="64" height="64" viewBox="0 0 64 64" style="filter:drop-shadow(0 2px 10px rgba(0,0,0,.45))" aria-label="Pausiert"><rect x="17" y="12" width="10" height="40" rx="3" fill="#fff"/><rect x="37" y="12" width="10" height="40" rx="3" fill="#fff"/></svg></div>`:''}
     <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
       <div ${post.real?`onclick="memberModal(${post.mid})" class="cursor-pointer"`:''}>${nameRank(post.a,post.r)}</div>${post.real&&S.member?(post.mine?`<button onclick="event.stopPropagation();delPost(${post.id})" class="text-xs mt-1" style="color:rgba(255,255,255,.75)">Zurückziehen</button>`:`<button onclick="event.stopPropagation();reportPost(${post.id})" class="text-xs mt-1" style="color:rgba(255,255,255,.75)">Melden</button>`):''}${(post.vid!==undefined||post.img||post.video)?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
       <div class="mt-3">${actionBar(post,'player')}</div>
     </div>`;
   document.getElementById('modal').innerHTML = `
   <div class="dark-zone fixed inset-0 z-50 bg-black flex items-center justify-center">
-    <div class="relative w-full h-full md:max-w-md md:h-[92vh] md:rounded-2xl overflow-hidden bg-panel ${p.dir?'slide-'+p.dir:''}">
+    <div class="relative w-full h-full md:max-w-md md:h-[92vh] md:rounded-2xl overflow-hidden bg-panel ${p.dir?'slide-'+p.dir:''} ${IS_IPHONE?'pl-ios':''}">
       <div class="absolute top-0 inset-x-0 h-1 bg-line z-10"><div id="pbar" class="h-full gold-bg" style="width:${p.t/DUR*100}%"></div></div>
-      <div class="absolute top-4 right-12 z-10 bg-black/80 rounded-full px-3 py-1 text-xs text-gold">⏱ <span id="ptime">${Math.ceil(DUR-p.t)}s</span></div>
+      ${IS_IPHONE?`<div class="pl-island">⏱<span id="ptime">${Math.ceil(DUR-p.t)}s</span></div>`:`<div class="absolute top-4 right-12 z-10 bg-black/80 rounded-full px-3 py-1 text-xs text-gold">⏱ <span id="ptime">${Math.ceil(DUR-p.t)}s</span></div>`}
       <button onclick="closeModal()" class="absolute top-3 right-4 z-10 text-xl">✕</button>
       ${S.member?'':`<button onclick="S.watch=${BREATH_AFTER-2}" class="absolute bottom-24 right-3 z-20 text-[10px] text-muted border border-line rounded-full px-2 py-1 bg-black/60">Demo: Atempause</button>`}
       ${inner}
@@ -2776,8 +2848,9 @@ function fitLabel(){
     if(cuts.length){ cuts.sort((x,y)=>Math.abs(x[0].length-x[1].length)-Math.abs(y[0].length-y[1].length)); lines=cuts[0]; }
   }
   // einzeilig: max. Größe; zweizeilig: jede Zeile exakt auf Feldbreite skaliert
-  const size = t => lines.length===1 ? Math.min(LABEL_MAX, LABEL_MAX*boxW/w(t,LABEL_MAX)) : Math.min(LABEL_MAX*1.5, LABEL_MAX*boxW/w(t,LABEL_MAX));
-  el.style.width=boxW+'px'; el.style.display='block'; el.style.fontSize=''; el.style.transform='skewX(-9deg)'; el.style.transformOrigin='left bottom';
+  lines=[txt]; const MS=Math.min(LABEL_MAX,LABEL_MAX*boxW/w('Mindset',LABEL_MAX));
+  const size = t => MS; const _oldSize = t => lines.length===1 ? Math.min(LABEL_MAX, LABEL_MAX*boxW/w(t,LABEL_MAX)) : Math.min(LABEL_MAX*1.5, LABEL_MAX*boxW/w(t,LABEL_MAX));
+  el.style.width='auto'; el.style.display='block'; el.style.fontSize=''; el.style.transform='skewX(-9deg)'; el.style.transformOrigin='left bottom';
   el.innerHTML=lines.map(t=>`<span style="display:block;line-height:.95;font-size:${size(t).toFixed(1)}px">${t}</span>`).join('');
   m.remove();
   labelContrast(el);
@@ -3045,7 +3118,7 @@ function settings(){
       <div><p class="font-semibold mb-2">Profilbild</p><div class="flex flex-wrap gap-2"><label class="btn-ghost text-sm cursor-pointer">Bild auswählen<input type="file" accept="image/*" class="hidden" onchange="setAvatar(this)"></label>${S.member?'':`<button class="btn-ghost text-sm" onclick="this.outerHTML='<span class=\'text-xs text-gold\'>✨ KI-Profilbild wird erstellt… (in der Vorschau simuliert)</span>'">✨ KI-Profilbild erstellen</button>`}</div></div></div>
     <div class="card p-4 flex justify-between items-center"><div><p class="font-semibold">Darstellung</p><p class="text-xs text-muted">Tag- oder Nacht-Modus</p></div>
       <div class="flex gap-2"><button onclick="if(isLight())toggleTheme()" class="${isLight()?'btn-ghost':'btn-gold'} text-sm">Nacht</button><button onclick="if(!isLight())toggleTheme()" class="${isLight()?'btn-gold':'btn-ghost'} text-sm">Tag</button></div></div>
-    <div class="card p-4"><p class="font-semibold mb-1">Was willst du im Feed sehen?</p><p class="text-xs text-muted mb-3">Die KI ordnet jeden Beitrag einem Thema zu – du entscheidest, welche Themen bei dir erscheinen.</p>
+    <div class="card p-4"><p class="font-semibold mb-1">Was willst du im Feed sehen?</p><p class="text-xs text-muted mb-3">Jeder Beitrag hat ein Thema (die KI schlägt es beim Posten vor, das Mitglied bestätigt) – du entscheidest, welche Themen bei dir erscheinen.</p>
       <div class="flex flex-wrap gap-2">${FTOPICS.map(t=>`<button onclick="toggleTopic('${t}')" class="${(!S.topics||S.topics.includes(t))?'btn-gold':'btn-ghost'} text-sm">${t}</button>`).join('')}</div></div>
     <div class="card p-4"><p class="font-semibold mb-3">Welche Abzeichen sollen im Profil angezeigt werden?</p>
       ${ME.badges.map(b=>`<label class="flex items-center gap-3 py-2 cursor-pointer"><input type="checkbox" ${S.badgesShown.includes(b)?'checked':''} onchange="toggleBadge('${b}')" style="accent-color:#087A4B;width:16px;height:16px"> ${badgePill(b)}</label>`).join('')}</div>
