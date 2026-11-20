@@ -352,7 +352,7 @@ window.tailwind=window.tailwind||{}; tailwind.config = { theme: { extend: {
   #chsplash.sp-out{opacity:0;pointer-events:none}
   #chsplash.sp-out .sp-c{transform:scale(1.06)}
 </style>
-<style>.cmbox{height:calc(100dvh - 200px)} @media (min-width:768px){.cmbox{height:calc(100vh - 45px)}}</style>
+<style>.cmbox{display:grid;grid-template-columns:minmax(0,1fr);height:calc(100dvh - 200px);max-width:1280px;margin:0 auto;border-left:1px solid rgb(var(--line));border-right:1px solid rgb(var(--line))}.cml{overflow-y:auto;min-height:0;border-right:1px solid rgb(var(--line))}.cmc{display:flex;flex-direction:column;min-height:0;min-width:0}.cmbox.has-cur .cml{display:none}.cmbox:not(.has-cur) .cmc{display:none}@media (min-width:768px){.cmbox{grid-template-columns:340px minmax(0,1fr);height:calc(100vh - 45px)}.cmbox.has-cur .cml{display:block}.cmbox:not(.has-cur) .cmc{display:flex}.cm-back{display:none}}@media (min-width:1280px){.cmbox{grid-template-columns:380px minmax(0,1fr)}}.cmc .chat-bub{max-width:min(78%,560px)}.chat-gone{font-style:italic;opacity:.6;background:transparent!important;border-style:dashed!important;color:rgb(var(--fg))!important}.cm-row{align-items:flex-end;gap:4px}.cm-row.justify-end{flex-direction:row-reverse}.cm-act{display:flex;opacity:0;transition:opacity .15s}.cm-act button{font-size:10px;color:rgb(var(--muted));white-space:nowrap;padding:2px 4px}.cm-row:hover .cm-act{opacity:1}@media (hover:none){.cm-act{opacity:.55}}.lkcard{display:block;width:260px;max-width:100%;border-radius:12px;overflow:hidden;background:rgb(var(--bg));border:1px solid rgb(var(--line));color:rgb(var(--fg));text-align:left;cursor:pointer}.lkcard img,.lkcard video{display:block;width:100%;height:140px;object-fit:cover}.lkcard .lkb{padding:8px 10px}.lkcard .lkk{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#087A4B;font-weight:700}.lkcard .lkt{font-size:13px;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.lkcard .lks{font-size:11px;color:rgb(var(--muted));display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.lb{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;cursor:zoom-out}.lb img{max-width:96vw;max-height:92vh;object-fit:contain;border-radius:6px}.lb button{position:absolute;top:14px;right:18px;color:#fff;font-size:28px}.emopop{position:fixed;z-index:80;background:rgb(var(--panel));border:1px solid rgb(var(--line));border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.35);width:236px}.fab-post{position:fixed;right:16px;bottom:96px;z-index:35;width:54px;height:54px;border-radius:50%;background:#087A4B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 8px 24px rgba(8,122,75,.45)}@media (min-width:768px){.fab-post{display:none}}.side-post{display:flex;align-items:center;justify-content:center;gap:8px;background:#087A4B;color:#fff;border-radius:999px;font-weight:600;padding:10px 12px;margin:10px 0 4px}.side-post:hover{filter:brightness(1.08)}.boot{min-height:100vh;display:flex;align-items:center;justify-content:center}@keyframes chpulse{50%{opacity:.35}}</style>
 <style id="skglut">
 /* Feuerring: Glut mit Funken (dünn) */
 .sk .sk-r::before,.sk .sk-r::after{display:none!important}
@@ -708,7 +708,7 @@ function partnerModal(p,offers,r,rt){
         <div class="flex items-end gap-4 -mt-6">
           <div class="relative shrink-0"><div class="w-16 h-16 rounded-full overflow-hidden" style="box-shadow:0 0 0 3px rgb(var(--panel))">${avatar(n)}</div>${SEAL}</div>
           <div class="min-w-0 pt-8"><div class="text-lg leading-tight">${nameRank(n,r)}</div></div></div>
-        ${p.role||p.meta?`<p class="text-sm mt-3"><b>${p.role||''}</b>${p.role&&p.meta?', ':''}<span class="text-muted">${p.meta||''}</span></p>`:''}<p class="text-sm text-muted ${p.role||p.meta?'mt-1':'mt-3'}">${p.bio}</p>${p.mid?`<button onclick="closeModal();memberModal(${p.mid})" class="text-sm font-semibold mt-2 inline-flex items-center gap-1" style="color:#087A4B">Profil in der App ansehen →</button>`:''}
+        ${p.role||p.meta?`<p class="text-sm mt-3"><b>${p.role||''}</b>${p.role&&p.meta?', ':''}<span class="text-muted">${p.meta||''}</span></p>`:''}<p class="text-sm text-muted ${p.role||p.meta?'mt-1':'mt-3'}">${p.bio}</p>${p.mid?`<button onclick="closeModal();openProfile(${p.mid})" class="text-sm font-semibold mt-2 inline-flex items-center gap-1" style="color:#087A4B">Profil in der App ansehen →</button>`:''}
         <div class="mt-4"><p class="text-xs uppercase tracking-wide text-muted mb-2">Abzeichen</p><div class="flex flex-wrap items-center gap-2">${p.link?`<a href="${p.link}" target="_blank" rel="noopener" title="Profil von ${n} öffnen" class="inline-flex items-center gap-2 h-11 pl-1.5 pr-4 rounded-full text-sm font-semibold whitespace-nowrap transition hover:opacity-90" style="background:#087A4B;color:#fff"><span class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(255,255,255,.18)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></span>Profil</a><span class="w-px h-7 mx-1" style="background:rgb(var(--line))"></span>`:''}${memberBadges(n).map(b=>badgeIcon(b,`openBadges('${String(n).replace(/[^\p{L}\p{N} .-]/gu,'')}')`)).join('')}</div></div>
         <div class="grid grid-cols-3 mt-4 border-y border-line text-center text-[11px] text-muted">
           <div class="py-2"><b class="block text-base" style="color:rgb(var(--fg))">${rt?rt.replace('.',','):'Neu'}</b>${rt?`★ aus ${nr}`:'dabei'}</div>
@@ -1038,10 +1038,11 @@ function shell(content){
     <aside class="hidden md:flex flex-col fixed inset-y-0 left-0 w-20 xl:w-64 border-r border-line px-3 py-6 bg-bg z-30">
       <a href="#feed" class="px-3 mb-8 text-3xl hidden xl:block"><span class="chlogo ${LP()}"><span class="l1">closing</span><span class="l2">HUB</span></span></a>
       <a href="#feed" class="px-3 mb-8 xl:hidden"><span class="chlogo"><span class="l2" style="font-size:30px">HUB</span></span></a>
-      <nav class="flex flex-col gap-1 flex-1">${side}</nav>
+      <nav class="flex flex-col gap-1 flex-1">${side}${S.user?`<a href="#create" class="side-post" title="Beitrag teilen"><span style="font-size:20px;line-height:1">＋</span><span class="hidden xl:inline">Beitrag teilen</span></a>`:''}</nav>
       <div class="flex flex-col gap-1 border-t border-line pt-4">
         <button onclick="toggleTheme()" class="nav-a text-left">${ic(isLight()?'moon':'sun')}<span class="hidden xl:inline text-sm">${isLight()?'Nacht-Modus':'Tag-Modus'}</span></button>
         <a href="#${S.user?'einstellungen':'login'}" class="nav-a ${S.user?'':'opacity-40'}">${ic('gear')}<span class="hidden xl:inline">Einstellungen</span></a>
+        <p class="hidden xl:block text-[11px] text-muted px-3 pt-2">${LEGAL()}</p>
       </div>
     </aside>
     <div class="flex-1 md:ml-20 xl:ml-64 pb-24 md:pb-0 min-w-0">
@@ -1057,6 +1058,7 @@ function shell(content){
       ${S.mode==='auftraggeber'?`<div class="px-4 py-2 text-xs bg-gold/10 text-gold border-b border-line">Auftraggeber-Modus aktiv · <a href="#jobs" class="underline">Meine Jobs</a> · Bewerber · Rechnungen</div>`:''}
       <main>${content}</main>
     </div>
+    ${S.user&&r==='feed'&&!S.onePost?`<a href="#create" class="fab-post" aria-label="Beitrag teilen">＋</a>`:''}
     <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-bg/95 backdrop-blur border-t border-line pb-1">
       <div class="flex justify-around items-center h-14">${bottom}</div>
       <div id="chathandle" class="relative flex justify-center items-center h-6" onclick="openChat()">
@@ -1145,7 +1147,7 @@ function myInitials(){ const n=(ME.fullName||ME.name||'?').trim().split(/\s+/); 
 function meAvatar(){ return `<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,#1B2B42,#0E1A2B);color:#C9D3E3;font-weight:800;font-size:clamp(9px,38%,40px);letter-spacing:.02em;container-type:size"><span style="font-size:40cqh">${myInitials()}</span></span>`; }
 function profLine(){ const l=[ME.role+' ⭐']; if(ME.years) l.push(ME.years+' Jahre Erfahrung'); if(ME.country) l.push(ME.country); if(ME.langs) l.push(ME.langs); return l.join(' · '); }
 
-async function loadMember(){
+async function loadMember0(){
   if(!SES) return;
   let m=null;
   try{ m=await rpc('member_ich'); }catch(e){ if(!SES) render(); return; }
@@ -1544,6 +1546,7 @@ async function memberModal(mid){
       <p class="text-sm mt-4">${line.join(' · ')}</p>${p.bio?`<p class="text-sm text-muted mt-1">${esc(p.bio)}</p>`:''}
       ${badges.length?`<div class="flex gap-2 mt-3">${badges.map(b=>badgeIcon(b)).join('')}</div>`:''}
       ${S.member?`<button id="mmBtn" class="${p.folge?'btn-ghost':'btn-gold'} w-full mt-4" onclick="followToggle(${p.id},this)">${p.folge?'Gefolgt ✓':'Folgen'}</button><button class="btn-ghost w-full mt-2" onclick="startChat(${p.id},this)">Nachricht schreiben</button><button class="text-xs text-muted w-full mt-2" onclick="const g=prompt('Warum meldest du dieses Profil?');if(g!==null)rpc('melden',{p_typ:'member',p_ref:${p.id},p_grund:g}).then(()=>alert('Danke, wir schauen es uns an.'))">Profil melden</button>`:`<a href="#login" onclick="closeModal()" class="btn-gold block text-center mt-4">Anmelden zum Folgen</a>`}
+      <div class="grid grid-cols-2 gap-2 mt-2">${S.member?`<button class="btn-ghost" onclick="startChat(${p.id},this)">Nachricht</button>`:''}<button class="btn-ghost ${S.member?'':'col-span-2'}" onclick="openProfile(${p.id})">Zum Profil →</button></div>
       ${postGrid(list,false)}</div></div>`;
 }
 function followToggle(mid,btn){ btn.disabled=true; rpc('folgen_umschalten',{p_member:mid}).then(j=>{ btn.disabled=false; if(!j||!j.ok) return; btn.className=(j.folge?'btn-ghost':'btn-gold')+' w-full mt-4'; btn.textContent=j.folge?'Gefolgt ✓':'Folgen'; const f=document.getElementById('mmF'); if(f) f.textContent=(+f.textContent)+(j.folge?1:-1); (S.rp||[]).forEach(p=>{ if(p.mid===mid) p.folge=j.folge; }); loadMember(); }).catch(()=>{ btn.disabled=false; }); }
@@ -1642,8 +1645,8 @@ async function chatsLoad(){ if(!S.member) return; try{ S.cl=await rpc('chats_lad
   S.unreadMsg=((S.cl.chats||[]).reduce((a,c)=>a+(+c.ungelesen||0),0))+((S.cl.partner||[]).reduce((a,c)=>a+(+c.ungelesen||0),0)); markBell(); const h=document.querySelector('#chathandle'); if(h&&route()!=='messages'){ const n=unread(); let c=h.querySelector('span'); if(n){ if(!c){ c=document.createElement('span'); c.className='absolute left-1/2 ml-[72px] text-[10px] gold-bg text-black rounded-full px-1.5 leading-4'; h.appendChild(c); } c.textContent=n; } else if(c) c.remove(); }
   if(route()==='messages') drawMsgs(); }
 async function convLoad(){ if(!S.cur) return; const k=S.cur;
-  try{ const r = k[0]==='m' ? await rpc('nachrichten_laden',{p_chat:+k.slice(1)}) : await rpc('partner_chat_laden',{p_partner:+k.slice(1)}); if(S.cur===k){ S.cmsg=r||[]; drawMsgs(true); } }catch(e){} }
-async function openConv(k){ S.cur=k; S.cmsg=null; S.cerr=''; if(route()!=='messages') go('messages'); else drawMsgs(); await convLoad(); chatsLoad(); }
+  try{ const r = k[0]==='m' ? await rpc('nachrichten_laden',{p_chat:+k.slice(1)}) : await rpc('partner_chat_laden',{p_partner:+k.slice(1)}); if(S.cur===k){ const first=S.cmsg===null; S.cmsg=r||[]; drawMsgs(first); } }catch(e){} }
+async function openConv(k){ if(S.crec) cRecStop(true); S.cur=k; S.cmsg=null; S.cerr=''; S.cdraft=''; if(route()!=='messages') go('messages'); else drawMsgs(); await convLoad(); chatsLoad(); }
 async function startChat(mid,btn){ if(btn) btn.disabled=true;
   try{ const j=await rpc('chat_starten',{p_member:mid}); if(!j||!j.ok){ alert(j&&j.grund==='tempo'?'Kurze Pause: Du hast in der letzten Stunde schon 6 neue Chats gestartet. Versuch es gleich nochmal.':'Chat konnte nicht gestartet werden.'); if(btn) btn.disabled=false; return; }
     closeModal(); S.newChat=j.chat; openConv('m'+j.chat); }catch(e){ if(btn) btn.disabled=false; } }
@@ -1654,56 +1657,78 @@ async function signUrl(path){
   const u=(j.signedURL||j.signedUrl); S.surl[path]=/^https?:/.test(u)?u:`${SB_URL}/storage/v1${u.startsWith('/')?'':'/'}${u}`; return S.surl[path];
 }
 function fillMedia(){ document.querySelectorAll('[data-cmedia]').forEach(el=>{ const p=el.getAttribute('data-cmedia'), t=el.getAttribute('data-typ'); el.removeAttribute('data-cmedia');
-  signUrl(p).then(u=>{ el.innerHTML = t==='bild'?`<img src="${u}" alt="Bild" class="chat-media">`:t==='video'?`<video src="${u}" controls playsinline preload="metadata" class="chat-media"></video>`:`<audio src="${u}" controls preload="metadata" class="chat-aud"></audio>`; }).catch(()=>{ el.textContent='Medium nicht verfügbar'; }); }); }
+  signUrl(p).then(u=>{ el.style.minHeight=''; el.innerHTML=mediaHtml(u,t); if(t==='audio') cmStick(); }).catch(()=>{ el.textContent='Medium nicht verfügbar'; }); }); }
 const cTime = d => { const x=new Date(d), n=new Date(); return x.toDateString()===n.toDateString()?x.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):x.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}); };
-const cLast = l => !l?'':(l.mine?'Du: ':'')+(l.typ==='bild'?'📷 Bild':l.typ==='video'?'🎬 Video':l.typ==='audio'?'🎤 Sprachnachricht':esc(l.text||''));
+const cLast = l => !l?'':l.zurueck?'↩︎ Nachricht zurückgerufen':(l.mine?'Du: ':'')+(LINK_RE.test(l.text||'')&&!l.typ?'🔗 Geteilter Inhalt':'')+(l.typ==='bild'?'📷 Bild':l.typ==='video'?'🎬 Video':l.typ==='audio'?'🎤 Sprachnachricht':LINK_RE.test(l.text||'')?'':esc(l.text||''));
 function convHead(){
   const k=S.cur; if(!k) return null;
   if(k[0]==='m'){ const c=((S.cl&&S.cl.chats)||[]).find(x=>'m'+x.id===k); return c?{name:c.name,av:c.avatar_url,mid:c.member_id,rang:c.rang}:{name:'Neuer Chat',mid:null}; }
   const p=((S.cl&&S.cl.partner)||[]).find(x=>'p'+x.partner_id===k)||(PARTNERS||[]).find(x=>'p'+x.pid===k); return {name:(p&&(p.name||p.n))||'Partner',av:p&&(p.img),partner:true};
 }
+const LINK_RE=/(?:https?:\/\/)?(?:www\.)?getclosinghub\.com\/app#([pjfom])(\d+)/i;
+function msgText(t){ const m=LINK_RE.exec(t||''); if(!m) return {txt:t||'',lk:null}; return {txt:(t.replace(m[0],'').replace(/[:\s]+$/,'').trim()),lk:[m[1].toLowerCase(),+m[2]]}; }
+function msgSig(){ return JSON.stringify([S.cur,(S.cmsg||[]).map(m=>[m.id,m.gelesen?1:0,m.zurueckgerufen?1:0,m.media_pfad?1:0]),S.cmsg===null]); }
+function mediaHtml(u,t){ return t==='bild'?`<img src="${u}" alt="Bild" class="chat-media" style="cursor:zoom-in" onclick="lightbox(this.src)" onload="cmStick()">`:t==='video'?`<video src="${u}" controls playsinline preload="metadata" class="chat-media" onloadedmetadata="cmStick()"></video>`:`<audio src="${u}" controls preload="metadata" class="chat-aud"></audio>`; }
 function msgsHtml(){
   if(S.cmsg===null) return '<p class="text-sm text-muted p-4">Lädt …</p>';
   if(!S.cmsg.length) return '<p class="text-sm text-muted p-4 text-center">Noch keine Nachrichten. Schreib die erste!</p>';
-  return S.cmsg.map(m=>`<div class="flex ${m.mine?'justify-end':''} group"><span class="chat-bub ${m.mine?'out gold-bg text-black':''} ${m.media_pfad||m.abgelaufen?'med':''}" title="${cTime(m.created_at)}">
-    ${m.media_pfad?`<span data-cmedia="${esc(m.media_pfad)}" data-typ="${m.media_typ}" class="block text-xs opacity-70">Lädt …</span><span class="chat-exp">wird nach 30 Tagen gelöscht</span>`:''}${m.abgelaufen?'<span class="text-xs opacity-70">Medium nach 30 Tagen gelöscht</span>':''}
-    ${m.text?esc(m.text).replace(/\n/g,'<br>'):''}<span class="block text-[10px] opacity-60 mt-0.5 ${m.mine?'text-right':''}">${cTime(m.created_at)}${m.mine&&m.gelesen?' · gelesen':''}</span></span>
-    ${!m.mine&&S.cur[0]==='m'?`<button onclick="reportMsg(${m.id})" class="text-[10px] text-muted self-end ml-1 opacity-0 group-hover:opacity-100" style="min-width:36px">Melden</button>`:''}</div>`).join('');
+  const member=S.cur[0]==='m';
+  return S.cmsg.map(m=>{ if(m.zurueckgerufen) return `<div class="flex ${m.mine?'justify-end':''}"><span class="chat-bub chat-gone">↩︎ ${m.mine?'Du hast diese Nachricht zurückgerufen':'Nachricht wurde zurückgerufen'}</span></div>`;
+    const x=msgText(m.text), cached=m.media_pfad&&S.surl[m.media_pfad];
+    return `<div class="flex ${m.mine?'justify-end':''} cm-row"><span class="chat-bub ${m.mine?'out gold-bg text-black':''} ${m.media_pfad||m.abgelaufen||x.lk?'med':''}" title="${cTime(m.created_at)}">
+    ${m.media_pfad?(cached?mediaHtml(cached,m.media_typ):`<span data-cmedia="${esc(m.media_pfad)}" data-typ="${m.media_typ}" class="block text-xs opacity-70" style="min-height:${m.media_typ==='audio'?40:160}px">Lädt …</span>`)+'<span class="chat-exp">wird nach 30 Tagen gelöscht</span>':''}${m.abgelaufen?'<span class="text-xs opacity-70">Medium nach 30 Tagen gelöscht</span>':''}
+    ${x.lk?linkCard(x.lk[0],x.lk[1]):''}${x.txt?`<span class="${x.lk?'block px-1 pt-1':''}">${esc(x.txt).replace(/\n/g,'<br>')}</span>`:''}<span class="block text-[10px] opacity-60 mt-0.5 ${m.mine?'text-right':''} ${x.lk||m.media_pfad?'px-1':''}">${cTime(m.created_at)}${m.mine&&m.gelesen?' · gelesen':''}</span></span>
+    <span class="cm-act">${m.mine?`<button onclick="msgRecall(${m.id})" title="Für beide zurückrufen">↩︎ Zurückrufen</button>`:member?`<button onclick="reportMsg(${m.id})">Melden</button>`:''}</span></div>`; }).join('');
 }
+async function msgRecall(id){ if(!confirm('Nachricht zurückrufen? Sie verschwindet dann für euch beide.')) return;
+  const j=await rpc(S.cur[0]==='m'?'nachricht_zurueckrufen':'partner_nachricht_zurueckrufen',{p_id:id}).catch(()=>null);
+  if(!j||!j.ok) alert('Das hat nicht geklappt.'); await convLoad(); chatsLoad(); }
+function cmStick(){ const l=document.getElementById('cmlist'); if(l&&l.dataset.atBottom!=='0') l.scrollTop=l.scrollHeight; }
 function drawMsgs(scroll){
   if(route()!=='messages') return; const box=document.getElementById('cmbox'); if(!box){ render(); return; }
-  const ii=document.getElementById('cminput'), keep=ii?{v:ii.value,f:document.activeElement===ii,a:ii.selectionStart,b:ii.selectionEnd}:null;
-  box.innerHTML=msgsInner(); fillMedia();
-  const ni=document.getElementById('cminput'); if(ni&&keep){ ni.value=keep.v; if(keep.f){ ni.focus(); try{ ni.setSelectionRange(keep.a,keep.b); }catch(e){} } } const m=document.getElementById('cmlist'); if(m&&(scroll||m.dataset.atBottom!=='0')) m.scrollTop=m.scrollHeight;
+  box.classList.toggle('has-cur',!!S.cur);
+  const lh=listHtml(), le=document.getElementById('cml'); if(le&&le._h!==lh){ const y=le.scrollTop; le.innerHTML=lh; le._h=lh; le.scrollTop=y; }
+  const ck=[S.cur,!!S.crec,(convHead()||{}).name].join('|'), ce=document.getElementById('cmc');
+  if(ce&&ce._k!==ck){ const ii=document.getElementById('cminput'); if(ii) S.cdraft=ii.value; ce.innerHTML=convHtml(); ce._k=ck; ce._s=null; scroll=true;
+    const ni=document.getElementById('cminput'); if(ni&&S.cdraft){ ni.value=S.cdraft; } }
+  const er=document.getElementById('cmerr'); if(er){ er.textContent=S.cerr||''; er.style.display=S.cerr?'':'none'; }
+  const l=document.getElementById('cmlist'); if(l&&ce){ const sg=msgSig(); if(ce._s!==sg){ const atB=l.scrollHeight-l.scrollTop-l.clientHeight<80, y=l.scrollTop; l.innerHTML=msgsHtml(); ce._s=sg; fillMedia();
+      if(scroll||atB){ l.scrollTop=l.scrollHeight; l.dataset.atBottom='1'; } else l.scrollTop=y; } else if(scroll){ l.scrollTop=l.scrollHeight; l.dataset.atBottom='1'; } }
   const i=document.getElementById('cminput'); if(i&&S._keepFocus){ i.focus(); S._keepFocus=false; }
   try{ navSync(); }catch(e){}
 }
-function msgsInner(){
+function listHtml(){
   const cl=S.cl||{chats:[],partner:[]}, items=[...(cl.chats||[]).map(c=>({k:'m'+c.id,name:c.name,av:c.avatar_url,last:c.letzte,at:c.last_at,un:c.ungelesen,sub:RANKS[(c.rang||1)-1]})),...(cl.partner||[]).map(p=>({k:'p'+p.partner_id,name:p.name,av:p.img,last:p.letzte,at:p.last_at,un:p.ungelesen,sub:'Partner'}))].sort((a,b)=>new Date(b.at)-new Date(a.at));
-  const h=convHead(), A='width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
-  const list=`<div class="border-r border-line overflow-y-auto ${S.cur?'hidden md:block':''}"><p class="font-serif text-xl p-4">Nachrichten</p>
-    ${S.cl===null?'<p class="text-sm text-muted px-4">Lädt …</p>':items.length?items.map(x=>`<button onclick="openConv('${x.k}')" class="w-full flex items-center gap-3 text-left p-4 border-t border-line hover:bg-panel ${x.k===S.cur?'bg-panel':''}">
-      <span class="w-11 h-11 rounded-full overflow-hidden shrink-0">${x.av?`<img src="${esc(x.av)}" class="w-full h-full object-cover">`:initAv(x.name)}</span>
+  return `<p class="font-serif text-xl p-4">Nachrichten</p>
+    ${S.cl===null?'<p class="text-sm text-muted px-4">Lädt …</p>':items.length?items.map(x=>`<button onclick="openConv('${x.k}')" class="w-full flex items-center gap-3 text-left px-4 py-3 border-t border-line hover:bg-panel ${x.k===S.cur?'bg-panel':''}" style="${x.k===S.cur?'box-shadow:inset 3px 0 0 #087A4B':''}">
+      <span class="rounded-full overflow-hidden shrink-0" style="width:46px;height:46px">${x.av?`<img src="${esc(x.av)}" class="w-full h-full object-cover">`:initAv(x.name)}</span>
       <span class="flex-1 min-w-0"><span class="flex justify-between gap-2"><b class="text-sm truncate">${esc(x.name)}</b><span class="text-[10px] text-muted whitespace-nowrap">${cTime(x.at)}</span></span><span class="flex justify-between gap-2"><span class="text-xs text-muted truncate">${cLast(x.last)}</span>${x.un?`<span class="text-[10px] font-bold rounded-full px-1.5" style="background:#087A4B;color:#fff">${x.un}</span>`:''}</span><span class="text-[10px] text-gold">${x.sub}</span></span></button>`).join('')
-      :'<div class="p-4 text-sm text-muted">Noch keine Chats. Öffne ein Profil im Feed und tippe auf „Nachricht schreiben“.</div>'}</div>`;
-  if(!S.cur) return list+`<div class="hidden md:flex items-center justify-center text-sm text-muted">Wähle einen Chat aus.</div>`;
-  const media=S.cur[0]==='m';
-  return list+`<div class="flex flex-col" style="min-height:0"><div class="p-3 border-b border-line flex items-center gap-3"><button class="inline-flex items-center gap-1 text-sm font-semibold pr-2 mr-1 border-r border-line" style="color:#087A4B" onclick="S.cur=null;drawMsgs()" aria-label="Zurück zu allen Chats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="md:hidden">Chats</span></button>
-      <span style="width:36px;height:36px" class="rounded-full overflow-hidden shrink-0 inline-block ${h.mid?'cursor-pointer':''}" ${h.mid?`onclick="memberModal(${h.mid})"`:''}>${h.av?`<img src="${esc(h.av)}" class="w-full h-full object-cover">`:initAv(h.name)}</span><b class="text-sm">${esc(h.name)}</b>${h.partner?'<span class="text-[10px] text-gold">Partner · Antwort meist in 24 h</span>':''}</div>
-    <div id="cmlist" class="flex-1 overflow-y-auto p-4 space-y-2" style="min-height:0" onscroll="this.dataset.atBottom=(this.scrollHeight-this.scrollTop-this.clientHeight<60)?'1':'0'">${msgsHtml()}</div>
-    ${S.cerr?`<p class="chat-err">${esc(S.cerr)}</p>`:''}
-    <form class="p-3 border-t border-line flex gap-2 items-center" onsubmit="event.preventDefault();cSend()">
-      ${media?`<label class="chat-btn" title="Bild oder Video senden">${'<svg '+A+'><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 15.5l-5-5L6 20"/></svg>'}<input type="file" accept="image/*,video/*" class="hidden" onchange="cFile(this)"></label>
-      <button type="button" class="chat-btn ${S.crec?'rec':''}" onclick="cRec()" title="${S.crec?'Stopp und senden':'Sprachnachricht'}">${S.crec?'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>':'<svg '+A+'><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg>'}</button>`:''}
-      ${S.crec?`<span class="chat-recbar"><span class="chat-dot"></span>Aufnahme läuft <b id="crt">0:00</b> · Stopp sendet</span>`:`<input id="cminput" class="input" autocomplete="off" maxlength="2000" placeholder="${h.partner?'Deine Anfrage …':'Nachricht …'}"><button class="btn-gold">Senden</button>`}</form>
-    ${media?'<p class="chat-note">Bilder, Videos und Sprachnachrichten werden nach 30 Tagen gelöscht. Werbung für andere Plattformen und fremde Links werden blockiert.</p>':''}</div>`;
+      :'<div class="p-4 text-sm text-muted">Noch keine Chats. Öffne ein Profil und tippe auf „Nachricht schreiben“.</div>'}`;
 }
-function messagesReal(){ if(S.cl===null) chatsLoad(); setTimeout(()=>{ fillMedia(); const m=document.getElementById('cmlist'); if(m) m.scrollTop=m.scrollHeight; },0);
-  return `<div id="cmbox" class="cmbox grid md:grid-cols-[320px_1fr]">${msgsInner()}</div>`; }
+function convHtml(){
+  if(!S.cur) return `<div class="flex-1 flex flex-col items-center justify-center text-sm text-muted gap-2 p-6 text-center"><span style="font-size:40px">💬</span>Wähle links einen Chat aus.</div>`;
+  const h=convHead(), media=S.cur[0]==='m', A='width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
+  return `<div class="p-3 border-b border-line flex items-center gap-3"><button class="cm-back inline-flex items-center gap-1 text-sm font-semibold pr-2 mr-1 border-r border-line" style="color:#087A4B" onclick="S.cur=null;drawMsgs()" aria-label="Zurück zu allen Chats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Chats</button>
+      <span style="width:38px;height:38px" class="rounded-full overflow-hidden shrink-0 inline-block ${h.mid?'cursor-pointer':''}" ${h.mid?`onclick="openProfile(${h.mid})"`:''}>${h.av?`<img src="${esc(h.av)}" class="w-full h-full object-cover">`:initAv(h.name)}</span><span class="min-w-0"><b class="text-sm block truncate ${h.mid?'cursor-pointer':''}" ${h.mid?`onclick="openProfile(${h.mid})"`:''}>${esc(h.name)}</b>${h.partner?'<span class="text-[10px] text-gold">Partner · Antwort meist in 24 h</span>':h.mid?`<span class="text-[11px] text-muted cursor-pointer" onclick="openProfile(${h.mid})">Profil ansehen</span>`:''}</span></div>
+    <div id="cmlist" class="flex-1 overflow-y-auto p-4 space-y-2" style="min-height:0;overscroll-behavior:contain" data-at-bottom="1" onscroll="this.dataset.atBottom=(this.scrollHeight-this.scrollTop-this.clientHeight<80)?'1':'0'"></div>
+    <p id="cmerr" class="chat-err" style="display:none"></p>
+    ${S.crec?`<div class="p-3 border-t border-line flex gap-2 items-center"><button type="button" class="chat-btn" onclick="cRecStop(true)" title="Verwerfen" aria-label="Aufnahme verwerfen"><svg ${A}><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+        <span class="chat-recbar flex-1"><span class="chat-dot"></span>Aufnahme läuft <b id="crt">0:00</b></span>
+        <button type="button" class="btn-gold" onclick="cRecStop(false)">Senden ➤</button></div>`
+    :`<form class="p-3 border-t border-line flex gap-2 items-center" onsubmit="event.preventDefault();cSend()">
+      ${media?`<label class="chat-btn" title="Bild oder Video senden">${'<svg '+A+'><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 15.5l-5-5L6 20"/></svg>'}<input type="file" accept="image/*,video/*" class="hidden" onchange="cFile(this)"></label>
+      <button type="button" class="chat-btn" onclick="cRec()" title="Sprachnachricht aufnehmen"><svg ${A}><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg></button>`:''}
+      <button type="button" class="chat-btn" onclick="emoQuick('cminput',this)" title="Emoji" aria-label="Emoji" style="font-size:19px">😊</button>
+      <input id="cminput" class="input" autocomplete="off" maxlength="2000" placeholder="${h.partner?'Deine Anfrage …':'Nachricht …'}" oninput="S.cdraft=this.value"><button class="btn-gold">Senden</button></form>`}
+    ${media?'<p class="chat-note">Bilder, Videos und Sprachnachrichten werden nach 30 Tagen gelöscht. Werbung für andere Plattformen und fremde Links werden blockiert.</p>':''}`;
+}
+function msgsInner(){ return `<div id="cml" class="cml"></div><div id="cmc" class="cmc"></div>`; }
+function messagesReal(){ if(S.cl===null) chatsLoad(); setTimeout(()=>drawMsgs(true),0);
+  return `<div id="cmbox" class="cmbox ${S.cur?'has-cur':''}">${msgsInner()}</div>`; }
 async function cSend(){
-  const i=document.getElementById('cminput'), v=(i&&i.value||'').trim(); if(!v||!S.cur) return; i.value=''; S.cerr='';
+  const i=document.getElementById('cminput'), v=(i&&i.value||'').trim(); if(!v||!S.cur) return; i.value=''; S.cdraft=''; S.cerr='';
   try{ const j = S.cur[0]==='m' ? await rpc('nachricht_senden',{p_chat:+S.cur.slice(1),p_text:v,p_media_pfad:null,p_media_typ:null}) : await rpc('partner_nachricht',{p_partner:+S.cur.slice(1),p_text:v});
-    if(!j||!j.ok){ S.cerr=j&&j.text?j.text:j&&j.grund==='tempo'?'Langsam – du schreibst gerade sehr schnell.':'Senden hat nicht geklappt.'; i.value=v; }
+    if(!j||!j.ok){ S.cerr=j&&j.text?j.text:j&&j.grund==='tempo'?'Langsam – du schreibst gerade sehr schnell.':'Senden hat nicht geklappt.'; i.value=v; S.cdraft=v; }
   }catch(e){ S.cerr='Keine Verbindung.'; }
   S._keepFocus=true; await convLoad(); chatsLoad();
 }
@@ -1722,15 +1747,20 @@ function cFile(inp){ const f=inp.files&&inp.files[0]; inp.value=''; if(!f) retur
   if(f.size>50*1024*1024){ S.cerr='Die Datei ist größer als 50 MB.'; drawMsgs(); return; }
   cSendMedia(f,typ,(f.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')); }
 function cRec(){
-  if(S.crec){ S.crec.stop(); return; }
+  if(S.crec) return;
   if(!navigator.mediaDevices||!window.MediaRecorder){ S.cerr='Dieser Browser kann keine Sprachnachrichten aufnehmen.'; drawMsgs(); return; }
-  navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{ const r=new MediaRecorder(st), ch=[], t0=Date.now();
+  navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{
+    const mt=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'].find(t=>{ try{ return MediaRecorder.isTypeSupported(t); }catch(e){ return false; } });
+    const r=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st), ch=[], t0=Date.now();
     r.ondataavailable=e=>{ if(e.data&&e.data.size) ch.push(e.data); };
-    r.onstop=()=>{ st.getTracks().forEach(t=>t.stop()); clearInterval(S.crecT); S.crec=null; if(ch.length){ const mt=r.mimeType||'audio/webm'; cSendMedia(new Blob(ch,{type:mt.split(';')[0]}),'audio',/mp4|aac/.test(mt)?'m4a':'webm'); } else drawMsgs(); };
-    r.start(); S.crec=r; S.cerr=''; drawMsgs();
-    S.crecT=setInterval(()=>{ const s=Math.floor((Date.now()-t0)/1000), e=document.getElementById('crt'); if(e) e.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); if(s>=300) r.stop(); },500);
-  }).catch(()=>{ S.cerr='Kein Zugriff auf das Mikrofon. Bitte erlauben.'; drawMsgs(); });
+    r.onstop=()=>{ st.getTracks().forEach(t=>t.stop()); clearInterval(S.crecT); const cancel=S.crecCancel, dur=Date.now()-t0; S.crec=null; S.crecCancel=false; drawMsgs();
+      if(cancel) return; if(dur<800||!ch.length){ S.cerr='Die Aufnahme war zu kurz.'; drawMsgs(); return; }
+      const type=(r.mimeType||mt||'audio/webm').split(';')[0]; cSendMedia(new Blob(ch,{type}),'audio',/mp4|aac/.test(type)?'m4a':/ogg/.test(type)?'ogg':'webm'); };
+    r.start(250); S.crec=r; S.crecCancel=false; S.cerr=''; drawMsgs();
+    S.crecT=setInterval(()=>{ const s=Math.floor((Date.now()-t0)/1000), e=document.getElementById('crt'); if(e) e.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); if(s>=300) cRecStop(false); },500);
+  }).catch(()=>{ S.cerr='Kein Zugriff auf das Mikrofon. Bitte im Browser erlauben.'; drawMsgs(); });
 }
+function cRecStop(cancel){ if(!S.crec) return; S.crecCancel=!!cancel; try{ S.crec.stop(); }catch(e){ S.crec=null; drawMsgs(); } }
 function reportMsg(id){ const g=prompt('Warum meldest du diese Nachricht? (z. B. Spam, Beleidigung, Abwerbung)'); if(g===null) return; rpc('melden',{p_typ:'nachricht',p_ref:id,p_grund:g}).then(()=>alert('Danke! Das ClosingHub-Team schaut es sich an.')); }
 function reportPost(id){ const g=prompt('Warum meldest du diesen Beitrag?'); if(g===null) return; rpc('melden',{p_typ:'beitrag',p_ref:id-1e6,p_grund:g}).then(()=>alert('Danke! Das ClosingHub-Team schaut es sich an.')); }
 function sendPersonMsg(n,pid){
@@ -1739,7 +1769,6 @@ function sendPersonMsg(n,pid){
   if(S.member&&pid){ const v=t.value.trim(); rpc('partner_nachricht',{p_partner:pid,p_text:v}).then(j=>{ if(j&&j.ok){ document.getElementById('pmsg').innerHTML=`<p class="text-center text-sm" style="color:#087A4B">✓ Nachricht an ${esc(n)} gesendet. Die Antwort findest du unter <a href="#messages" onclick="closeModal();openConv('p${pid}')" class="underline">Nachrichten</a>.</p>`; chatsLoad(); } else alert(j&&j.text?j.text:'Senden hat nicht geklappt.'); }); return; }
   document.getElementById('pmsg').innerHTML=`<p class="text-emerald-400 text-center text-sm">✓ Nachricht an ${esc(n)} gesendet. Die Antwort findest du unter Nachrichten.</p>`;
 }
-setInterval(()=>{ if(!S.member||document.visibilityState!=='visible') return; if(route()==='messages'&&S.cur&&!S.crec) convLoad(); },6000);
 setInterval(()=>{ if(S.member&&document.visibilityState==='visible') chatsLoad(); },25000);
 
 /* ===== Forum über die Datenbank ===== */
@@ -1754,13 +1783,9 @@ function threadReal(){
   return `<div class="max-w-3xl mx-auto px-4 py-6">
     <button onclick="S.thread=null;render()" class="text-sm text-muted mb-4">← Forum</button>
     <div class="flex justify-between items-center mb-4 gap-3"><h1 class="font-serif text-2xl">${esc(cat)}</h1>${S.user&&cat!=='ClosingHub'?`<button class="btn-gold text-sm" onclick="newThread('${cat}')">+ Neues Thema</button>`:''}</div>
-    ${list===null?'<p class="text-sm text-muted">Lädt …</p>':list.length?list.map(t=>`<div class="card p-5 mb-3"><div class="flex items-center gap-2 mb-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block ${t.member_id?'cursor-pointer':''}" ${t.member_id?`onclick="memberModal(${t.member_id})"`:''}>${fAv(t)}</span>${nameRank(esc(String(t.name).split(' ')[0]),t.member_id?RANKS[(t.rang||1)-1]:'Team')}<span class="text-[11px] text-muted ml-auto">${cTime(t.created_at)}</span></div>
-      <h2 class="font-serif text-xl mb-2">${esc(t.titel)}</h2>${t.text?`<p class="text-sm text-muted">${esc(t.text)}</p>`:''}
-      ${t.antworten.map(a=>`<div class="border-t border-line mt-3 pt-3" ${a.beste?'style="border-color:#087A4B"':''}>${a.beste?'<p class="text-[11px] uppercase tracking-wider text-gold mb-1">✓ Beste Antwort</p>':''}<div class="flex items-center gap-2 mb-1"><span class="w-7 h-7 rounded-full overflow-hidden inline-block cursor-pointer" onclick="memberModal(${a.member_id})">${skAv(String(a.name).split(' ')[0],28,fAv(a))}</span>${nameRank(esc(String(a.name).split(' ')[0]),RANKS[(a.rang||1)-1])}</div>
-        <p class="text-sm">${esc(a.text).replace(/\n/g,'<br>')}</p>
-        <div class="flex gap-4 mt-2 text-xs">${S.member&&!a.mine?`<button onclick="fHelp(${a.id},'${cat}')" class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-semibold ${a.ich_hilfreich?'text-gold':'text-muted border-line'}" style="${a.ich_hilfreich?'border-color:#087A4B;background:rgba(8,122,75,.08)':''}">👍 ${a.ich_hilfreich?'Gefällt dir':'Gefällt mir'} · ${a.hilfreich}</button>`:`<span class="text-muted inline-flex items-center gap-1 px-1 py-1" title="${a.mine?'Deine eigene Antwort':''}">👍 ${a.hilfreich} ${a.hilfreich===1?'Like':'Likes'}</span>`}
-          ${t.mine&&!a.beste?`<button class="text-muted" onclick="rpc('forum_beste_antwort',{p_antwort:${a.id}}).then(()=>forumList('${cat}'))">Als beste Antwort markieren</button>`:''}
-          ${S.member&&!a.mine?`<button class="text-muted" onclick="fReport('forum',${a.id})">Melden</button>`:''}</div></div>`).join('')}
+    ${list===null?'<p class="text-sm text-muted">Lädt …</p>':list.length?list.map(t=>`<div id="fq${t.id}" class="card p-5 mb-3"><div class="flex items-center gap-2 mb-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block ${t.member_id?'cursor-pointer':''}" ${t.member_id?`onclick="memberModal(${t.member_id})"`:''}>${fAv(t)}</span>${nameRank(esc(String(t.name).split(' ')[0]),t.member_id?RANKS[(t.rang||1)-1]:'Team')}<span class="text-[11px] text-muted ml-auto">${cTime(t.created_at)}</span></div>
+      <div class="flex items-start justify-between gap-3"><h2 class="font-serif text-xl mb-2">${esc(t.titel)}</h2>${S.member?`<button class="text-xs text-muted shrink-0 inline-flex items-center gap-1 mt-1" onclick="shareAny('f',${t.id})">${SHARE_IC} Teilen</button>`:''}</div>${t.text?`<p class="text-sm text-muted">${esc(t.text)}</p>`:''}
+      ${fAnsList(t,cat)}
       ${S.member?`<form class="mt-4 space-y-2" onsubmit="event.preventDefault();fAnswer(${t.id},this,'${cat}')"><div id="femo${t.id}" class="hidden">${emoBar('#fin'+t.id)}</div><div class="flex gap-2"><button type="button" class="text-xl px-1" onclick="document.getElementById('femo${t.id}').classList.toggle('hidden')" aria-label="Emojis">😊</button><input id="fin${t.id}" name="a" class="input" maxlength="1000" placeholder="Deine Antwort…" autocomplete="off"><button class="btn-gold">Senden</button></div></form>`:S.user?'':`<a href="#login" class="text-sm text-gold block mt-3">Anmelden zum Antworten</a>`}
       ${S.member&&!t.mine&&t.member_id?`<button class="text-[11px] text-muted mt-2" onclick="fReport('forumfrage',${t.id})">Frage melden</button>`:''}</div>`).join('')
       :`<div class="card p-5 text-sm"><p class="font-semibold mb-1">Hier steht noch keine Frage.</p><p class="text-muted">${cat==='ClosingHub'?'Hier stellt das ClosingHub-Team Fragen an die Community.':'Stell die erste Frage – die Community hilft dir.'}</p></div>`}
@@ -1770,7 +1795,22 @@ async function fAnswer(fid,form,cat){ const v=form.a.value.trim(); if(!v) return
   const j=await rpc('forum_antwort_neu',{p_frage:fid,p_text:v}).catch(()=>null);
   if(!j||!j.ok){ alert(j&&j.text?j.text:j&&j.grund==='tempo'?'Kurz durchatmen – du antwortest gerade sehr schnell.':'Antwort konnte nicht gesendet werden.'); form.querySelector('button').disabled=false; return; }
   await forumList(cat); }
-function fHelp(aid,cat){ rpc('forum_hilfreich_umschalten',{p_antwort:aid}).then(()=>forumList(cat)); }
+function fHelp(aid,cat){ rpc('forum_hilfreich_umschalten',{p_antwort:aid}).then(j=>{ if(j&&j.ok===false) alert('Das hat nicht geklappt. Bitte lade die Seite neu.'); forumList(cat); }).catch(()=>alert('Keine Verbindung.')); }
+function fAnsOne(a,t,cat,sub){ const n=esc(String(a.name).split(' ')[0]);
+  return `<div class="${sub?'mt-3 pt-3 border-t border-line':'border-t border-line mt-3 pt-3'}" style="${sub?'margin-left:36px;':''}${a.beste?'border-color:#087A4B':''}">${a.beste?'<p class="text-[11px] uppercase tracking-wider text-gold mb-1">✓ Beste Antwort</p>':''}<div class="flex items-center gap-2 mb-1"><span class="rounded-full overflow-hidden inline-block cursor-pointer" style="width:${sub?24:28}px;height:${sub?24:28}px" onclick="openProfile(${a.member_id})">${skAv(n,sub?24:28,fAv(a))}</span>${nameRank(n,RANKS[(a.rang||1)-1])}<span class="text-[11px] text-muted ml-auto">${cTime(a.created_at)}</span></div>
+    <p class="text-sm" style="overflow-wrap:anywhere">${esc(a.text).replace(/\n/g,'<br>')}</p>
+    <div class="flex flex-wrap mt-2 text-xs items-center" style="gap:6px 16px">${S.member?`<button onclick="fHelp(${a.id},'${cat}')" class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-semibold ${a.ich_hilfreich?'text-gold':'text-muted border-line'}" style="${a.ich_hilfreich?'border-color:#087A4B;background:rgba(8,122,75,.08)':''}">👍 ${a.ich_hilfreich?'Gefällt dir':'Gefällt mir'} · ${a.hilfreich}</button>`:`<span class="text-muted">👍 ${a.hilfreich}</span>`}
+      ${S.member?`<button class="text-muted font-semibold" onclick="fReplyOpen(${a.parent_id||a.id},'${n.replace(/'/g,'')}')">Antworten</button>`:''}
+      ${t.mine&&!a.beste&&!sub?`<button class="text-muted" onclick="rpc('forum_beste_antwort',{p_antwort:${a.id}}).then(()=>forumList('${cat}'))">Als beste Antwort markieren</button>`:''}
+      ${S.member&&!a.mine?`<button class="text-muted" onclick="fReport('forum',${a.id})">Melden</button>`:''}</div></div>`; }
+function fAnsList(t,cat){ const all=t.antworten||[], top=all.filter(a=>!a.parent_id), kids=id=>all.filter(a=>a.parent_id===id);
+  return top.map(a=>fAnsOne(a,t,cat,false)+kids(a.id).map(k=>fAnsOne(k,t,cat,true)).join('')
+    +(S.fre&&S.fre.id===a.id?`<form class="flex gap-2 mt-3" style="margin-left:36px" onsubmit="event.preventDefault();fReplySend(${t.id},${a.id},this,'${cat}')"><input id="fre${a.id}" name="a" class="input text-sm" maxlength="1000" placeholder="Antwort an ${esc(S.fre.n)} …" autocomplete="off" value="${esc(S.fre.v||'')}" oninput="S.fre.v=this.value"><button type="button" class="text-xl px-1" onclick="emoQuick('fre${a.id}')" aria-label="Emoji">😊</button><button class="btn-gold text-sm">Senden</button></form>`:'')).join(''); }
+function fReplyOpen(id,n){ S.fre={id,n,v:''}; render(); setTimeout(()=>{ const i=document.getElementById('fre'+id); if(i) i.focus(); },30); }
+async function fReplySend(fid,pid,form,cat){ const v=form.a.value.trim(); if(!v) return; form.querySelector('button.btn-gold').disabled=true;
+  const j=await rpc('forum_antwort_auf',{p_frage:fid,p_text:v,p_parent:pid}).catch(()=>null);
+  if(!j||!j.ok){ alert(j&&j.text?j.text:'Antwort konnte nicht gesendet werden.'); form.querySelector('button.btn-gold').disabled=false; return; }
+  S.fre=null; await forumList(cat); }
 function fReport(typ,id){ const g=prompt('Warum meldest du das?'); if(g===null) return; rpc('melden',{p_typ:typ,p_ref:id,p_grund:g}).then(()=>alert('Danke! Das ClosingHub-Team schaut es sich an.')); }
 async function saveThreadReal(f){
   const q=f.q.value.trim(); if(q.length<5){ const e=document.getElementById('ntErr'); e.textContent='Bitte formuliere deine Frage etwas ausführlicher.'; e.style.display='block'; return; }
@@ -1787,13 +1827,13 @@ function realOffers(){ if(S.mo===null){ S.mo=[]; S._moLoading=true; marktLoad().
   return (S.mo||[]).map(o=>({real:1,id:o.id,cat:o.kategorie,t:esc(o.titel),desc:o.beschreibung,pr:(+o.preis).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:2}),s:esc(String(o.name).split(' ')[0]),full:o.name,r:RANKS[(o.rang||1)-1],av:o.avatar_url,mid:o.member_id,mine:o.mine,ab:o.abzeichen||[],bis:o.laeuft_bis,med:Array.isArray(o.medien)?o.medien:[]})); }
 function useRealOffers(){ return S.member || (S.mo&&S.mo.length); }
 function realOfferCard(o){
-  return `<div class="card p-4 flex flex-col gap-3">
+  return `<div id="mo${o.id}" class="card p-4 flex flex-col gap-3">
     <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">${esc(o.cat)}</span><p class="font-semibold leading-snug mt-0.5">${o.t}</p></div><span class="font-serif text-xl text-gold whitespace-nowrap leading-none mt-1">${o.pr} €</span></div>
     ${o.desc?`<p class="text-xs text-muted">${esc(o.desc).slice(0,160)}${o.desc.length>160?' …':''}</p>`:''}
-    ${(o.med||[]).length?`<div class="flex gap-2 overflow-x-auto">${o.med.map(m=>m.typ==='video'?`<video src="${esc(m.url)}#t=0.1" class="h-24 rounded-xl border border-line shrink-0" controls playsinline preload="metadata"></video>`:`<img src="${esc(m.url)}" class="h-24 rounded-xl border border-line object-cover shrink-0 cursor-pointer" onclick="window.open(this.src,'_blank')">`).join('')}</div>`:''}
-    <button onclick="memberModal(${o.mid})" class="flex items-center gap-2 text-sm text-left min-w-0"><span class="w-7 h-7 rounded-full overflow-hidden shrink-0">${skAv(o.s,28,o.av?`<img src="${esc(o.av)}" class="w-full h-full object-cover">`:initAv(o.full))}</span><span class="font-medium truncate">${o.s}</span>${rkChip(o.r)}</button>
+    ${(o.med||[]).length?`<div class="flex gap-2 overflow-x-auto">${o.med.map(m=>m.typ==='video'?`<video src="${esc(m.url)}#t=0.1" class="h-24 rounded-xl border border-line shrink-0" controls playsinline preload="metadata"></video>`:`<img src="${esc(m.url)}" class="h-24 rounded-xl border border-line object-cover shrink-0 cursor-pointer" onclick="lightbox(this.src)">`).join('')}</div>`:''}
+    <button onclick="openProfile(${o.mid})" class="flex items-center gap-2 text-sm text-left min-w-0"><span class="w-7 h-7 rounded-full overflow-hidden shrink-0">${skAv(o.s,28,o.av?`<img src="${esc(o.av)}" class="w-full h-full object-cover">`:initAv(o.full))}</span><span class="font-medium truncate">${o.s}</span>${rkChip(o.r)}</button>
     <div class="flex items-center justify-between gap-3 border-t border-line pt-3"><span class="text-xs text-muted truncate">${o.ab.length?o.ab.slice(0,2).map(a=>'🏅 '+esc(a)).join(' · '):'Neu im Marktplatz'}</span>
-      ${o.mine?'<span class="text-xs text-gold">Dein Angebot</span>':`<button onclick="${S.member?`anfrageModal(${o.id})`:`go('login')`}" class="btn-gold text-xs whitespace-nowrap" style="padding:.4rem .9rem">Anfragen</button>`}</div></div>`;
+      <span class="flex items-center gap-2 shrink-0">${S.member?`<button onclick="shareAny('o',${o.id})" class="text-muted p-1" title="Teilen" aria-label="Angebot teilen">${SHARE_IC}</button>`:''}${o.mine?'<span class="text-xs text-gold">Dein Angebot</span>':`<button onclick="${S.member?`anfrageModal(${o.id})`:`go('login')`}" class="btn-gold text-xs whitespace-nowrap" style="padding:.4rem .9rem">Anfragen</button>`}</span></div></div>`;
 }
 function anfrageModal(id){ const o=realOffers().find(x=>x.id===id); if(!o) return;
   document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()"><form class="card w-full max-w-md p-5 space-y-3 relative" onclick="event.stopPropagation()" onsubmit="event.preventDefault();anfrageSend(${id},this)">
@@ -1852,7 +1892,7 @@ function jobDetail(j,action){
   const when=j.d===0?'Heute':j.d===1?'Gestern':'vor '+j.d+' Tagen';
   return `<div class="card overflow-hidden h-fit md:sticky md:top-6">
     <div class="p-5">
-      <div class="flex flex-wrap items-center gap-1.5 mb-3">
+      <div class="flex flex-wrap items-center gap-1.5 mb-3">${S.member?`<button onclick="shareAny('j',${j.id})" class="order-last ml-auto text-xs text-muted inline-flex items-center gap-1" title="Job teilen">${SHARE_IC} Teilen</button>`:''}
         ${j.top?'<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style="background:linear-gradient(135deg,#D9B45A,#B8913A);color:#1a1405">★ Top-Job</span>':''}
         ${roles.map(r=>`<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border text-gold" style="border-color:#087A4B">${esc(r)}</span>`).join('')}
         <span class="text-[11px] text-muted px-2 py-0.5 rounded-full border border-line">🛡️ Auftraggeber geprüft & anonym</span>
@@ -2002,17 +2042,20 @@ function mkShare(){ const t='Ich hab heute den Daily Close auf ClosingHub geknac
 })();
 // Glücksrad
 function grFriday(){ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Berlin'})); return d.getDay()===5&&d.getHours()>=8; }
+function grWeek(){ return new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Berlin'}); }
+function grDemoDone(){ try{ return localStorage.getItem('ch_gr_demo')===grWeek(); }catch(e){ return false; } }
 function grFields(){ const f=S.gr&&S.gr.felder||[]; return f.length?f.map(x=>({id:x.id,t:x.t})):GR_DEMO.map((t,i)=>({id:'d'+i,t,demo:1})); }
 function wheelCard(){
   if(!grFriday()) return ''; const real=S.gr&&S.gr.felder&&S.gr.felder.length, demo=!real;
   if(!demo&&!S.gr.offen) return '';
+  if(!S.grJust&&(demo?grDemoDone():S.gr.gedreht)) return '';  // nach dem Drehen ausgeblendet bis nächsten Freitag
   const won=demo?S.grDemoWin:(S.gr.gedreht?S.gr.gewinn:null), f=grFields(), n=f.length, seg=360/n;
   const cols=['#087A4B','#F4EFE2','#06603B','#F4EFE2'];
   const grad=f.map((x,i)=>`${cols[i%4]} ${i*seg}deg ${(i+1)*seg}deg`).join(',');
   const labs=f.map((x,i)=>{ const dark=cols[i%4]==='#F4EFE2'; return `<div class="gr-lab" style="transform:rotate(${i*seg+seg/2-90}deg);color:${dark?'#0E1A2B':'#fff'}"><span>${esc(x.t)}</span></div>`; }).join('');
   const lines=f.map((x,i)=>`<div style="position:absolute;left:50%;top:0;width:2px;height:50%;margin-left:-1px;background:rgba(217,180,90,.9);transform-origin:50% 100%;transform:rotate(${i*seg}deg)"></div>`).join('');
   return `<article class="card mk" id="grcard"><div class="mk-hd"><div class="mk-logo">HUB</div><div><div class="mk-n">ClosingHub${demo?'<span class="mk-demo">Beispiel</span>':''}</div><div class="mk-t">Freitag · 1 Dreh pro Woche</div></div><span class="mk-chip" style="background:rgba(217,180,90,.2);color:#8a6a12">Glücksrad</span></div>
-    <div class="mk-bd" style="text-align:center"><p class="mk-q">${won?'Dein Freitags-Gewinn 🎉':'Dein Freitags-Dreh wartet 🎡'}</p><p class="mk-t" style="margin-top:4px">${won?'Nächsten Freitag ab 8 Uhr geht\'s weiter.':'Einmal pro Woche, nur heute bis 23:59 Uhr.'}</p>
+    <div class="mk-bd" style="text-align:center"><p class="mk-q">${won?'Dein Freitags-Gewinn 🎉':'Dein Freitags-Dreh wartet 🎡'}</p><p class="mk-t" style="margin-top:4px">${won?'Glückwunsch! Nächsten Freitag ab 8 Uhr kannst du wieder drehen.':'Einmal pro Woche, nur heute bis 23:59 Uhr.'}</p>
     <div class="gr-wrap"><div class="gr-pin"></div><div class="gr-wheel" id="grw" style="background:conic-gradient(${grad})">${lines}${labs}</div><button class="gr-hub" ${won?'disabled':'onclick="grSpin(this)"'}>${won?'🎉':'DREHEN'}</button></div>
     <div class="gr-win" id="grwin" style="${won?'':'display:none'}"><span class="mk-t">Dein Gewinn</span><b>${esc(won||'')}</b><span class="mk-t">${demo?'Beispiel – echte Gewinne kommen bald.':'Wird deinem Konto gutgeschrieben.'}</span></div></div></article>`;
 }
@@ -2021,6 +2064,8 @@ async function grSpin(b){ b.disabled=true; const f=grFields(); let k, txt;
   if(f[0].demo){ k=Math.floor(Math.random()*f.length); txt=f[k].t; }
   else { const j=await rpc('gluecksrad_drehen',{}).catch(()=>null); if(!j||!j.ok){ b.disabled=false; alert(j&&j.grund==='gedreht'?'Du hast diese Woche schon gedreht.':'Das hat gerade nicht geklappt.'); return; } k=Math.max(0,f.findIndex(x=>x.id===j.id)); txt=j.t; }
   const seg=360/f.length; document.getElementById('grw').style.transform=`rotate(${360*6+(360-(k*seg+seg/2))}deg)`;
+  S.grJust=true; if(f[0].demo){ try{ localStorage.setItem('ch_gr_demo',grWeek()); }catch(e){} }
+  setTimeout(()=>{ const c=document.getElementById('grcard'); if(c){ c.style.transition='opacity .6s,max-height .6s'; c.style.overflow='hidden'; c.style.maxHeight=c.offsetHeight+'px'; requestAnimationFrame(()=>{ c.style.opacity=0; c.style.maxHeight='0px'; c.style.margin='0'; }); setTimeout(()=>{ S.grJust=false; c.remove(); },700); } else S.grJust=false; },11000);
   setTimeout(()=>{ if(f[0].demo) S.grDemoWin=txt; else { S.gr.gedreht=true; S.gr.gewinn=txt; } const w=document.getElementById('grwin'); w.style.display=''; w.querySelector('b').textContent=txt; b.textContent='🎉'; },4300);
 }
 
@@ -2128,9 +2173,9 @@ async function openPost(pid,withC){ pid=+pid; if(!pid) return;
 function onePostView(posts){ return `<div class="max-w-lg mx-auto px-4 py-6"><button onclick="S.onePost=null;render()" class="inline-flex items-center gap-1 text-sm font-semibold mb-4" style="color:#087A4B"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zum Feed</button>${posts}</div>`; }
 function noteGo(l){ if(!l) return; let m;
   if((m=/^post:(\d+)(:k)?$/.exec(l))) return openPost(m[1],!!m[2]);
-  if((m=/^mitglied:(\d+)$/.exec(l))) return memberModal(+m[1]); }
+  if((m=/^mitglied:(\d+)$/.exec(l))) return openProfile(+m[1]); }
 // Geteilter Link #p123 öffnet den Beitrag
-(()=>{ const m=/^#p(\d+)$/.exec(location.hash||''); if(m){ S.route='feed'; try{ history.replaceState(null,'',location.pathname+'#feed'); }catch(e){} setTimeout(()=>openPost(m[1]),900); } })();
+
 // Schnelle Aktualisierung: Zähler alle 8 s, Chat offen alle 3 s – ohne die Seite neu aufzubauen
 S._lastNm=-1;
 setInterval(async()=>{ if(!S.member||document.visibilityState!=='visible') return;
@@ -2176,16 +2221,7 @@ async function cmSend(f){ const v=f.c.value.trim(); if(!v) return; const btn=f.q
   const p=(S.rp||[]).find(x=>x.id===S.cmx.id); if(p&&route()==='feed') render(); }
 
 // ===== Teilen (eigene Ansicht statt Windows-/System-Fenster) =====
-function shareReal(id){ const pid=id-1e6, url=`https://www.getclosinghub.com/app#p${pid}`, txt='Schau dir diesen Beitrag auf ClosingHub an: '+url;
-  const chats=((S.cl&&S.cl.chats)||[]).slice(0,8), mobile=window.matchMedia&&matchMedia('(pointer:coarse)').matches&&navigator.share;
-  sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Beitrag teilen</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
-    ${S.member?`<div><p class="text-xs uppercase tracking-wider text-muted mb-2">An Kontakte in ClosingHub</p>${chats.length?`<div class="flex gap-3 overflow-x-auto pb-1">${chats.map(c=>`<button class="flex flex-col items-center gap-1 shrink-0 w-16" onclick="shareToChat(${c.id},${pid},this)"><span class="w-11 h-11 rounded-full overflow-hidden">${c.avatar_url?`<img src="${esc(c.avatar_url)}" class="w-full h-full object-cover">`:initAv(c.name)}</span><span class="text-[11px] truncate w-full text-center">${esc(String(c.name).split(' ')[0])}</span></button>`).join('')}</div>`:'<p class="text-sm text-muted">Noch keine Chats. Öffne ein Profil und tippe auf „Nachricht schreiben“.</p>'}</div>`:''}
-    <div><p class="text-xs uppercase tracking-wider text-muted mb-2">Nach draußen</p><div class="grid grid-cols-3 gap-2 text-sm">
-      <a class="btn-ghost text-center" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(txt)}">WhatsApp</a>
-      <a class="btn-ghost text-center" target="_blank" rel="noopener" href="https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent('Schau dir diesen Beitrag auf ClosingHub an')}">Telegram</a>
-      <a class="btn-ghost text-center" href="mailto:?subject=${encodeURIComponent('Beitrag auf ClosingHub')}&body=${encodeURIComponent(txt)}">E-Mail</a></div></div>
-    <div class="flex gap-2"><input class="input text-sm" readonly value="${url}" onclick="this.select()"><button class="btn-gold whitespace-nowrap" onclick="copyTxt('${url}',this)">Link kopieren</button></div>
-    ${mobile?`<button class="text-sm text-muted w-full" onclick="navigator.share({title:'ClosingHub',text:'Schau dir diesen Beitrag auf ClosingHub an',url:'${url}'}).catch(()=>{})">Weitere Apps …</button>`:''}`); }
+function shareReal(id){ shareAny('p',id-1e6); }
 function copyTxt(t,b){ const done=()=>{ b.textContent='✓ Kopiert'; setTimeout(()=>b.textContent='Link kopieren',1800); };
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done).catch(()=>{ prompt('Link kopieren:',t); });
   else prompt('Link kopieren:',t); }
@@ -2205,7 +2241,7 @@ async function srRun(){ const q=(S.sq||'').trim(), box=document.getElementById('
   const ql=q.toLowerCase(), jobs=(JOBS||[]).filter(j=>(j.live||!S.member)&&[j.t,j.ind,j.p,j.reg,j.roles].join(' ').toLowerCase().includes(ql)).slice(0,6);
   const offs=(typeof realOffers==='function'&&S.member?realOffers():[]).filter(o=>[o.t,o.cat,o.desc,o.full].join(' ').toLowerCase().includes(ql)).slice(0,6);
   const sec=(t,h)=>`<p class="text-xs uppercase tracking-wider text-muted mt-5 mb-2">${t}</p>${h}`;
-  box.innerHTML=(S.member?sec('Mitglieder',mem.length?mem.map(m=>`<button class="w-full flex items-center gap-3 text-left p-3 rounded-xl hover:bg-panel" onclick="memberModal(${m.id})"><span class="w-11 h-11 rounded-full overflow-hidden shrink-0">${m.avatar_url?`<img src="${esc(m.avatar_url)}" class="w-full h-full object-cover">`:initAv(m.name)}</span><span class="min-w-0"><span class="block text-sm">${nameRank(esc(m.name),RANKS[(m.rang||1)-1])}</span><span class="text-xs text-muted">${esc([m.rolle,m.land].filter(Boolean).join(' · '))}</span></span></button>`).join(''):'<p class="text-sm text-muted">Kein Mitglied gefunden.</p>'):sec('Mitglieder','<p class="text-sm text-muted"><a href="#login" class="text-gold">Melde dich an</a>, um Mitglieder zu finden.</p>'))
+  box.innerHTML=(S.member?sec('Mitglieder',mem.length?mem.map(m=>`<button class="w-full flex items-center gap-3 text-left p-3 rounded-xl hover:bg-panel" onclick="openProfile(${m.id})"><span class="w-11 h-11 rounded-full overflow-hidden shrink-0">${m.avatar_url?`<img src="${esc(m.avatar_url)}" class="w-full h-full object-cover">`:initAv(m.name)}</span><span class="min-w-0"><span class="block text-sm">${nameRank(esc(m.name),RANKS[(m.rang||1)-1])}</span><span class="text-xs text-muted">${esc([m.rolle,m.land].filter(Boolean).join(' · '))}</span></span></button>`).join(''):'<p class="text-sm text-muted">Kein Mitglied gefunden.</p>'):sec('Mitglieder','<p class="text-sm text-muted"><a href="#login" class="text-gold">Melde dich an</a>, um Mitglieder zu finden.</p>'))
     +sec('Jobs',jobs.length?jobs.map(j=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="S.job=${j.id};S.jopen=1;go('jobs')"><b class="text-sm block">${esc(j.t)}</b><span class="text-xs text-muted">${esc([j.ind,j.reg,j.pay].filter(Boolean).join(' · '))}</span></button>`).join(''):'<p class="text-sm text-muted">Kein Job gefunden.</p>')
     +(S.member?sec('Marktplatz',offs.length?offs.map(o=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="S.mcat='${esc(o.cat).replace(/'/g,'')}';go('markt')"><b class="text-sm block">${o.t}</b><span class="text-xs text-muted">${esc(o.cat)} · ${esc(o.full||'')}</span></button>`).join(''):'<p class="text-sm text-muted">Kein Angebot gefunden.</p>'):''); }
 
@@ -2213,6 +2249,125 @@ async function partnerAppMsg(n,mid,v){ const box=document.getElementById('pmsg')
   try{ const c=await rpc('chat_starten',{p_member:mid}); if(!c||!c.ok) throw 0; const j=await rpc('nachricht_senden',{p_chat:c.chat,p_text:v,p_media_pfad:null,p_media_typ:null}); if(!j||!j.ok){ alert(j&&j.text?j.text:'Senden hat nicht geklappt.'); return; }
     box.innerHTML=`<p class="text-center text-sm" style="color:#087A4B">✓ Nachricht an ${esc(n)} gesendet. <a href="javascript:void(0)" onclick="closeModal();openConv('m${c.chat}')" class="underline font-semibold">Zum Chat</a></p>`; chatsLoad();
   }catch(e){ alert('Senden hat nicht geklappt. Versuch es gleich nochmal.'); } }
+// ===== Runde 2: Teilen von allem, Link-Vorschau, Profilseite, Lightbox, Emojis, Recht, Ladeansicht =====
+const SHARE_IC='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v13M7 8l5-5 5 5"/></svg>';
+const LK_NAME={p:'Beitrag',j:'Job',f:'Forum-Frage',o:'Marktplatz-Angebot',m:'Profil'};
+const lkUrl=(k,id)=>`https://www.getclosinghub.com/app#${k}${id}`;
+
+// --- Emoji-Auswahl für jedes Eingabefeld
+function emoQuick(id,btn){ const old=document.getElementById('emopop'); if(old){ old.remove(); if(old._for===id) return; }
+  const d=document.createElement('div'); d.id='emopop'; d.className='emopop'; d._for=id; d.innerHTML=emoBar('#'+id); document.body.appendChild(d);
+  const r=btn.getBoundingClientRect(); let top=r.top-d.offsetHeight-8; if(top<8) top=r.bottom+8; d.style.top=top+'px'; d.style.left=Math.max(8,Math.min(innerWidth-244,r.left-100))+'px';
+  setTimeout(()=>{ const off=e=>{ if(!d.contains(e.target)&&e.target!==btn){ d.remove(); document.removeEventListener('pointerdown',off,true); } }; document.addEventListener('pointerdown',off,true); },0); }
+
+// --- Bild groß ansehen
+function lightbox(src){ const d=document.createElement('div'); d.className='lb'; d.id='lbox'; d.innerHTML=`<img src="${esc(src)}" alt="Bild"><button aria-label="Schließen">✕</button>`;
+  const close=()=>{ d.remove(); document.removeEventListener('keydown',k); }, k=e=>{ if(e.key==='Escape') close(); };
+  d.onclick=close; document.addEventListener('keydown',k); document.body.appendChild(d); }
+
+// --- Vorschau-Karte für geteilte Inhalte im Chat
+S.lkc=S.lkc||{};
+async function lkData(k,id){ const key=k+id; if(key in S.lkc) return S.lkc[key]; S.lkc[key]=null;
+  let d=null;
+  try{
+    if(k==='p'){ const r=await rpc('post_laden',{p_id:id}); if(r){ const p=mapPost(r); d={t:'Beitrag von '+String(r.name||'').split(' ')[0],s:(r.text||'').slice(0,140),img:r.media_typ==='bild'?r.media_url:null,vid:r.media_typ==='video'?r.media_url:null}; } }
+    else if(k==='m'){ const r=await rpc('profil_laden',{p_member:id}); if(r) d={t:r.name,s:[r.rolle,RANKS[(r.rang||1)-1]].filter(Boolean).join(' · '),av:r.avatar_url}; }
+    else if(k==='f'){ const r=await rpc('forum_frage_info',{p_id:id}); if(r) d={t:r.titel,s:'Forum · '+r.kategorie}; }
+    else if(k==='j'){ const j=(JOBS||[]).find(x=>x.id===id); if(j) d={t:j.t,s:[j.ind,j.pay].filter(Boolean).join(' · ')}; }
+    else if(k==='o'){ const o=(typeof realOffers==='function'?realOffers():[]).find(x=>x.id===id); if(o) d={t:String(o.t).replace(/<[^>]*>/g,''),s:[o.cat,o.full].filter(Boolean).join(' · '),img:o.med&&o.med[0]&&o.med[0].typ!=='video'?o.med[0].url:null}; }
+  }catch(e){}
+  S.lkc[key]=d||{gone:1}; document.querySelectorAll(`[data-lk="${key}"]`).forEach(el=>{ el.outerHTML=linkCard(k,id); }); cmStick(); return S.lkc[key]; }
+function linkCard(k,id){ const key=k+id, d=S.lkc[key]; if(d===undefined) setTimeout(()=>lkData(k,id),0);
+  const kind=LK_NAME[k]||'Inhalt';
+  if(!d) return `<span class="lkcard" data-lk="${key}"><span class="lkb"><span class="lkk">${kind}</span><span class="lks">Lädt Vorschau …</span></span></span>`;
+  if(d.gone) return `<span class="lkcard" style="cursor:default"><span class="lkb"><span class="lkk">${kind}</span><span class="lks">Nicht mehr verfügbar</span></span></span>`;
+  return `<button type="button" class="lkcard" onclick="openLink('${k}',${id})">${d.img?`<img src="${esc(d.img)}" alt="" onload="cmStick()">`:d.vid?`<video src="${esc(d.vid)}#t=0.1" muted preload="metadata" onloadedmetadata="cmStick()"></video>`:''}
+    <span class="lkb">${d.av!==undefined?`<span class="flex items-center gap-2"><span class="rounded-full overflow-hidden shrink-0" style="width:34px;height:34px">${d.av?`<img src="${esc(d.av)}" style="width:34px;height:34px;object-fit:cover">`:initAv(d.t)}</span><span class="min-w-0"><span class="lkk">${kind}</span><span class="lkt">${esc(d.t)}</span></span></span>`:`<span class="lkk">${kind}</span><span class="lkt">${esc(d.t)}</span>`}
+    ${d.s?`<span class="lks">${esc(d.s)}</span>`:''}<span class="lkk" style="display:block;margin-top:4px">Ansehen →</span></span></button>`; }
+
+// --- Geteilte Links öffnen (#p123 Beitrag, #j Job, #f Forum, #o Angebot, #m Mitglied)
+async function openLink(k,id){ id=+id; closeModal(); const sh=document.getElementById('psheet'); if(sh) sh.remove();
+  if(k==='p') return openPost(id);
+  if(k==='m') return openProfile(id);
+  if(k==='j'){ S.job=id; S.jopen=1; S.sent=false; return go('jobs'); }
+  if(k==='o'){ const o=(typeof realOffers==='function'?realOffers():[]).find(x=>x.id===id); if(o&&o.cat) S.mcat=o.cat; S.mhl=id; go('markt'); setTimeout(()=>{ const e=document.getElementById('mo'+id); if(e){ e.scrollIntoView({block:'center'}); e.style.boxShadow='0 0 0 2px #087A4B'; } },600); return; }
+  if(k==='f'){ const r=await rpc('forum_frage_info',{p_id:id}).catch(()=>null); if(!r){ alert('Diese Frage ist nicht mehr verfügbar.'); return; }
+    S.thread=r.kategorie; delete S.fl[r.kategorie]; go('forum');
+    const t0=Date.now(), iv=setInterval(()=>{ const e=document.getElementById('fq'+id); if(e||Date.now()-t0>5000){ clearInterval(iv); if(e){ e.scrollIntoView({block:'start',behavior:'smooth'}); e.style.boxShadow='0 0 0 2px #087A4B'; } } },150); } }
+function lkHash(){ const m=/^#([pjfom])(\d+)$/.exec(location.hash||''); if(!m) return false; try{ history.replaceState(null,'',location.pathname+'#feed'); }catch(e){} S.route='feed'; setTimeout(()=>openLink(m[1],+m[2]),SES&&!S.member?1200:100); return true; }
+lkHash(); window.addEventListener('hashchange',()=>{ lkHash(); });
+
+// --- Teilen: Beiträge, Jobs, Forum, Angebote, Profile
+S.kontakte=null;
+async function kontakteLoad(){ try{ S.kontakte=await rpc('meine_kontakte')||[]; }catch(e){ S.kontakte=[]; } const b=document.getElementById('shK'); if(b) b.innerHTML=shareContacts(); }
+function shareContacts(){ if(S.kontakte===null) return '<p class="text-sm text-muted">Lädt …</p>'; const q=(S.shq||'').toLowerCase(), l=S.kontakte.filter(c=>!q||String(c.name).toLowerCase().includes(q));
+  if(!S.kontakte.length) return '<p class="text-sm text-muted">Noch keine Kontakte. Folge Mitgliedern oder schreib jemandem – dann kannst du hier direkt teilen.</p>';
+  return l.length?`<div class="flex gap-3 overflow-x-auto pb-1">${l.map(c=>`<button class="flex flex-col items-center gap-1 shrink-0 w-16" onclick="shareToMember(${c.id},this)"><span class="rounded-full overflow-hidden" style="width:48px;height:48px">${c.avatar_url?`<img src="${esc(c.avatar_url)}" class="w-full h-full object-cover">`:initAv(c.name)}</span><span class="text-[11px] truncate w-full text-center">${esc(String(c.name).split(' ')[0])}</span></button>`).join('')}</div>`:'<p class="text-sm text-muted">Niemand gefunden.</p>'; }
+function shareAny(k,id){ id=+id; const url=lkUrl(k,id), kind=LK_NAME[k]||'Inhalt', txt=`Schau dir das auf ClosingHub an (${kind}): `+url, mobile=window.matchMedia&&matchMedia('(pointer:coarse)').matches&&navigator.share;
+  S.shk=[k,id]; S.shq=''; if(S.member) kontakteLoad();
+  sheet(`<div class="flex justify-between items-center"><p class="font-semibold">${kind} teilen</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
+    ${S.member?`<div><p class="text-xs uppercase tracking-wider text-muted mb-2">An Mitglieder in ClosingHub</p><input class="input text-sm mb-3" placeholder="Kontakt suchen …" oninput="S.shq=this.value;document.getElementById('shK').innerHTML=shareContacts()"><div id="shK">${shareContacts()}</div>
+      <p class="text-[11px] text-muted mt-2">Leute, denen du folgst, und alle, mit denen du schon schreibst. Sie bekommen eine Vorschau im Chat.</p></div>`:''}
+    <div><p class="text-xs uppercase tracking-wider text-muted mb-2">Nach draußen</p><div class="grid grid-cols-3 gap-2 text-sm">
+      <a class="btn-ghost text-center" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(txt)}">WhatsApp</a>
+      <a class="btn-ghost text-center" target="_blank" rel="noopener" href="https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent('Schau dir das auf ClosingHub an')}">Telegram</a>
+      <a class="btn-ghost text-center" href="mailto:?subject=${encodeURIComponent(kind+' auf ClosingHub')}&body=${encodeURIComponent(txt)}">E-Mail</a></div></div>
+    <div class="flex gap-2"><input class="input text-sm" readonly value="${url}" onclick="this.select()"><button class="btn-gold whitespace-nowrap" onclick="copyTxt('${url}',this)">Link kopieren</button></div>
+    ${mobile?`<button class="text-sm text-muted w-full" onclick="navigator.share({title:'ClosingHub',text:'Schau dir das auf ClosingHub an',url:'${url}'}).catch(()=>{})">Weitere Apps …</button>`:''}`); }
+async function shareToMember(mid,b){ const [k,id]=S.shk||[]; if(!k) return; b.disabled=true; const lab=b.querySelector('span:last-child');
+  try{ const c=await rpc('chat_starten',{p_member:mid}); if(!c||!c.ok) throw new Error(c&&c.grund==='tempo'?'Du hast in der letzten Stunde schon viele neue Chats gestartet. Versuch es gleich nochmal.':'');
+    const j=await rpc('nachricht_senden',{p_chat:c.chat,p_text:lkUrl(k,id),p_media_pfad:null,p_media_typ:null}); if(!j||!j.ok) throw new Error(j&&j.text||'');
+    b.style.opacity='.55'; lab.textContent='✓ Gesendet'; chatsLoad(); }
+  catch(e){ b.disabled=false; alert(e.message||'Senden hat nicht geklappt.'); } }
+
+// --- Eigene Profilseite für jedes Mitglied
+S.mpid=null; S.mp=null; try{ S.mpid=+sessionStorage.getItem('ch_mpid')||null; }catch(e){}
+function openProfile(mid){ mid=+mid; if(!mid) return; if(S.member&&mid===S.member.id){ closeModal(); go('profile'); return; }
+  closeModal(); S.mpid=mid; S.mp=null; try{ sessionStorage.setItem('ch_mpid',mid); }catch(e){} go('mitglied'); }
+async function mpLoad(mid){ let p=null, posts=[]; try{ [p,posts]=await Promise.all([rpc('profil_laden',{p_member:mid}),rpc('feed_laden',{p_vor:null,p_limit:60,p_kats:null,p_member:mid})]); }catch(e){}
+  if(S.mpid!==mid) return; S.mp=p?{p,posts:(posts||[]).map(mapPost)}:{gone:1}; if(route()==='mitglied') render(); }
+function mitglied(){
+  if(!S.member&&!S.adminPreview) return `<div class="max-w-lg mx-auto px-4 py-10 text-center"><p class="text-sm text-muted mb-4">Melde dich an, um Profile zu sehen.</p><a href="#login" class="btn-gold">Anmelden</a></div>`;
+  const back=`<button onclick="history.length>1?history.back():go('feed')" class="inline-flex items-center gap-1 text-sm font-semibold mb-4" style="color:#087A4B"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zurück</button>`;
+  if(!S.mpid) return `<div class="max-w-2xl mx-auto px-4 py-6">${back}<p class="text-sm text-muted">Kein Profil ausgewählt.</p></div>`;
+  if(!S.mp){ S.mp={loading:1}; mpLoad(S.mpid); }
+  if(S.mp.loading){ return `<div class="max-w-2xl mx-auto px-4 py-6">${back}<p class="text-sm text-muted">Lädt …</p></div>`; }
+  if(S.mp.gone) return `<div class="max-w-2xl mx-auto px-4 py-6">${back}<p class="text-sm text-muted">Dieses Profil ist nicht verfügbar.</p></div>`;
+  const p=S.mp.p, first=String(p.name).split(' ')[0]; S.skMap=S.skMap||{}; S.skMap[first]=p.streak;
+  const line=[p.rolle]; if(p.erfahrung) line.push(p.erfahrung+' Jahre Erfahrung'); if(p.land) line.push(esc(p.land)); if(p.sprachen) line.push(esc(p.sprachen));
+  const badges=Array.isArray(p.abzeichen)?p.abzeichen:[...(p.day_one?['Day One']:[]),...(p.premium?['Premium']:[])];
+  const since=p.dabei_seit?new Date(p.dabei_seit).toLocaleDateString('de-DE',{month:'long',year:'numeric'}):'';
+  return `<div class="max-w-2xl mx-auto px-4 py-6">${back}
+    <div class="card p-5 md:p-6"${p.partner?` style="border-color:#D9B45A"`:''}>
+      <div class="flex items-center gap-5">${skAv(first,96,p.avatar_url?`<img src="${esc(p.avatar_url)}" class="w-full h-full object-cover">`:initAv(p.name),'shrink-0')}
+        <div class="min-w-0"><div class="text-xl">${nameRank(esc(first),RANKS[(p.rang||1)-1])}</div>${p.partner?`<div class="mt-1">${typeof partnerChip==='function'?partnerChip():'<span class="text-xs text-gold font-semibold">Partner</span>'}</div>`:''}
+          <div class="flex gap-5 text-sm mt-2"><span><b id="mmF">${p.follower}</b> Follower</span><span><b>${p.gefolgt}</b> gefolgt</span><span><b>${p.beitraege}</b> Beiträge</span></div></div></div>
+      <p class="text-sm mt-4">${line.filter(Boolean).join(' · ')}</p>${p.bio?`<p class="text-sm text-muted mt-1" style="white-space:pre-line">${esc(p.bio)}</p>`:''}
+      ${since?`<p class="text-xs text-muted mt-2">Dabei seit ${since}${p.streak?` · 🔥 ${p.streak} Tage Streak`:''}</p>`:''}
+      ${badges.length?`<div class="flex flex-wrap gap-2 mt-4">${badges.map(b=>badgeIcon(b)).join('')}</div>`:''}
+      ${S.member?`<div class="grid grid-cols-3 gap-2 mt-5"><button id="mmBtn" class="${p.folge?'btn-ghost':'btn-gold'}" onclick="mpFollow(${p.id},this)">${p.folge?'Gefolgt ✓':'Folgen'}</button>
+        <button class="btn-ghost" onclick="startChat(${p.id},this)">Nachricht</button><button class="btn-ghost inline-flex items-center justify-center gap-1" onclick="shareAny('m',${p.id})">${SHARE_IC} Teilen</button></div>
+        <button class="text-[11px] text-muted mt-3" onclick="fReport('member',${p.id})">Profil melden</button>`:''}
+    </div>
+    <p class="text-xs uppercase tracking-wider text-muted mt-8 mb-1">Beiträge</p>${postGrid(S.mp.posts,false).replace('mt-8 ','mt-2 ')}</div>`;
+}
+function mpFollow(mid,btn){ btn.disabled=true; rpc('folgen_umschalten',{p_member:mid}).then(j=>{ btn.disabled=false; if(!j||!j.ok) return; btn.className=j.folge?'btn-ghost':'btn-gold'; btn.textContent=j.folge?'Gefolgt ✓':'Folgen'; const f=document.getElementById('mmF'); if(f) f.textContent=(+f.textContent)+(j.folge?1:-1); if(S.mp&&S.mp.p) S.mp.p.folge=j.folge; (S.rp||[]).forEach(p=>{ if(p.mid===mid) p.folge=j.folge; }); S.kontakte=null; }).catch(()=>{ btn.disabled=false; }); }
+
+// --- Impressum, Datenschutz, AGB, Widerruf (Texte aus der Zentrale)
+S.recht=null;
+async function legalOpen(k){ const T={impressum:'Impressum',datenschutz:'Datenschutz',agb:'AGB',widerruf:'Widerruf'};
+  const show=txt=>{ document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()"><div class="card w-full max-w-2xl p-6 relative max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()"><button onclick="closeModal()" class="absolute top-3 right-4 text-muted text-xl">✕</button>
+    <h2 class="font-serif text-2xl mb-4">${T[k]}</h2><div class="text-sm" style="white-space:pre-line;line-height:1.6">${txt?esc(txt):'<span class="text-muted">Dieser Text wird gerade vorbereitet.</span>'}</div>
+    <div class="flex flex-wrap gap-3 mt-6 text-xs text-muted">${Object.keys(T).filter(x=>x!==k).map(x=>`<button class="underline" onclick="legalOpen('${x}')">${T[x]}</button>`).join('')}</div></div></div>`; };
+  if(S.recht){ show(S.recht[k]); return; } show(null);
+  try{ const r=await fetch(`${SB_URL}/rest/v1/settings?select=value&key=eq.recht`,{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}); const j=await r.json(); S.recht=(j&&j[0]&&j[0].value)||{}; show(S.recht[k]); }catch(e){} }
+const LEGAL=()=>`<button class="hover:underline" onclick="legalOpen('impressum')">Impressum</button> · <button class="hover:underline" onclick="legalOpen('datenschutz')">Datenschutz</button> · <button class="hover:underline" onclick="legalOpen('agb')">AGB</button>`;
+
+// --- Ladeansicht statt kurz aufblitzendem Demo-Profil
+S._mDone=false; setTimeout(()=>{ if(!S._mDone){ S._mDone=true; render(); } },7000);
+async function loadMember(){ try{ await loadMember0(); } finally { const was=S._mDone; S._mDone=true; if(!was) render(); } }
+function bootView(){ return `<div class="boot"><span class="text-4xl" style="animation:chpulse 1.4s ease-in-out infinite"><span class="chlogo ${LP()}"><span class="l1">closing</span><span class="l2">HUB</span></span></span></div>`; }
+
 function feed(){
   const ft = S.ptopics || S.topics;
   const fp=feedPool(); const pool = fp ? (ft ? fp.filter(p=>ft.includes(p.k)) : fp) : (ft ? POSTS.filter(p=>ft.includes(p.k)) : POSTS);
@@ -2249,7 +2404,7 @@ function spotlightBanner(){
 }
 function rightRail(){
   return `<aside class="hidden lg:block w-80 shrink-0 space-y-5 pt-6">
-    ${S.user?'':`<a href="#login" class="btn-gold block">Kostenlos anmelden</a>`}
+    ${S.user?`<div class="card p-4"><p class="font-semibold">Was hast du heute geclosed?</p><p class="text-xs text-muted mt-1 mb-3">Teile deinen Deal, Tipp oder Fail mit der Community.</p><a href="#create" class="btn-gold block text-center">＋ Beitrag teilen</a></div>`:`<a href="#login" class="btn-gold block">Kostenlos anmelden</a>`}
     <div class="card p-4" style="${S.member?'display:none':''}"><p class="text-xs uppercase tracking-wider text-muted mb-3">Spotlight des Monats</p>
       <p class="text-sm">👑 Top-Profi</p>${nameRank('Lena','Dealmaker')}<p class="text-xs text-muted mb-3">2.480 Punkte · meiste Punkte ab Rang 4 (Dealmaker, Rainmaker)</p>
       <p class="text-sm">🚀 Top-Starter</p>${nameRank('Marco','Rising')}<p class="text-xs text-muted">1.120 Punkte · meiste Punkte bis Rang 2 (Starter, Rising)</p></div>
@@ -2257,7 +2412,7 @@ function rightRail(){
       ${JOBS.slice(0,3).map(j=>`<a href="#jobs" onclick="S.job=${j.id}" class="block py-2 border-t border-line first:border-0"><p class="text-sm font-medium">${j.t}</p><p class="text-xs text-gold">${j.pay}</p></a>`).join('')}</div>
     <div class="card p-4" style="${S.member?'display:none':''}"><p class="text-xs uppercase tracking-wider text-muted mb-3">Member, die du kennen solltest</p>
       ${NEARBY.slice(0,3).map(([n,r])=>`<div class="flex items-center justify-between py-1.5">${nameRank(n,r)}<button class="text-gold text-sm font-semibold" onclick="this.textContent=this.textContent==='Folgen'?'Gefolgt ✓':'Folgen'">Folgen</button></div>`).join('')}</div>
-    <p class="text-xs text-muted">Impressum · Datenschutz · AGB · <a href="#werbung" class="text-gold">Werbung schalten</a> · © 2026 ClosingHub</p></aside>`;
+    <p class="text-xs text-muted">${LEGAL()} · <a href="#werbung" class="text-gold">Werbung schalten</a> · © 2026 ClosingHub</p></aside>`;
 }
 
 // Player
@@ -2630,6 +2785,7 @@ function profile(){
       <button onclick="openMedals()" class="text-gold text-sm mt-3 hover:underline">Alle Abzeichen und Medaillen ansehen →</button></div>
     ${S.member?postGrid(S.myPosts,true):''}<div class="mt-8 grid grid-cols-3 gap-1" ${S.member?'style="display:none"':''}>${POSTS.slice(0,6).map((p,i)=>`<div onclick="startPlayer(${i})" class="aspect-square bg-panel border border-line p-3 text-[11px] font-serif overflow-hidden cursor-pointer">${p.t}</div>`).join('')}</div>
     ${S.user?`<div class="mt-8 flex flex-wrap gap-3"><button onclick="doLogout()" class="btn-ghost">Abmelden</button></div>`:''}
+    <p class="text-xs text-muted mt-6">${LEGAL()} · <button class="hover:underline" onclick="legalOpen('widerruf')">Widerruf</button></p>
   </div>`;
 }
 
@@ -2909,13 +3065,14 @@ function vorteile(){
 
 
 
-const PAGES = {designs,markt,werbung,vorteile,feed,jobs,forum,messages,create,profile,einstellungen:settings,notifications,search};
+const PAGES = {mitglied,designs,markt,werbung,vorteile,feed,jobs,forum,messages,create,profile,einstellungen:settings,notifications,search};
 function render(){
   if(S.recover){ document.getElementById('app').innerHTML=recoverView(); return; }
   if(S.invite){ document.getElementById('app').innerHTML=inviteView(); return; }
   const r=route();
   if(r==='login'){ document.getElementById('app').innerHTML=login(); return; }
   if(r==='zentrale'){ document.getElementById('app').innerHTML=zentrale(); return; }
+  if(SES&&!S.member&&!S.adminPreview&&!S._mDone){ document.getElementById('app').innerHTML=bootView(); return; }
   const fn = PAGES[r] || feed;
   if(S.member&&S.chs){ if(r==='markt') setTimeout(()=>chEv('markt'),300); if(r==='feed'&&Date.now()-(S._chT||0)>15000){ S._chT=Date.now(); setTimeout(chLoad,1500); } }
   const _same=S._lastR===r, _y=window.scrollY, _ae=document.activeElement;
