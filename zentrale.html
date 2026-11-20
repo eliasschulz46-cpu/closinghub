@@ -984,7 +984,7 @@ function mbProfile(m){
   ${pr.map(p=>`<tr><td><b>${esc(PROOF_ART[p.art]||p.art)}</b></td><td>${esc(p.titel||'–')}${p.datei_url?` · <a href="#" onclick="event.preventDefault();zProofOpen(${p.id})" class="gold">Dokument öffnen ↗</a>`:''}${p.notiz?`<div class="muted" style="font-size:12px">${esc(p.notiz)}</div>`:''}</td>
     <td class="muted">${p.monate?p.monate+' Monate':'–'}</td><td class="muted">${new Date(p.created_at).toLocaleDateString('de-DE')}</td>
     <td>${pill(p.status==='bestaetigt'?'bestätigt':p.status)}${p.gegengeprueft?' <span class="pill p-ok">gegengeprüft</span>':''}</td>
-    <td style="text-align:right;white-space:nowrap">${p.status!=='bestaetigt'?`<button class="btn sm gold-b" onclick="zProofApprove(${p.id},this)">Bestätigen</button> `:''}${p.status!=='abgelehnt'?`<button class="btn sm" onclick="mbProofSet(${p.id},{status:'abgelehnt',geprueft_at:new Date().toISOString()},'Abgelehnt')">Ablehnen</button> `:''}<button class="btn sm" onclick="mbProofSet(${p.id},{gegengeprueft:${p.gegengeprueft?'false':'true'}},'Gespeichert')">${p.gegengeprueft?'Gegenprüfung zurücknehmen':'Per Anruf gegengeprüft'}</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine Nachweise. Mitglieder reichen sie später in der App unter Einstellungen → „Nachweise hochladen“ ein. Bis dahin kannst du sie hier von Hand eintragen.</td></tr>'}
+    <td style="text-align:right;white-space:nowrap">${p.vorschau_url?`<a class="btn sm" href="${esc(p.vorschau_url)}" target="_blank" rel="noopener" title="So sieht der Auftraggeber den Nachweis">👁 Auftraggeber-Ansicht</a> `:''}${p.status==='bestaetigt'&&p.datei_url?`<button class="btn sm" onclick="redEditor(${p.id})">✎ Schwärzung bearbeiten</button> `:''}${p.status!=='bestaetigt'?`<button class="btn sm gold-b" onclick="zProofApprove(${p.id},this)">Prüfen & schwärzen</button> `:''}${p.status!=='abgelehnt'?`<button class="btn sm" onclick="mbProofSet(${p.id},{status:'abgelehnt',geprueft_at:new Date().toISOString()},'Abgelehnt')">Ablehnen</button> `:''}<button class="btn sm" onclick="mbProofSet(${p.id},{gegengeprueft:${p.gegengeprueft?'false':'true'}},'Gespeichert')">${p.gegengeprueft?'Gegenprüfung zurücknehmen':'Per Anruf gegengeprüft'}</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine Nachweise. Mitglieder reichen sie später in der App unter Einstellungen → „Nachweise hochladen“ ein. Bis dahin kannst du sie hier von Hand eintragen.</td></tr>'}
   </tbody></table></div>`;
 }
 const mbById = id => D.members.find(x=>x.id===id);
@@ -1599,8 +1599,8 @@ async function gzDone(id,b){ b.disabled=true; try{ await q('rpc/gutschein_erledi
 /* ===== Nachweise schwärzen: automatisch (Texterkennung + KI + Regeln), dann prüft Elias und bestätigt ===== */
 PROOF_ART.lebenslauf='Lebenslauf';
 const _zProofApprove0=zProofApprove;
-// Ausweis: wird wie bisher komplett unkenntlich gemacht (Foto lässt sich nicht automatisch erkennen). Alles andere: Schwärz-Editor.
-zProofApprove=async function(pid,btn){ const p=(D.proofs||[]).find(x=>x.id===pid); if(p&&p.art!=='ausweis'&&p.datei_url) return redEditor(pid); return _zProofApprove0(pid,btn); };
+// Jeder Nachweis läuft durch den Schwärz-Editor: automatisch vorschwärzen, Elias prüft und ergänzt von Hand, erst dann sieht der Auftraggeber ihn.
+zProofApprove=async function(pid,btn){ const p=(D.proofs||[]).find(x=>x.id===pid); if(p&&p.datei_url) return redEditor(pid); return _zProofApprove0(pid,btn); };
 let RD=null;
 const loadJs=src=>new Promise((ok,no)=>{ if(document.querySelector(`script[src="${src}"]`)) return ok(); const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=()=>no(new Error('Bibliothek konnte nicht geladen werden')); document.head.appendChild(s); });
 async function rdPdf(){ if(!window.pdfjsLib){ await loadJs('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'); window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; } return window.pdfjsLib; }
@@ -1611,8 +1611,8 @@ async function redEditor(pid){
   ov.innerHTML=`<div style="background:#fff;border-radius:14px;padding:14px 16px;max-width:980px;width:100%;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2;box-shadow:0 6px 20px rgba(0,0,0,.25)">
     <div style="min-width:260px;flex:1"><b>${esc(PROOF_ART[p.art]||p.art)} schwärzen</b> <span class="muted" style="font-size:12.5px">· ${esc(mem.name||'')}</span>
       <div id="rdst" class="muted" style="font-size:12.5px;margin-top:2px">Lädt Dokument …</div>
-      <div class="muted" style="font-size:12px;margin-top:2px">Prüfen: Fehlt etwas? Mit der Maus einen Balken ziehen. Zu viel geschwärzt? Auf den Balken klicken, dann ist er weg.</div></div>
-    <div class="row" style="gap:8px"><button class="btn sm" onclick="rdUndo()">↶ Rückgängig</button><button class="btn sm" onclick="document.getElementById('rdov').remove();RD=null">Abbrechen</button><button class="btn sm gold-b" id="rdOk" disabled onclick="rdSave(${pid},this)">Geprüft & bestätigen</button></div></div>
+      ${p.art==='ausweis'?'<div style="font-size:12px;margin-top:2px;color:#B8860B"><b>Ausweis:</b> Das Foto wird nicht automatisch erkannt – bitte selbst mit einem Balken abdecken.</div>':''}<div class="muted" style="font-size:12px;margin-top:2px">Prüfen: Fehlt etwas? Mit der Maus einen Balken ziehen. Zu viel geschwärzt? Auf den Balken klicken, dann ist er weg.</div></div>
+    <div class="row" style="gap:8px"><button class="btn sm" onclick="rdUndo()">↶ Rückgängig</button><button class="btn sm" onclick="document.getElementById('rdov').remove();RD=null">Abbrechen</button><button class="btn sm gold-b" id="rdOk" disabled onclick="rdSave(${pid},this)">${p.status==='bestaetigt'?'Speichern':'Geprüft & bestätigen'}</button></div></div>
     <div id="rdwrap" style="margin-top:14px;position:relative;max-width:980px;width:100%;background:#fff;border-radius:6px;overflow:hidden"></div>`;
   document.body.appendChild(ov);
   try{
@@ -1688,7 +1688,9 @@ async function rdSave(pid,btn){ if(!RD) return;
     const r=await fetch(`${SB_URL}/storage/v1/object/medien/${path}`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+await zToken(),'Content-Type':'image/jpeg'},body:blob});
     if(!r.ok) throw new Error('Hochladen fehlgeschlagen ('+r.status+')');
     document.getElementById('rdov').remove(); RD=null;
-    await mbProofSet(pid,{status:'bestaetigt',geprueft_at:new Date().toISOString(),vorschau_url:`${SB_URL}/storage/v1/object/public/medien/${path}`},'Bestätigt – geschwärzte Version ist beim Auftraggeber sichtbar');
+    const pr=(D.proofs||[]).find(x=>x.id===pid), url=`${SB_URL}/storage/v1/object/public/medien/${path}`;
+    if(pr&&pr.status==='bestaetigt') await mbProofSet(pid,{vorschau_url:url},'Neue geschwärzte Version gespeichert – der Auftraggeber sieht ab jetzt diese');
+    else await mbProofSet(pid,{status:'bestaetigt',geprueft_at:new Date().toISOString(),vorschau_url:url},'Bestätigt – geschwärzte Version ist beim Auftraggeber sichtbar');
   }catch(e){ btn.disabled=false; btn.textContent='Geprüft & bestätigen'; toast('⚠️ '+e.message); } }
 
 async function mbDel(id){ const m=mbById(id); if(!m) return; const t=prompt(m.name+' endgültig löschen?\n\nDas löscht das Konto mit ALLEM: Beiträge, Kommentare, Chats, Bewerbungen, Punkte, Nachweise und den Einladungslink. Das kann man nicht rückgängig machen.\n\nZum Bestätigen tippe: LÖSCHEN'); if(t===null) return; if(t.trim().toUpperCase()!=='LÖSCHEN') return toast('Nicht gelöscht – Bestätigung falsch'); try{ const j=await q('rpc/member_loeschen',{method:'POST',body:{p_id:id}}); if(!j||!j.ok) throw 0; D.members=(D.members||[]).filter(x=>x.id!==id); mbSel=null; toast('Endgültig gelöscht'); location.hash='#member'; render(); }catch(e){ toast('Fehlt noch: closinghub-mitglieder.sql in Supabase ausführen'); } }
