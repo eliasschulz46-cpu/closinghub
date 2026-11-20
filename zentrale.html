@@ -231,6 +231,7 @@ const I = {
   support:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
   inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13L22 12v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7z"/>',
   users:'<circle cx="9" cy="8" r="4"/><path d="M1 21v-1a7 7 0 0 1 14 0v1M17 4a4 4 0 0 1 0 8M23 21v-1a7 7 0 0 0-5-6.7"/>',
+  flame:'<path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-6 1-9.5z"/>',
   shield:'<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   pen:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
@@ -272,7 +273,7 @@ function logout(){ keepSession(null); render(); }
 
 /* ===== Daten ===== */
 const DEFAULT_SETTINGS = {
-  plus:9.99, plusY:119.88, premiumM:19.99, premiumY:239.88, unlock:25, marketFee:9.9, topJob:19, jobFee:0, vat:21,
+  plus:9.99, plusY:119.88, premiumM:19.99, premiumY:239.88, unlock:25, hire:250, marketFee:9.9, topJob:19, jobFee:0, vat:21,
   dayoneTotal:250, dayoneFreeMonths:12, dayonePremiumMonths:3, maxPerCountry:1000, perCategory:10,
   heroTop:'Mehr closen –', heroGold:'mehr verdienen.', heroSub:'Die Plattform für Closer & Setter, die mehr wollen.', heroLead:'Attraktive Jobs, motivierender Feed, Kontakte auch in deiner Nähe und mehr besondere Member-Vorteile, die dich jeden Tag besser machen – für maximale Abschlüsse.',
   features:{arena:false, marketplace:true, stories:true, breathing:true, forum:true, topjobs:true, waitlistOpen:true}
@@ -309,7 +310,7 @@ async function loadAll(){
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at, quelle:w.quelle||'' }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
-  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.gate=S.app_gate||{}; D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.gate=S.app_gate||{}; fxLoad(S); D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
@@ -350,6 +351,7 @@ const NAV = [
   ['support','Support','support', ()=>D.tickets.filter(t=>t.st==='offen').length],
   ['member','Member','users', ()=>(D.proofs||[]).filter(p=>p.status==='offen').length],
   ['moderation','Prüfen & Meldungen','shield', ()=>D.queue.length+D.reports.length],
+  ['feedx','Feed & Battle','flame', ()=>{ try{ const b=D.battle; if(!b||!b.on||!b.start) return 0; const i=bxInfo().i; return (b.queue.length-i-1)<=7?'!':0; }catch(e){ return 0; } }],
   ['System'],
   ['inhalte','Website & App','pen'],
   ['einstellungen','Preise & Einstellungen','gear']
@@ -749,7 +751,7 @@ function newInvoice(cid){
     <label class="f">Kunde<input class="in" id="iCust" placeholder="Firma oder Name" value="${cl?esc(cl.firma):''}"></label>
     <label class="f">E-Mail<input class="in" id="iMail" type="email" placeholder="rechnung@firma.de" value="${cl?esc(cl.email||''):''}"></label>
     <label class="f">Leistung<select class="in" id="iItem" onchange="iNet.value=this.selectedOptions[0].dataset.p||iNet.value">
-      <option data-p="${cl?feeOf(cl,'fee_unlock'):D.settings.unlock}">Freischaltung Kandidat</option><option data-p="${cl?feeOf(cl,'fee_job'):D.settings.jobFee}">Stellenanzeige</option><option data-p="${D.settings.topJob}">Top-Job (30 Tage)</option><option data-p="149">Laufband-Anzeige (1 Monat)</option><option data-p="">Sonstiges</option></select></label>
+      <option data-p="${cl?feeOf(cl,'fee_unlock'):D.settings.unlock}">Freischaltung Kandidat</option><option data-p="${D.settings.hire||250}">Einstellung Kandidat</option><option data-p="${cl?feeOf(cl,'fee_job'):D.settings.jobFee}">Stellenanzeige</option><option data-p="${D.settings.topJob}">Top-Job (30 Tage)</option><option data-p="149">Laufband-Anzeige (1 Monat)</option><option data-p="">Sonstiges</option></select></label>
     <div class="grid g2" style="gap:12px"><label class="f">Netto (€)<input class="in" id="iNet" type="number" step="0.01" value="${D.settings.unlock}"></label><label class="f">MwSt / IVA<input class="in" value="${D.settings.vat} %" disabled></label></div>
     <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="saveInvoice(this)">Rechnung erstellen</button></div>
   </div>`);
@@ -876,7 +878,7 @@ function support(){
 async function tSet(id,patch){ await q(`tickets?id=eq.${id}`,{method:'PATCH',body:patch}); const t=D.tickets.find(x=>x.id===id); if(patch.status) t.st=patch.status; if(patch.messages) t.msgs=patch.messages; render(); }
 function aiReply(id){
   const t=D.tickets.find(x=>x.id===id), s=D.settings;
-  const map={'Freischalt':`Hi! Für ${eur(s.unlock)} pro Kandidat schaltest du das komplette Profil inkl. Kontaktdaten frei. Kein Abo, keine Grundgebühr. Bei Fragen bin ich da.`,
+  const map={'Freischalt':`Hi! Für ${eur(s.unlock)} pro Kandidat schaltest du das komplette Profil inkl. Kontaktdaten frei. Stellst du jemanden ein, fällt einmalig ${eur(s.hire||250)} an. Kein Abo, keine Grundgebühr. Bei Fragen bin ich da.`,
     'Day':`Hey! Dein Eintrag ist gespeichert. Die Day-One-Plätze werden nach Reihenfolge vergeben, du bekommst zum Start eine Mail mit allen Infos.`};
   const k=Object.keys(map).find(k=>t.topic.includes(k));
   $('rep').value = map[k] || `Hi ${t.from.split(' ')[0]}, danke für deine Nachricht! Ich schau mir das direkt an und melde mich kurzfristig bei dir.`;
@@ -1086,7 +1088,7 @@ function ptCard(p,i){
     <div class="grid g2" style="gap:10px;margin-top:10px">
       ${f('n','Name','Paul')}${f('s','Wofür er Partner ist (steht groß im Profilkopf)','Morgen-Call')}
       ${f('role','Beruf oder Rolle','Mindset-Coach')}${f('meta','Erfahrung und Land (optional)','8 Jahre Vertrieb, Deutschland')}
-      ${f('bk','Text auf dem grünen Knopf','Coaching anfragen')}${f('live','Hinweis auf seine Live-Termine (optional)','Mo–Do, 7:30 Uhr live in der App')}
+      ${f('bk','Text auf dem grünen Knopf','Coaching anfragen')}${f('live','Hinweis auf seine Live-Termine (optional)','Mo–Do, 7:30 Uhr live in der App')}${f('link','Link zu seinem Profil (Instagram, LinkedIn oder Website)','https://instagram.com/name')}
       ${f('k0','Zahl, mit der er überzeugt (optional)','312',(p.k||[])[0]||'')}${f('k1','Was die Zahl bedeutet','Calls analysiert',(p.k||[])[1]||'')}
       ${f('d0','Rabatt für Member (optional)','−20 % für Member',(p.deal||[])[0]||'')}${f('d1','Worauf der Rabatt gilt','auf das erste Coaching',(p.deal||[])[1]||'')}
       ${f('d2','Rabattcode','PAUL20',(p.deal||[])[2]||'')}
@@ -1117,7 +1119,7 @@ function ptPhoto(inp,i){
 function ptReadOne(i){
   const c=x=>String(x||'').replace(/[<>"'`]/g,'').trim();
   const g=k=>{ const el=document.querySelector(`[data-pt="${i}"][data-f="${k}"]`); return el?(el.type==='checkbox'?el.checked:c(el.value)):''; };
-  const p={n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^(https:\/\/|data:image\/(jpeg|png|webp);base64,)/.test(g('img'))?g('img'):'',live:g('live').slice(0,90),fem:!!g('fem')};
+  const p={n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^(https:\/\/|data:image\/(jpeg|png|webp);base64,)/.test(g('img'))?g('img'):'',live:g('live').slice(0,90),link:/^https:\/\/\S+$/.test(g('link'))?g('link').slice(0,200):'',fem:!!g('fem')};
   if(g('k0')) p.k=[g('k0').slice(0,12),g('k1').slice(0,30)];
   if(g('d0')) p.deal=[g('d0').slice(0,40),g('d1').slice(0,60),g('d2').slice(0,20)];
   p.offers=g('offers').split('\n').map(z=>{ const f=z.split('|').map(c); return {t:(f[0]||'').slice(0,70),pr:(f[1]||'').slice(0,12)}; }).filter(o=>o.t).slice(0,8);
@@ -1224,7 +1226,7 @@ function einstellungen(){
   <div class="grid g2">
     <div class="card"><h3>Abos</h3><div class="grid g2" style="gap:12px">${n('plus','Plus / Monat','0.01','€')}${n('plusY','Plus / Jahr','0.01','€')}${n('premiumM','Premium / Monat','0.01','€')}${n('premiumY','Premium / Jahr','0.01','€')}${n('vat','MwSt / IVA','1','%')}</div></div>
     <div class="card"><h3>Day Ones</h3><div class="grid g2" style="gap:12px">${n('dayoneTotal','Anzahl Plätze (live)','1')}${n('dayoneFreeMonths','Gratis-Monate','1')}${n('dayonePremiumMonths','Premium-Monate gratis','1')}${n('maxPerCountry','Max. Member je Land','1')}</div></div>
-    <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('marketFee','Marktplatz-Gebühr','0.1','%')}${n('topJob','Top-Job','0.01','€')}${n('jobFee','Gebühr pro veröffentlichtem Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
+    <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('hire','Einstellung (einmalig, bei Einstellung)','0.01','€')}${n('marketFee','Marktplatz-Gebühr','0.1','%')}${n('topJob','Top-Job','0.01','€')}${n('jobFee','Gebühr pro veröffentlichtem Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
     <div class="card"><h3>Verbindung</h3><div class="row" style="margin-bottom:8px"><span class="pill p-ok">Supabase verbunden</span></div><p class="muted" style="font-size:13px">Angemeldet als ${esc(SESSION&&SESSION.email)}</p><button class="btn" style="margin-top:12px" onclick="logout()">Abmelden</button></div>
   </div>
   <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn gold-b" onclick="saveSettings(this)">Alles speichern</button></div>
@@ -1255,7 +1257,7 @@ async function saveSettings(b){
   const s=D.settings; b.disabled=true;
   try{
     await Promise.all([
-      setKey('preise',{plus:s.plus,plusY:s.plusY,premiumM:s.premiumM,premiumY:s.premiumY,unlock:s.unlock,marketFee:s.marketFee,topJob:s.topJob,jobFee:s.jobFee,vat:s.vat}),
+      setKey('preise',{plus:s.plus,plusY:s.plusY,premiumM:s.premiumM,premiumY:s.premiumY,unlock:s.unlock,hire:s.hire,marketFee:s.marketFee,topJob:s.topJob,jobFee:s.jobFee,vat:s.vat}),
       setKey('dayone',{total:s.dayoneTotal,freeMonths:s.dayoneFreeMonths,premiumMonths:s.dayonePremiumMonths}),
       setKey('limits',{maxPerCountry:s.maxPerCountry,perCategory:s.perCategory})
     ]);
@@ -1281,7 +1283,77 @@ $('q').addEventListener('keydown',e=>{
 });
 
 /* ===== Render ===== */
-const PAGES={partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
+
+/* ===== Feed & Battle: Einwand-Battle, Streak, Push-Mitteilungen ===== */
+const FEEDX_Z = {
+  battle:{on:true,start:'',hour:12,queue:['Meine Katze ist dagegen.','Ich kaufe nur, wenn mein Horoskop das sagt.','Ich habe gerade mein ganzes Geld in Kaugummi investiert.','Ich entscheide nichts vor meinem dritten Kaffee.','Da muss ich erst meine Oma fragen, die ist bis 2028 auf Kreuzfahrt.','Kann ich auch in Pokémon-Karten zahlen?','Ich unterschreibe nur mit Füller, und der ist leer.']},
+  streak:{min:5,stufen:[[7,'Feuerstarter'],[30,'Dauerbrenner'],[100,'Unaufhaltbar'],[365,'Legende']],warn:['20:00','23:00'],text:'Noch {min} Minuten – rette deine 🔥 {n}!'},
+  push:{folgen:true,antwort:true,viral:true,battle:true,streak:true,rang:true}
+};
+const PUSH_KAT=[['folgen','Neue Beiträge','Jemand, dem man folgt, postet etwas'],['antwort','Antworten','Antwort auf eigenen Beitrag oder Kommentar'],['viral','Beitrag geht viral','Eigener Beitrag startet richtig durch'],['battle','Einwand-Battle','Neuer Einwand ist live, Abstimmung startet'],['streak','Streak','Erinnerung, bevor die 🔥 abläuft'],['rang','Rangliste','Aufstieg in der Rangliste']];
+function fxLoad(S){
+  const c=k=>JSON.parse(JSON.stringify({...FEEDX_Z[k],...(S[k]||{})}));
+  D.battle=c('battle'); D.streak=c('streak'); D.push=c('push');
+  D.battle.queue=(D.battle.queue||[]).map(x=>typeof x==='string'?x:(x&&x.t)||'').filter(Boolean);
+}
+function bxInfo(){
+  const b=D.battle, h=Number.isFinite(+b.hour)&&b.hour!==''?+b.hour:12;
+  if(!b.start) return {i:-1,h,dates:b.queue.map(()=>null)};
+  const st=new Date(b.start+'T00:00:00'); st.setHours(h,0,0,0);
+  const now=new Date(), i=now<st?-1:Math.floor((now-st)/864e5);
+  const dates=b.queue.map((_,k)=>new Date(st.getTime()+k*864e5));
+  return {i,h,dates,st};
+}
+function bxSync(){
+  const b=D.battle; if(!$('bx-hour')) return;
+  b.start=$('bx-start').value; b.hour=+$('bx-hour').value;
+  b.queue=b.queue.map((t,k)=>{ const el=$('bx-q'+k); return el?el.value.trim():t; }).filter(Boolean);
+  const s=D.streak; s.min=+$('sx-min').value||5; s.text=$('sx-text').value.trim();
+  s.stufen=s.stufen.map((x,k)=>[+$('sx-d'+k).value||x[0],$('sx-n'+k).value.trim()||x[1]]);
+  s.warn=[$('sx-w0').value,$('sx-w1').value].filter(Boolean);
+}
+function bxMove(k,d){ bxSync(); const q=D.battle.queue, j=k+d; if(j<0||j>=q.length) return; [q[k],q[j]]=[q[j],q[k]]; render(); }
+function bxDel(k){ bxSync(); D.battle.queue.splice(k,1); render(); }
+function bxAdd(){ bxSync(); const v=$('bx-new').value.split('\n').map(x=>x.trim()).filter(Boolean); if(!v.length) return; D.battle.queue.push(...v); render(); toast(v.length+' Einwand'+(v.length>1?'e':'')+' hinzugefügt – Speichern nicht vergessen'); }
+function bxToggle(){ bxSync(); D.battle.on=!D.battle.on; render(); }
+function pxToggle(k){ bxSync(); D.push[k]=!D.push[k]; render(); }
+async function fxSave(b){
+  bxSync(); b.disabled=true;
+  try{ await setKey('battle',D.battle); await setKey('streak',D.streak); await setKey('push',D.push); toast('Gespeichert – ist live in der App'); }
+  finally{ b.disabled=false; }
+}
+function feedx(){
+  const b=D.battle, s=D.streak, p=D.push, inf=bxInfo();
+  const left = inf.i<0 ? b.queue.length : Math.max(0,b.queue.length-inf.i-1);
+  const fmt=d=>d?d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}):'–';
+  const status = !b.on ? `<span class="pill">Aus</span>` : !b.start ? `<span class="pill">Kein Startdatum</span>` : inf.i<0 ? `<span class="pill p-ok">Startet ${fmt(inf.st)} um ${inf.h} Uhr</span>` : inf.i<b.queue.length ? `<span class="pill p-ok">Läuft · heute Nr. ${inf.i+1}</span>` : `<span class="pill" style="color:#e5484d">Warteschleife leer</span>`;
+  const sw=on=>`<span style="display:inline-block;width:38px;height:22px;border-radius:99px;position:relative;background:${on?'#087A4B':'#3a3a40'};vertical-align:middle"><span style="position:absolute;top:2px;left:${on?'18px':'2px'};width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s"></span></span>`;
+  return `<h1 class="h1">Feed & Battle</h1><p class="sub">Einwand-Battle, Streak und Push-Mitteilungen steuern. Alles wird mit „Speichern“ sofort in der App übernommen.</p>
+  <div class="card"><div class="row between"><h3 style="margin:0">Einwand-Battle</h3><div class="row">${status}<button class="btn sm" onclick="bxToggle()">${sw(b.on)} ${b.on?'An':'Aus'}</button></div></div>
+    <p class="muted" style="font-size:12.5px;margin:6px 0 14px">Ablauf: Um ${inf.h} Uhr geht der nächste Einwand live → Antworten & Likes bis 0 Uhr → die 2 Antworten mit den meisten Likes kommen ins Finale → Abstimmung bis ${inf.h} Uhr → Sieger 24 Std. im Spotlight, gleichzeitig startet der nächste Einwand.</p>
+    <div class="grid g2" style="gap:12px;max-width:520px"><label class="f">Startdatum (erster Einwand)<input class="in" type="date" id="bx-start" value="${esc(b.start||'')}"></label><label class="f">Wechsel jeden Tag um<div class="row" style="flex-wrap:nowrap"><input class="in" type="number" min="0" max="23" id="bx-hour" value="${inf.h}"><span class="muted">Uhr</span></div></label></div>
+    ${b.on&&left<=7?`<div class="demo" style="margin-top:12px">⚠️ Nur noch ${left} Einwand${left===1?'':'e'} in der Warteschleife. Füll nach, damit kein Tag leer bleibt.</div>`:''}
+    <h4 style="margin:18px 0 8px">Warteschleife (${b.queue.length})</h4>
+    <div style="display:grid;gap:6px">${b.queue.map((t,k)=>{ const past=inf.i>=0&&k<inf.i, now=k===inf.i;
+      return `<div class="row" style="flex-wrap:nowrap;gap:8px;${past?'opacity:.45':''}"><span class="muted" style="width:96px;flex:none;font-size:12px">${now?'<b style="color:#3FBF86">● Heute</b>':past?'gelaufen':fmt(inf.dates[k])}</span><span class="muted" style="width:26px;flex:none;font-size:12px">${k+1}.</span><input class="in" id="bx-q${k}" value="${esc(t)}" style="flex:1"><button class="btn sm" title="Nach oben" onclick="bxMove(${k},-1)">${ic('up')}</button><button class="btn sm" title="Nach unten" onclick="bxMove(${k},1)">${ic('down')}</button><button class="btn sm" title="Entfernen" onclick="bxDel(${k})">${ic('trash')}</button></div>`; }).join('')}</div>
+    <label class="f" style="margin-top:14px">Neue Einwände (einer pro Zeile, mehrere auf einmal möglich)<textarea class="in" id="bx-new" rows="3" placeholder="Meine Katze ist dagegen.&#10;Kann ich auch in Pokémon-Karten zahlen?"></textarea></label>
+    <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn sm" onclick="bxAdd()">＋ Zur Warteschleife hinzufügen</button></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h3>Streak & Flammen-Ring</h3>
+      <div class="grid g2" style="gap:12px"><label class="f">Pflicht-Minuten pro Tag<div class="row" style="flex-wrap:nowrap"><input class="in" type="number" min="1" id="sx-min" value="${+s.min||5}"><span class="muted">Min.</span></div></label><div></div>
+      ${s.stufen.map((x,k)=>`<label class="f">${['🥉 Bronze-Ring','🥈 Silber-Ring','🥇 Gold-Ring','💎 Diamant-Ring'][k]} ab<div class="row" style="flex-wrap:nowrap"><input class="in" type="number" min="1" id="sx-d${k}" value="${x[0]}"><span class="muted">Tagen</span></div></label><label class="f">Medaille<input class="in" id="sx-n${k}" value="${esc(x[1])}"></label>`).join('')}
+      <label class="f">1. Erinnerung<input class="in" type="time" id="sx-w0" value="${esc(s.warn[0]||'')}"></label><label class="f">2. Erinnerung<input class="in" type="time" id="sx-w1" value="${esc(s.warn[1]||'')}"></label></div>
+      <label class="f" style="margin-top:12px">Text der Erinnerung <span class="muted" style="font-weight:400">({min} = fehlende Minuten, {n} = Streak)</span><input class="in" id="sx-text" value="${esc(s.text||'')}"></label>
+      <p class="muted" style="font-size:12px;margin-top:8px">Wer einen Tag verpasst, fällt auf 0. Ring weg, Medaille bleibt.</p></div>
+    <div class="card"><h3>Push-Mitteilungen</h3><p class="muted" style="font-size:12.5px;margin-bottom:6px">Standard: alles an. Mitglieder können jede Kategorie selbst abschalten. Was du hier ausschaltest, verschwindet für alle.</p>
+      ${PUSH_KAT.map(([k,t,d])=>`<button type="button" onclick="pxToggle('${k}')" class="row between" style="width:100%;padding:10px 0;border:0;border-top:1px solid rgba(128,128,128,.25);background:none;color:inherit;text-align:left;cursor:pointer"><span><b style="font-size:14px">${t}</b><br><span class="muted" style="font-size:12px">${d}</span></span>${sw(p[k]!==false)}</button>`).join('')}</div>
+  </div>
+  ${demoNote('Hinweis: Antworten, Likes und Stimmen im Battle sowie die Streak-Minuten werden aktuell auf dem Gerät des Mitglieds gespeichert. Sobald die echten Mitgliedskonten live sind, laufen sie über die Datenbank, damit alle dasselbe sehen. Push-Mitteilungen kommen bis dahin nur, solange die App offen ist.')}
+  <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn gold-b" onclick="fxSave(this)">Alles speichern</button></div>`;
+}
+
+const PAGES={feedx,partner,auftraggeber,stellen:auftraggeber,dashboard,mitteilungen,rechnungen,laufband,anfragen,support,member,moderation,inhalte,einstellungen};
 async function reload(){ LOADED=false; await render(); toast('Aktualisiert'); }
 async function render(){
   const logged=!!SESSION;

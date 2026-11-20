@@ -252,6 +252,83 @@ window.tailwind=window.tailwind||{}; tailwind.config = { theme: { extend: {
 <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
 <script defer src="/_vercel/insights/script.js"></script>
 <link rel="stylesheet" href="assets/app-tailwind.css">
+<style>
+  /* ===== Streak-Flammenring ===== */
+  .sk{--s:40px;position:relative;display:inline-block;width:var(--s);height:var(--s);flex:none;vertical-align:middle}
+  .sk .sk-r{position:absolute;inset:0;border-radius:50%}
+  .sk .sk-p{position:absolute;inset:0;border-radius:50%;overflow:hidden;display:block}
+  .sk.sk1 .sk-p,.sk.sk2 .sk-p,.sk.sk3 .sk-p,.sk.sk4 .sk-p{inset:calc(var(--s)*.085);box-shadow:0 0 0 calc(var(--s)*.025) rgb(var(--bg))}
+  .sk .sk-p img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+  .sk .sk-f{position:absolute;right:calc(var(--s)*-.12);bottom:calc(var(--s)*-.06);background:#0E1A2B;color:#fff;border:1.5px solid var(--c,#ff8a3d);border-radius:999px;padding:0 calc(var(--s)*.07) 0 calc(var(--s)*.03);font:800 max(8px,calc(var(--s)*.2))/1.35 Archivo,system-ui,sans-serif;white-space:nowrap;pointer-events:none}
+  .sk1{--c:#CD7F32}.sk2{--c:#D9E2EC}.sk3{--c:#F5C542}.sk4{--c:#9EE7FF}
+  .sk1 .sk-r{background:conic-gradient(#8C4F1E,#E8A15C,#CD7F32,#8C4F1E);animation:skSpin 24s linear infinite,skG1 4s ease-in-out infinite}
+  .sk2 .sk-r{background:conic-gradient(#8E9AA8,#FFFFFF,#B8C4D2,#8E9AA8);animation:skSpin 22s linear infinite,skG2 4s ease-in-out infinite}
+  .sk3 .sk-r{background:conic-gradient(#B8860B,#FFE38A,#F5C542,#FF8A3D,#B8860B);animation:skSpin 20s linear infinite,skG3 4s ease-in-out infinite}
+  .sk4 .sk-r{background:conic-gradient(#5FD3FF,#FFFFFF,#B48CFF,#5FD3FF,#FFFFFF,#7CF0C8,#5FD3FF);animation:skSpin 18s linear infinite,skG4 4s ease-in-out infinite}
+  .sk1 .sk-r::before,.sk2 .sk-r::before,.sk3 .sk-r::before,.sk4 .sk-r::before,.sk2 .sk-r::after,.sk3 .sk-r::after,.sk4 .sk-r::after{content:"";position:absolute;inset:0;border-radius:50%;-webkit-mask:radial-gradient(circle closest-side,transparent 82%,#000 83%);mask:radial-gradient(circle closest-side,transparent 82%,#000 83%)}
+  .sk1 .sk-r::before{background:repeating-conic-gradient(rgba(255,235,210,.45) 0 1.5deg,transparent 1.5deg 30deg);animation:skSpin 60s linear infinite reverse}
+  .sk2 .sk-r::before{background:repeating-conic-gradient(rgba(255,255,255,.5) 0 1deg,transparent 1deg 15deg);animation:skSpin 60s linear infinite reverse}
+  .sk2 .sk-r::after{background:radial-gradient(circle closest-side,transparent 88%,rgba(255,255,255,.55) 88.5%,rgba(255,255,255,.55) 90%,transparent 90.5%)}
+  .sk3 .sk-r::before{background:repeating-conic-gradient(rgba(255,250,220,.75) 0 1.4deg,transparent 1.4deg 30deg),repeating-conic-gradient(rgba(255,250,220,.35) 0 .7deg,transparent .7deg 6deg);animation:skSpin 60s linear infinite reverse}
+  .sk3 .sk-r::after{background:radial-gradient(circle closest-side,transparent 88%,rgba(255,255,255,.55) 88.5%,rgba(255,255,255,.55) 90%,transparent 90.5%),radial-gradient(circle closest-side,transparent 96%,rgba(255,255,255,.5) 96.5%,rgba(255,255,255,.5) 97.5%,transparent 98%)}
+  .sk4 .sk-r::before{background:repeating-conic-gradient(rgba(255,255,255,.38) 0 6deg,rgba(14,26,43,.22) 6deg 12deg);animation:skSpin 50s linear infinite reverse}
+  .sk4 .sk-r::after{background:radial-gradient(circle closest-side,transparent 88%,rgba(255,255,255,.55) 88.5%,rgba(255,255,255,.55) 90%,transparent 90.5%),radial-gradient(circle closest-side,transparent 96%,rgba(255,255,255,.5) 96.5%,rgba(255,255,255,.5) 97.5%,transparent 98%),repeating-conic-gradient(rgba(255,255,255,.6) 0 .6deg,transparent .6deg 12deg)}
+  @keyframes skSpin{to{transform:rotate(360deg)}}
+  @keyframes skG1{0%,100%{box-shadow:0 0 0 rgba(205,127,50,0)}50%{box-shadow:0 0 10px 1px rgba(205,127,50,.4)}}
+  @keyframes skG2{0%,100%{box-shadow:0 0 4px rgba(255,255,255,.2)}50%{box-shadow:0 0 12px 2px rgba(220,230,240,.4)}}
+  @keyframes skG3{0%,100%{box-shadow:0 0 6px 1px rgba(245,197,66,.3)}50%{box-shadow:0 0 16px 2px rgba(245,197,66,.45)}}
+  @keyframes skG4{0%,100%{box-shadow:0 0 8px 1px rgba(158,231,255,.4)}50%{box-shadow:0 0 18px 3px rgba(158,231,255,.5)}}
+
+  /* ===== Einwand-Battle (Hintergrund statisch, nur Text & Felder animiert) ===== */
+  .bt{position:relative;border-radius:1rem;overflow:hidden;color:#fff;font-family:Archivo,system-ui,sans-serif;border:1px solid #22324A}
+  .bt-bg{position:absolute;inset:0;background:#0E1A2B;overflow:hidden}
+  .bt-bg::before{content:"";position:absolute;width:520px;height:520px;left:50%;top:62%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(63,191,134,.16) 0%,rgba(63,191,134,0) 62%)}
+  .bt-bg::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(201,211,227,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(201,211,227,.035) 1px,transparent 1px);background-size:32px 32px}
+  .bt-vs{position:absolute;left:50%;top:64%;transform:translate(-50%,-50%);font-family:'Bebas Neue',sans-serif;font-size:240px;line-height:1;color:rgba(201,211,227,.04);user-select:none;pointer-events:none}
+  .bt-ui{position:relative;padding:20px 18px 18px}
+  .bt-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .bt-k{display:block;font-size:12px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#3FBF86}
+  .bt-t{font-size:11.5px;font-weight:700;color:#C9D3E3;background:rgba(34,50,74,.7);border:1px solid #22324A;border-radius:999px;padding:5px 10px;font-variant-numeric:tabular-nums}
+  .bt-t b{color:#3FBF86}
+  .bt-e{margin-top:12px;font-weight:900;font-stretch:72%;font-size:36px;line-height:1;letter-spacing:-.005em}
+  .bt-e q{quotes:"„" "“"}
+  .bt-h{margin-top:10px;font-size:13.5px;color:#C9D3E3}
+  .bt-form{display:flex;gap:8px;margin-top:14px;background:rgba(22,38,61,.92);border:1.5px solid #22324A;border-radius:16px;padding:8px}
+  .bt-form textarea{flex:1;background:transparent;border:0;outline:0;color:#fff;font:500 14px/1.4 Archivo,system-ui,sans-serif;resize:none;padding:4px 6px}
+  .bt-form textarea::placeholder{color:#8A9BB0}
+  .bt-form button{align-self:flex-end;background:#3FBF86;color:#0E1A2B;font-weight:800;font-size:13px;border-radius:999px;padding:8px 14px}
+  .bt-list{margin-top:12px;display:grid;gap:8px}
+  .bt-a{display:flex;gap:10px;align-items:flex-start;background:rgba(22,38,61,.75);border:1px solid #22324A;border-radius:14px;padding:10px 12px}
+  .bt-a b{font-size:12.5px}.bt-a p{font-size:14px;line-height:1.4;margin-top:2px}
+  .bt-like{flex:none;font-size:12.5px;font-weight:800;color:#8A9BB0;border:1px solid #22324A;border-radius:999px;padding:4px 9px;white-space:nowrap}
+  .bt-like.on{color:#0E1A2B;background:#3FBF86;border-color:#3FBF86}
+  .bt-more{font-size:12.5px;font-weight:700;color:#3FBF86;padding:4px 0;text-align:left}
+  .bt-duel{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .bt-c{position:relative;overflow:hidden;text-align:left;background:rgba(22,38,61,.92);border:2px solid #22324A;border-radius:18px;padding:14px 12px 12px;display:flex;flex-direction:column;min-height:220px;color:#fff;transition:border-color .25s,opacity .3s}
+  .bt-c:disabled{cursor:default}
+  .bt-side{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#8A9BB0}
+  .bt-tx{margin-top:6px;font-size:14.5px;line-height:1.38;font-weight:600;flex:1;position:relative;z-index:2}
+  .bt-who{display:flex;align-items:center;gap:8px;margin-top:10px;position:relative;z-index:2}
+  .bt-who b{display:block;font-size:12px}.bt-who small{display:block;font-size:10.5px;color:#8A9BB0}
+  .bt-bar{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(0deg,rgba(63,191,134,.28),rgba(63,191,134,.08));transition:height 1s cubic-bezier(.2,.8,.2,1);z-index:1}
+  .bt-pc{position:absolute;top:10px;right:12px;font-weight:900;font-stretch:75%;font-size:26px;opacity:0;transition:opacity .5s .4s;z-index:2}
+  .bt-ck{position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:50%;background:#3FBF86;color:#0E1A2B;display:grid;place-items:center;font-weight:900;font-size:14px;transform:scale(0);transition:transform .35s cubic-bezier(.3,1.6,.5,1);z-index:3}
+  .bt-duel.voted .bt-pc{opacity:1}
+  .bt-duel.voted .bt-c.me{border-color:#3FBF86}
+  .bt-duel.voted .bt-c.me .bt-ck{transform:scale(1)}
+  .bt-duel.voted .bt-c.me .bt-pc{right:44px;color:#3FBF86}
+  .bt-duel.voted .bt-c:not(.me){opacity:.72}
+  .bt-foot{margin-top:12px;font-size:12px;color:#8A9BB0}.bt-foot b{color:#fff}
+  .bt-spot{display:flex;align-items:center;gap:10px;margin-bottom:10px;background:#0E1A2B;border:1px solid #22324A;border-radius:1rem;padding:10px 14px}
+  .bt-crown{font-size:20px}
+  .bt-in{opacity:0;animation:btUp .6s cubic-bezier(.2,.8,.2,1) forwards}
+  .bt-e.bt-in{animation-delay:.12s}.bt-h.bt-in{animation-delay:.24s}.bt-form.bt-in,.bt-list.bt-in{animation-delay:.36s}
+  .bt-cL.bt-in{animation:btL .7s .4s cubic-bezier(.2,.8,.2,1) forwards}.bt-cR.bt-in{animation:btR .7s .52s cubic-bezier(.2,.8,.2,1) forwards}
+  @keyframes btUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  @keyframes btL{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}
+  @keyframes btR{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.sk *,.bt *{animation:none!important;opacity:1!important}}
+</style>
 </head>
 <body>
 <style>
@@ -481,7 +558,7 @@ function personModal(n){
     <div class="card w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
       <button onclick="closeModal()" class="absolute top-3 right-4 text-muted hover:text-white text-xl">✕</button>
       <div class="flex items-center gap-4">
-        <div class="w-20 h-20 rounded-full gold-bg p-[3px] shrink-0"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(n)}</div></div>
+        ${skAv(n,80,avatar(n),'shrink-0')}
         <div class="min-w-0"><div class="text-lg">${nameRank(n,r)}</div>
           ${rt?`<p class="text-sm mt-0.5">⭐ <b>${rt.replace('.',',')}</b> <span class="text-muted">· ${offers.reduce((s,o)=>s+o.n,0)} Bewertungen</span></p>`:''}
           ${p?`<span class="inline-block mt-1.5 text-[11px] px-2.5 py-0.5 rounded-full border" style="border-color:#087A4B;color:#7FD1A8">Partner für ${p.s}</span>`:''}</div></div>
@@ -880,12 +957,14 @@ function toggleMode(){
 const GUEST = 5;
 
 /* ===== Benachrichtigungen ===== */
-const NOTIF=[['jobs','Neue passende Jobs','Wenn ein Job zu deinen Interessen erscheint'],['status','Status deiner Bewerbung','Freigeschaltet, angesehen, Rückmeldung'],['msg','Nachrichten','Neue Nachricht oder Antwort eines Partners'],['community','Community','Kommentare, Likes, Forum-Antworten, „hilfreich“, neue Follower'],['live','Live','Morgen-Call startet in 5 Minuten, Vortrag heute'],['erfolge','Erfolge','Neue Medaille, neues Abzeichen, Rang gestiegen, Spotlight'],['konto','Konto','Bewertung erhalten, Nachweis geprüft']];
-function toggleNotif(k){ S.notif[k]=!S.notif[k]; render(); }
+const NOTIF=[['jobs','Neue passende Jobs','Wenn ein Job zu deinen Interessen erscheint'],['status','Status deiner Bewerbung','Freigeschaltet, angesehen, Rückmeldung'],['msg','Nachrichten','Neue Nachricht oder Antwort eines Partners'],['community','Community','Kommentare, Likes, Forum-Antworten, „hilfreich“, neue Follower'],['live','Live','Morgen-Call startet in 5 Minuten, Vortrag heute'],['erfolge','Erfolge','Neue Medaille, neues Abzeichen, Rang gestiegen, Spotlight'],['konto','Konto','Bewertung erhalten, Nachweis geprüft'],['folgen','Neue Beiträge','Wenn jemand, dem du folgst, etwas postet'],['antwort','Antworten','Antwort auf deinen Beitrag oder Kommentar'],['viral','Dein Beitrag geht viral','Wenn dein Beitrag richtig durchstartet'],['battle','Einwand-Battle','Neuer Einwand ist live, Abstimmung startet'],['streak','Streak','Erinnerung, bevor deine 🔥 abläuft'],['rang','Rangliste','Wenn du in der Rangliste aufsteigst']];
+Object.assign(S.notif,{folgen:true,antwort:true,viral:true,battle:true,streak:true,rang:true},(()=>{try{return JSON.parse(localStorage.getItem('ch_notif'))||{}}catch(e){return{}}})());
+function toggleNotif(k){ S.notif[k]=!S.notif[k]; try{localStorage.setItem('ch_notif',JSON.stringify(S.notif))}catch(e){} render(); }
 function notifCard(){
   const sw=on=>`<span class="relative inline-block w-10 h-6 rounded-full shrink-0 transition" style="background:${on?'#087A4B':'rgb(var(--line))'}"><span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition" style="left:${on?'18px':'2px'}"></span></span>`;
   return `<div class="card p-4"><p class="font-semibold mb-1">Benachrichtigungen</p><p class="text-xs text-muted mb-2">Du entscheidest, welche Mitteilungen du bekommst.</p>
-    ${NOTIF.map(([k,t,d])=>`<button type="button" onclick="toggleNotif('${k}')" class="w-full flex items-center justify-between gap-3 py-2.5 border-t border-line text-left"><span class="min-w-0"><span class="block text-sm font-medium">${t}</span><span class="block text-xs text-muted">${d}</span></span>${sw(S.notif[k])}</button>`).join('')}
+    ${NOTIF.filter(([k])=>!(typeof FX!=='undefined'&&FX.push&&FX.push[k]===false)).map(([k,t,d])=>`<button type="button" onclick="toggleNotif('${k}')" class="w-full flex items-center justify-between gap-3 py-2.5 border-t border-line text-left"><span class="min-w-0"><span class="block text-sm font-medium">${t}</span><span class="block text-xs text-muted">${d}</span></span>${sw(S.notif[k])}</button>`).join('')}
+    <button type="button" onclick="askPush(this)" class="w-full text-sm font-semibold text-gold border-t border-line py-2.5 text-left">🔔 Mitteilungen auf diesem Gerät erlauben</button>
     <p class="text-xs text-muted border-t border-line pt-3 mt-1">🔒 Mahnungen bekommst du immer. Diese Mitteilung lässt sich nicht abschalten.</p></div>`;
 }
 /* ===== Start-Challenge: die ersten 14 Tage ===== */
@@ -904,13 +983,153 @@ function challengeCard(){
     <p class="text-xs mt-2 ${full(today)?'text-gold font-semibold':'text-muted'}">${full(today)?'🎉 Geschafft! +20 Punkte und +1 Los fürs Gewinnspiel':'Belohnung heute: +20 Punkte und +1 Los fürs Gewinnspiel'}</p>
     <p class="text-xs text-muted mt-2 border-t border-line pt-2">${cnt} von 10 Tagen geschafft. Schaffe 10 der 14 Tage und sichere dir das Abzeichen „${CH_BADGE}“.</p></div>`;
 }
+/* ===== Streak · Flammen-Ring · Einwand-Battle (Einstellungen aus der Zentrale) ===== */
+const FEEDX_DEF = {
+  streak:{min:5, stufen:[[7,'Feuerstarter'],[30,'Dauerbrenner'],[100,'Unaufhaltbar'],[365,'Legende']], warn:['20:00','23:00'], text:'Noch {min} Minuten – rette deine 🔥 {n}!'},
+  push:{folgen:true,antwort:true,viral:true,battle:true,streak:true,rang:true},
+  battle:{on:true, start:'', hour:12, queue:[
+    'Meine Katze ist dagegen.','Ich kaufe nur, wenn mein Horoskop das sagt.','Ich habe gerade mein ganzes Geld in Kaugummi investiert.',
+    'Ich entscheide nichts vor meinem dritten Kaffee.','Da muss ich erst meine Oma fragen, die ist bis 2028 auf Kreuzfahrt.',
+    'Kann ich auch in Pokémon-Karten zahlen?','Ich unterschreibe nur mit Füller, und der ist leer.']}
+};
+const FX = JSON.parse(JSON.stringify(FEEDX_DEF));
+fetch(`${SB_URL}/rest/v1/settings?select=key,value&key=in.(streak,push,battle)`,{headers:{apikey:SB_KEY},cache:'no-store'})
+  .then(r=>r.ok?r.json():[]).then(l=>{ (l||[]).forEach(x=>{ if(x&&x.value&&FX[x.key]) FX[x.key]={...FX[x.key],...x.value}; }); if(route()==='feed'||route()==='profile'||route()==='settings') render(); }).catch(()=>{});
+
+/* ---------- Streak: 5 Minuten App offen pro Tag ---------- */
+const dKey = (d=new Date()) => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const SKS = { get(){ try{ return JSON.parse(localStorage.getItem('ch_streak'))||{sec:{},best:0,warned:{}}; }catch(e){ return {sec:{},best:0,warned:{}}; } }, put(v){ try{ localStorage.setItem('ch_streak',JSON.stringify(v)); }catch(e){} } };
+const skNeed = () => Math.max(1,+FX.streak.min||5)*60;
+function myStreak(){
+  const st=SKS.get(), need=skNeed(), d=new Date(); let n=0;
+  if((st.sec[dKey(d)]||0)<need) d.setDate(d.getDate()-1);   // heute noch nicht geschafft: Serie läuft bis 0 Uhr weiter
+  while((st.sec[dKey(d)]||0)>=need){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+const SK_DEMO = {Lena:112,Tobias:34,Sofia:9,Marco:4,Felix:23,Hannah:3,Mia:1,Lukas:41,Jana:7,Alex:365};
+function streakOf(n){ if(!n||n==='ClosingHub') return 0; if(n===ME.name) return S.user?myStreak():0; return (n in SK_DEMO)?SK_DEMO[n]:(hashN(n)%18); }
+function skTier(s){ const st=FX.streak.stufen||[]; let t=0; st.forEach((x,i)=>{ if(s>=+x[0]) t=i+1; }); return Math.min(t,4); }
+function skAv(n,px,inner,cls=''){
+  const s=streakOf(n), t=skTier(s);
+  return `<span class="sk sk${t} ${cls}" style="--s:${px}px" title="${s?'🔥 '+s+' Tage in Folge aktiv':''}">${t?'<span class="sk-r"></span>':''}<span class="sk-p">${inner}</span>${s>0?`<span class="sk-f">🔥${s}</span>`:''}</span>`;
+}
+function streakCard(){
+  if(!S.user) return '';
+  const st=SKS.get(), s=myStreak(), need=skNeed(), today=Math.min(need,st.sec[dKey()]||0), done=today>=need;
+  const stufen=FX.streak.stufen||[], next=stufen.find(x=>s<+x[0]);
+  const medals=stufen.filter(x=>(st.best||0)>=+x[0]);
+  const ico=['🥉','🥈','🥇','💎'];
+  return `<div class="card p-4 mt-5" id="skcard"><div class="flex items-center justify-between gap-3"><p class="font-semibold">🔥 ${s} ${s===1?'Tag':'Tage'} in Folge</p><span class="text-xs ${done?'text-gold':'text-muted'}">${done?'Heute geschafft ✓':'Heute: '+Math.floor(today/60)+' von '+(need/60)+' Min.'}</span></div>
+    <div class="rounded-full mt-3 overflow-hidden" style="height:6px;background:rgb(var(--line))"><div class="h-full rounded-full" style="width:${today/need*100}%;background:#087A4B"></div></div>
+    <p class="text-xs text-muted mt-2">${next?`Noch ${+next[0]-s} ${+next[0]-s===1?'Tag':'Tage'} bis zur Medaille „${esc(next[1])}“.`:'Höchste Stufe erreicht. Legende!'} Ein Tag ohne ${need/60} Minuten in der App setzt die Serie auf 0.</p>
+    ${medals.length?`<div class="flex flex-wrap gap-2 mt-3">${medals.map(m=>`<span class="text-xs rounded-full border border-line px-3 py-1">${ico[stufen.indexOf(m)]||'🏅'} ${esc(m[1])}</span>`).join('')}</div>`:''}</div>`;
+}
+(function skTick(){
+  let last=Date.now();
+  setInterval(()=>{
+    const now=Date.now(), dt=Math.min(10,(now-last)/1000); last=now;
+    if(!S.user || document.visibilityState!=='visible') return;
+    const st=SKS.get(), k=dKey(), need=skNeed(), before=st.sec[k]||0;
+    st.sec[k]=before+dt;
+    const keys=Object.keys(st.sec).sort(); while(keys.length>400) delete st.sec[keys.shift()];
+    if(before<need && st.sec[k]>=need){ SKS.put(st); st.best=Math.max(st.best||0,myStreak()); SKS.put(st); if(route()==='feed'||route()==='profile') render(); return; }
+    // Erinnerung (solange die App offen ist), wenn die Minuten noch fehlen
+    const hm=new Date().toTimeString().slice(0,5);
+    if(st.sec[k]<need && S.notif.streak!==false && FX.push.streak!==false && (FX.streak.warn||[]).includes(hm) && !(st.warned||{})[k+hm]){
+      st.warned={...(st.warned||{}),[k+hm]:1};
+      const txt=String(FX.streak.text||'').replace('{min}',Math.ceil((need-st.sec[k])/60)).replace('{n}',myStreak());
+      try{ if('Notification' in window && Notification.permission==='granted') new Notification('ClosingHub',{body:txt}); }catch(e){}
+    }
+    SKS.put(st);
+    const c=document.getElementById('skcard'); if(c && route()==='profile') c.outerHTML=streakCard();
+  },5000);
+})();
+function askPush(btn){ if(!('Notification' in window)) { btn.textContent='Dein Browser unterstützt keine Mitteilungen'; return; } Notification.requestPermission().then(p=>{ btn.textContent=p==='granted'?'Mitteilungen erlaubt ✓':'Mitteilungen blockiert – in den Handy-Einstellungen erlauben'; }); }
+
+/* ---------- Einwand-Battle ---------- */
+const B_DEMO_ANS = [
+  ['Lena','Kein Problem. Ich hab gestern schon mit ihr telefoniert – sie meinte, du sollst endlich mal was für dich tun.',412],
+  ['Tobias','Verständlich. Dann bekommt sie das Premium-Paket mit Kratzbaum. Unterschreibst du für euch beide?',389],
+  ['Sofia','Perfekt, dann machen wir einen Termin zu dritt. Ich bring Leckerlis mit.',201],
+  ['Marco','Respekt, dass du dich traust, ihr zu widersprechen. Machst du das heute zum ersten Mal?',144],
+  ['Felix','Alles klar. Was müsste ich ihr sagen, damit sie schnurrt?',97]
+];
+function bStartDate(){ const c=FX.battle; const d=new Date(c.start+'T00:00:00'); const h=Number.isFinite(+c.hour)&&c.hour!==''?+c.hour:12; d.setHours(h,0,0,0); return d; }
+function bState(now=new Date()){
+  const c=FX.battle, q=(c.queue||[]).map(x=>typeof x==='string'?x:(x&&x.t)||'').filter(Boolean);
+  if(!c.on||!q.length||!c.start) return null;
+  const start=bStartDate(); if(now<start) return {phase:'soon',start};
+  const i=Math.floor((now-start)/864e5), cyc=new Date(start.getTime()+i*864e5);
+  const mid=new Date(cyc); mid.setDate(mid.getDate()+1); mid.setHours(0,0,0,0);
+  const nextCyc=new Date(cyc.getTime()+864e5);
+  const phase = now<mid ? 'antworten' : 'abstimmen';
+  return {i, q, phase, cur:q[i]??null, prev:i>0?q[i-1]:null, prevPrev:i>1?q[i-2]:null, end: phase==='antworten'?mid:nextCyc};
+}
+const BST = { get(id){ try{ return JSON.parse(localStorage.getItem('ch_battle_'+id))||null; }catch(e){ return null; } }, put(id,v){ try{ localStorage.setItem('ch_battle_'+id,JSON.stringify(v)); }catch(e){} } };
+function bId(i){ return 'e'+i; }
+const B_DEMO_GEN = [
+  ['Lena','Absolut nachvollziehbar. Darf ich das kurz an meinen Chef weiterleiten? Der sammelt solche Sätze.',356],
+  ['Tobias','Verstehe ich. Sollen wir das schriftlich festhalten, bevor du es dir anders überlegst?',331],
+  ['Sofia','Kein Problem. Ich warte. Ich hab Snacks dabei.',188],
+  ['Marco','Das hat mein letzter Kunde auch gesagt. Heute ist er Millionär. Zufall? Ich glaube nicht.',121],
+  ['Felix','Ehrlichkeit gegen Ehrlichkeit: Das ist der beste Einwand, den ich diese Woche gehört habe.',84]
+];
+function bData(i){
+  let d=BST.get(bId(i));
+  if(!d){ const st=bState(), txt=st&&st.q?st.q[i]||'':''; const src=/katze/i.test(txt)?B_DEMO_ANS:B_DEMO_GEN; const off=i%3;
+    d={ans:src.map((a,k)=>({id:k,n:a[0],t:a[1],l:a[2]-((k+off)%3)*7})),liked:{},vote:null,v:[0,0]}; }
+  return d;
+}
+function bTop2(d){ return [...d.ans].sort((a,b)=>b.l-a.l||a.id-b.id).slice(0,2); }
+function bVotes(i,d){ const h=hashN('v'+i), base=600+h%900, p=0.4+(h%21)/100; return [Math.round(base*p)+d.v[0], Math.round(base*(1-p))+d.v[1]]; }
+function bWinner(i){ const d=bData(i), t=bTop2(d); if(!t.length) return null; if(t.length<2) return t[0]; const v=bVotes(i,d); return v[0]>=v[1]?t[0]:t[1]; }
+const bFmt = ms => { const s=Math.max(0,Math.floor(ms/1000)); return [Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(v=>String(v).padStart(2,'0')).join(':'); };
+
+function battleCard(anim=true){
+  const b=bState(); if(!b) return '';
+  const A = anim ? ' bt-in' : '';
+  if(b.phase==='soon') return `<div id="battle" class="bt"><div class="bt-bg"><div class="bt-vs">VS</div></div><div class="bt-ui"><p class="bt-k${A}">Einwand-Battle</p><p class="bt-e${A}" style="font-size:28px">Startet am ${b.start.toLocaleDateString('de-DE')} um ${b.start.getHours()} Uhr.</p><p class="bt-h${A}">Jeden Tag ein verrückter Einwand. Die lustigste Antwort gewinnt.</p></div></div>`;
+  if(!b.cur && !b.prev) return '';
+  // Spotlight: Sieger des Battles, dessen Abstimmung zuletzt endete
+  const spI = b.phase==='antworten' ? b.i-1 : b.i-1;
+  const w = spI>=0 && b.q[spI] ? bWinner(spI) : null;
+  const spot = w ? `<div class="bt-spot${A}"><span class="bt-crown">👑</span>${skAv(w.n,30,avatar(w.n),'shrink-0')}<div class="min-w-0"><p class="uppercase tracking-wider" style="color:#3FBF86;font-size:11px">Spotlight · Sieger des letzten Battles</p><p class="text-sm truncate" style="color:#fff"><b>${esc(w.n)}:</b> „${esc(w.t)}“</p><p class="text-xs truncate" style="color:#8A9BB0">auf „${esc(b.q[spI])}“</p></div></div>` : '';
+  if(!b.cur) return spot?`<div id="battle">${spot}</div>`:'';
+  const d=bData(b.i), head=`<div class="bt-top"><span class="bt-k${A}">Einwand-Battle${b.phase==='abstimmen'?' · Finale':''}</span><span class="bt-t">${b.phase==='antworten'?'Antworten bis 0 Uhr':'Abstimmung endet in'} <b id="btT">${bFmt(b.end-new Date())}</b></span></div><p class="bt-e${A}"><q>${esc(b.cur)}</q></p>`;
+  let body='';
+  if(b.phase==='antworten'){
+    const list=[...d.ans].sort((a,c)=>c.l-a.l||a.id-c.id), mine=d.ans.find(a=>a.mine);
+    const show=S.btAll?list:list.slice(0,4);
+    body = `<p class="bt-h${A}">Sei kreativ. Die 2 Antworten mit den meisten Likes kommen um 0 Uhr ins Finale.</p>
+      ${S.user ? (mine?`<p class="bt-h" style="color:#3FBF86;margin-top:12px">✓ Deine Antwort ist drin. Jetzt Likes sammeln!</p>`:`<div class="bt-form${A}"><textarea id="btIn" maxlength="200" rows="2" placeholder="Deine schlagfertige Antwort …"></textarea><button onclick="bSend(${b.i})">Posten</button></div>`)
+        : `<a href="#login" class="bt-form${A}" style="justify-content:center;color:#3FBF86;font-weight:700">Anmelden und mitmachen</a>`}
+      <div class="bt-list${A}">${show.map(a=>`<div class="bt-a">${skAv(a.n,30,avatar(a.n),'shrink-0')}<div class="min-w-0 flex-1"><b>${esc(a.n)}</b><p>${esc(a.t)}</p></div><button class="bt-like ${d.liked[a.id]?'on':''}" onclick="bLike(${b.i},${a.id})" aria-label="Gefällt mir">♥ ${a.l+(d.liked[a.id]?1:0)}</button></div>`).join('')}
+      ${list.length>4?`<button class="bt-more" onclick="S.btAll=!S.btAll;bRedraw()">${S.btAll?'Weniger anzeigen':'Alle '+list.length+' Antworten'}</button>`:''}</div>`;
+  } else {
+    const t=bTop2(d), v=bVotes(b.i,d), sum=v[0]+v[1], pc=[Math.round(v[0]/sum*100),0]; pc[1]=100-pc[0];
+    body = `<p class="bt-h${A}">Welche Antwort ist besser? Tippe links oder rechts.</p>
+      <div class="bt-duel ${d.vote!==null?'voted':''}">${t.map((a,k)=>`<button class="bt-c ${k?'bt-cR':'bt-cL'}${A} ${d.vote===k?'me':''}" onclick="bVote(${b.i},${k})" ${d.vote!==null||!S.user?'disabled':''}>
+        <span class="bt-ck">✓</span><span class="bt-pc">${pc[k]} %</span><span class="bt-side">${k?'Rechts':'Links'}</span><span class="bt-tx">„${esc(a.t)}“</span>
+        <span class="bt-who">${skAv(a.n,26,avatar(a.n),'shrink-0')}<span><b>${esc(a.n)}</b><small>${a.l+(d.liked[a.id]?1:0)} Likes</small></span></span><span class="bt-bar" style="height:${d.vote!==null?pc[k]:0}%"></span></button>`).join('')}</div>
+      <p class="bt-foot"><b>${sum.toLocaleString('de-DE')}</b> Stimmen${S.user?'':' · <a href="#login" style="color:#3FBF86">Anmelden zum Abstimmen</a>'}</p>`;
+  }
+  return `<div id="battle">${spot}<div class="bt"><div class="bt-bg"><div class="bt-vs">VS</div></div><div class="bt-ui">${head}${body}</div></div></div>`;
+}
+function bRedraw(){ const e=document.getElementById('battle'); if(e) e.outerHTML=battleCard(false); }
+function bSend(i){ const el=document.getElementById('btIn'), t=(el&&el.value||'').trim(); if(t.length<3) return; const d=bData(i); d.ans.push({id:Date.now(),n:ME.name,t,l:0,mine:true}); BST.put(bId(i),d); bRedraw(); }
+function bLike(i,id){ if(!S.user){ go('login'); return; } const d=bData(i); d.liked[id]=!d.liked[id]; BST.put(bId(i),d); bRedraw(); }
+function bVote(i,k){ const d=bData(i); if(d.vote!==null||!S.user) return; d.vote=k; d.v[k]++; BST.put(bId(i),d); bRedraw(); }
+let _bPhase=null;
+setInterval(()=>{ const b=bState(); const key=b?b.phase+b.i:'x'; if(_bPhase!==null && key!==_bPhase && route()==='feed'){ _bPhase=key; bRedraw(); return; } _bPhase=key;
+  const t=document.getElementById('btT'); if(t&&b&&b.end) t.textContent=bFmt(b.end-new Date()); },1000);
+
 function feed(){
   const ft = S.ptopics || S.topics;
   const pool = ft ? POSTS.filter(p=>ft.includes(p.k)) : POSTS;
   const list = S.user ? pool : pool.slice(0,GUEST); S.feedList = list;
   const posts = list.map((p,i)=>`
     <article class="card overflow-hidden">
-      <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block ${p.a==='ClosingHub'?'gold-bg':''}">${p.a==='ClosingHub'?'<span class="w-full h-full flex items-center justify-center font-serif italic text-black text-sm">CH</span>':avatar(p.a)}</span>${nameRank(p.a,p.r)}</span><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span></div>
+      <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2">${p.a==='ClosingHub'?'<span class="w-8 h-8 rounded-full overflow-hidden inline-block gold-bg"><span class="w-full h-full flex items-center justify-center font-serif italic text-black text-sm">CH</span></span>':skAv(p.a,34,avatar(p.a))}${nameRank(p.a,p.r)}</span><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span></div>
       <div class="relative aspect-square bg-bg flex items-center justify-center p-8 cursor-pointer border-y border-line overflow-hidden" onclick="S.plist=S.feedList;startPlayer(${i})" style="${p.v&&p.vid===undefined?'background:radial-gradient(circle at 50% 40%,#1c1a14,#0A0A0B 70%)':''}">
         ${p.vid!==undefined?`<img src="${VIDS[p.vid]}" class="absolute inset-0 w-full h-full object-cover"><span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}
         ${p.bg?bgSvg(p.bg):''}
@@ -924,6 +1143,7 @@ function feed(){
   return `<div class="flex justify-center gap-10 px-4">
     <section class="w-full max-w-[480px] py-6 space-y-6">
       ${storiesRow()}
+      ${battleCard()}
       ${challengeCard()}
       <div class="flex items-center justify-between gap-3"><button onclick="playerMenu()" class="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-sm font-semibold" aria-label="Feed-Einstellungen">${svg('gearplay',16)}Feed-Einstellungen<span class="text-xs text-muted font-normal">${S.ptopics?S.ptopics.length+' Arten':''}${S.timerMin?' · '+S.timerMin+' Min.':''}</span></button><a href="#${S.user?'create':'login'}" class="btn-gold text-sm" style="padding:8px 14px">＋ Teilen</a></div>
       ${posts}${guest}
@@ -996,7 +1216,7 @@ function commentsP(id){
   const base=[['Lena','Dealmaker','Genau so mache ich es auch 🔥'],['Jonas','Performer','Direkt im nächsten Call getestet – funktioniert!'],['Hannah','Rising','Danke für den Input!']];
   const mine=(S.cm[id]||[]).map(t=>[ME.name,ME.rank,t]);
   sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Kommentare</p><button onclick="closeSheet()" class="text-muted text-xl">✕</button></div>
-    <div class="space-y-3">${[...base,...mine].map(([n,r,t])=>`<div class="flex gap-3"><span class="w-8 h-8 rounded-full overflow-hidden shrink-0">${avatar(n)}</span><div><div class="text-sm">${nameRank(n,r)}</div><p class="text-sm text-white/90">${t}</p></div></div>`).join('')}</div>
+    <div class="space-y-3">${[...base,...mine].map(([n,r,t])=>`<div class="flex gap-3">${skAv(n,32,avatar(n),'shrink-0')}<div><div class="text-sm">${nameRank(n,r)}</div><p class="text-sm text-white/90">${t}</p></div></div>`).join('')}</div>
     ${S.user?`<form class="flex gap-2 pt-2" onsubmit="event.preventDefault();const v=this.c.value.trim();if(!v)return;(S.cm[${id}]=S.cm[${id}]||[]).push(v);commentsP(${id})"><input name="c" class="input" placeholder="Kommentar schreiben…" autocomplete="off"><button class="btn-gold">Senden</button></form>`:`<a href="#login" onclick="closeSheet();closeModal()" class="btn-gold block">Anmelden zum Kommentieren</a>`}`);
   const inp=document.querySelector('#psheet input'); if(inp) inp.focus();
 }
@@ -1289,11 +1509,12 @@ function profile(){
   return `<div class="max-w-3xl mx-auto px-4 py-8">
     ${S.user?'':`<div class="card p-3 mb-6 text-sm text-center">👀 Beispielprofil – <a href="#login" class="text-gold">melde dich an</a>, um dein eigenes zu erstellen.</div>`}
     <div class="flex items-center gap-5">
-      <div class="w-24 h-24 md:w-36 md:h-36 rounded-full gold-bg p-[3px] shrink-0"><div class="w-full h-full rounded-full overflow-hidden bg-panel">${avatar(ME.name)}</div></div>
+      ${skAv(ME.name,112,avatar(ME.name),'shrink-0')}
       <div class="flex-1 space-y-2 min-w-0">
         <div class="flex items-center gap-3 flex-wrap text-xl">${nameRank(ME.name,ME.rank,ME.medals)} <button onclick="openReviews()" title="Bewertungen ansehen" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line pl-2.5 pr-2 py-1 text-sm leading-none transition hover:border-gold"><span style="color:#E0A82E">★</span><b>${String(ME.rating).replace('.',',')}</b><span class="text-muted">· ${REVIEWS.reduce((s,g)=>s+g.n,0)}</span><span class="text-muted text-xs">›</span></button></div>
         <div class="flex gap-5 text-sm flex-wrap"><span><b>${ME.followers}</b> Follower</span><span><b>${ME.following}</b> gefolgt</span></div>
       </div></div>
+    ${streakCard()}
     <div class="mt-5 space-y-2 text-left">
       <p class="text-sm">${ME.role} ⭐ · ${ME.years} Jahre Erfahrung · ${ME.country} · ${ME.langs}</p>
       <p class="text-sm text-muted">${ME.bio}</p>
