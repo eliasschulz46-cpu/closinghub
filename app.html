@@ -352,6 +352,7 @@ window.tailwind=window.tailwind||{}; tailwind.config = { theme: { extend: {
   #chsplash.sp-out{opacity:0;pointer-events:none}
   #chsplash.sp-out .sp-c{transform:scale(1.06)}
 </style>
+<style>.cmbox{height:calc(100dvh - 200px)} @media (min-width:768px){.cmbox{height:calc(100vh - 45px)}}</style>
 </head>
 <body>
 <script>/* ===== Start-Animation: Lichtpunkt schreibt „closing“, „HUB“ zündet wie Neon, Linie + Slogan, dann auf ===== */
@@ -672,7 +673,7 @@ function partnerModal(p,offers,r,rt){
         ${p.rv?`<p class="text-xs font-semibold text-muted mt-5 mb-1">Bewertungen von Membern</p>
         <div class="border-t border-line py-2 text-sm"><div class="flex justify-between"><b>${p.rv[0]}, ${p.rv[1]}</b><span style="color:#087A4B">★★★★★</span></div><p class="text-muted">${p.rv[2]}</p></div>`:''}
         <div id="pmsg" class="mt-4">${S.user?`<textarea id="pmtxt" maxlength="500" class="input h-20 text-sm" placeholder="Schreib ${n} eine Nachricht …"></textarea>
-          <button class="btn-ghost w-full mt-2" onclick="sendPersonMsg('${n}')">Nachricht senden</button>`
+          <button class="btn-ghost w-full mt-2" onclick="sendPersonMsg('${n}',${p.pid||0})">Nachricht senden</button>`
           :`<button class="btn-ghost w-full" onclick="closeModal();go('login')">Anmelden, um ${n} zu schreiben</button>`}</div>
       </div>
     </div></div>`;
@@ -689,7 +690,7 @@ function applyPartners(list){
     if(Array.isArray(p.k)&&c(p.k[0])) o.k=[c(p.k[0],12),c(p.k[1],30)];
     if(Array.isArray(p.deal)&&c(p.deal[0])) o.deal=[c(p.deal[0],40),c(p.deal[1],60),c(p.deal[2],20)];
     o.offers=(Array.isArray(p.offers)?p.offers:[]).slice(0,3).map(x=>({t:c(x&&x.t,70),pr:c(x&&x.pr,12)})).filter(x=>x.t);
-    return o; }).filter(p=>p.n&&p.s);
+    o.pid=+p.pid||0; return o; }).filter(p=>p.n&&p.s);
   if(typeof route==='function' && route()==='markt') render();
 }
 fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/settings?select=value&key=eq.markt',{headers:{apikey:'sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D'}})
@@ -1093,7 +1094,7 @@ async function loadMember(){
   if(!m){ let adm=false; try{ adm=await rpc('is_admin'); }catch(e){}
     if(!adm){ dropSes(); save(); S.loginErr='Für diese E-Mail gibt es noch kein Mitgliedskonto. Nutze deinen persönlichen Einladungslink.'; S.route='login'; try{ history.replaceState(null,'',location.pathname+'#login'); }catch(e){} render(); return; }
     S.adminPreview=true; }
-  applyMember(m); render(); if(m){ mbLoad(); unreadLoad(); }
+  applyMember(m); render(); if(m){ mbLoad(); unreadLoad(); chatsLoad(); }
 }
 async function doLogin(){
   const e=(document.getElementById('lgE')||{}).value||'', p=(document.getElementById('lgP')||{}).value||'', er=document.getElementById('lgErr'), b=document.getElementById('lgBtn');
@@ -1471,7 +1472,7 @@ async function memberModal(mid){
         <div class="min-w-0"><div class="text-lg">${nameRank(esc(first),RANKS[(p.rang||1)-1])}</div><div class="flex gap-4 text-sm mt-1"><span><b id="mmF">${p.follower}</b> Follower</span><span><b>${p.gefolgt}</b> gefolgt</span><span><b>${p.beitraege}</b> Beiträge</span></div></div></div>
       <p class="text-sm mt-4">${line.join(' · ')}</p>${p.bio?`<p class="text-sm text-muted mt-1">${esc(p.bio)}</p>`:''}
       ${badges.length?`<div class="flex gap-2 mt-3">${badges.map(b=>badgeIcon(b)).join('')}</div>`:''}
-      ${S.member?`<button id="mmBtn" class="${p.folge?'btn-ghost':'btn-gold'} w-full mt-4" onclick="followToggle(${p.id},this)">${p.folge?'Gefolgt ✓':'Folgen'}</button>`:`<a href="#login" onclick="closeModal()" class="btn-gold block text-center mt-4">Anmelden zum Folgen</a>`}
+      ${S.member?`<button id="mmBtn" class="${p.folge?'btn-ghost':'btn-gold'} w-full mt-4" onclick="followToggle(${p.id},this)">${p.folge?'Gefolgt ✓':'Folgen'}</button><button class="btn-ghost w-full mt-2" onclick="startChat(${p.id},this)">Nachricht schreiben</button><button class="text-xs text-muted w-full mt-2" onclick="const g=prompt('Warum meldest du dieses Profil?');if(g!==null)rpc('melden',{p_typ:'member',p_ref:${p.id},p_grund:g}).then(()=>alert('Danke, wir schauen es uns an.'))">Profil melden</button>`:`<a href="#login" onclick="closeModal()" class="btn-gold block text-center mt-4">Anmelden zum Folgen</a>`}
       ${postGrid(list,false)}</div></div>`;
 }
 function followToggle(mid,btn){ btn.disabled=true; rpc('folgen_umschalten',{p_member:mid}).then(j=>{ btn.disabled=false; if(!j||!j.ok) return; btn.className=(j.folge?'btn-ghost':'btn-gold')+' w-full mt-4'; btn.textContent=j.folge?'Gefolgt ✓':'Folgen'; const f=document.getElementById('mmF'); if(f) f.textContent=(+f.textContent)+(j.folge?1:-1); (S.rp||[]).forEach(p=>{ if(p.mid===mid) p.folge=j.folge; }); loadMember(); }).catch(()=>{ btn.disabled=false; }); }
@@ -1553,14 +1554,242 @@ const N_IC={like:'❤️',kommentar:'💬',folgen:'👤',bewerbung:'💼'};
 S.notes=null;
 async function notesLoad(){ if(!S.member) return; try{ S.notes=await rpc('mitteilungen_laden'); }catch(e){ S.notes=[]; } if(route()==='notifications'){ S.unread=0; render(); rpc('mitteilungen_gelesen').then(()=>{ S.unread=0; markBell(); }).catch(()=>{}); } }
 async function unreadLoad(){ if(!S.member) return; try{ S.unread=await rpc('mitteilungen_ungelesen')||0; }catch(e){} markBell(); }
-function markBell(){ document.querySelectorAll('a[href="#notifications"]').forEach(a=>{ let d=a.querySelector('.nbadge'); if(S.unread>0){ if(!d){ d=document.createElement('span'); d.className='nbadge'; d.style.cssText='position:absolute;top:2px;right:2px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#e5484d;color:#fff;font:700 10px/17px Archivo,sans-serif;text-align:center;pointer-events:none'; a.style.position='relative'; a.appendChild(d); } d.textContent=S.unread>9?'9+':S.unread; } else if(d) d.remove(); }); }
+function markBell(){ markMsgs(); document.querySelectorAll('a[href="#notifications"]').forEach(a=>{ let d=a.querySelector('.nbadge'); if(S.unread>0){ if(!d){ d=document.createElement('span'); d.className='nbadge'; d.style.cssText='position:absolute;top:2px;right:2px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#e5484d;color:#fff;font:700 10px/17px Archivo,sans-serif;text-align:center;pointer-events:none'; a.style.position='relative'; a.appendChild(d); } d.textContent=S.unread>9?'9+':S.unread; } else if(d) d.remove(); }); }
+function markMsgs(){ document.querySelectorAll('a[href="#messages"]').forEach(a=>{ let d=a.querySelector('.mbadge'); if(S.unreadMsg>0){ if(!d){ d=document.createElement('span'); d.className='mbadge'; d.style.cssText='position:absolute;top:2px;right:2px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#087A4B;color:#fff;font:700 10px/17px Archivo,sans-serif;text-align:center;pointer-events:none'; a.style.position='relative'; a.appendChild(d); } d.textContent=S.unreadMsg>9?'9+':S.unreadMsg; } else if(d) d.remove(); }); }
+function noteHref(n){ const l=n.link||'feed'; if(/^chat:/.test(l)) return `href="#messages" onclick="openConv('${/^chat:p/.test(l)?'p'+l.slice(6):'m'+l.slice(5)}')"`; return `href="#${l}"`; }
 function notesReal(){
   if(S.notes===null){ notesLoad(); return `<div class="max-w-lg mx-auto px-4 py-8"><h1 class="font-serif text-2xl mb-2">Mitteilungen</h1><p class="text-sm text-muted">Lädt …</p></div>`; }
   return `<div class="max-w-lg mx-auto px-4 py-8 space-y-3"><h1 class="font-serif text-2xl mb-2">Mitteilungen</h1>
-    ${S.notes.length?S.notes.map(n=>`<a href="#${n.link||'feed'}" class="card p-4 text-sm flex gap-3 items-start ${n.gelesen?'':'border-gold'}" style="${n.gelesen?'':'border-color:#087A4B'}"><span class="text-lg leading-none">${N_IC[n.typ]||'🔔'}</span><span class="min-w-0"><span class="block">${esc(n.text)}</span><span class="block text-xs text-muted mt-1">${new Date(n.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></span></a>`).join('')
+    ${S.notes.length?S.notes.map(n=>`<a ${noteHref(n)} class="card p-4 text-sm flex gap-3 items-start ${n.gelesen?'':'border-gold'}" style="${n.gelesen?'':'border-color:#087A4B'}"><span class="text-lg leading-none">${N_IC[n.typ]||'🔔'}</span><span class="min-w-0"><span class="block">${esc(n.text)}</span><span class="block text-xs text-muted mt-1">${new Date(n.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></span></a>`).join('')
       :'<div class="card p-8 text-center text-sm text-muted">Noch keine Mitteilungen. Sobald jemand deinen Beitrag liked, dir folgt oder sich bei deiner Bewerbung etwas tut, siehst du es hier.</div>'}</div>`;
 }
 setInterval(()=>{ if(document.visibilityState==='visible') unreadLoad(); },45000);
+
+/* ===== Nachrichten: echte Chats (Mitglieder + Partner-Anfragen) ===== */
+S.cl=null; S.cur=null; S.cmsg=null; S.surl={}; S.unreadMsg=0; S.cerr='';
+async function chatsLoad(){ if(!S.member) return; try{ S.cl=await rpc('chats_laden'); }catch(e){ S.cl=S.cl||{chats:[],partner:[]}; }
+  S.unreadMsg=((S.cl.chats||[]).reduce((a,c)=>a+(+c.ungelesen||0),0))+((S.cl.partner||[]).reduce((a,c)=>a+(+c.ungelesen||0),0)); markBell(); const h=document.querySelector('#chathandle'); if(h&&route()!=='messages') render();
+  if(route()==='messages') drawMsgs(); }
+async function convLoad(){ if(!S.cur) return; const k=S.cur;
+  try{ const r = k[0]==='m' ? await rpc('nachrichten_laden',{p_chat:+k.slice(1)}) : await rpc('partner_chat_laden',{p_partner:+k.slice(1)}); if(S.cur===k){ S.cmsg=r||[]; drawMsgs(true); } }catch(e){} }
+async function openConv(k){ S.cur=k; S.cmsg=null; S.cerr=''; if(route()!=='messages') go('messages'); else drawMsgs(); await convLoad(); chatsLoad(); }
+async function startChat(mid,btn){ if(btn) btn.disabled=true;
+  try{ const j=await rpc('chat_starten',{p_member:mid}); if(!j||!j.ok){ alert(j&&j.grund==='tempo'?'Kurze Pause: Du hast in der letzten Stunde schon 6 neue Chats gestartet. Versuch es gleich nochmal.':'Chat konnte nicht gestartet werden.'); if(btn) btn.disabled=false; return; }
+    closeModal(); S.newChat=j.chat; openConv('m'+j.chat); }catch(e){ if(btn) btn.disabled=false; } }
+async function signUrl(path){
+  if(S.surl[path]) return S.surl[path];
+  const t=await sesToken(); const r=await fetch(`${SB_URL}/storage/v1/object/sign/chat/${path}`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:3600})});
+  const j=await r.json().catch(()=>({})); if(!r.ok||!(j.signedURL||j.signedUrl)) throw 0;
+  const u=(j.signedURL||j.signedUrl); S.surl[path]=/^https?:/.test(u)?u:`${SB_URL}/storage/v1${u.startsWith('/')?'':'/'}${u}`; return S.surl[path];
+}
+function fillMedia(){ document.querySelectorAll('[data-cmedia]').forEach(el=>{ const p=el.getAttribute('data-cmedia'), t=el.getAttribute('data-typ'); el.removeAttribute('data-cmedia');
+  signUrl(p).then(u=>{ el.innerHTML = t==='bild'?`<img src="${u}" alt="Bild" class="chat-media">`:t==='video'?`<video src="${u}" controls playsinline preload="metadata" class="chat-media"></video>`:`<audio src="${u}" controls preload="metadata" class="chat-aud"></audio>`; }).catch(()=>{ el.textContent='Medium nicht verfügbar'; }); }); }
+const cTime = d => { const x=new Date(d), n=new Date(); return x.toDateString()===n.toDateString()?x.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):x.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}); };
+const cLast = l => !l?'':(l.mine?'Du: ':'')+(l.typ==='bild'?'📷 Bild':l.typ==='video'?'🎬 Video':l.typ==='audio'?'🎤 Sprachnachricht':esc(l.text||''));
+function convHead(){
+  const k=S.cur; if(!k) return null;
+  if(k[0]==='m'){ const c=((S.cl&&S.cl.chats)||[]).find(x=>'m'+x.id===k); return c?{name:c.name,av:c.avatar_url,mid:c.member_id,rang:c.rang}:{name:'Neuer Chat',mid:null}; }
+  const p=((S.cl&&S.cl.partner)||[]).find(x=>'p'+x.partner_id===k)||(PARTNERS||[]).find(x=>'p'+x.pid===k); return {name:(p&&(p.name||p.n))||'Partner',av:p&&(p.img),partner:true};
+}
+function msgsHtml(){
+  if(S.cmsg===null) return '<p class="text-sm text-muted p-4">Lädt …</p>';
+  if(!S.cmsg.length) return '<p class="text-sm text-muted p-4 text-center">Noch keine Nachrichten. Schreib die erste!</p>';
+  return S.cmsg.map(m=>`<div class="flex ${m.mine?'justify-end':''} group"><span class="chat-bub ${m.mine?'out gold-bg text-black':''} ${m.media_pfad||m.abgelaufen?'med':''}" title="${cTime(m.created_at)}">
+    ${m.media_pfad?`<span data-cmedia="${esc(m.media_pfad)}" data-typ="${m.media_typ}" class="block text-xs opacity-70">Lädt …</span><span class="chat-exp">wird nach 30 Tagen gelöscht</span>`:''}${m.abgelaufen?'<span class="text-xs opacity-70">Medium nach 30 Tagen gelöscht</span>':''}
+    ${m.text?esc(m.text).replace(/\n/g,'<br>'):''}<span class="block text-[10px] opacity-60 mt-0.5 ${m.mine?'text-right':''}">${cTime(m.created_at)}${m.mine&&m.gelesen?' · gelesen':''}</span></span>
+    ${!m.mine&&S.cur[0]==='m'?`<button onclick="reportMsg(${m.id})" class="text-[10px] text-muted self-end ml-1 opacity-0 group-hover:opacity-100" style="min-width:36px">Melden</button>`:''}</div>`).join('');
+}
+function drawMsgs(scroll){
+  if(route()!=='messages') return; const box=document.getElementById('cmbox'); if(!box){ render(); return; }
+  const ii=document.getElementById('cminput'), keep=ii?{v:ii.value,f:document.activeElement===ii,a:ii.selectionStart,b:ii.selectionEnd}:null;
+  box.innerHTML=msgsInner(); fillMedia();
+  const ni=document.getElementById('cminput'); if(ni&&keep){ ni.value=keep.v; if(keep.f){ ni.focus(); try{ ni.setSelectionRange(keep.a,keep.b); }catch(e){} } } const m=document.getElementById('cmlist'); if(m&&(scroll||m.dataset.atBottom!=='0')) m.scrollTop=m.scrollHeight;
+  const i=document.getElementById('cminput'); if(i&&S._keepFocus){ i.focus(); S._keepFocus=false; }
+}
+function msgsInner(){
+  const cl=S.cl||{chats:[],partner:[]}, items=[...(cl.chats||[]).map(c=>({k:'m'+c.id,name:c.name,av:c.avatar_url,last:c.letzte,at:c.last_at,un:c.ungelesen,sub:RANKS[(c.rang||1)-1]})),...(cl.partner||[]).map(p=>({k:'p'+p.partner_id,name:p.name,av:p.img,last:p.letzte,at:p.last_at,un:p.ungelesen,sub:'Partner'}))].sort((a,b)=>new Date(b.at)-new Date(a.at));
+  const h=convHead(), A='width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
+  const list=`<div class="border-r border-line overflow-y-auto ${S.cur?'hidden md:block':''}"><p class="font-serif text-xl p-4">Nachrichten</p>
+    ${S.cl===null?'<p class="text-sm text-muted px-4">Lädt …</p>':items.length?items.map(x=>`<button onclick="openConv('${x.k}')" class="w-full flex items-center gap-3 text-left p-4 border-t border-line hover:bg-panel ${x.k===S.cur?'bg-panel':''}">
+      <span class="w-11 h-11 rounded-full overflow-hidden shrink-0">${x.av?`<img src="${esc(x.av)}" class="w-full h-full object-cover">`:initAv(x.name)}</span>
+      <span class="flex-1 min-w-0"><span class="flex justify-between gap-2"><b class="text-sm truncate">${esc(x.name)}</b><span class="text-[10px] text-muted whitespace-nowrap">${cTime(x.at)}</span></span><span class="flex justify-between gap-2"><span class="text-xs text-muted truncate">${cLast(x.last)}</span>${x.un?`<span class="text-[10px] font-bold rounded-full px-1.5" style="background:#087A4B;color:#fff">${x.un}</span>`:''}</span><span class="text-[10px] text-gold">${x.sub}</span></span></button>`).join('')
+      :'<div class="p-4 text-sm text-muted">Noch keine Chats. Öffne ein Profil im Feed und tippe auf „Nachricht schreiben“.</div>'}</div>`;
+  if(!S.cur) return list+`<div class="hidden md:flex items-center justify-center text-sm text-muted">Wähle einen Chat aus.</div>`;
+  const media=S.cur[0]==='m';
+  return list+`<div class="flex flex-col" style="min-height:0"><div class="p-3 border-b border-line flex items-center gap-3"><button class="md:hidden text-2xl px-1 leading-none" onclick="S.cur=null;drawMsgs()">‹</button>
+      <span class="w-9 h-9 rounded-full overflow-hidden shrink-0 ${h.mid?'cursor-pointer':''}" ${h.mid?`onclick="memberModal(${h.mid})"`:''}>${h.av?`<img src="${esc(h.av)}" class="w-full h-full object-cover">`:initAv(h.name)}</span><b class="text-sm">${esc(h.name)}</b>${h.partner?'<span class="text-[10px] text-gold">Partner · Antwort meist in 24 h</span>':''}</div>
+    <div id="cmlist" class="flex-1 overflow-y-auto p-4 space-y-2" style="min-height:0" onscroll="this.dataset.atBottom=(this.scrollHeight-this.scrollTop-this.clientHeight<60)?'1':'0'">${msgsHtml()}</div>
+    ${S.cerr?`<p class="chat-err">${esc(S.cerr)}</p>`:''}
+    <form class="p-3 border-t border-line flex gap-2 items-center" onsubmit="event.preventDefault();cSend()">
+      ${media?`<label class="chat-btn" title="Bild oder Video senden">${'<svg '+A+'><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 15.5l-5-5L6 20"/></svg>'}<input type="file" accept="image/*,video/*" class="hidden" onchange="cFile(this)"></label>
+      <button type="button" class="chat-btn ${S.crec?'rec':''}" onclick="cRec()" title="${S.crec?'Stopp und senden':'Sprachnachricht'}">${S.crec?'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>':'<svg '+A+'><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg>'}</button>`:''}
+      ${S.crec?`<span class="chat-recbar"><span class="chat-dot"></span>Aufnahme läuft <b id="crt">0:00</b> · Stopp sendet</span>`:`<input id="cminput" class="input" autocomplete="off" maxlength="2000" placeholder="${h.partner?'Deine Anfrage …':'Nachricht …'}"><button class="btn-gold">Senden</button>`}</form>
+    ${media?'<p class="chat-note">Bilder, Videos und Sprachnachrichten werden nach 30 Tagen gelöscht. Werbung für andere Plattformen und fremde Links werden blockiert.</p>':''}</div>`;
+}
+function messagesReal(){ if(S.cl===null) chatsLoad(); setTimeout(()=>{ fillMedia(); const m=document.getElementById('cmlist'); if(m) m.scrollTop=m.scrollHeight; },0);
+  return `<div id="cmbox" class="cmbox grid md:grid-cols-[320px_1fr]">${msgsInner()}</div>`; }
+async function cSend(){
+  const i=document.getElementById('cminput'), v=(i&&i.value||'').trim(); if(!v||!S.cur) return; i.value=''; S.cerr='';
+  try{ const j = S.cur[0]==='m' ? await rpc('nachricht_senden',{p_chat:+S.cur.slice(1),p_text:v,p_media_pfad:null,p_media_typ:null}) : await rpc('partner_nachricht',{p_partner:+S.cur.slice(1),p_text:v});
+    if(!j||!j.ok){ S.cerr=j&&j.text?j.text:j&&j.grund==='tempo'?'Langsam – du schreibst gerade sehr schnell.':'Senden hat nicht geklappt.'; i.value=v; }
+  }catch(e){ S.cerr='Keine Verbindung.'; }
+  S._keepFocus=true; await convLoad(); chatsLoad();
+}
+async function cSendMedia(blob,typ,ext){
+  const chat=+S.cur.slice(1), uid=jwtSub(); S.cerr='Lädt hoch …'; drawMsgs();
+  try{ const f=new File([blob],'m.'+ext,{type:blob.type||({bild:'image/jpeg',video:'video/mp4',audio:'audio/webm'})[typ]});
+    const t=await sesToken(), body=typ==='bild'?await shrinkImg(f):f, path=`${chat}/${uid}/${Date.now()}-${Math.random().toString(36).slice(2,7)}.${typ==='bild'?'jpg':ext}`;
+    const r=await fetch(`${SB_URL}/storage/v1/object/chat/${path}`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+t,'Content-Type':typ==='bild'?'image/jpeg':(f.type||'application/octet-stream')},body});
+    if(!r.ok) throw new Error('Hochladen fehlgeschlagen ('+r.status+')');
+    const j=await rpc('nachricht_senden',{p_chat:chat,p_text:'',p_media_pfad:path,p_media_typ:typ}); if(!j||!j.ok) throw new Error('Senden hat nicht geklappt.');
+    S.cerr=''; }catch(e){ S.cerr=e.message||'Fehler'; }
+  await convLoad(); chatsLoad();
+}
+function cFile(inp){ const f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
+  const typ=f.type.startsWith('image/')?'bild':f.type.startsWith('video/')?'video':''; if(!typ){ S.cerr='Bitte ein Bild oder Video auswählen.'; drawMsgs(); return; }
+  if(f.size>50*1024*1024){ S.cerr='Die Datei ist größer als 50 MB.'; drawMsgs(); return; }
+  cSendMedia(f,typ,(f.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')); }
+function cRec(){
+  if(S.crec){ S.crec.stop(); return; }
+  if(!navigator.mediaDevices||!window.MediaRecorder){ S.cerr='Dieser Browser kann keine Sprachnachrichten aufnehmen.'; drawMsgs(); return; }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{ const r=new MediaRecorder(st), ch=[], t0=Date.now();
+    r.ondataavailable=e=>{ if(e.data&&e.data.size) ch.push(e.data); };
+    r.onstop=()=>{ st.getTracks().forEach(t=>t.stop()); clearInterval(S.crecT); S.crec=null; if(ch.length){ const mt=r.mimeType||'audio/webm'; cSendMedia(new Blob(ch,{type:mt.split(';')[0]}),'audio',/mp4|aac/.test(mt)?'m4a':'webm'); } else drawMsgs(); };
+    r.start(); S.crec=r; S.cerr=''; drawMsgs();
+    S.crecT=setInterval(()=>{ const s=Math.floor((Date.now()-t0)/1000), e=document.getElementById('crt'); if(e) e.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); if(s>=300) r.stop(); },500);
+  }).catch(()=>{ S.cerr='Kein Zugriff auf das Mikrofon. Bitte erlauben.'; drawMsgs(); });
+}
+function reportMsg(id){ const g=prompt('Warum meldest du diese Nachricht? (z. B. Spam, Beleidigung, Abwerbung)'); if(g===null) return; rpc('melden',{p_typ:'nachricht',p_ref:id,p_grund:g}).then(()=>alert('Danke! Das ClosingHub-Team schaut es sich an.')); }
+function reportPost(id){ const g=prompt('Warum meldest du diesen Beitrag?'); if(g===null) return; rpc('melden',{p_typ:'beitrag',p_ref:id-1e6,p_grund:g}).then(()=>alert('Danke! Das ClosingHub-Team schaut es sich an.')); }
+function sendPersonMsg(n,pid){
+  const t=document.getElementById('pmtxt'); if(!t||!t.value.trim()){ if(t) t.focus(); return; }
+  if(S.member&&pid){ const v=t.value.trim(); rpc('partner_nachricht',{p_partner:pid,p_text:v}).then(j=>{ if(j&&j.ok){ document.getElementById('pmsg').innerHTML=`<p class="text-center text-sm" style="color:#087A4B">✓ Nachricht an ${esc(n)} gesendet. Die Antwort findest du unter <a href="#messages" onclick="closeModal();openConv('p${pid}')" class="underline">Nachrichten</a>.</p>`; chatsLoad(); } else alert(j&&j.text?j.text:'Senden hat nicht geklappt.'); }); return; }
+  document.getElementById('pmsg').innerHTML=`<p class="text-emerald-400 text-center text-sm">✓ Nachricht an ${esc(n)} gesendet. Die Antwort findest du unter Nachrichten.</p>`;
+}
+setInterval(()=>{ if(!S.member||document.visibilityState!=='visible') return; if(route()==='messages'&&S.cur&&!S.crec) convLoad(); },6000);
+setInterval(()=>{ if(S.member&&document.visibilityState==='visible') chatsLoad(); },25000);
+
+/* ===== Forum über die Datenbank ===== */
+S.fz=null; S.fl={}; S.fdb=null;
+async function forumCounts(){ try{ S.fz=await rpc('forum_zaehlen'); S.fdb=true; }catch(e){ S.fdb=false; } if(route()==='forum') render(); }
+async function forumList(cat){ try{ S.fl[cat]=await rpc('forum_laden',{p_kat:cat}); S.fdb=true; }catch(e){ S.fl[cat]=[]; S.fdb=false; } if(route()==='forum'&&S.thread===cat) render(); }
+function fCount(n){ if(S.fz===null){ S.fz={}; forumCounts(); } if(S.fdb===false) return FTHREADS.filter(t=>t.cat===n).length; return +(S.fz[n]||0); }
+function fAv(x){ return x.avatar_url?`<img src="${esc(x.avatar_url)}" class="w-full h-full object-cover">`:(x.member_id?initAv(x.name):`<span class="w-full h-full flex items-center justify-center gold-bg font-serif italic text-black text-xs">CH</span>`); }
+function threadReal(){
+  const cat=S.thread; if(!(cat in S.fl)){ S.fl[cat]=null; forumList(cat); }
+  const list=S.fl[cat];
+  return `<div class="max-w-3xl mx-auto px-4 py-6">
+    <button onclick="S.thread=null;render()" class="text-sm text-muted mb-4">← Forum</button>
+    <div class="flex justify-between items-center mb-4 gap-3"><h1 class="font-serif text-2xl">${esc(cat)}</h1>${S.user&&cat!=='ClosingHub'?`<button class="btn-gold text-sm" onclick="newThread('${cat}')">+ Neues Thema</button>`:''}</div>
+    ${list===null?'<p class="text-sm text-muted">Lädt …</p>':list.length?list.map(t=>`<div class="card p-5 mb-3"><div class="flex items-center gap-2 mb-2"><span class="w-8 h-8 rounded-full overflow-hidden inline-block ${t.member_id?'cursor-pointer':''}" ${t.member_id?`onclick="memberModal(${t.member_id})"`:''}>${fAv(t)}</span>${nameRank(esc(String(t.name).split(' ')[0]),t.member_id?RANKS[(t.rang||1)-1]:'Team')}<span class="text-[11px] text-muted ml-auto">${cTime(t.created_at)}</span></div>
+      <h2 class="font-serif text-xl mb-2">${esc(t.titel)}</h2>${t.text?`<p class="text-sm text-muted">${esc(t.text)}</p>`:''}
+      ${t.antworten.map(a=>`<div class="border-t border-line mt-3 pt-3" ${a.beste?'style="border-color:#087A4B"':''}>${a.beste?'<p class="text-[11px] uppercase tracking-wider text-gold mb-1">✓ Beste Antwort</p>':''}<div class="flex items-center gap-2 mb-1"><span class="w-7 h-7 rounded-full overflow-hidden inline-block cursor-pointer" onclick="memberModal(${a.member_id})">${skAv(String(a.name).split(' ')[0],28,fAv(a))}</span>${nameRank(esc(String(a.name).split(' ')[0]),RANKS[(a.rang||1)-1])}</div>
+        <p class="text-sm">${esc(a.text).replace(/\n/g,'<br>')}</p>
+        <div class="flex gap-4 mt-2 text-xs">${S.member&&!a.mine?`<button onclick="fHelp(${a.id},'${cat}')" class="${a.ich_hilfreich?'text-gold':'text-muted'}">👍 Hilfreich · ${a.hilfreich}</button>`:`<span class="text-muted">👍 ${a.hilfreich}</span>`}
+          ${t.mine&&!a.beste?`<button class="text-muted" onclick="rpc('forum_beste_antwort',{p_antwort:${a.id}}).then(()=>forumList('${cat}'))">Als beste Antwort markieren</button>`:''}
+          ${S.member&&!a.mine?`<button class="text-muted" onclick="fReport('forum',${a.id})">Melden</button>`:''}</div></div>`).join('')}
+      ${S.member?`<form class="flex gap-2 mt-4" onsubmit="event.preventDefault();fAnswer(${t.id},this,'${cat}')"><input name="a" class="input" maxlength="1000" placeholder="Deine Antwort…" autocomplete="off"><button class="btn-gold">Senden</button></form>`:S.user?'':`<a href="#login" class="text-sm text-gold block mt-3">Anmelden zum Antworten</a>`}
+      ${S.member&&!t.mine&&t.member_id?`<button class="text-[11px] text-muted mt-2" onclick="fReport('forumfrage',${t.id})">Frage melden</button>`:''}</div>`).join('')
+      :`<div class="card p-5 text-sm"><p class="font-semibold mb-1">Hier steht noch keine Frage.</p><p class="text-muted">${cat==='ClosingHub'?'Hier stellt das ClosingHub-Team Fragen an die Community.':'Stell die erste Frage – die Community hilft dir.'}</p></div>`}
+  </div>`;
+}
+async function fAnswer(fid,form,cat){ const v=form.a.value.trim(); if(!v) return; form.querySelector('button').disabled=true;
+  const j=await rpc('forum_antwort_neu',{p_frage:fid,p_text:v}).catch(()=>null);
+  if(!j||!j.ok){ alert(j&&j.text?j.text:j&&j.grund==='tempo'?'Kurz durchatmen – du antwortest gerade sehr schnell.':'Antwort konnte nicht gesendet werden.'); form.querySelector('button').disabled=false; return; }
+  await forumList(cat); }
+function fHelp(aid,cat){ rpc('forum_hilfreich_umschalten',{p_antwort:aid}).then(()=>forumList(cat)); }
+function fReport(typ,id){ const g=prompt('Warum meldest du das?'); if(g===null) return; rpc('melden',{p_typ:typ,p_ref:id,p_grund:g}).then(()=>alert('Danke! Das ClosingHub-Team schaut es sich an.')); }
+async function saveThreadReal(f){
+  const q=f.q.value.trim(); if(q.length<5){ const e=document.getElementById('ntErr'); e.textContent='Bitte formuliere deine Frage etwas ausführlicher.'; e.style.display='block'; return; }
+  f.querySelector('button.btn-gold').disabled=true;
+  const j=await rpc('forum_frage_neu',{p_kat:f.cat.value,p_titel:q,p_text:f.t.value.trim()}).catch(()=>null);
+  if(!j||!j.ok){ const e=document.getElementById('ntErr'); e.textContent=j&&j.text?j.text:j&&j.grund==='limit'?'Du hast heute schon 3 Fragen gestellt. Morgen geht es weiter!':'Frage konnte nicht veröffentlicht werden.'; e.style.display='block'; f.querySelector('button.btn-gold').disabled=false; return; }
+  const cat=f.cat.value; closeModal(); S.thread=cat; S.fz=null; delete S.fl[cat]; render();
+}
+
+/* ===== Marktplatz über die Datenbank ===== */
+S.mo=null; S.myOffers=null;
+async function marktLoad(){ try{ S.mo=await rpc('markt_liste'); }catch(e){ S.mo=[]; } if(S.member){ try{ S.myOffers=await rpc('meine_angebote'); }catch(e){ S.myOffers=[]; } } if(route()==='markt') render(); }
+function realOffers(){ if(S.mo===null){ S.mo=[]; S._moLoading=true; marktLoad().finally(()=>S._moLoading=false); }
+  return (S.mo||[]).map(o=>({real:1,id:o.id,cat:o.kategorie,t:esc(o.titel),desc:o.beschreibung,pr:(+o.preis).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:2}),s:esc(String(o.name).split(' ')[0]),full:o.name,r:RANKS[(o.rang||1)-1],av:o.avatar_url,mid:o.member_id,mine:o.mine,ab:o.abzeichen||[],bis:o.laeuft_bis})); }
+function useRealOffers(){ return S.member || (S.mo&&S.mo.length); }
+function realOfferCard(o){
+  return `<div class="card p-4 flex flex-col gap-3">
+    <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">${esc(o.cat)}</span><p class="font-semibold leading-snug mt-0.5">${o.t}</p></div><span class="font-serif text-xl text-gold whitespace-nowrap leading-none mt-1">${o.pr} €</span></div>
+    ${o.desc?`<p class="text-xs text-muted">${esc(o.desc).slice(0,160)}${o.desc.length>160?' …':''}</p>`:''}
+    <button onclick="memberModal(${o.mid})" class="flex items-center gap-2 text-sm text-left min-w-0"><span class="w-7 h-7 rounded-full overflow-hidden shrink-0">${skAv(o.s,28,o.av?`<img src="${esc(o.av)}" class="w-full h-full object-cover">`:initAv(o.full))}</span><span class="font-medium truncate">${o.s}</span>${rkChip(o.r)}</button>
+    <div class="flex items-center justify-between gap-3 border-t border-line pt-3"><span class="text-xs text-muted truncate">${o.ab.length?o.ab.slice(0,2).map(a=>'🏅 '+esc(a)).join(' · '):'Neu im Marktplatz'}</span>
+      ${o.mine?'<span class="text-xs text-gold">Dein Angebot</span>':`<button onclick="${S.member?`anfrageModal(${o.id})`:`go('login')`}" class="btn-gold text-xs whitespace-nowrap" style="padding:.4rem .9rem">Anfragen</button>`}</div></div>`;
+}
+function anfrageModal(id){ const o=realOffers().find(x=>x.id===id); if(!o) return;
+  document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()"><form class="card w-full max-w-md p-5 space-y-3 relative" onclick="event.stopPropagation()" onsubmit="event.preventDefault();anfrageSend(${id},this)">
+    <button type="button" onclick="closeModal()" class="absolute top-3 right-4 text-muted text-xl">✕</button><h3 class="font-serif text-xl">Anfrage an ${o.s}</h3><p class="text-sm"><b>${o.t}</b> · ${o.pr} €</p>
+    <textarea name="m" class="input h-24 text-sm" maxlength="600" placeholder="Was brauchst du? Wann hast du Zeit?"></textarea><p id="afErr" class="text-sm" style="color:#e5484d"></p>
+    <button class="btn-gold w-full">Anfrage senden</button><p class="text-[11px] text-muted">Die Anfrage landet als Nachricht im Chat mit ${o.s}. Dort klärt ihr Termin und Bezahlung.</p></form></div>`; }
+async function anfrageSend(id,f){ f.querySelector('button.btn-gold').disabled=true;
+  const j=await rpc('markt_anfrage',{p_angebot:id,p_text:f.m.value}).catch(()=>null);
+  if(!j||!j.ok){ document.getElementById('afErr').textContent=j&&j.text?j.text:'Anfrage hat nicht geklappt.'; f.querySelector('button.btn-gold').disabled=false; return; }
+  closeModal(); openConv('m'+j.chat); }
+function catTaken(c){ return realOffers().some(o=>o.cat===c) || PARTNERS.some(p=>p.real&&p.s===c); }
+function freeCats(){ return MCATS.filter(c=>!catTaken(c)); }
+function angebotModal(){
+  document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()"><form class="card w-full max-w-md p-5 space-y-3 relative max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()" onsubmit="event.preventDefault();angebotSend(this)">
+    <button type="button" onclick="closeModal()" class="absolute top-3 right-4 text-muted text-xl">✕</button><h3 class="font-serif text-xl">Angebot einreichen</h3>
+    <p class="text-xs text-muted">Wir prüfen jedes Angebot persönlich. Nach der Freigabe ist es 6 Monate im Marktplatz sichtbar. Jede Leistung gibt es nur einmal: Du bist dann der einzige Anbieter. Du kannst bis zu 3 Angebote haben.</p>
+    ${freeCats().length?`<label class="block text-sm">Leistung (nur freie)<select name="k" class="input mt-1">${freeCats().map(c=>`<option ${c===S.mcat?'selected':''}>${esc(c)}</option>`).join('')}</select></label>`:'<p class="text-sm text-gold">Gerade sind alle Leistungen vergeben.</p>'}
+    <label class="block text-sm">Titel<input name="t" class="input mt-1" maxlength="80" required placeholder="z. B. 60 Min. Call-Analyse mit Feedback"></label>
+    <label class="block text-sm">Beschreibung<textarea name="d" class="input mt-1 h-24" maxlength="600" placeholder="Was bekommt man genau? Für wen ist es?"></textarea></label>
+    <label class="block text-sm">Preis in €<input name="p" type="number" min="0" max="100000" step="1" class="input mt-1" required></label>
+    <p id="aoErr" class="text-sm" style="color:#e5484d"></p><button class="btn-gold w-full">Zur Prüfung einreichen</button></form></div>`; }
+async function angebotSend(f){ f.querySelector('button.btn-gold').disabled=true;
+  const j=await rpc('markt_angebot_beantragen',{p_kat:f.k.value,p_titel:f.t.value,p_text:f.d.value,p_preis:+f.p.value}).catch(()=>null);
+  if(!j||!j.ok){ document.getElementById('aoErr').textContent=j&&j.text?j.text:j&&j.grund==='limit'?'Du hast schon 3 Angebote (aktiv oder in Prüfung).':j&&j.grund==='vergeben'?'Diese Leistung hat schon einen Anbieter.':j&&j.grund==='doppelt'?'Für diese Leistung hast du schon einen Antrag in Prüfung.':'Bitte fülle Titel (mind. 5 Zeichen) und Preis aus.'; f.querySelector('button.btn-gold').disabled=false; return; }
+  closeModal(); S.mo=null; render(); alert('Danke! Dein Angebot ist eingereicht. Du bekommst eine Mitteilung, sobald es freigegeben ist.'); }
+const AO_ST={beantragt:'In Prüfung',aktiv:'Aktiv',abgelehnt:'Nicht freigegeben',beendet:'Beendet'};
+function myOffersCard(){ const l=S.myOffers||[]; if(!S.member||!l.length) return '';
+  return `<div class="card p-4 mb-4"><p class="text-xs uppercase tracking-wider text-muted mb-2">Meine Angebote</p>${l.map(o=>`<div class="flex justify-between items-center gap-3 py-2 border-t border-line text-sm"><span class="min-w-0"><span class="block font-medium truncate">${esc(o.titel)} · ${(+o.preis).toLocaleString('de-DE')} €</span><span class="block text-xs text-muted">${esc(o.kategorie)}${o.status==='aktiv'&&o.laeuft_bis?' · sichtbar bis '+new Date(o.laeuft_bis).toLocaleDateString('de-DE'):''}${o.anfragen?' · '+o.anfragen+' Anfragen':''}${o.notiz?' · '+esc(o.notiz):''}</span></span>
+    <span class="flex items-center gap-2 whitespace-nowrap"><span class="text-xs ${o.status==='aktiv'?'text-gold':'text-muted'}">${AO_ST[o.status]||o.status}</span>${o.status==='aktiv'||o.status==='beantragt'?`<button class="text-xs text-muted underline" onclick="if(confirm('Angebot beenden?'))rpc('markt_angebot_beenden',{p_id:${o.id}}).then(()=>{S.mo=null;render();})">beenden</button>`:''}</span></div>`).join('')}</div>`; }
+
+// ===== Job-Details: attraktive Darstellung wie im Demo-Handy =====
+function jdNum(s){ return String(s||'').match(/\d{1,3}(?:\.\d{3})+|\d+/g)?.map(x=>+x.replace(/\./g,''))||[]; }
+function jdExample(j){
+  const m=String(j.pay||'').match(/(\d+(?:[.,]\d+)?)\s*%/); const t=jdNum(j.ticket||j.p).filter(n=>n>=100);
+  if(!m||!t.length) return ''; const pct=+m[1].replace(',','.'), tk=t[0], v=Math.round(tk*pct/100);
+  if(!v) return ''; const f=n=>n.toLocaleString('de-DE');
+  return `<p class="text-xs mt-2" style="color:rgba(255,255,255,.75)">Beispiel: 1 Abschluss bei ${f(tk)} € Ticket = <b style="color:#fff">${f(v)} € für dich</b></p>`;
+}
+function jdList(s){ return String(s||'').split(/\n|•|;/).map(x=>x.replace(/^[\s\-–*·]+/,'').trim()).filter(Boolean); }
+function jobDetail(j,action){
+  const ok=v=>v&&v!=='–';
+  const facts=(j.live?[['Ticket',j.ticket],['Umfang',j.umfang],['Arbeitsmodell',j.modell],['Start',j.start],['Auftragsdauer',j.dauer],['Produkt',j.p]]
+    :[['Produkt',j.p],['Region',j.reg],['Firmengröße',j.size],['Firmenalter',j.age],['Bewertung',j.rt?'⭐ '+j.rt:''],['Start','ab sofort']]).filter(([k,v])=>ok(v));
+  const req=jdList(j.req), roles=String(j.roles||'').split(/,|\//).map(x=>x.trim()).filter(ok);
+  const online=j.live?(j.left!=null?'noch '+j.left+(j.left===1?' Tag':' Tage')+' online':''):'noch '+(30-j.d)+' Tage online';
+  const when=j.d===0?'Heute':j.d===1?'Gestern':'vor '+j.d+' Tagen';
+  return `<div class="card overflow-hidden h-fit md:sticky md:top-6">
+    <div class="p-5 md:p-6">
+      <div class="flex flex-wrap items-center gap-1.5 mb-3">
+        ${j.top?'<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style="background:linear-gradient(135deg,#D9B45A,#B8913A);color:#1a1405">★ Top-Job</span>':''}
+        ${roles.map(r=>`<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border text-gold" style="border-color:#087A4B">${esc(r)}</span>`).join('')}
+        <span class="text-[11px] text-muted px-2 py-0.5 rounded-full border border-line">🛡️ Auftraggeber geprüft & anonym</span>
+      </div>
+      <h1 class="font-serif leading-tight" style="font-size:30px;line-height:1.15">${esc(j.t)}</h1>
+      <p class="text-sm text-muted mt-1">${[j.ind,j.reg].filter(ok).map(esc).join(' · ')}${online?' · '+online:''} · ${when}</p>
+      <div class="rounded-2xl p-4 mt-4 relative overflow-hidden" style="background:linear-gradient(135deg,#087A4B,#06603B 60%,#04482C);box-shadow:0 10px 30px -12px rgba(8,122,75,.6)">
+        <span style="position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(217,180,90,.35),transparent 70%)"></span>
+        <p class="text-[10px] uppercase tracking-widest font-semibold" style="color:rgba(255,255,255,.7)">Deine Vergütung</p>
+        <p class="font-serif mt-0.5" style="color:#fff;font-size:26px;line-height:1.2">${esc(j.pay||'Nach Absprache')}</p>
+        ${jdExample(j)}
+      </div>
+      ${facts.length?`<div class="grid grid-cols-2 gap-2 mt-3">${facts.map(([k,v])=>`<div class="rounded-xl px-3 py-2.5 border border-line" style="background:rgb(var(--panel))"><p class="text-[10px] uppercase tracking-wider text-muted">${k}</p><p class="text-sm font-semibold mt-0.5 leading-snug">${esc(v)}</p></div>`).join('')}</div>`:''}
+      ${ok(j.desc)?`<p class="text-xs uppercase tracking-wider text-muted font-semibold mt-6 mb-2">Über den Job</p><p class="text-sm leading-relaxed" style="white-space:pre-line">${esc(j.desc)}</p>`:''}
+      ${req.length?`<p class="text-xs uppercase tracking-wider text-muted font-semibold mt-6 mb-2">Das bringst du mit</p><ul class="space-y-2">${req.map(r=>`<li class="flex gap-2.5 text-sm"><span class="text-gold" style="flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;background:rgba(8,122,75,.16);margin-top:1px">✓</span><span>${esc(r)}</span></li>`).join('')}</ul>`:''}
+      <p class="text-xs uppercase tracking-wider text-muted font-semibold mt-6 mb-2">So läuft's</p>
+      <div class="grid grid-cols-3 gap-2 text-center">${[['1','Bewerben','mit deinem Profil'],['2','Freischaltung','Auftraggeber meldet sich'],['3','Loslegen','und Provision verdienen']].map(([n,a,b])=>`<div class="rounded-xl p-2.5 border border-line"><span style="display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;font-size:12px;font-weight:700;background:#087A4B;color:#fff">${n}</span><p class="text-xs font-semibold mt-1.5">${a}</p><p class="text-[10px] text-muted leading-tight mt-0.5">${b}</p></div>`).join('')}</div>
+    </div>
+    <div id="japply" class="p-5 md:p-6 border-t border-line" style="background:rgba(8,122,75,.05)">${action}</div>
+  </div>`;
+}
 
 function feed(){
   const ft = S.ptopics || S.topics;
@@ -1568,7 +1797,7 @@ function feed(){
   const list = S.user ? pool : pool.slice(0,GUEST); S.feedList = list;
   const posts = list.map((p,i)=>`
     <article class="card overflow-hidden">
-      <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2 ${p.real?'cursor-pointer':''}" ${p.real?`onclick="memberModal(${p.mid})"`:''}>${p.a==='ClosingHub'?'<span class="w-8 h-8 rounded-full overflow-hidden inline-block gold-bg"><span class="w-full h-full flex items-center justify-center font-serif italic text-black text-sm">CH</span></span>':skAv(p.a,34,pAv(p))}${nameRank(p.a,p.r)}</span><span class="inline-flex items-center gap-2"><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span>${p.mine?`<button onclick="event.stopPropagation();delPost(${p.id})" class="text-muted text-xs" aria-label="Beitrag löschen">Löschen</button>`:''}</span></div>
+      <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2 ${p.real?'cursor-pointer':''}" ${p.real?`onclick="memberModal(${p.mid})"`:''}>${p.a==='ClosingHub'?'<span class="w-8 h-8 rounded-full overflow-hidden inline-block gold-bg"><span class="w-full h-full flex items-center justify-center font-serif italic text-black text-sm">CH</span></span>':skAv(p.a,34,pAv(p))}${nameRank(p.a,p.r)}</span><span class="inline-flex items-center gap-2"><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span>${p.mine?`<button onclick="event.stopPropagation();delPost(${p.id})" class="text-muted text-xs" aria-label="Beitrag löschen">Löschen</button>`:''}${p.real&&!p.mine&&S.member?`<button onclick="event.stopPropagation();reportPost(${p.id})" class="text-muted text-xs">Melden</button>`:''}</span></div>
       <div class="relative aspect-square bg-bg flex items-center justify-center p-8 cursor-pointer border-y border-line overflow-hidden" onclick="S.plist=S.feedList;startPlayer(${i})" style="${p.v&&p.vid===undefined?'background:radial-gradient(circle at 50% 40%,#1c1a14,#0A0A0B 70%)':''}">
         ${p.video?`<video src="${p.video}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted playsinline loop preload="metadata"></video>`:''}${p.img?`<img src="${p.img}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:''}${(p.img||p.video)&&p.t?`<span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}${p.video?`<span class="absolute top-3 right-3 text-white text-lg">▶</span>`:''}
         ${p.vid!==undefined?`<img src="${VIDS[p.vid]}" class="absolute inset-0 w-full h-full object-cover"><span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}
@@ -1751,7 +1980,7 @@ function jobSubBar(){
 function jobs(){
   if(S.member && !JOBS.some(x=>x.live)) return jobsEmpty();
   const j = JOBS.find(x=>x.id===S.job)||JOBS.find(x=>x.live)||JOBS[0];
-  const list = JOBS.filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="card w-full text-left p-4 ${x.id===j.id?'!border-gold':''}" style="${x.id===j.id?'border-color:#087A4B':''}">
+  const list = JOBS.filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;S.jopen=1;render();if(innerWidth<768)scrollTo(0,0)" class="card w-full text-left p-4 ${x.id===j.id?'!border-gold':''}" style="${x.id===j.id?'border-color:#087A4B':''}">
     <p class="font-semibold">${x.t}</p><p class="text-sm text-muted">${x.ind} · ${x.reg}</p><p class="text-sm text-gold mt-1">${x.pay}</p><p class="text-xs text-muted mt-1">${x.d===0?'Heute':'vor '+x.d+' Tagen'}</p></button>`).join('');
   const action = !S.user ? `<a href="#login" class="btn-gold">🔒 Anmelden zum Bewerben</a>`
     : S.sent ? `<p class="text-emerald-400">✓ Bewerbung gesendet. Der Auftraggeber sieht dein anonymes Profil und kann den Kontakt für 25 € freischalten.</p>`
@@ -1761,6 +1990,7 @@ function jobs(){
         <textarea id="amsg" maxlength="300" oninput="document.getElementById('cnt').textContent=this.value.length" class="input h-24 text-sm placeholder:text-xs" placeholder="Kurze Nachricht an den Auftraggeber (max. 300 Zeichen)"></textarea>
         <div class="flex justify-between items-center gap-3"><span class="text-xs text-muted"><span id="cnt">0</span>/300 · Kontaktdaten werden automatisch gefiltert</span><button onclick="applyJob()" class="btn-gold text-sm whitespace-nowrap" style="padding:9px 14px">One-Klick-Bewerbung</button></div>
         <p class="text-xs text-muted">Noch <b>${5-(S.apps??2)}</b> von 5 Bewerbungen diesen Monat. Mit Premium: 10.</p></div>`;
+  if(S.jopen && innerWidth<768) return `<div class="px-4 py-4 max-w-2xl mx-auto"><button onclick="S.jopen=0;render()" class="text-sm text-gold mb-3">← Alle Jobs</button>${jobDetail(j,S.member&&j.live?memberJobAction(j):action)}</div>`;
   return `<div class="px-4 py-6 max-w-6xl mx-auto">
     <div class="flex gap-2 mb-5"><span class="btn-gold">Jobs</span><a href="#forum" class="btn-ghost">Forum</a><a href="#markt" class="btn-ghost">Marktplatz</a></div>
     <div class="grid md:grid-cols-[340px_1fr] gap-5">
@@ -1769,25 +1999,14 @@ function jobs(){
         ${jobSubBar()}
         ${S.member?myAppsCard():''}
         <p class="text-xs uppercase tracking-wider text-gold font-semibold">★ Top-Jobs</p>
-        ${JOBS.filter(x=>x.top).filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;render()" class="w-full text-left rounded-2xl p-[1.5px]" style="background:linear-gradient(135deg,#D9B45A,#087A4B 55%,#06603B)"><span class="block rounded-[15px] p-4 relative overflow-hidden" style="background:linear-gradient(135deg,rgba(217,180,90,.14),rgba(8,122,75,.10) 60%),rgb(var(--panel))">
+        ${JOBS.filter(x=>x.top).filter(jobFits).map(x=>`<button onclick="S.job=${x.id};S.sent=false;S.jopen=1;render();if(innerWidth<768)scrollTo(0,0)" class="w-full text-left rounded-2xl p-[1.5px]" style="background:linear-gradient(135deg,#D9B45A,#087A4B 55%,#06603B)"><span class="block rounded-[15px] p-4 relative overflow-hidden" style="background:linear-gradient(135deg,rgba(217,180,90,.14),rgba(8,122,75,.10) 60%),rgb(var(--panel))">
           <span class="flex items-center justify-between gap-2"><span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style="background:#087A4B;color:#fff">★ Top-Job</span><span class="text-[10px] text-muted">Anzeige</span></span>
           <span class="block font-semibold mt-2 text-[15px]">${x.t}</span><span class="block text-sm text-muted">${x.ind} · ${x.reg}</span>
           <span class="flex items-center justify-between mt-2"><span class="text-sm font-semibold text-gold">${x.pay}</span><span class="text-xs text-gold">Ansehen →</span></span></span></button>`).join('')}
         ${Array.from({length:3-JOBS.filter(x=>x.top).length}).map(()=>`<div class="card p-4 text-sm text-muted border-dashed" style="border-style:dashed">Freier Top-Platz · <span class="text-gold">19 €</span> – für Auftraggeber</div>`).join('')}
         <p class="text-xs uppercase tracking-wider text-muted pt-2">Alle Jobs</p>
         ${list||'<p class="text-sm text-muted">Gerade keine Jobs in dieser Kategorie.</p>'}</div>
-      <div class="card p-6 h-fit md:sticky md:top-6">
-        <p class="text-xs text-muted mb-2">🛡️ Anonymer, geprüfter Auftraggeber</p>
-        <h1 class="font-serif text-3xl mb-1">${j.t}</h1>
-        <p class="text-gold text-lg mb-5">${j.pay}</p>
-        <dl class="grid grid-cols-2 gap-4 text-sm mb-6">
-          ${(j.live ? [['Gesucht',j.roles],['Branche',j.ind],['Produkt',j.p],['Ticket',j.ticket],['Arbeitsmodell',j.modell],['Region',j.reg],['Umfang',j.umfang],['Start',j.start],['Auftragsdauer',j.dauer],['Online',j.left!=null?'noch '+j.left+' Tage':'–']]
-              : [['Branche',j.ind],['Produkt',j.p],['Region',j.reg],['Gesucht',j.roles],['Firmengröße',j.size],['Firmenalter',j.age],['Bewertung','⭐ '+j.rt],['Online','noch '+(30-j.d)+' Tage']])
-            .filter(([k,v])=>v).map(([k,v])=>`<div><dt class="text-muted">${k}</dt><dd>${esc(v)}</dd></div>`).join('')}
-        </dl>
-        ${j.desc?`<p class="text-sm mb-4">${esc(j.desc)}</p>`:''}
-        ${j.req?`<div class="text-sm mb-6"><p class="text-muted mb-1">Das bringst du mit</p><p style="white-space:pre-line">${esc(j.req)}</p></div>`:''}
-        ${S.member&&j.live?memberJobAction(j):action}</div></div></div>`;
+      ${jobDetail(j,S.member&&j.live?memberJobAction(j):action)}</div></div>`;
 }
 
 const CONTACT_RE = /(\+?\d[\d\s\/\-().]{6,}\d)|([\w.+-]+@[\w-]+\.[\w.]+)|(@[\w.]{3,})|((https?:\/\/|www\.)\S+)|(\b(insta(gram)?|whats ?app|telegram|tiktok|linkedin)\b[:\s]*\S*)/gi;
@@ -1820,7 +2039,7 @@ let FANS={}; try{ FANS=JSON.parse(localStorage.getItem('ch_fans')||'{}')||{}; }c
 function sendAnswer(i,inp){ const t=FTHREADS[i], v=inp?inp.value.trim():''; if(!t||!v) return; const k=t.cat+'|'+t.q; (FANS[k]=FANS[k]||[]).push({a:ME.name,r:ME.rank,t:v}); try{ localStorage.setItem('ch_fans',JSON.stringify(FANS)); }catch(e){} render(); }
 function newThread(cat){
   if(!S.user){ go('login'); return; }
-  const cats=FCATS.flatMap(g=>g[1].map(c=>c[1]));
+  const cats=FCATS.flatMap(g=>g[1].map(c=>c[1])).filter(c=>!S.member||c!=='ClosingHub');
   document.getElementById('modal').innerHTML = `
   <div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()">
     <form class="card w-full max-w-md p-5 relative max-h-[86vh] overflow-y-auto space-y-3" onclick="event.stopPropagation()" onsubmit="event.preventDefault();saveThread(this)">
@@ -1835,6 +2054,7 @@ function newThread(cat){
   const i=document.querySelector('#modal input[name=q]'); if(i) i.focus();
 }
 function saveThread(f){
+  if(S.member) return saveThreadReal(f);
   const q=f.q.value.trim(); if(!q){ document.getElementById('ntErr').style.display='block'; return; }
   FTHREADS.unshift({cat:f.cat.value,q,t:f.t.value.trim(),a:ME.name,r:ME.rank,own:1});
   try{ localStorage.setItem('ch_fthreads',JSON.stringify(FTHREADS.filter(t=>t.own))); }catch(e){}
@@ -1846,7 +2066,7 @@ S.helpful={};
 // ---- Handy: Chat als Halb-Sheet (Linie unten nach oben wischen) ----
 S.chatMsgs = {1:[['in','Danke für den Tipp mit der Pause!']],2:[['in','Kontakt freigeschaltet ✓ – Lass uns Dienstag telefonieren.']],3:[['in','Lust auf ein Testgespräch?']]};
 S.read = {};
-function unread(){ return S.user ? CHATS.filter(c=>!S.read[c.id]).length : 0; }
+function unread(){ if(S.member) return S.unreadMsg||0; return S.user ? CHATS.filter(c=>!S.read[c.id]).length : 0; }
 function chatEl(){
   let w=document.getElementById('chatwrap'); if(w) return w;
   w=document.createElement('div'); w.id='chatwrap'; w.className='md:hidden';
@@ -1862,7 +2082,7 @@ function chatEl(){
   g.addEventListener('touchend',e=>{ if(y0===null) return; const dy=e.changedTouches[0].clientY-y0; y0=null; sh.style.transition=''; sh.style.transform=''; if(dy>70) closeChat(); });
   return w;
 }
-function openChat(){ if(!S.user){ go('login'); return; } const w=chatEl(); drawChat(); requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('open'))); }
+function openChat(){ if(!S.user){ go('login'); return; } if(S.member){ go('messages'); return; } const w=chatEl(); drawChat(); requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('open'))); }
 function closeChat(){ const w=document.getElementById('chatwrap'); if(w) w.classList.remove('open'); }
 function drawChat(){
   const b=document.getElementById('chatbody'); if(!b) return;
@@ -1888,10 +2108,11 @@ function forum(){
   if(S.thread) return thread();
   return `<div class="px-4 py-6 max-w-6xl mx-auto"><div class="max-w-3xl"><div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><span class="btn-gold">Forum</span><a href="#markt" class="btn-ghost">Marktplatz</a></div>
     <div class="flex justify-between items-center mb-4"><h1 class="font-serif text-2xl">Forum</h1>${S.user?'<button class="btn-gold text-sm" onclick="newThread()">+ Neues Thema</button>':'<a href="#login" class="btn-gold text-sm">Anmelden zum Mitreden</a>'}</div>
-    ${FCATS.map(([g,cs])=>`<p class="text-xs uppercase tracking-wider text-gold mt-6 mb-3">${g}</p><div class="space-y-3">${cs.map(([i,n,c])=>`<div onclick="S.thread='${n}';render()" class="card p-4 flex justify-between items-center hover:border-gold" style="cursor:pointer"><span>${i} <b class="ml-1">${n}</b></span><span class="text-sm text-muted">${(k=>k?k+(k===1?' Frage':' Fragen'):'Noch keine Fragen')(FTHREADS.filter(t=>t.cat===n).length)}</span></div>`).join('')}</div>`).join('')}
+    ${FCATS.map(([g,cs])=>`<p class="text-xs uppercase tracking-wider text-gold mt-6 mb-3">${g}</p><div class="space-y-3">${cs.map(([i,n,c])=>`<div onclick="S.thread='${n}';render()" class="card p-4 flex justify-between items-center hover:border-gold" style="cursor:pointer"><span>${i} <b class="ml-1">${n}</b></span><span class="text-sm text-muted">${(k=>k?k+(k===1?' Frage':' Fragen'):'Noch keine Fragen')(fCount(n))}</span></div>`).join('')}</div>`).join('')}
     <p class="text-xs text-muted mt-6">🛡️ KI filtert Spam vorab · Beiträge melden möglich · Moderatoren ab Rang 4 Dealmaker</p></div></div>`;
 }
 function thread(){
+  if(S.fdb!==false) return threadReal();
   const cat=S.thread, list=FTHREADS.filter(t=>t.cat===cat);
   return `<div class="max-w-3xl mx-auto px-4 py-6">
     <button onclick="S.thread=null;render()" class="text-sm text-muted mb-4">← Forum</button>
@@ -1940,6 +2161,7 @@ function pcRec(){
   }).catch(()=>{ S.chatErr='Kein Zugriff auf das Mikrofon. Bitte im Browser erlauben.'; render(); });
 }
 function messages(){
+  if(S.member) return messagesReal();
   const c=CHATS.find(x=>x.id===S.chat), msgs=(S.chatMsgs[c.id]||[]).filter(msgOk);
   const last=id=>{ const l=(S.chatMsgs[id]||[]).filter(msgOk).slice(-1)[0]; return l?msgLast(l[1]):''; };
   const A='width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
@@ -2135,7 +2357,8 @@ function regionSelect(){
 function markt(){
   S.wide = true;
   const inRegion = o => S.wide ? true : o.reg===S.region;
-  const pool = OFFERS.filter(inRegion).filter(o=>MCATS.includes(o.cat));
+  const _ro = realOffers();
+  const pool = (useRealOffers() ? _ro : OFFERS.filter(inRegion).filter(o=>MCATS.includes(o.cat)&&!partnerOf(o.cat))).filter((o,i,a)=>a.findIndex(x=>x.cat===o.cat)===i);
   const pt = S.mcat!=='Alle' ? partnerOf(S.mcat) : null;
   const cats = ['Alle',...MCATS];
   const shown = S.mcat==='Alle'?pool:pool.filter(o=>o.cat===S.mcat);
@@ -2144,25 +2367,24 @@ function markt(){
     <div class="flex gap-2 mb-5"><a href="#jobs" class="btn-ghost">Jobs</a><a href="#forum" class="btn-ghost">Forum</a><span class="btn-gold">Marktplatz</span></div>
     <div class="flex flex-wrap justify-between items-end gap-3 mb-4">
       <div><h1 class="font-serif text-3xl">Marktplatz</h1><p class="text-muted text-sm">Coaching, Training, Analysen und Skripte von Membern für Member – buche Experten oder verdiene mit deinem Wissen.</p></div>
-      <a href="mailto:info@getclosinghub.com?subject=Marktplatz-Angebot%20einreichen" class="btn-gold">Angebot einreichen</a>
+      ${S.member?'<button class="btn-gold" onclick="angebotModal()">Angebot einreichen</button>':'<a href="mailto:info@getclosinghub.com?subject=Marktplatz-Angebot%20einreichen" class="btn-gold">Angebot einreichen</a>'}
     </div>
-    ${partnersRow()}
-    <p class="text-xs text-muted mb-4">Eigenes Angebot? Reich es per Mail oder telefonisch bei uns ein. Wir prüfen jedes Angebot persönlich.</p>
-    <div class="flex gap-2 overflow-x-auto noscroll mb-5">${cats.map(c=>`<button onclick="S.mcat='${c}';render()" class="${S.mcat===c?'btn-gold':'btn-ghost'} text-xs whitespace-nowrap" style="padding:.4rem .8rem;border-radius:999px">${c}${c!=='Alle'&&!S.wide?` <span class="opacity-70">${slots(c)}/10</span>${10-slots(c)<=3&&10-slots(c)>0?' <span class="text-[10px] font-bold" style="color:#ff8a5c">🔥</span>':''}`:''}</button>`).join('')}</div>
-    ${!S.wide?scarcity(slots):''}
-    ${!S.wide&&S.mcat!=='Alle'?`<p class="text-xs text-muted mb-4">${slots(S.mcat)} von 10 Plätzen in ${S.region} belegt${slots(S.mcat)>=10?' – <span class="text-gold">Kategorie voll, Warteliste</span>':''}</p>`:''}
+    ${partnersRow()}${myOffersCard()}
+    ${S.member?'':'<p class="text-xs text-muted mb-4">Eigenes Angebot? Reich es per Mail oder telefonisch bei uns ein. Wir prüfen jedes Angebot persönlich.</p>'}
+    <div class="flex gap-2 overflow-x-auto noscroll mb-5">${cats.map(c=>`<button onclick="S.mcat='${c}';render()" class="${S.mcat===c?'btn-gold':'btn-ghost'} text-xs whitespace-nowrap" style="padding:.4rem .8rem;border-radius:999px">${c}</button>`).join('')}</div>
+    ${S.mcat!=='Alle'&&!pt&&!shown.length?`<div class="card p-4 mb-4 flex flex-wrap items-center justify-between gap-3" style="border-color:#06603B"><span class="text-sm"><b class="text-gold">Diese Leistung ist noch frei.</b> Jede Leistung gibt es nur einmal – sichere sie dir als einziger Anbieter.</span>${S.member?'<button class="btn-gold text-sm" onclick="angebotModal()">Jetzt sichern</button>':''}</div>`:''}
     ${pt?`<button onclick="personModal('${pt.n}')" class="card w-full text-left p-4 mb-4 flex items-center gap-4" style="border-color:#087A4B;box-shadow:0 0 0 1px #06603B inset">
       <span class="w-14 h-14 rounded-full gold-bg p-[2px] shrink-0"><span class="block w-full h-full rounded-full overflow-hidden bg-panel">${avatar(pt.n)}</span></span>
       <span class="flex-1 min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">Partner für ${pt.s}</span><span class="block mt-0.5">${nameRank(pt.n,pt.r)}</span><span class="block text-xs text-muted truncate">${pt.bio}</span></span>
       <span class="btn-ghost text-sm whitespace-nowrap">Profil ansehen</span></button>`:''}
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      ${shown.length?shown.map(o=>`<div class="card p-4 flex flex-col gap-3">
+      ${shown.length?shown.map(o=>o.real?realOfferCard(o):`<div class="card p-4 flex flex-col gap-3">
         <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="text-[10px] uppercase tracking-wide text-gold">${o.cat}</span><p class="font-semibold leading-snug mt-0.5">${o.t}</p></div><span class="font-serif text-xl text-gold whitespace-nowrap leading-none mt-1">${o.pr} €</span></div>
         <button onclick="personModal('${o.s}')" class="flex items-center gap-2 text-sm text-left min-w-0"><span class="w-7 h-7 rounded-full overflow-hidden shrink-0">${avatar(o.s)}</span><span class="font-medium truncate">${o.s}</span>${rkChip(o.r)}</button>
         <div class="flex items-center justify-between gap-3 border-t border-line pt-3"><span class="text-xs text-muted truncate">⭐ <b class="text-[rgb(var(--fg))] font-semibold">${o.st.toFixed(1).replace('.',',')}</b> · ${o.n} Bewertungen · ${o.reg}</span><button onclick="${S.user?`buyModal('${o.t.replace(/'/g,'')}',${o.pr})`:`go('login')`}" class="btn-gold text-xs whitespace-nowrap" style="padding:.4rem .9rem">Kaufen</button></div>
-      </div>`).join(''):`<div class="card p-6 text-muted text-sm">Noch keine Angebote in ${S.region}. ${S.user?'Sei der Erste und sichere dir einen der 10 Plätze!':''} Tipp: „Ganzes Land durchsuchen“ aktivieren.</div>`}
+      </div>`).join(''):(useRealOffers()?`<div class="card p-6 text-muted text-sm">Noch keine Angebote${S.mcat!=='Alle'?' in dieser Kategorie':''}. ${S.member?'Sichere dir einen der 10 Plätze und reich dein eigenes Angebot ein!':''}</div>`:`<div class="card p-6 text-muted text-sm">Noch keine Angebote in ${S.region}. ${S.user?'Sei der Erste und sichere dir einen der 10 Plätze!':''} Tipp: „Ganzes Land durchsuchen“ aktivieren.</div>`)}
     </div>
-    <p class="text-xs text-muted mt-6">Käufe laufen sicher über ClosingHub. Verkäufer werden nach jedem Kauf bewertet. ClosingHub-Gebühr: 9,9 % pro Verkauf.</p>
+    <p class="text-xs text-muted mt-6">${useRealOffers()?'Anfragen landen als Nachricht im Chat mit dem Anbieter. Jedes Angebot wird von ClosingHub geprüft. Unpassende Angebote kannst du melden.':'Käufe laufen sicher über ClosingHub. Verkäufer werden nach jedem Kauf bewertet. ClosingHub-Gebühr: 9,9 % pro Verkauf.'}</p>
   </div>`;
 }
 function scarcity(slots){
