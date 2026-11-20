@@ -665,7 +665,7 @@ function partnersRow(){
   const ps=PARTNERS.filter(p=>p.real||MCATS.includes(p.s)).slice(0,5); if(!ps.length) return '';
   return `<div class="mb-6"><div class="flex items-center gap-2 mb-3"><p class="font-semibold">Unsere Partner</p><span class="text-[10px] uppercase tracking-wide text-muted border border-line rounded px-1.5">Partner</span></div>
     <div class="flex gap-4 overflow-x-auto noscroll pb-1">${ps.map(p=>`<button onclick="personModal('${p.n}')" class="flex flex-col items-center gap-1.5 shrink-0 w-[108px]">
-      <div class="w-[88px] h-[88px] rounded-full p-[3px] gold-bg"><div class="w-full h-full rounded-full bg-panel border-2 border-bg overflow-hidden">${avatar(p.n)}</div></div>
+      ${p.real&&p.mid?skAv(p.n,88,avatar(p.n)):`<div class="w-[88px] h-[88px] rounded-full p-[3px] gold-bg"><div class="w-full h-full rounded-full bg-panel border-2 border-bg overflow-hidden">${avatar(p.n)}</div></div>`}
       <span class="text-sm font-semibold truncate w-full text-center">${p.n}</span>
       <span class="text-[11px] text-gold leading-tight text-center">${p.s}</span></button>`).join('')}</div></div>`;
 }
@@ -706,7 +706,7 @@ function partnerModal(p,offers,r,rt){
         <p class="font-semibold" style="font-family:Archivo,sans-serif">${p.s}</p></div>
       <div class="px-6 pb-6">
         <div class="flex items-end gap-4 -mt-6">
-          <div class="relative shrink-0"><div class="w-16 h-16 rounded-full overflow-hidden" style="box-shadow:0 0 0 3px rgb(var(--panel))">${avatar(n)}</div>${SEAL}</div>
+          <div class="relative shrink-0" style="border-radius:50%;box-shadow:0 0 0 3px rgb(var(--panel))">${p.real&&p.mid?skAv(n,64,avatar(n)):`<div class="w-16 h-16 rounded-full overflow-hidden">${avatar(n)}</div>`}${SEAL}</div>
           <div class="min-w-0 pt-8"><div class="text-lg leading-tight">${nameRank(n,r)}</div></div></div>
         ${p.role||p.meta?`<p class="text-sm mt-3"><b>${p.role||''}</b>${p.role&&p.meta?', ':''}<span class="text-muted">${p.meta||''}</span></p>`:''}<p class="text-sm text-muted ${p.role||p.meta?'mt-1':'mt-3'}">${p.bio}</p>${p.mid?`<button onclick="closeModal();openProfile(${p.mid})" class="text-sm font-semibold mt-2 inline-flex items-center gap-1" style="color:#087A4B">Profil in der App ansehen →</button>`:''}
         <div class="mt-4"><p class="text-xs uppercase tracking-wide text-muted mb-2">Abzeichen</p><div class="flex flex-wrap items-center gap-2">${p.link?`<a href="${p.link}" target="_blank" rel="noopener" title="Profil von ${n} öffnen" class="inline-flex items-center gap-2 h-11 pl-1.5 pr-4 rounded-full text-sm font-semibold whitespace-nowrap transition hover:opacity-90" style="background:#087A4B;color:#fff"><span class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(255,255,255,.18)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></span>Profil</a><span class="w-px h-7 mx-1" style="background:rgb(var(--line))"></span>`:''}${memberBadges(n).map(b=>badgeIcon(b,`openBadges('${String(n).replace(/[^\p{L}\p{N} .-]/gu,'')}')`)).join('')}</div></div>
@@ -745,7 +745,7 @@ function applyPartners(list){
     if(Array.isArray(p.k)&&c(p.k[0])) o.k=[c(p.k[0],12),c(p.k[1],30)];
     if(Array.isArray(p.deal)&&c(p.deal[0])) o.deal=[c(p.deal[0],40),c(p.deal[1],60),c(p.deal[2],20)];
     o.offers=(Array.isArray(p.offers)?p.offers:[]).slice(0,3).map(x=>({t:c(x&&x.t,70),pr:c(x&&x.pr,12)})).filter(x=>x.t);
-    o.pid=+p.pid||0; o.mid=+p.mid||0; return o; }).filter(p=>p.n&&p.s);
+    o.pid=+p.pid||0; o.mid=+p.mid||0; o.streak=+p.streak||0; if(o.mid){ S.skMap=S.skMap||{}; S.skMap[o.n]=o.streak; S.skMap[String(o.n).split(' ')[0]]=o.streak; } return o; }).filter(p=>p.n&&p.s);
   if(typeof route==='function' && route()==='markt') render();
 }
 setTimeout(()=>{ if(!S._ptOk||!S._mcOk){ S._ptOk=S._mcOk=true; if(typeof route==='function'&&route()==='markt') render(); } },6000);
@@ -1369,7 +1369,7 @@ function battleCard(anim=true){
     body = `<p class="bt-h${A}">Sei kreativ. Die 2 Antworten mit den meisten Likes kommen um 0 Uhr ins Finale.</p>
       ${S.user ? (mine?`<p class="bt-h" style="color:#3FBF86;margin-top:12px">✓ Deine Antwort ist drin. Jetzt Likes sammeln!</p>`:`<div class="bt-form${A}"><textarea id="btIn" maxlength="200" rows="2" placeholder="Deine schlagfertige Antwort …"></textarea><button onclick="bSend(${b.i})">Posten</button></div>`)
         : `<a href="#login" class="bt-form${A}" style="justify-content:center;color:#3FBF86;font-weight:700">Anmelden und mitmachen</a>`}
-      <div class="bt-list${A}">${show.map(a=>`<div class="bt-a">${skAv(a.n,30,avatar(a.n),'shrink-0')}<div class="min-w-0 flex-1"><b>${esc(a.n)}</b><p>${esc(a.t)}</p></div><button class="bt-like ${d.liked[a.id]?'on':''}" onclick="bLike(${b.i},${a.id})" aria-label="Gefällt mir">♥ ${a.l+(d.liked[a.id]?1:0)}</button></div>`).join('')}
+      <div class="bt-list${A}">${show.map(a=>`<div class="bt-a">${skAv(a.n,30,avatar(a.n),'shrink-0')}<div class="min-w-0 flex-1"><b>${esc(a.n)}</b><p>${esc(a.t)}</p>${S.member&&S.bsrv&&a.id>0?(a.mine?`<button class="text-[11px] underline" style="color:rgba(255,255,255,.6)" onclick="btDel(${a.id})">Zurückziehen</button>`:`<button class="text-[11px]" style="color:rgba(255,255,255,.45)" onclick="mReport('battle',${a.id},'diese Antwort')">Melden</button>`):''}</div><button class="bt-like ${d.liked[a.id]?'on':''}" onclick="bLike(${b.i},${a.id})" aria-label="Gefällt mir">♥ ${a.l+(d.liked[a.id]?1:0)}</button></div>`).join('')}
       ${list.length>4?`<button class="bt-more" onclick="S.btAll=!S.btAll;bRedraw()">${S.btAll?'Weniger anzeigen':'Alle '+list.length+' Antworten'}</button>`:''}</div>`;
   } else {
     const t=bTop2(d), v=bVotes(b.i,d), sum=v[0]+v[1], pc=[sum?Math.round(v[0]/sum*100):50,0]; pc[1]=100-pc[0];
@@ -1566,7 +1566,7 @@ function nachweiseCard(){
   if(S.proofs===null){ S.proofs=undefined; proofsLoad(); }
   const l=S.proofs||[];
   return `<div class="card p-4 space-y-3"><div><p class="font-semibold">Nachweise</p><p class="text-xs text-muted">Lade Abrechnungen, Zertifikate oder deinen Ausweis hoch. Wir prüfen sie und geben sie frei. Damit steigt dein Rang, du bekommst Abzeichen, und Auftraggeber sehen eine geschwärzte Version – deine Daten bleiben geschützt.</p></div>
-    ${l.length?`<div>${l.map(p=>`<div class="flex justify-between items-center gap-3 py-2 border-t border-line text-sm"><span class="min-w-0"><span class="block font-medium truncate">${esc(PROOF_ART[p.art]||(p.art==='lebenslauf'?'Lebenslauf':p.art))}${p.monate?' · '+p.monate+' Monate':''}</span>${p.titel?`<span class="block text-xs text-muted truncate">${esc(p.titel)}</span>`:''}</span><span class="text-xs whitespace-nowrap ${(PROOF_ST[p.status]||['',''])[1]}" style="${p.status==='abgelehnt'?'color:#e5484d':''}">${(PROOF_ST[p.status]||[p.status])[0]}</span></div>`).join('')}</div>`:''}
+    ${l.length?`<div>${l.map(p=>`<div class="flex justify-between items-center gap-3 py-2 border-t border-line text-sm"><span class="min-w-0"><span class="block font-medium truncate">${esc(PROOF_ART[p.art]||(p.art==='lebenslauf'?'Lebenslauf':p.art))}${p.monate?' · '+p.monate+' Monate':''}</span>${p.titel?`<span class="block text-xs text-muted truncate">${esc(p.titel)}</span>`:''}</span><span class="text-xs whitespace-nowrap ${(PROOF_ST[p.status]||['',''])[1]}" style="${p.status==='abgelehnt'?'color:#e5484d':''}">${(PROOF_ST[p.status]||[p.status])[0]}<br><button class="underline text-muted" onclick="nwDel(${p.id})">Zurückziehen</button></span></div>`).join('')}</div>`:''}
     <div class="grid grid-cols-2 gap-2"><label class="text-xs text-muted col-span-2">Art<select id="nwArt" class="input text-sm mt-1" onchange="document.getElementById('nwMonW').style.display=this.value==='abrechnung'?'':'none'">${Object.entries(PROOF_ART).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
       <label class="text-xs text-muted">Beschreibung<input id="nwTitel" maxlength="120" class="input text-sm mt-1" placeholder="z. B. Provision Solar"></label>
       <label class="text-xs text-muted" id="nwMonW" style="display:none">Zeitraum (Monate)<input id="nwMon" type="number" min="1" max="60" class="input text-sm mt-1" value="1"></label></div>
@@ -1790,7 +1790,7 @@ function threadReal(){
       <div class="flex items-start justify-between gap-3"><h2 class="font-serif text-xl mb-2">${esc(t.titel)}</h2>${S.member?`<button class="text-xs text-muted shrink-0 inline-flex items-center gap-1 mt-1" onclick="shareAny('f',${t.id})">${SHARE_IC} Teilen</button>`:''}</div>${t.text?`<p class="text-sm text-muted">${esc(t.text)}</p>`:''}
       ${fAnsList(t,cat)}
       ${S.member?`<form class="mt-4 space-y-2" onsubmit="event.preventDefault();fAnswer(${t.id},this,'${cat}')"><div id="femo${t.id}" class="hidden">${emoBar('#fin'+t.id)}</div><div class="flex gap-2"><button type="button" class="text-xl px-1" onclick="document.getElementById('femo${t.id}').classList.toggle('hidden')" aria-label="Emojis">😊</button><input id="fin${t.id}" name="a" class="input" maxlength="1000" placeholder="Deine Antwort…" autocomplete="off"><button class="btn-gold">Senden</button></div></form>`:S.user?'':`<a href="#login" class="text-sm text-gold block mt-3">Anmelden zum Antworten</a>`}
-      ${S.member&&!t.mine&&t.member_id?`<button class="text-[11px] text-muted mt-2" onclick="fReport('forumfrage',${t.id})">Frage melden</button>`:''}</div>`).join('')
+      ${S.member&&!t.mine&&t.member_id?`<button class="text-[11px] text-muted mt-2" onclick="fReport('forumfrage',${t.id})">Frage melden</button>`:''}${t.mine?`<button class="text-[11px] text-muted mt-2" onclick="fqDel(${t.id},'${cat}')">Frage zurückziehen</button>`:''}</div>`).join('')
       :`<div class="card p-5 text-sm"><p class="font-semibold mb-1">Hier steht noch keine Frage.</p><p class="text-muted">${cat==='ClosingHub'?'Hier stellt das ClosingHub-Team Fragen an die Community.':'Stell die erste Frage – die Community hilft dir.'}</p></div>`}
   </div>`;
 }
@@ -1805,7 +1805,7 @@ function fAnsOne(a,t,cat,sub){ const n=esc(String(a.name).split(' ')[0]);
     <div class="flex flex-wrap mt-2 text-xs items-center" style="gap:6px 16px">${S.member?`<button onclick="fHelp(${a.id},'${cat}')" class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-semibold ${a.ich_hilfreich?'text-gold':'text-muted border-line'}" style="${a.ich_hilfreich?'border-color:#087A4B;background:rgba(8,122,75,.08)':''}">👍 ${a.ich_hilfreich?'Gefällt dir':'Gefällt mir'} · ${a.hilfreich}</button>`:`<span class="text-muted">👍 ${a.hilfreich}</span>`}
       ${S.member?`<button class="text-muted font-semibold" onclick="fReplyOpen(${a.parent_id||a.id},'${n.replace(/'/g,'')}')">Antworten</button>`:''}
       ${t.mine&&!a.beste&&!sub?`<button class="text-muted" onclick="rpc('forum_beste_antwort',{p_antwort:${a.id}}).then(()=>forumList('${cat}'))">Als beste Antwort markieren</button>`:''}
-      ${S.member&&!a.mine?`<button class="text-muted" onclick="fReport('forum',${a.id})">Melden</button>`:''}</div></div>`; }
+      ${S.member&&!a.mine?`<button class="text-muted" onclick="fReport('forum',${a.id})">Melden</button>`:''}${a.mine?`<button class="text-muted" onclick="faDel(${a.id},'${cat}')">Zurückziehen</button>`:''}</div></div>`; }
 function fAnsList(t,cat){ const all=t.antworten||[], top=all.filter(a=>!a.parent_id), kids=id=>all.filter(a=>a.parent_id===id);
   return top.map(a=>fAnsOne(a,t,cat,false)+kids(a.id).map(k=>fAnsOne(k,t,cat,true)).join('')
     +(S.fre&&S.fre.id===a.id?`<form class="flex gap-2 mt-3" style="margin-left:36px" onsubmit="event.preventDefault();fReplySend(${t.id},${a.id},this,'${cat}')"><input id="fre${a.id}" name="a" class="input text-sm" maxlength="1000" placeholder="Antwort an ${esc(S.fre.n)} …" autocomplete="off" value="${esc(S.fre.v||'')}" oninput="S.fre.v=this.value"><button type="button" class="text-xl px-1" onclick="emoQuick('fre${a.id}')" aria-label="Emoji">😊</button><button class="btn-gold text-sm">Senden</button></form>`:'')).join(''); }
@@ -1836,7 +1836,7 @@ function realOfferCard(o){
     ${(o.med||[]).length?`<div class="flex gap-2 overflow-x-auto">${o.med.map(m=>m.typ==='video'?`<video src="${esc(m.url)}#t=0.1" class="h-24 rounded-xl border border-line shrink-0" controls playsinline preload="metadata"></video>`:`<img src="${esc(m.url)}" class="h-24 rounded-xl border border-line object-cover shrink-0 cursor-pointer" onclick="lightbox(this.src)">`).join('')}</div>`:''}
     <button onclick="openProfile(${o.mid})" class="flex items-center gap-2 text-sm text-left min-w-0"><span class="rounded-full overflow-hidden shrink-0" style="width:28px;height:28px">${o.av?`<img src="${esc(o.av)}" class="w-full h-full object-cover">`:initAv(o.full)}</span><span class="font-medium truncate">${o.s}</span></button>
     <div class="flex items-center justify-between gap-3 border-t border-line pt-3"><span class="text-xs text-muted truncate">${o.bis?'Läuft bis '+new Date(o.bis).toLocaleDateString('de-DE'):''}</span>
-      <span class="flex items-center gap-2 shrink-0">${S.member?`<button onclick="shareAny('o',${o.id})" class="text-muted p-1" title="Teilen" aria-label="Angebot teilen">${SHARE_IC}</button>`:''}${o.mine?'<span class="text-xs text-gold">Dein Angebot</span>':`<button onclick="${S.member?`anfrageModal(${o.id})`:`go('login')`}" class="btn-gold text-xs whitespace-nowrap" style="padding:.4rem .9rem">Anfragen</button>`}</span></div></div>`;
+      <span class="flex items-center gap-2 shrink-0">${S.member?`<button onclick="shareAny('o',${o.id})" class="text-muted p-1" title="Teilen" aria-label="Angebot teilen">${SHARE_IC}</button>`:''}${o.mine?`<button class="text-xs text-muted underline" onclick="aoDel(${o.id})">Zurückziehen</button>`:`${S.member?`<button onclick="mReport('markt',${o.id},'dieses Angebot')" class="text-[11px] text-muted">Melden</button>`:''}<button onclick="${S.member?`anfrageModal(${o.id})`:`go('login')`}" class="btn-gold text-xs whitespace-nowrap" style="padding:.4rem .9rem">Anfragen</button>`}</span></div></div>`;
 }
 function anfrageModal(id){ const o=realOffers().find(x=>x.id===id); if(!o) return;
   document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()"><form class="card w-full max-w-md p-5 space-y-3 relative" onclick="event.stopPropagation()" onsubmit="event.preventDefault();anfrageSend(${id},this)">
@@ -1875,7 +1875,7 @@ const AO_ST={beantragt:'⏳ In Prüfung',aktiv:'✓ Veröffentlicht',abgelehnt:'
 const AO_PILL={beantragt:'background:#FFF1C9;color:#7a5a00',aktiv:'background:#087A4B;color:#fff',abgelehnt:'background:#FCEBEB;color:#A32D2D',beendet:'background:rgba(120,120,130,.15);color:rgb(var(--muted))'};
 function myOffersCard(){ const l=S.myOffers||[]; if(!S.member||!l.length) return '';
   return `<div class="card p-4 mb-4"><p class="text-xs uppercase tracking-wider text-muted mb-2">Meine Angebote</p>${l.map(o=>`<div class="flex justify-between items-center gap-3 py-2 border-t border-line text-sm"><span class="min-w-0"><span class="block font-medium truncate">${esc(o.titel)} · ${(+o.preis).toLocaleString('de-DE')} €</span><span class="block text-xs text-muted">${esc(o.kategorie)}${o.status==='aktiv'&&o.laeuft_bis?' · sichtbar bis '+new Date(o.laeuft_bis).toLocaleDateString('de-DE'):''}${o.anfragen?' · '+o.anfragen+' Anfragen':''}${o.notiz?' · '+esc(o.notiz):''}</span></span>
-    <span class="flex items-center gap-2 whitespace-nowrap"><span class="text-[11px] font-bold uppercase tracking-wide rounded-full px-2.5 py-1" style="${AO_PILL[o.status]||''}">${AO_ST[o.status]||o.status}</span>${o.status==='aktiv'||o.status==='beantragt'?`<button class="text-xs text-muted underline" onclick="if(confirm('Angebot beenden?'))rpc('markt_angebot_beenden',{p_id:${o.id}}).then(()=>{S.mo=null;render();})">beenden</button>`:''}</span></div>`).join('')}</div>`; }
+    <span class="flex items-center gap-2 whitespace-nowrap"><span class="text-[11px] font-bold uppercase tracking-wide rounded-full px-2.5 py-1" style="${AO_PILL[o.status]||''}">${AO_ST[o.status]||o.status}</span>${o.status==='aktiv'||o.status==='beantragt'?`<button class="text-xs text-muted underline" onclick="aoDel(${o.id})">zurückziehen</button>`:''}</span></div>`).join('')}</div>`; }
 
 // ===== Job-Details: attraktive Darstellung wie im Demo-Handy =====
 function jdNum(s){ return String(s||'').match(/\d{1,3}(?:\.\d{3})+|\d+/g)?.map(x=>+x.replace(/\./g,''))||[]; }
@@ -2200,9 +2200,9 @@ async function commentsReal(id,keep){
   S.cmx.list=list; cmDraw();
 }
 function cmItem(k,small){ const n=String(k.name||'').split(' ')[0];
-  return `<div class="flex gap-3" style="${small?'margin-left:44px':''}"><button type="button" class="${small?'w-7 h-7':'w-8 h-8'} rounded-full overflow-hidden shrink-0" onclick="closeSheet();memberModal(${k.member_id})">${k.avatar_url?`<img src="${esc(k.avatar_url)}" class="w-full h-full object-cover">`:initAv(k.name)}</button>
+  return `<div class="flex gap-3" style="${small?'margin-left:44px':''}"><button type="button" class="${small?'w-7 h-7':'w-8 h-8'} rounded-full overflow-hidden shrink-0" onclick="closeSheet();openProfile(${k.member_id})">${k.avatar_url?`<img src="${esc(k.avatar_url)}" class="w-full h-full object-cover">`:initAv(k.name)}</button>
     <div class="min-w-0 flex-1"><div class="text-sm">${nameRank(esc(n),RANKS[(k.rang||1)-1])} <span class="text-[11px] text-muted">${cTime(k.created_at)}</span></div><p class="text-sm" style="white-space:pre-line;overflow-wrap:anywhere">${esc(k.text)}</p>
-    ${S.member?`<button type="button" class="text-xs text-muted mt-0.5" onclick="cmReply(${k.parent_id||k.id},'${esc(n).replace(/'/g,'')}')">Antworten</button>`:''}</div></div>`; }
+    ${S.member?`<span class="flex gap-4 mt-0.5"><button type="button" class="text-xs text-muted" onclick="cmReply(${k.parent_id||k.id},'${esc(n).replace(/'/g,'')}')">Antworten</button>${k.mine?`<button type="button" class="text-xs text-muted" onclick="cmDel(${k.id})">Zurückziehen</button>`:`<button type="button" class="text-xs text-muted" onclick="mReport('kommentar',${k.id},'diesen Kommentar')">Melden</button>`}</span>`:''}</div></div>`; }
 function cmDraw(){ const box=document.querySelector('#psheet .cmwrap'); if(!box) return; const id=S.cmx.id, list=S.cmx.list||[];
   const inp=document.getElementById('cmIn'), keepV=inp?inp.value:'', focus=inp&&document.activeElement===inp;
   const top=list.filter(k=>!k.parent_id), kids=pid=>list.filter(k=>k.parent_id===pid);
@@ -2347,11 +2347,11 @@ function mitglied(){
   if(p.partner_info){ const pi=p.partner_info, fem=p.partner&&p.partner.fem, pt=(PARTNERS||[]).find(x=>x.real&&x.mid===p.id);
     return `<div class="max-w-2xl mx-auto px-4 py-6">${back}<div class="card p-0 overflow-hidden">
       <div class="pl-6 pr-6 pt-4 pb-8" style="background:#0E1A2B;color:#fff"><p class="text-xs" style="color:#C9D3E3">Offizielle${fem?' Partnerin':'r Partner'} von ClosingHub</p><p class="font-semibold" style="font-family:Archivo,sans-serif">${esc(pi.s||'')}</p></div>
-      <div class="px-6 pb-6"><div class="flex items-end gap-4 -mt-6"><div class="relative shrink-0"><div class="rounded-full overflow-hidden" style="width:72px;height:72px;box-shadow:0 0 0 3px rgb(var(--panel))">${p.avatar_url?`<img src="${esc(p.avatar_url)}" class="w-full h-full object-cover">`:initAv(p.name)}</div>${typeof SEAL!=='undefined'?SEAL:''}</div>
+      <div class="px-6 pb-6"><div class="flex items-end gap-4 -mt-6"><div class="relative shrink-0" style="border-radius:50%;box-shadow:0 0 0 3px rgb(var(--panel))">${skAv(first,72,p.avatar_url?`<img src="${esc(p.avatar_url)}" class="w-full h-full object-cover">`:initAv(p.name))}${typeof SEAL!=='undefined'?SEAL:''}</div>
         <div class="min-w-0 pt-8"><div class="text-lg leading-tight">${nameRank(esc(first),RANKS[(p.rang||1)-1])}</div></div></div>
         ${pi.role||pi.meta?`<p class="text-sm mt-3"><b>${esc(pi.role||'')}</b>${pi.role&&pi.meta?', ':''}<span class="text-muted">${esc(pi.meta||'')}</span></p>`:''}<p class="text-sm text-muted mt-1" style="white-space:pre-line">${esc(p.bio||pi.bio||'')}</p>
         <div class="grid grid-cols-3 mt-4 border-y border-line text-center text-[11px] text-muted"><div class="py-2"><b class="block text-base" style="color:rgb(var(--fg))">${p.follower}</b>Follower</div><div class="py-2 border-l border-line"><b class="block text-base" style="color:rgb(var(--fg))">${p.beitraege}</b>Beiträge</div><div class="py-2 border-l border-line"><b class="block text-base" style="color:rgb(var(--fg))">&lt; 24 h</b>Antwortzeit</div></div>
-        ${bm}${btns}${pt?`<button class="btn-gold w-full mt-3" onclick="personModal('${String(pt.n).replace(/'/g,'')}')">Angebot im Marktplatz ansehen</button>`:''}</div></div>
+        ${mpStats(p)}${bm}${btns}${pt?`<button class="btn-gold w-full mt-3" onclick="personModal('${String(pt.n).replace(/'/g,'')}')">Angebot im Marktplatz ansehen</button>`:''}</div></div>
       <p class="text-xs uppercase tracking-wider text-muted mt-8 mb-1">Beiträge</p>${postGrid(S.mp.posts,false).replace('mt-8 ','mt-2 ')}</div>`; }
   const since=p.dabei_seit?new Date(p.dabei_seit).toLocaleDateString('de-DE',{month:'long',year:'numeric'}):'';
   return `<div class="max-w-2xl mx-auto px-4 py-6">${back}
@@ -2361,7 +2361,7 @@ function mitglied(){
           <div class="flex gap-5 text-sm mt-2"><span><b id="mmF">${p.follower}</b> Follower</span><span><b>${p.gefolgt}</b> gefolgt</span><span><b>${p.beitraege}</b> Beiträge</span></div></div></div>
       <p class="text-sm mt-4">${line.filter(Boolean).join(' · ')}</p>${p.bio?`<p class="text-sm text-muted mt-1" style="white-space:pre-line">${esc(p.bio)}</p>`:''}
       ${since?`<p class="text-xs text-muted mt-2">Dabei seit ${since}${p.streak?` · 🔥 ${p.streak} Tage Streak`:''}</p>`:''}
-      ${bm}${btns}
+      ${mpStats(p)}${bm}${btns}
     </div>
     <p class="text-xs uppercase tracking-wider text-muted mt-8 mb-1">Beiträge</p>${postGrid(S.mp.posts,false).replace('mt-8 ','mt-2 ')}</div>`;
 }
@@ -2472,7 +2472,7 @@ function openMedalsFor(mid){ const p=S.mp&&S.mp.p; if(!p||p.id!==mid) return; co
 function cvCard(){ if(!S.member) return ''; const l=(S.proofs||[]).filter(p=>p.art==='lebenslauf'), cur=l[0];
   const st=cur?{offen:['In Prüfung – wir schwärzen deine Kontaktdaten','text-muted'],bestaetigt:['Geprüft ✓ – Auftraggeber sehen die geschwärzte Version','text-gold'],abgelehnt:['Abgelehnt – bitte lade eine neue Version hoch','']}[cur.status]||[cur.status,'']:null;
   return `<div class="card p-4 space-y-3"><div><p class="font-semibold">Lebenslauf</p><p class="text-xs text-muted">Wenn du dich auf einen Job bewirbst, sieht der Auftraggeber deinen Lebenslauf – geschwärzt, also ohne Namen, Foto, Telefon, E-Mail und Adresse. Erst nach der Freischaltung bekommt er deine Kontaktdaten.</p></div>
-    ${cur?`<div class="flex justify-between items-center gap-3 text-sm border-t border-line pt-3"><span>📄 Lebenslauf vom ${new Date(cur.created_at).toLocaleDateString('de-DE')}</span><span class="text-xs text-right ${st[1]}" style="${cur.status==='abgelehnt'?'color:#e5484d':''}">${st[0]}</span></div>`:''}
+    ${cur?`<div class="flex justify-between items-center gap-3 text-sm border-t border-line pt-3"><span>📄 Lebenslauf vom ${new Date(cur.created_at).toLocaleDateString('de-DE')}</span><span class="text-xs text-right ${st[1]}" style="${cur.status==='abgelehnt'?'color:#e5484d':''}">${st[0]}<br><button class="underline text-muted" onclick="nwDel(${cur.id})">Zurückziehen</button></span></div>`:''}
     <p id="cvErr" class="text-sm" style="color:#e5484d;min-height:1em"></p>
     <label class="${cur?'btn-ghost':'btn-gold'} w-full block text-center cursor-pointer" id="cvBtn">${cur?'Neue Version hochladen':'Lebenslauf hochladen'}<input type="file" accept="application/pdf,image/*" class="hidden" onchange="cvSend(this)"></label>
     <p class="text-[11px] text-muted">PDF oder Bild, max. 15 MB. Das Original sieht nur das ClosingHub-Team.</p></div>`; }
@@ -2485,6 +2485,22 @@ async function cvSend(inp){ const f=inp.files[0], err=document.getElementById('c
   catch(e){ err.textContent=e.message; btn.firstChild.textContent='Lebenslauf hochladen'; } }
 function ptFollow(mid,btn){ btn.disabled=true; rpc('folgen_umschalten',{p_member:mid}).then(j=>{ btn.disabled=false; if(!j||!j.ok){ alert('Folgen hat nicht geklappt.'); return; } btn.textContent=j.folge?'Gefolgt ✓':'Folgen'; S.kontakte=null; loadMember(); }).catch(()=>{ btn.disabled=false; alert('Keine Verbindung.'); }); }
 function ptFollowState(mid){ rpc('profil_laden',{p_member:mid}).then(p=>{ const b=document.getElementById('ptF'); if(b&&p) b.textContent=p.folge?'Gefolgt ✓':'Folgen'; }).catch(()=>{}); }
+
+// ===== Runde 4: alles Eigene zurückziehen, alles melden, Punkte im Profil, Partner-Flammen =====
+function mReport(typ,id,label){ const g=prompt('Warum meldest du '+(label||'das')+'?'); if(g===null) return; rpc('melden',{p_typ:typ,p_ref:id,p_grund:g}).then(()=>alert('Danke! Das ClosingHub-Team schaut es sich an.')).catch(()=>alert('Melden hat nicht geklappt.')); }
+async function mWithdraw(fn,id,q,after){ if(!confirm(q)) return; const j=await rpc(fn,{p_id:id}).catch(()=>null); if(!j||!j.ok){ alert('Das hat nicht geklappt.'); return; } if(after) after(); }
+function cmDel(id){ mWithdraw('kommentar_loeschen',id,'Kommentar zurückziehen? Er ist dann für alle weg.',()=>commentsReal(S.cmx.id,true)); }
+function fqDel(id,cat){ mWithdraw('forum_frage_loeschen',id,'Frage zurückziehen? Sie verschwindet samt Antworten aus dem Forum.',()=>{ S.fz=null; forumList(cat); }); }
+function faDel(id,cat){ mWithdraw('forum_antwort_loeschen',id,'Antwort zurückziehen? Sie ist dann für alle weg.',()=>forumList(cat)); }
+function btDel(id){ mWithdraw('battle_antwort_loeschen',id,'Deine Battle-Antwort zurückziehen? Danach kannst du eine neue posten, solange die Antwortphase läuft.',()=>bAfter()); }
+function nwDel(id){ mWithdraw('nachweis_zurueckziehen',id,'Diesen Nachweis zurückziehen? Auftraggeber sehen ihn dann nicht mehr. Abzeichen, die daran hängen, fallen weg.',()=>{ S.proofs=null; proofsLoad(); }); }
+function aoDel(id){ mWithdraw('markt_angebot_beenden',id,'Angebot zurückziehen? Es ist dann nicht mehr im Marktplatz zu sehen.',()=>{ S.mo=null; S.myOffers=null; render(); }); }
+// Punkte-Karte: lädt nach, falls der erste Versuch beim Start nicht geklappt hat
+function ptEnsure(){ if(S.member&&!S.pt&&Date.now()-(S._ptTry||0)>8000){ S._ptTry=Date.now(); ptLoad(); } return ''; }
+function mpStats(p){ const s=+p.streak||0, st=(FX.streak&&FX.streak.stufen)||[], next=st.find(x=>s<+x[0]), prev=[...st].reverse().find(x=>s>=+x[0]), lo=prev?+prev[0]:0, hi=next?+next[0]:Math.max(s,1), pc=next?Math.round((s-lo)/(hi-lo)*100):100;
+  return `<div class="card p-4 mt-4"><div class="grid grid-cols-3 text-center"><div><p class="font-serif" style="font-size:24px;line-height:1.1">${(+p.punkte||0).toLocaleString('de-DE')}</p><p class="text-[11px] text-muted">Punkte gesamt</p></div><div class="border-l border-line"><p class="font-serif text-gold" style="font-size:24px;line-height:1.1">${(+p.punkte_monat||0).toLocaleString('de-DE')}</p><p class="text-[11px] text-muted">diesen Monat</p></div><div class="border-l border-line"><p class="font-serif" style="font-size:24px;line-height:1.1">🔥 ${s}</p><p class="text-[11px] text-muted">Tage in Folge</p></div></div>
+    <div class="mt-3"><div style="height:8px;border-radius:4px;background:rgb(var(--line));overflow:hidden"><div style="height:100%;width:${pc}%;background:linear-gradient(90deg,#087A4B,#D9B45A);border-radius:4px"></div></div>
+    <p class="text-[11px] text-muted mt-1">${next?`Noch ${hi-s} ${hi-s===1?'Tag':'Tage'} bis zur Streak-Medaille „${esc(next[1])}“`:'Höchste Streak-Stufe erreicht 🔥'}</p></div></div>`; }
 
 function feed(){
   const ft = S.ptopics || S.topics;
@@ -2614,7 +2630,7 @@ function drawPlayer(){
       ${(post.vid!==undefined||post.img||post.video)?'':`<p class="font-serif text-2xl leading-relaxed text-center">${post.t}</p>`}</div>
     ${p.paused?`<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><span class="icbox" style="width:72px;height:72px">${svg('play',34)}</span></div>`:''}
     <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-      <div ${post.real?`onclick="memberModal(${post.mid})" class="cursor-pointer"`:''}>${nameRank(post.a,post.r)}</div>${(post.vid!==undefined||post.img||post.video)?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
+      <div ${post.real?`onclick="memberModal(${post.mid})" class="cursor-pointer"`:''}>${nameRank(post.a,post.r)}</div>${post.real&&S.member?(post.mine?`<button onclick="event.stopPropagation();delPost(${post.id})" class="text-xs mt-1" style="color:rgba(255,255,255,.75)">Zurückziehen</button>`:`<button onclick="event.stopPropagation();reportPost(${post.id})" class="text-xs mt-1" style="color:rgba(255,255,255,.75)">Melden</button>`):''}${(post.vid!==undefined||post.img||post.video)?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
       <div class="mt-3">${actionBar(post,'player')}</div>
     </div>`;
   document.getElementById('modal').innerHTML = `
@@ -2893,7 +2909,7 @@ function profile(){
         <div class="flex gap-5 text-sm flex-wrap"><span><b>${ME.followers}</b> Follower</span><span><b>${ME.following}</b> gefolgt</span></div>
         ${S.member?`<a href="#create" onclick="S.cmode='beitrag'" class="btn-gold inline-flex items-center gap-1.5 text-sm" style="padding:7px 16px">＋ Posten</a>`:''}
       </div></div>
-    ${streakCard()}${ptCard()}
+    ${streakCard()}${ptCard()}${ptEnsure()}${S.member&&!S.pt?'<div class="card p-4 mt-5 text-sm text-muted">Punkte laden …</div>':''}
     <div class="mt-5 space-y-2 text-left">
       <p class="text-sm">${profLine()}</p>
       <p class="text-sm text-muted">${ME.bio||(S.member?'Noch kein Profiltext. Schreib in den <a href="#einstellungen" class="text-gold">Einstellungen</a>, was du machst und wofür du stehst.':'')}</p>
@@ -2981,6 +2997,7 @@ const PROFIL=['Marco','Sofia','Lena','Amira','Jonas','Felix','Tobias','Hannah','
 function hashN(n){ let h=0; for(const c of n) h=(h*31+c.charCodeAt(0))>>>0; return h; }
 function avatar(n){
   const pp=PARTNERS.find(x=>x.n===n&&x.img); if(pp) return `<img src="${pp.img}" alt="" class="w-full h-full rounded-full object-cover">`;
+  if(PARTNERS.some(x=>x.real&&x.n===n)) return initAv(n);
   if(n===ME.name && S.avatar) return `<img src="${S.avatar}" class="w-full h-full rounded-full object-cover">`;
   if(n===ME.name && S.member) return meAvatar();
   if(PROFIL.includes(n)) return `<img src="assets/app/profil/${n.toLowerCase()}.jpg" alt="" class="w-full h-full rounded-full object-cover">`;
