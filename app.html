@@ -433,7 +433,16 @@ window.tailwind=window.tailwind||{}; tailwind.config = { theme: { extend: {
 .cx-note{font-size:10.5px;color:rgb(var(--muted));text-align:center;padding:0 12px 8px;background:rgb(var(--bg))}
 .cx-pick{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;text-align:center;font-size:13.5px;color:rgb(var(--muted));background:rgb(var(--panel))}.cx-pick b{font-family:var(--serif,Georgia),serif;font-size:22px;color:rgb(var(--fg));font-weight:500}.cx-pickic{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;background:rgba(8,122,75,.12);margin-bottom:4px}
 .cx-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:40px 16px;text-align:center;font-size:13px;color:rgb(var(--muted))}.cx-empty b{color:rgb(var(--fg));font-size:16px}.cx-emav{width:76px;height:76px;border-radius:50%;overflow:hidden;display:block;margin-bottom:4px}.cx-emav img{width:100%;height:100%;object-fit:cover}.cx-chip{font-size:12.5px;padding:6px 12px;border-radius:99px;border:1px solid rgb(var(--line));background:rgb(var(--bg));color:rgb(var(--fg))}.cx-chip:hover{border-color:#087A4B}
-</style></head>
+</style><style>
+.gal{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}.gal::-webkit-scrollbar{display:none}.gal img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start;scroll-snap-stop:always}
+.gal-cnt{position:absolute;top:10px;right:10px;z-index:3;font-size:11.5px;font-weight:600;color:#fff;background:rgba(0,0,0,.55);border-radius:99px;padding:2px 8px;pointer-events:none}
+.gal-dots{position:absolute;left:0;right:0;bottom:10px;z-index:3;display:flex;justify-content:center;gap:5px;pointer-events:none}.gal-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5);box-shadow:0 0 2px rgba(0,0,0,.5)}.gal-dots i.on{background:#fff;width:7px;height:7px}
+span>.gal-dots{position:static}
+.gal-a{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:34px;height:34px;border-radius:50%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.92);color:#0E1A2B;box-shadow:0 2px 10px rgba(0,0,0,.3)}.gal-a.l{left:10px}.gal-a.r{right:10px}
+@media (hover:hover){.gal-a{display:flex;opacity:0;transition:opacity .15s}*:hover>.gal-a,.gal-a.pl{opacity:1}}.gal-a.pl{z-index:6}
+</style><style>.gw-bar{height:6px;border-radius:99px;background:rgba(217,180,90,.2);margin-top:10px;overflow:hidden}.gw-bar i{display:block;height:100%;background:linear-gradient(90deg,#D9B45A,#B8892E);border-radius:99px;transition:width .3s}
+.gw-row{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:8px 2px;border-top:1px solid rgb(var(--line));font-size:13.5px}.gw-row:first-child{border-top:0}
+.gw-bx{flex:none;width:22px;height:22px;border-radius:7px;border:1.6px solid rgb(var(--line));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff}.gw-bx.on{background:#087A4B;border-color:#087A4B}.gw-bx.lock{border-style:dashed;font-size:11px}</style></head>
 <body>
 <script>/* ===== Start-Animation: Lichtpunkt schreibt „closing“, „HUB“ zündet wie Neon, Linie + Slogan, dann auf ===== */
 function chSplash(force){
@@ -856,6 +865,7 @@ const EN={gold:null,ink:['#2A3B58','#0B1524'],green:['#16A36A','#05583A'],blue:[
 const BADGES=[
  ['Mitgliedschaft',[
   ['dayone','Day One','DAY ONE','nr1','gold','Einer der ersten 250 Member'],
+  ['gruender','Gründungsmitglied','GRÜNDUNGSMITGLIED','flag','gold','Plus oder Premium in der ersten Woche nach dem Start'],
   ['premium','Premium','PREMIUM','crown','gold','Aktives Premium-Abo'],
   ['partner','Partner','PARTNER','logo','gold','Einer der 5 Partner'],
   ['innercircle','Inner Circle','INNER CIRCLE','key','gold','Unterstützungsteam von ClosingHub']]],
@@ -915,7 +925,7 @@ const GRP={},BY={};BADGES.forEach(([g,l])=>l.forEach(b=>{GRP[b[0]]=g;BY[b[1]]=b}
 return function(name,size){const b=BY[name];if(!b)return '';return medal(b,'s'+(++n),SHAPE[GRP[b[0]]]).replace('<svg ','<svg width="'+size+'" height="'+size+'" style="display:block;flex:none" ');};
 })();
 const BADGES = [
-  ['Mitgliedschaft',[['Day One','Einer der ersten 250 Member','b_found'],['Premium','Aktives Premium-Abo. Gilt, solange du Premium bist','b_star'],['Partner','Einer der 5 Partner, solange die Partnerschaft läuft','b_partner'],['Inner Circle','Unterstützungsteam von ClosingHub','b_circle']]],
+  ['Mitgliedschaft',[['Day One','Einer der ersten 250 Member','b_found'],['Gründungsmitglied','Plus oder Premium in der ersten Woche nach dem Start – gibt es danach nie wieder','b_found'],['Premium','Aktives Premium-Abo. Gilt, solange du Premium bist','b_star'],['Partner','Einer der 5 Partner, solange die Partnerschaft läuft','b_partner'],['Inner Circle','Unterstützungsteam von ClosingHub','b_circle']]],
   ['Geprüft',[['Identität geprüft','Ausweis von ClosingHub bestätigt','b_id'],['High-Ticket','Nachgewiesener Abschluss ab 5.000 €','b_diamond'],['Ausgebildet von …','Absolvent eines Ausbilders, nach Einreichung des Dokuments','b_cap']]],
   ['Leistung',[['Hired via ClosingHub','Erster Job über die Plattform','b_brief'],['Spotlight','Meiste Punkte im eigenen Rang in einem Monat','sun']]],
   ['Community',[['Challenger','Start-Challenge: 10 der ersten 14 Tage geschafft','b_star'],['Recruiter','3 Member über deinen Einladungslink geworben','b_userplus'],['Helping Hand','3 Verbesserungsvorschläge für ClosingHub gegeben','b_bulb']]],
@@ -1218,10 +1228,11 @@ async function loadMember0(){
   let m=null;
   try{ m=await rpc('member_ich'); }catch(e){ if(!SES) render(); return; }
   if(m&&m.status&&m.status!=='aktiv'){ dropSes(); save(); S.loginErr=m.status==='gesperrt'?'Dein Konto ist gesperrt. Wenn du denkst, das ist ein Fehler, schreib uns an info@getclosinghub.com.':'Dein Konto ist nicht mehr aktiv. Bei Fragen schreib uns an info@getclosinghub.com.'; S.member=null; S.user=false; S.route='login'; try{ history.replaceState(null,'',location.pathname+'#login'); }catch(e){} render(); return; }
+  if(!m){ try{ const bj=await rpc('basic_beitreten',{p_name:null}); if(bj&&bj.ok){ m=await rpc('member_ich'); } }catch(e){} }
   if(!m){ let adm=false; try{ adm=await rpc('is_admin'); }catch(e){}
     if(!adm){ dropSes(); save(); S.loginErr='Für diese E-Mail gibt es noch kein Mitgliedskonto. Nutze deinen persönlichen Einladungslink.'; S.route='login'; try{ history.replaceState(null,'',location.pathname+'#login'); }catch(e){} render(); return; }
     S.adminPreview=true; }
-  applyMember(m); render(); if(m){ mbLoad(); unreadLoad(); chatsLoad(); mkLoad(); ptLoad(); chLoad(); mdSharedLoad(); }
+  applyMember(m); render(); if(m){ mbLoad(); unreadLoad(); chatsLoad(); mkLoad(); ptLoad(); chLoad(); mdSharedLoad(); S.gw=null; S.bd=null; }
 }
 async function doLogin(){
   const e=(document.getElementById('lgE')||{}).value||'', p=(document.getElementById('lgP')||{}).value||'', er=document.getElementById('lgErr'), b=document.getElementById('lgBtn');
@@ -1247,7 +1258,7 @@ function login(){
     <button class="btn-gold w-full" id="lgBtn" onclick="doLogin()">Anmelden</button>
     <button class="text-sm text-muted w-full" onclick="pwReset()">Passwort vergessen?</button>
     <div class="flex items-center gap-3 text-xs text-muted"><div class="flex-1 h-px bg-line"></div>noch kein Konto?<div class="flex-1 h-px bg-line"></div></div>
-    <a href="/#day-ones" class="btn-ghost w-full block text-center">Auf die Warteliste</a>
+    <button class="btn-ghost w-full" onclick="S.signup=1;render()">Kostenlos starten</button><a href="/#day-ones" class="block text-center text-sm" style="color:#087A4B">Day One werden – Warteliste →</a>
     <a href="#feed" class="block text-center text-sm text-muted">Erst mal umschauen →</a></div></div>`;
 }
 /* Einladung aus der Warteliste: ?einladung=TOKEN → nur noch Passwort wählen */
@@ -1509,7 +1520,7 @@ S.rp=null; S.rpMore=true;
 function mapPost(p){
   const first=String(p.name||'').split(' ')[0]; S.skMap=S.skMap||{}; S.skMap[first]=p.streak;
   const id=1e6+p.id; S.liked[id]=!!p.liked;
-  return {vor:p.vorlage||null, raw:p.text||'', hl:!!p.highlight, imp:p.im_profil!==false, thumb:p.thumb_url||null, id, rid:p.id, real:true, mid:p.member_id, k:p.kategorie, a:esc(first), full:p.name, r:RANKS[(p.rang||1)-1]||'Starter', av:p.avatar_url,
+  return {vor:p.vorlage||null, raw:p.text||'', hl:!!p.highlight, imp:p.im_profil!==false, thumb:p.thumb_url||null, imgs:p.media_typ==='bild'&&Array.isArray(p.medien)&&p.medien.length?[p.media_url,...p.medien]:null, id, rid:p.id, real:true, mid:p.member_id, k:p.kategorie, a:esc(first), full:p.name, r:RANKS[(p.rang||1)-1]||'Starter', av:p.avatar_url,
     t:esc(p.text).replace(/\n/g,'<br>'), l:p.likes-(p.liked?1:0), c:p.kommentare, img:p.media_typ==='bild'?p.media_url:null, video:p.media_typ==='video'?p.media_url:null,
     mine:p.mine, folge:p.folge, at:p.created_at};
 }
@@ -1595,7 +1606,7 @@ function postGrid(list,owner){
   if(!list) return '<p class="mt-8 text-sm text-muted text-center">Lädt …</p>';
   if(!list.length) return owner?`<div class="mt-8 card p-8 text-center space-y-3"><p class="font-serif text-xl">Noch keine Beiträge</p><p class="text-sm text-muted">Teile deinen ersten Deal, Tipp oder Fail mit der Community.</p><a href="#create" class="btn-gold inline-block" style="padding:8px 16px">＋ Ersten Beitrag teilen</a></div>`:'<p class="mt-8 text-sm text-muted text-center">Noch keine Beiträge.</p>';
   S.plistReal=list;
-  return `<div class="mt-8 grid grid-cols-3 gap-1">${list.map((p,i)=>`<div onclick="closeModal();S.plist=S.plistReal;S.plMk=0;startPlayer(${i})" class="relative aspect-square bg-panel border border-line overflow-hidden cursor-pointer">${p.hl?'<span class="absolute z-10" style="top:4px;right:6px;font-size:15px;color:#F1D58A;text-shadow:0 1px 3px rgba(0,0,0,.8)">★</span>':''}${owner&&p.imp===false?'<span class="absolute z-10 text-[10px] rounded px-1" style="bottom:4px;left:4px;background:rgba(0,0,0,.65);color:#fff">nur Feed</span>':''}${p.thumb?`<img src="${esc(p.thumb)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">${p.video?'<span class="absolute top-1.5 right-2 text-white text-xs">▶</span>':''}`:p.img?`<img src="${esc(p.img)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:p.video?`<video src="${esc(p.video)}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted preload="metadata"></video><span class="absolute top-1.5 right-2 text-white text-xs">▶</span>`:p.vor?tplHtml(p.vor,p.raw,'sq'):`<div class="p-3 text-[11px] font-serif">${p.t}</div>`}</div>`).join('')}</div>`;
+  return `<div class="mt-8 grid grid-cols-3 gap-1">${list.map((p,i)=>`<div onclick="closeModal();S.plist=S.plistReal;S.plMk=0;startPlayer(${i})" class="relative aspect-square bg-panel border border-line overflow-hidden cursor-pointer">${p.imgs?`<span class="absolute z-10" style="top:5px;left:6px" title="${p.imgs.length} Fotos">${GAL_IC}</span>`:''}${p.hl?'<span class="absolute z-10" style="top:4px;right:6px;font-size:15px;color:#F1D58A;text-shadow:0 1px 3px rgba(0,0,0,.8)">★</span>':''}${owner&&p.imp===false?'<span class="absolute z-10 text-[10px] rounded px-1" style="bottom:4px;left:4px;background:rgba(0,0,0,.65);color:#fff">nur Feed</span>':''}${p.thumb?`<img src="${esc(p.thumb)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">${p.video?'<span class="absolute top-1.5 right-2 text-white text-xs">▶</span>':''}`:p.img?`<img src="${esc(p.img)}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:p.video?`<video src="${esc(p.video)}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted preload="metadata"></video><span class="absolute top-1.5 right-2 text-white text-xs">▶</span>`:p.vor?tplHtml(p.vor,p.raw,'sq'):`<div class="p-3 text-[11px] font-serif">${p.t}</div>`}</div>`).join('')}</div>`;
 }
 async function memberModal(mid){
   if(S.member&&mid===S.member.id){ go('profile'); return; }
@@ -2426,7 +2437,7 @@ function mpFollow(mid,btn){ btn.disabled=true; rpc('folgen_umschalten',{p_member
 
 // --- Impressum, Datenschutz, AGB, Widerruf (Texte aus der Zentrale)
 S.recht=null;
-async function legalOpen(k){ const T={impressum:'Impressum',datenschutz:'Datenschutz',agb:'AGB',widerruf:'Widerruf'};
+async function legalOpen(k){ const T={impressum:'Impressum',datenschutz:'Datenschutz',agb:'AGB',widerruf:'Widerruf',gewinnspiel:'Teilnahmebedingungen Gewinnspiel'};
   const show=txt=>{ document.getElementById('modal').innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="closeModal()"><div class="card w-full max-w-2xl p-6 relative max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()"><button onclick="closeModal()" class="absolute top-3 right-4 text-muted text-xl">✕</button>
     <h2 class="font-serif text-2xl mb-4">${T[k]}</h2><div class="text-sm" style="white-space:pre-line;line-height:1.6">${txt?esc(txt):'<span class="text-muted">Dieser Text wird gerade vorbereitet.</span>'}</div>
     <div class="flex flex-wrap gap-3 mt-6 text-xs text-muted">${Object.keys(T).filter(x=>x!==k).map(x=>`<button class="underline" onclick="legalOpen('${x}')">${T[x]}</button>`).join('')}</div></div></div>`; };
@@ -2932,12 +2943,12 @@ function create(){
   if(!S.member) return `<div class="max-w-lg mx-auto px-4 py-8"><div class="card p-8 text-center space-y-3"><p class="font-serif text-xl">Melde dich an, um zu teilen</p><a href="#login" class="btn-gold inline-block" style="padding:8px 16px">Anmelden</a></div></div>`;
   if(S.cmode==='status') return statusCreate();
   const f=S.cf||(S.cf={kat:null,ki:null,kiLoad:false,file:null,prev:null,typ:null,frames:[],thumb:null,thumbPrev:null,thumbIdx:-1,vorlage:'papier'});
-  const preview=f.prev?`<div class="relative rounded-xl overflow-hidden bg-black">${f.typ==='video'?`<video id="cfVid" src="${f.prev}" class="w-full object-contain" style="max-height:360px" controls playsinline></video>`:`<img src="${f.prev}" class="w-full object-contain" style="max-height:360px">`}</div>`
+  const preview=f.typ==='bild'&&f.prev?cfGalEdit(f):f.prev?`<div class="relative rounded-xl overflow-hidden bg-black">${f.typ==='video'?`<video id="cfVid" src="${f.prev}" class="w-full object-contain" style="max-height:360px" controls playsinline></video>`:`<img src="${f.prev}" class="w-full object-contain" style="max-height:360px">`}</div>`
     :`<div id="cfPrev" class="relative rounded-xl overflow-hidden mx-auto" style="width:100%;max-width:360px;aspect-ratio:1;box-shadow:0 12px 28px -14px rgba(0,0,0,.45)">${tplHtml(f.vorlage,f.text||'Dein Text erscheint hier.','sq')}</div>`;
   return `<div class="max-w-lg mx-auto px-4 py-6 space-y-4">${postTabs()}
     ${PSEC('Inhalt',`${preview}
       <textarea id="cfText" class="input" style="min-height:84px" maxlength="1000" placeholder="${f.file?'Text zum Beitrag (optional) …':'Was willst du teilen?'}" oninput="S.cf.text=this.value;document.getElementById('cfCnt').textContent=this.value.length;clearTimeout(S._kiT);S._kiT=setTimeout(()=>cfKi(),1300);clearTimeout(S._tvT);S._tvT=setTimeout(()=>tplPrev('cf'),180)">${esc(f.text||'')}</textarea>
-      <div class="flex items-center justify-between gap-2"><div class="flex gap-2">${f.file?`<button style="${PBTN}" onclick="cfClear()">✕ ${f.typ==='video'?'Video':'Bild'} entfernen</button>`:`<label style="${PBTN}">🖼 Bild<input type="file" accept="image/*" class="hidden" onchange="cfFile(this,'bild')"></label><label style="${PBTN}">🎬 Video<input type="file" accept="video/mp4,video/quicktime,video/webm" class="hidden" onchange="cfFile(this,'video')"></label>`}</div><span class="text-[11px] text-muted"><span id="cfCnt">${(f.text||'').length}</span>/1000</span></div>`)}
+      <div class="flex items-center justify-between gap-2"><div class="flex gap-2">${f.file?`<button style="${PBTN}" onclick="cfClear()">✕ ${f.typ==='video'?'Video':(f.extra||[]).length?'Alle Fotos':'Foto'} entfernen</button>`:`<label style="${PBTN}">🖼 Fotos<input type="file" accept="image/*" multiple class="hidden" onchange="cfFiles(this)"></label><label style="${PBTN}">🎬 Video<input type="file" accept="video/mp4,video/quicktime,video/webm" class="hidden" onchange="cfFile(this,'video')"></label>`}</div><span class="text-[11px] text-muted"><span id="cfCnt">${(f.text||'').length}</span>/1000</span></div>`)}
     ${f.file?PSEC('Vorschaubild <span class="normal-case tracking-normal font-normal">· fürs Profil, nicht im Feed</span>',cfThumbBox(f).replace(/^<div class="card p-3">[\s\S]*?<div class="flex gap-2 overflow-x-auto mt-2 pb-1">/,'<div class="flex gap-2 overflow-x-auto pb-1">').replace(/<\/div>$/,'')):PSEC('Hintergrund',tplStrip('cf',f.vorlage,'sq'))}
     <section class="card p-4"><label class="flex items-center justify-between gap-3 text-sm cursor-pointer"><span>In meinem Profil zeigen<span class="block text-[11px] text-muted">Aus = Beitrag läuft nur im Feed</span></span><input type="checkbox" ${f.noProf?'':'checked'} onchange="S.cf.noProf=!this.checked" style="width:20px;height:20px;accent-color:#087A4B"></label></section>
     <p id="cfErr" class="text-sm" style="color:#e5484d;min-height:1.1em;margin:0"></p>
@@ -3024,15 +3035,215 @@ function convHtml(){
     ${media?'<p class="cx-note">Medien werden nach 30 Tagen gelöscht · Werbung und fremde Links werden blockiert</p>':''}`;
 }
 
+// ===== Runde 14: Forum-Sortierung, Feed-Einstellungen, Beiträge bearbeiten, mehrere Fotos =====
+['Lektion|Fail und was man daraus gelernt hat|🙈','Einwand|Ein Einwand und wie man ihn knackt|🛡️','Arbeitsalltag|Hinter den Kulissen, Setup, Day in the Life|💼','Community-Frage|Frage an alle – hol dir Meinungen|❓'].forEach(x=>{ const [n,d,i]=x.split('|'); if(!KAT_DEF.some(k=>k.n===n)){ KAT_DEF.push({n,d,i}); if(!KATS.some(k=>k.n===n)) KATS.push({n,d,i}); } });
+
+// --- Forum: Antwort mit den meisten Likes oben – Reihenfolge wird nur beim Betreten/Neuladen festgelegt ---
+S.fOrd={};
+const _render13=render; render=function(){ if(route()!=='forum'&&Object.keys(S.fOrd).length) S.fOrd={}; return _render13.apply(this,arguments); };
+function fAnsList(t,cat){ const all=t.antworten||[], top=all.filter(a=>!a.parent_id), kids=id=>all.filter(a=>a.parent_id===id);
+  let ord=S.fOrd[t.id];
+  if(!ord){ ord=S.fOrd[t.id]=[...top].sort((a,b)=>(b.beste?1:0)-(a.beste?1:0)||(+b.hilfreich||0)-(+a.hilfreich||0)||a.id-b.id).map(a=>a.id); }
+  const pos=id=>{ const i=ord.indexOf(id); return i<0?1e9+id:i; };
+  return [...top].sort((a,b)=>pos(a.id)-pos(b.id)).map(a=>fAnsOne(a,t,cat,false)+kids(a.id).map(k=>fAnsOne(k,t,cat,true)).join('')
+    +(S.fre&&S.fre.id===a.id?`<form class="flex gap-2 mt-3" style="margin-left:36px" onsubmit="event.preventDefault();fReplySend(${t.id},${a.id},this,'${cat}')"><input id="fre${a.id}" name="a" class="input text-sm" maxlength="1000" placeholder="Antwort an ${esc(S.fre.n)} …" autocomplete="off" value="${esc(S.fre.v||'')}" oninput="S.fre.v=this.value"><button class="btn-gold text-sm" style="padding:6px 12px">Senden</button><button type="button" class="text-xs text-muted" onclick="S.fre=null;render()">Abbrechen</button></form>`:'')).join(''); }
+
+// --- Feed-Einstellungen: nur noch in den Einstellungen des Mitglieds ---
+try{ const s=JSON.parse(localStorage.getItem('ch_feed')||'null'); if(s){ S.breathOff=!!s.b; S.timerMin=s.t||0; if(Array.isArray(s.k)&&s.k.length){ S.ptopics=s.k; S.topics=s.k; } } }catch(e){}
+function feedSave(){ try{ localStorage.setItem('ch_feed',JSON.stringify({b:!!S.breathOff,t:S.timerMin||0,k:S.ptopics||null})); }catch(e){} }
+function fsTopic(t){ let cur=S.ptopics||[...FTOPICS]; cur=cur.includes(t)?cur.filter(x=>x!==t):[...cur,t]; if(!cur.length) return; S.ptopics=S.topics=cur.length===FTOPICS.length?null:cur; feedSave(); render(); feedLoad(); }
+function feedSetCard(){ const sel=S.ptopics||[...FTOPICS], breath=!S.breathOff;
+  return `<div class="card p-4 space-y-5" id="feedset"><div><p class="font-semibold">Feed-Einstellungen</p><p class="text-xs text-muted">Du bestimmst, was du siehst und wie lange.</p></div>
+    <div><p class="text-sm font-semibold mb-2">Diese Beiträge zeigen</p><div class="flex flex-wrap gap-2">${FTOPICS.map(t=>`<button onclick="fsTopic('${t.replace(/'/g,'')}')" class="text-sm px-3 py-1.5 rounded-full border" style="${sel.includes(t)?'border-color:#087A4B;background:#087A4B;color:#fff':'border-color:rgb(var(--line))'}">${katIc(t)} ${esc(t)}</button>`).join('')}</div></div>
+    <div class="flex items-center justify-between gap-4 border-t border-line pt-4"><div><p class="text-sm font-semibold">Atempause</p><p class="text-xs text-muted">Nach 5 Minuten Reels kurz durchatmen</p></div>
+      <button role="switch" aria-checked="${breath}" aria-label="Atempause" onclick="S.breathOff=!S.breathOff;feedSave();render()" class="relative rounded-full shrink-0" style="width:44px;height:24px;background:${breath?'#087A4B':'rgb(var(--line))'}"><span class="absolute rounded-full bg-white" style="top:4px;width:16px;height:16px;left:${breath?'24px':'4px'};transition:left .15s"></span></button></div>
+    <div class="border-t border-line pt-4"><p class="text-sm font-semibold mb-2">Reels ausschalten nach</p><div class="grid grid-cols-3 gap-2">${[5,10,15].map(m=>`<button onclick="S.timerMin=S.timerMin===${m}?0:${m};S.timerEnd=null;feedSave();render()" class="py-2 rounded-lg border text-sm font-semibold" style="${(S.timerMin||0)===m?'border-color:#087A4B;background:#087A4B;color:#fff':'border-color:rgb(var(--line))'}">${m} Min.</button>`).join('')}</div>
+      <p class="text-xs text-muted mt-2">${S.timerMin?'Die Reels schalten sich nach '+S.timerMin+' Minuten aus.':'Kein Timer aktiv.'}</p></div></div>`; }
+const _startPlayer0=startPlayer;
+startPlayer=function(i){ if(S.timerMin&&!S.timerEnd) S.timerEnd=Date.now()+S.timerMin*60000; return _startPlayer0(i); };
+
+// --- Eigenen Beitrag bearbeiten ---
+function postEdit(id){ const p=[...(S.rp||[]),...(S.myPosts||[]),...(S.plist||[]),...((S.mp&&S.mp.posts)||[]),...(S.onePost?[S.onePost]:[])].find(x=>x&&x.id===id); if(!p) return;
+  const d=document.createElement('div'); d.id='peEd'; d.className='fixed inset-0 flex items-end sm:items-center justify-center'; d.style.cssText='z-index:300;background:rgba(4,8,14,.62);backdrop-filter:blur(3px)';
+  d.onclick=e=>{ if(e.target===d) d.remove(); };
+  d.innerHTML=`<div class="w-full bg-panel ks-sheet" style="max-width:560px"><div class="flex items-center justify-between mb-3"><p class="font-serif text-xl">Beitrag bearbeiten</p><button class="text-muted text-xl" onclick="document.getElementById('peEd').remove()" aria-label="Schließen">✕</button></div>
+    <textarea id="peTx" class="input" style="min-height:140px" maxlength="1000" oninput="document.getElementById('peCnt').textContent=this.value.length">${esc(p.raw||'')}</textarea>
+    <div class="flex items-center justify-between mt-2"><span class="text-[11px] text-muted"><span id="peCnt">${(p.raw||'').length}</span>/1000</span><span id="peErr" class="text-sm" style="color:#e5484d"></span></div>
+    <div class="grid grid-cols-2 gap-2 mt-3"><button class="btn-ghost" onclick="document.getElementById('peEd').remove()">Abbrechen</button><button class="btn-gold" id="peBtn" onclick="postEditSave(${id})">Speichern</button></div></div>`;
+  document.body.appendChild(d); setTimeout(()=>{ const t=document.getElementById('peTx'); t.focus(); t.setSelectionRange(t.value.length,t.value.length); },30); }
+async function postEditSave(id){ const v=document.getElementById('peTx').value.trim(), b=document.getElementById('peBtn'), er=document.getElementById('peErr'); b.disabled=true; b.textContent='Speichert …';
+  const j=await rpc('post_bearbeiten',{p_id:id-1e6,p_text:v}).catch(()=>null);
+  if(!j||!j.ok){ er.textContent=j&&j.grund==='leer'?'Ein Textbeitrag braucht Text.':'Das hat nicht geklappt.'; b.disabled=false; b.textContent='Speichern'; return; }
+  const t=esc(v).replace(/\n/g,'<br>'); [S.rp,S.myPosts,S.plist,S.plistReal,S.feedList,S.mp&&S.mp.posts,S.onePost&&[S.onePost],Object.values(S.hl||{}).flat()].forEach(a=>(a||[]).forEach(p=>{ if(p&&p.id===id){ p.raw=v; p.t=t; } }));
+  document.getElementById('peEd').remove(); if(S.player) drawPlayer(); else render(); }
+
+// --- Mehrere Fotos in einem Beitrag ---
+S.gi=S.gi||{};
+const GAL_IC='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))"><rect x="7" y="7" width="13" height="13" rx="2.5"/><path d="M4 16V6.5A2.5 2.5 0 0 1 6.5 4H16"/></svg>';
+const GAL_AR=d=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="${d<0?'M15 18l-6-6 6-6':'M9 6l6 6-6 6'}"/></svg>`;
+function galDots(n,i){ return `<span class="gal-dots">${Array.from({length:n},(_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</span>`; }
+function galFeed(p){ const n=p.imgs.length, i=S.gi[p.id]||0;
+  return `<div class="gal" data-id="${p.id}" onscroll="galScroll(this)">${p.imgs.map(u=>`<img src="${esc(u)}" loading="lazy" alt="">`).join('')}</div>
+    <span class="gal-cnt">${i+1}/${n}</span><button class="gal-a l" onclick="event.stopPropagation();galStep(this,-1)" aria-label="Vorheriges Foto">${GAL_AR(-1)}</button><button class="gal-a r" onclick="event.stopPropagation();galStep(this,1)" aria-label="Nächstes Foto">${GAL_AR(1)}</button>${galDots(n,i)}`; }
+function galScroll(el){ const i=Math.round(el.scrollLeft/el.clientWidth), id=+el.dataset.id; if(S.gi[id]===i) return; S.gi[id]=i; const w=el.parentNode, n=el.children.length;
+  const c=w.querySelector('.gal-cnt'); if(c) c.textContent=(i+1)+'/'+n; w.querySelectorAll('.gal-dots i').forEach((d,k)=>d.classList.toggle('on',k===i)); }
+function galStep(btn,d){ const g=btn.parentNode.querySelector('.gal'); if(!g) return; const n=g.children.length, i=Math.max(0,Math.min(n-1,(S.gi[+g.dataset.id]||0)+d)); g.scrollTo({left:i*g.clientWidth,behavior:'smooth'}); }
+setTimeout(()=>{ new MutationObserver(()=>{ document.querySelectorAll('.gal:not([data-ok])').forEach(g=>{ g.dataset.ok=1; const i=S.gi[+g.dataset.id]||0; if(i) g.scrollLeft=i*g.clientWidth; }); }).observe(document.body,{childList:true,subtree:true}); },0);
+function galPl(post){ const n=post.imgs.length, i=Math.min(S.gi[post.id]||0,n-1);
+  return `<img src="${esc(post.imgs[i])}" class="absolute inset-0 w-full h-full object-contain bg-black" alt="">
+    <span class="gal-cnt" style="top:58px;z-index:6">${i+1}/${n}</span>${i>0?`<button class="gal-a l pl" onclick="event.stopPropagation();galPlGo(-1)" aria-label="Vorheriges Foto">${GAL_AR(-1)}</button>`:''}${i<n-1?`<button class="gal-a r pl" onclick="event.stopPropagation();galPlGo(1)" aria-label="Nächstes Foto">${GAL_AR(1)}</button>`:''}<span style="position:absolute;left:0;right:0;top:64px;z-index:6;display:flex;justify-content:center;pointer-events:none">${galDots(n,i)}</span>`; }
+function galPlGo(d){ const p=S.player; if(!p) return; const post=PL()[p.i]; if(!post||!post.imgs) return false; const n=post.imgs.length, i=(S.gi[post.id]||0)+d; if(i<0||i>=n) return false; S.gi[post.id]=i; drawPlayer(); return true; }
+let galX=null, galY=null;
+window.addEventListener('touchstart',e=>{ if(S.player){ galX=e.touches[0].clientX; galY=e.touches[0].clientY; } },{passive:true});
+window.addEventListener('touchend',e=>{ if(!S.player||galX===null) return; const dx=galX-e.changedTouches[0].clientX, dy=galY-e.changedTouches[0].clientY; galX=null; if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3) galPlGo(dx>0?1:-1); },{passive:true});
+window.addEventListener('keydown',e=>{ if(!S.player||document.getElementById('psheet')) return; if(e.key==='ArrowRight') galPlGo(1); if(e.key==='ArrowLeft') galPlGo(-1); });
+
+// Posten: mehrere Fotos auswählen
+function cfFiles(inp){ const fs=[...inp.files].filter(x=>/^image\//.test(x.type)); if(!fs.length) return; const err=document.getElementById('cfErr');
+  if(fs.some(x=>x.size>50*1024*1024)){ err.textContent='Ein Foto ist größer als 50 MB.'; return; }
+  const f=S.cf; (f.extra||[]).forEach(x=>URL.revokeObjectURL(x.u));
+  f.extra=fs.slice(1,10).map(x=>({f:x,u:URL.createObjectURL(x)}));
+  if(fs.length>10) setTimeout(()=>{ const e=document.getElementById('cfErr'); if(e) e.textContent='Maximal 10 Fotos pro Beitrag – die ersten 10 sind drin.'; },50);
+  const dt=new DataTransfer(); dt.items.add(fs[0]); const fake={files:dt.files}; cfFile(fake,'bild'); }
+function cfAddImgs(inp){ const f=S.cf, fs=[...inp.files].filter(x=>/^image\//.test(x.type)); f.text=(document.getElementById('cfText')||{}).value||f.text;
+  const free=9-(f.extra||[]).length; f.extra=[...(f.extra||[]),...fs.slice(0,Math.max(0,free)).map(x=>({f:x,u:URL.createObjectURL(x)}))]; render();
+  if(fs.length>free) setTimeout(()=>{ const e=document.getElementById('cfErr'); if(e) e.textContent='Maximal 10 Fotos pro Beitrag.'; },50); }
+function cfDelImg(k){ const f=S.cf; f.text=(document.getElementById('cfText')||{}).value||f.text;
+  if(k<0){ if(!(f.extra||[]).length) return cfClear(); const nx=f.extra.shift(); if(f.prev) URL.revokeObjectURL(f.prev); f.file=nx.f; f.prev=nx.u; if(f.thumbIdx===-1||f.thumbIdx===100){ f.thumbIdx=-1; f.thumb=null; } }
+  else { const x=f.extra.splice(k,1)[0]; if(x){ if(f.thumbIdx===100+k){ f.thumbIdx=-1; f.thumb=null; } URL.revokeObjectURL(x.u); } }
+  render(); }
+const _cfClear0=cfClear; cfClear=function(){ const f=S.cf; (f.extra||[]).forEach(x=>URL.revokeObjectURL(x.u)); f.extra=[]; _cfClear0(); };
+function cfGalEdit(f){ const all=[{u:f.prev},...(f.extra||[])];
+  return `<div class="flex gap-2 overflow-x-auto pb-1" style="scrollbar-width:none">${all.map((x,k)=>`<div class="relative shrink-0 rounded-lg overflow-hidden bg-black" style="width:${all.length>1?'78%':'100%'};aspect-ratio:1;max-width:360px"><img src="${x.u}" style="width:100%;height:100%;object-fit:cover"><span class="gal-cnt" style="top:8px;left:8px;right:auto">${k+1}/${all.length}</span><button class="absolute rounded-full" style="top:8px;right:8px;width:28px;height:28px;background:rgba(0,0,0,.65);color:#fff" onclick="cfDelImg(${k-1})" aria-label="Foto entfernen">✕</button></div>`).join('')}
+    ${all.length<10?`<label class="shrink-0 rounded-lg flex flex-col items-center justify-center text-xs text-muted cursor-pointer text-center" style="width:110px;aspect-ratio:1;border:1.5px dashed rgb(var(--line))"><span style="font-size:24px;line-height:1">＋</span>Foto<br>hinzufügen<input type="file" accept="image/*" multiple class="hidden" onchange="cfAddImgs(this)"></label>`:''}</div>
+    ${all.length>1?`<p class="text-[11px] text-muted">${all.length} Fotos · im Feed zum Durchwischen</p>`:''}`; }
+function cfThumbBox(f){
+  return `<div class="card p-3"><p class="text-sm font-semibold">Vorschaubild</p>
+    <div class="flex gap-2 overflow-x-auto mt-2 pb-1">
+      ${f.typ==='bild'?[{u:f.prev,i:-1},...(f.extra||[]).map((x,k)=>({u:x.u,i:100+k}))].map(x=>`<button onclick="cfThumbPick(${x.i})" class="shrink-0 rounded-lg overflow-hidden" style="width:64px;height:64px;box-shadow:${f.thumbIdx===x.i?'0 0 0 2px #087A4B':'0 0 0 1px rgb(var(--line))'}"><img src="${x.u}" style="width:100%;height:100%;object-fit:cover"></button>`).join(''):''}
+      ${(f.frames||[]).map((u,i)=>`<button onclick="cfThumbPick(${i})" class="shrink-0 rounded-lg overflow-hidden" style="width:64px;height:64px;box-shadow:${f.thumbIdx===i?'0 0 0 2px #087A4B':'0 0 0 1px rgb(var(--line))'}"><img src="${u}" style="width:100%;height:100%;object-fit:cover"></button>`).join('')}
+      ${f.thumbIdx===-2&&f.thumbPrev?`<span class="shrink-0 rounded-lg overflow-hidden" style="width:64px;height:64px;box-shadow:0 0 0 2px #087A4B"><img src="${f.thumbPrev}" style="width:100%;height:100%;object-fit:cover"></span>`:''}
+      <label class="shrink-0 rounded-lg flex flex-col items-center justify-center text-[10px] text-muted cursor-pointer text-center" style="width:64px;height:64px;border:1px dashed rgb(var(--line))">＋<br>Eigenes<input type="file" accept="image/*" class="hidden" onchange="cfThumbFile(this)"></label></div>
+    ${f.typ==='video'?'<p class="text-[11px] text-muted mt-1">Tipp: Wähle ein Bild aus dem Video oder lade ein eigenes hoch.</p>':''}</div>`; }
+function cfThumbPick(i){ const f=S.cf; f.text=(document.getElementById('cfText')||{}).value||f.text; f.thumbIdx=i; f.thumb=i>=100?((f.extra||[])[i-100]||{}).f||null:i>=0?f.frameBlobs[i]:null; render(); }
+// nach dem Posten: weitere Fotos hochladen und anhängen
+const _rpc0=rpc;
+rpc=async function(fn,body){ const r=await _rpc0(fn,body);
+  if(fn==='post_neu'&&r&&r.ok&&S.cf&&(S.cf.extra||[]).length&&body&&body.p_media_typ==='bild'){ const b=document.getElementById('cfBtn'), ex=S.cf.extra, urls=[];
+    for(let k=0;k<ex.length;k++){ if(b) b.textContent=`Foto ${k+2} von ${ex.length+1} …`; try{ urls.push(await upload(ex[k].f)); }catch(e){} }
+    if(urls.length) await _rpc0('post_medien_setzen',{p_id:r.id,p_urls:urls}).catch(()=>null); }
+  return r; };
+
+// ===== Runde 15: Basic (kostenlos) =====
+const isBasic=()=>!!(S.member&&S.member.abo==='basic');
+const BASIC_BLOCK={post_neu:'Beiträge posten',story_neu:'deinen Status posten',story_medaille:'deinen Status posten',nachricht_senden:'Nachrichten schreiben',chat_starten:'Nachrichten schreiben',partner_nachricht:'Partner anschreiben',bewerbung_neu:'dich auf Jobs bewerben',nachweis_einreichen:'Nachweise hochladen',forum_frage_neu:'Fragen im Forum stellen',markt_angebot_beantragen:'im Marktplatz anbieten',markt_anfrage:'Dienstleistungen anfragen'};
+const PLUS_LIST=['Auf Jobs bewerben','Mit allen Mitgliedern schreiben','Beiträge und Status posten','Profil mit Lebenslauf und Nachweisen','Fragen im Forum stellen'];
+function plusPitch(was){ return `<div class="text-center space-y-3"><div class="mx-auto rounded-full flex items-center justify-center" style="width:58px;height:58px;background:rgba(8,122,75,.12);font-size:26px">🔓</div>
+  <p class="font-serif text-2xl leading-tight">${was?`Mit Plus kannst du ${esc(was)}`:'Hol dir Plus'}</p>
+  <p class="text-sm text-muted">Du nutzt ClosingHub gerade kostenlos (Basic). Ein Abschluss über ClosingHub bezahlt dein Abo für Jahre.</p></div>
+  <ul class="space-y-2 text-sm my-4">${PLUS_LIST.map(t=>`<li class="flex items-center gap-2"><span style="color:#087A4B;font-weight:800">✓</span>${t}</li>`).join('')}</ul>
+  <a class="btn-gold w-full block text-center" style="padding:12px" href="mailto:info@getclosinghub.com?subject=${encodeURIComponent('Upgrade auf Plus')}&body=${encodeURIComponent('Hallo ClosingHub-Team,\n\nich möchte auf Plus upgraden.\n\nMein Name: '+(ME.fullName||''))}">Auf Plus upgraden · 9,99 €/Monat</a>`; }
+function plusModal(was){ const old=document.getElementById('plusMd'); if(old) old.remove();
+  const d=document.createElement('div'); d.id='plusMd'; d.className='fixed inset-0 flex justify-center ks-wrap'; d.style.cssText='z-index:320;background:rgba(4,8,14,.62);backdrop-filter:blur(3px)';
+  d.onclick=e=>{ if(e.target===d) d.remove(); };
+  d.innerHTML=`<div class="w-full bg-panel ks-sheet" style="max-width:440px"><div class="flex justify-end -mb-2"><button class="text-muted text-xl" onclick="document.getElementById('plusMd').remove()" aria-label="Schließen">✕</button></div>${plusPitch(was)}<button class="text-sm text-muted w-full mt-3" onclick="document.getElementById('plusMd').remove()">Später</button></div>`;
+  document.body.appendChild(d); }
+function plusPage(was){ return `<div class="max-w-md mx-auto px-4 py-10"><div class="card p-6">${plusPitch(was)}</div></div>`; }
+// Sperren in der App (die Datenbank sperrt zusätzlich)
+const _rpc14=rpc;
+rpc=async function(fn,body){ if(isBasic()&&BASIC_BLOCK[fn]){ plusModal(BASIC_BLOCK[fn]); return {ok:false,grund:'basic'}; }
+  if(isBasic()&&fn==='profil_speichern'&&body&&body.p){ const p={...body.p}; ['bio','erfahrung','land','sprachen'].forEach(k=>delete p[k]); body={p}; }
+  return _rpc14(fn,body); };
+const _create14=create; create=function(){ return isBasic()?plusPage('Beiträge und deinen Status posten'):_create14(); };
+const _messages14=messages; messages=function(){ return isBasic()?plusPage('mit allen Mitgliedern schreiben'):_messages14(); };
+const _pf14=profilFelderCard; profilFelderCard=function(){ return isBasic()?`<div class="card p-4"><p class="font-semibold mb-1">Profil, Lebenslauf und Nachweise</p><p class="text-xs text-muted mb-3">Mit Plus füllst du dein Profil aus, lädst Lebenslauf und Nachweise hoch und bewirbst dich auf Jobs.</p><button class="btn-gold text-sm" onclick="plusModal('dein Profil ausfüllen')">Mehr erfahren</button></div>`:_pf14(); };
+const _cv14=cvCard; cvCard=function(){ return isBasic()?'':_cv14(); };
+const _nw14=nachweiseCard; nachweiseCard=function(){ return isBasic()?'':_nw14(); };
+function basicBanner(){ if(!isBasic()||S.bbOff) return ''; return `<div class="card p-3 flex items-center gap-3" style="border-color:rgba(8,122,75,.45);background:rgba(8,122,75,.06)"><span style="font-size:20px">🔓</span><p class="text-sm flex-1">Du nutzt <b>Basic</b>. Mit Plus bewirbst du dich auf Jobs und schreibst mit allen Mitgliedern.</p><button class="btn-gold text-xs whitespace-nowrap" style="padding:6px 12px" onclick="plusModal()">Ansehen</button><button class="text-muted" onclick="S.bbOff=1;render()" aria-label="Ausblenden">✕</button></div>`; }
+
+// Kostenlos registrieren
+function signupView(){ const logo=`<h1 class="text-4xl text-center"><span class="chlogo ${LP()}"><span class="l1">closing</span><span class="l2">HUB</span></span></h1>`;
+  if(S.signup==='mail') return `<div class="min-h-screen flex items-center justify-center px-4"><div class="card w-full max-w-sm p-8 space-y-4 text-center">${logo}<p class="font-serif text-xl">Fast geschafft!</p><p class="text-sm text-muted">Wir haben dir eine E-Mail geschickt. Bestätige deine Adresse und melde dich dann hier an.</p><button class="btn-gold w-full" onclick="S.signup=null;go('login')">Zur Anmeldung</button></div></div>`;
+  return `<div class="min-h-screen flex items-center justify-center px-4"><div class="card w-full max-w-sm p-8 space-y-4">${logo}
+    <div class="text-center"><p class="font-serif text-xl">Kostenlos starten</p><p class="text-xs text-muted mt-1">Feed, Forum und Jobs ansehen, liken und kommentieren. Upgrade jederzeit möglich.</p></div>
+    <input class="input" id="suN" autocomplete="name" maxlength="60" placeholder="Vor- und Nachname">
+    <input class="input" id="suE" type="email" autocomplete="email" placeholder="E-Mail">
+    <input class="input" id="suP" type="password" autocomplete="new-password" placeholder="Passwort (mind. 8 Zeichen)" onkeydown="if(event.key==='Enter')signupGo()">
+    <p id="suErr" class="text-sm" style="color:#e5484d;min-height:1.2em"></p>
+    <button class="btn-gold w-full" id="suBtn" onclick="signupGo()">Konto erstellen</button>
+    <p class="text-[11px] text-muted text-center">Mit dem Erstellen akzeptierst du AGB und Datenschutz.</p>
+    <button class="text-sm text-muted w-full" onclick="S.signup=null;render()">Ich habe schon ein Konto</button></div></div>`; }
+async function signupGo(){ const n=document.getElementById('suN').value.trim(), e=document.getElementById('suE').value.trim().toLowerCase(), p=document.getElementById('suP').value, er=document.getElementById('suErr'), b=document.getElementById('suBtn');
+  if(n.length<2||!/\s/.test(n)){ er.textContent='Bitte Vor- und Nachnamen eingeben.'; return; }
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){ er.textContent='Bitte eine gültige E-Mail eingeben.'; return; }
+  if(p.length<8){ er.textContent='Nimm mindestens 8 Zeichen.'; return; }
+  b.disabled=true; b.textContent='Konto wird erstellt …';
+  try{ const j=await authCall('signup',{email:e,password:p,data:{name:n}});
+    if(!j||!j.access_token){ S.signup='mail'; render(); return; }
+    takeSes(j); const r=await rpc('basic_beitreten',{p_name:n}); if(!r||!r.ok) throw new Error(r&&r.grund==='konto'?'Mit dieser E-Mail gibt es schon ein Auftraggeber- oder Partnerkonto.':'Das Konto konnte nicht angelegt werden.');
+    S.signup=null; S.user=true; save(); history.replaceState(null,'',location.pathname+'#feed'); S.route='feed'; await loadMember();
+  }catch(x){ er.textContent=x.message; b.disabled=false; b.textContent='Konto erstellen'; } }
+
+// ===== Runde 16: Start-Gewinnspiel (Tag 1 der Challenge), Start-Buddy, Willkommens-Video, Gründungsmitglied =====
+S.launch=S.launch||null; S.gw=S.gw||null; S.bd=S.bd||null;
+setTimeout(async()=>{ try{ const r=await fetch(`${SB_URL}/rest/v1/settings?select=value&key=eq.launch`,{headers:{apikey:SB_KEY}}); const j=await r.json(); const v=j&&j[0]&&j[0].value; if(v&&v.start){ S.launch=v; if(route()==='feed'&&!(document.activeElement&&document.activeElement.value)) render(); } }catch(e){} },0);
+const ymd=d=>{ const x=new Date(d); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); };
+function gwAktiv(){ const L=S.launch; if(!L||!L.start) return false; const t=ymd(Date.now()), pre=ymd(Date.parse(L.start)-864e5); return t>=pre&&(!L.gewinnspiel_ende||t<=L.gewinnspiel_ende); }
+async function gwLoad(){ if(!S.member) return; const j=await rpc('gewinnspiel_status',{}).catch(()=>null); if(j){ S.gw=j; gwDraw(); } }
+function gwDraw(){ const e=document.getElementById('gwcard'); if(e) e.outerHTML=gwCard(); }
+async function gwSet(k,v){ if(!S.gw) return; S.gw[k]=v; gwDraw(); const j=await rpc('gewinnspiel_setzen',{p_schritt:k,p_wert:v}).catch(()=>null); if(j&&j.info){ S.gw=j.info; gwDraw(); if(typeof chLoad==='function') chLoad(); } }
+async function gwInsta(inp){ const v=inp.value.trim(); const j=await rpc('gewinnspiel_setzen',{p_schritt:'insta',p_wert:false,p_insta:v}).catch(()=>null); if(j&&j.info){ S.gw=j.info; const h=document.getElementById('gwInstaOk'); if(h) h.textContent=v?'✓ gespeichert':''; } }
+const GW_STEPS=[['folgen','Dem ClosingHub-Account auf Instagram folgen'],['liken','Den Gewinnspiel-Beitrag liken'],['story','Den Beitrag in deine Story teilen'],['markiert','2 Vertriebskollegen markieren (echte Profile)']];
+function gwCard(){
+  if(!S.member||!gwAktiv()) return '<div id="gwcard"></div>';
+  if(!S.gw){ gwLoad(); return '<div id="gwcard"></div>'; }
+  const g=S.gw, basic=g.basic, done=GW_STEPS.filter(s=>g[s[0]]).length+(g.beitrag?1:0), all=done===5, lose=all?1+(+g.extra||0):0;
+  const box=(on,lock)=>`<span class="gw-bx ${on?'on':''} ${lock?'lock':''}">${on?'✓':lock?'🔒':''}</span>`;
+  return `<div id="gwcard" class="card p-4 gw" style="border-color:#D9B45A">
+    <div class="flex items-center justify-between gap-2"><p class="text-xs uppercase tracking-wider font-semibold" style="color:#B8892E">🎁 Start-Gewinnspiel · Tag 1</p><span class="text-xs text-muted">${done} von 5</span></div>
+    <p class="font-semibold mt-1">${all?'Du bist im Lostopf!':'Hak ab, was du schon erledigt hast'}</p>
+    <div class="gw-bar"><i style="width:${done*20}%"></i></div>
+    <div class="mt-2">${GW_STEPS.map(([k,t])=>`<button class="gw-row" onclick="gwSet('${k}',${!g[k]})">${box(g[k])}<span class="${g[k]?'text-muted':''}">${t}</span></button>`).join('')}
+      ${basic?`<button class="gw-row" onclick="plusModal('am Gewinnspiel teilnehmen')">${box(false,true)}<span><b>Einen Beitrag auf ClosingHub posten</b><span class="block text-[11.5px]" style="color:#B8892E">Dir fehlt nur noch dein Ticket – mit Plus</span></span></button>`
+        :`<div class="gw-row">${box(g.beitrag)}<span class="flex-1 ${g.beitrag?'text-muted':''}">Einen Beitrag auf ClosingHub posten <span class="block text-[11.5px] text-muted">zählt auch für Challenge-Tag 1</span></span>${g.beitrag?'':`<button class="btn-gold text-xs" style="padding:5px 10px" onclick="S.cmode='beitrag';go('create')">Posten</button>`}</div>`}</div>
+    <label class="flex items-center gap-2 mt-2 text-xs text-muted">Dein Instagram-Name <input class="input text-sm" style="padding:6px 10px;max-width:180px" placeholder="@deinname" value="${esc(g.insta||'')}" onchange="gwInsta(this)" autocomplete="off"><span id="gwInstaOk" style="color:#087A4B"></span></label>
+    <p class="text-xs mt-3 border-t border-line pt-2 ${all?'font-semibold':''}" style="${all?'color:#087A4B':''}">${all?`Deine Lose: ${lose} (1 Teilnahme + ${+g.extra||0} Extra-${(+g.extra||0)===1?'Los':'Lose'} aus der Challenge). Jeder geschaffte Challenge-Tag bringt ein weiteres Los.`:'Jeder geschaffte Challenge-Tag bringt dir zusätzlich ein Extra-Los.'}${g.ende?` Teilnahme bis ${g.ende.slice(8)}.${g.ende.slice(5,7)}.`:''} <a href="#" onclick="event.preventDefault();legalOpen&&legalOpen('gewinnspiel')" style="text-decoration:underline">Teilnahmebedingungen</a></p></div>`; }
+
+// Start-Buddy
+async function bdLoad(){ if(!S.member||isBasic()) return; const j=await rpc('mein_buddy',{}).catch(()=>null); S.bd=j||{}; const e=document.getElementById('bdcard'); if(e) e.outerHTML=bdCard(); }
+function bdCard(){ const c=S.chs; if(!S.member||isBasic()||!c||!(c.tag>=1&&c.tag<=14)) return '<div id="bdcard"></div>';
+  if(!S.bd){ bdLoad(); return '<div id="bdcard"></div>'; }
+  const b=S.bd; if(b.warten) return `<div id="bdcard" class="card p-3 flex items-center gap-3"><span style="font-size:22px">🤝</span><p class="text-sm flex-1">Dein Start-Buddy wird gerade gesucht. Sobald ein neues Mitglied dazukommt, verbinden wir euch.</p></div>`;
+  if(!b.id) return '<div id="bdcard"></div>';
+  return `<div id="bdcard" class="card p-3 flex items-center gap-3"><span class="cx-av sm" style="cursor:pointer" onclick="openProfile(${b.id})">${b.avatar_url?`<img src="${esc(b.avatar_url)}">`:initAv(b.name)}</span>
+    <div class="flex-1 min-w-0"><p class="text-[11px] uppercase tracking-wider font-semibold" style="color:#087A4B">🤝 Dein Start-Buddy</p><p class="text-sm font-semibold truncate">${esc(b.name)} <span class="text-muted font-normal">· ${esc(b.rolle||'')}</span></p><p class="text-[11.5px] text-muted">Ihr startet zusammen – tauscht euch aus und pusht euch gegenseitig.</p></div>
+    <button class="btn-gold text-xs whitespace-nowrap" style="padding:6px 12px" onclick="bdChat(${b.id})">Schreiben</button></div>`; }
+function bdChat(id){ startChat(id); }
+const _chReal16=challengeReal; challengeReal=function(){ return isBasic()?'<div id="chcard"></div>':_chReal16(); };
+const _chGo16=chGo; chGo=function(i){ const t=chToday(); if(!t) return; const a=t.t[i];
+  if(a.h==='gewinnspiel'){ const e=document.getElementById('gwcard'); go('feed'); setTimeout(()=>{ const x=document.getElementById('gwcard'); if(x) x.scrollIntoView({behavior:'smooth',block:'center'}); },200); return; }
+  if(a.h==='buddy'){ if(S.bd&&S.bd.id) return bdChat(S.bd.id); return bdLoad(); }
+  if(a.k==='vortrag'||a.k==='qa'){ if(confirm(a.t+' – erledigt?')) chEv(a.k); return; }
+  return _chGo16(i); };
+
+// Willkommens-Video beim ersten Start (wenn in der Zentrale hinterlegt)
+function welcomeCheck(){ const v=S.launch&&S.launch.video; if(!v||!S.member||isBasic()) return; try{ if(localStorage.getItem('ch_welcome')===v) return; localStorage.setItem('ch_welcome',v); }catch(e){ return; }
+  const yt=(v.match(/(?:youtu\.be\/|v=|shorts\/)([\w-]{11})/)||[])[1];
+  const media=yt?`<iframe src="https://www.youtube.com/embed/${yt}?autoplay=1&rel=0" style="width:100%;aspect-ratio:9/16;max-height:70vh;border:0;border-radius:14px" allow="autoplay; encrypted-media" allowfullscreen></iframe>`:`<video src="${esc(v)}" controls autoplay playsinline style="width:100%;max-height:70vh;border-radius:14px;background:#000"></video>`;
+  const d=document.createElement('div'); d.id='wlMd'; d.className='fixed inset-0 flex justify-center ks-wrap'; d.style.cssText='z-index:330;background:rgba(4,8,14,.7)'; d.onclick=e=>{ if(e.target===d) d.remove(); };
+  d.innerHTML=`<div class="w-full bg-panel ks-sheet" style="max-width:420px"><p class="font-serif text-xl mb-1">Willkommen bei ClosingHub, ${esc(ME.name||'')}!</p><p class="text-sm text-muted mb-3">Eine kurze Nachricht von Elias.</p>${media}<button class="btn-gold w-full mt-3" onclick="document.getElementById('wlMd').remove()">Los geht's</button></div>`;
+  document.body.appendChild(d); }
+setInterval(()=>{ if(S.member&&S.launch&&!S._wlDone){ S._wlDone=1; welcomeCheck(); } },1500);
+
 function feed(){
   const ft = S.ptopics || S.topics;
   const fp=feedPool(); const pool = fp ? (ft ? fp.filter(p=>ft.includes(p.k)) : fp) : (ft ? POSTS.filter(p=>ft.includes(p.k)) : POSTS);
   const list = S.onePost ? [S.onePost] : (S.user ? pool : pool.slice(0,GUEST)); S.feedList = list;
   const posts = list.map((p,i)=>`
     <article class="card overflow-hidden">
-      <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2 ${p.real?'cursor-pointer':''}" ${p.real?`onclick="memberModal(${p.mid})"`:''}>${p.a==='ClosingHub'?'<span class="w-8 h-8 rounded-full overflow-hidden inline-block"><span class="w-full h-full flex items-center justify-center" style="background:#0E1A2B;color:#fff;font:400 13px/1 Bebas Neue,Arial Narrow,sans-serif;letter-spacing:.02em;padding-top:2px">HUB</span></span>':skAv(p.a,34,pAv(p))}${nameRank(p.a,p.r)}</span><span class="inline-flex items-center gap-2"><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span>${p.mine?`<button onclick="event.stopPropagation();delPost(${p.id})" class="text-muted text-xs" aria-label="Beitrag löschen">Löschen</button>`:''}${p.real&&!p.mine&&S.member?`<button onclick="event.stopPropagation();reportPost(${p.id})" class="text-muted text-xs">Melden</button>`:''}</span></div>
+      <div class="p-4 flex justify-between items-center"><span class="inline-flex items-center gap-2 ${p.real?'cursor-pointer':''}" ${p.real?`onclick="memberModal(${p.mid})"`:''}>${p.a==='ClosingHub'?'<span class="w-8 h-8 rounded-full overflow-hidden inline-block"><span class="w-full h-full flex items-center justify-center" style="background:#0E1A2B;color:#fff;font:400 13px/1 Bebas Neue,Arial Narrow,sans-serif;letter-spacing:.02em;padding-top:2px">HUB</span></span>':skAv(p.a,34,pAv(p))}${nameRank(p.a,p.r)}</span><span class="inline-flex items-center gap-2"><span class="text-[10px] uppercase tracking-wider text-gold border border-line rounded-full px-2 py-0.5">${p.k}</span>${p.mine&&p.real?`<button onclick="event.stopPropagation();postEdit(${p.id})" class="text-muted text-xs">Bearbeiten</button>`:''}${p.mine?`<button onclick="event.stopPropagation();delPost(${p.id})" class="text-muted text-xs" aria-label="Beitrag löschen">Löschen</button>`:''}${p.real&&!p.mine&&S.member?`<button onclick="event.stopPropagation();reportPost(${p.id})" class="text-muted text-xs">Melden</button>`:''}</span></div>
       <div class="relative aspect-square bg-bg flex items-center justify-center p-8 cursor-pointer border-y border-line overflow-hidden" onclick="S.plist=S.feedList;S.plMk=1;startPlayer(${i})" style="${p.v&&p.vid===undefined?'background:radial-gradient(circle at 50% 40%,#1c1a14,#0A0A0B 70%)':''}">
-        ${p.video?`<video src="${p.video}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted playsinline loop preload="metadata"></video>`:''}${p.img?`<img src="${p.img}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:''}${(p.img||p.video)&&p.t?`<span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}${p.video?`<span class="absolute top-3 right-3 text-white text-lg">▶</span>`:''}
+        ${p.video?`<video src="${p.video}#t=0.1" class="absolute inset-0 w-full h-full object-cover" muted playsinline loop preload="metadata"></video>`:''}${p.imgs?galFeed(p):p.img?`<img src="${p.img}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">`:''}${(p.img||p.video)&&p.t?`<span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}${p.video?`<span class="absolute top-3 right-3 text-white text-lg">▶</span>`:''}
         ${p.vid!==undefined?`<img src="${VIDS[p.vid]}" class="absolute inset-0 w-full h-full object-cover"><span class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"></span>`:''}
         ${p.bg?bgSvg(p.bg):''}${p.vor?tplHtml(p.vor,p.raw,'sq'):''}
         ${p.v?`<span class="absolute bottom-3 right-3 text-xs bg-black/70 rounded px-2 py-0.5" style="color:#fff">▶ ${p.v}</span>`:''}
@@ -3045,11 +3256,10 @@ function feed(){
   const guest = S.user?'':`<div class="card p-6 text-center space-y-3"><p class="font-serif text-xl">Du willst mehr sehen?</p><p class="text-muted text-sm">Melde dich kostenlos an – Feed, Jobs, Forum und dein Rang warten.</p><a href="#login" class="btn-gold">Kostenlos anmelden</a></div>`;
   return `<div class="flex justify-center gap-10 px-4">
     <section class="w-full max-w-[480px] py-6 space-y-6">
-      ${storiesRow()}
+      ${basicBanner()}${storiesRow()}${gwCard()}
       ${wheelCard()}
       ${battleCard()}
-      ${challengeCard()}
-      <div class="flex items-center justify-between gap-3"><button onclick="playerMenu()" class="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 text-sm font-semibold" aria-label="Feed-Einstellungen">${svg('gearplay',16)}Feed-Einstellungen<span class="text-xs text-muted font-normal">${S.ptopics?S.ptopics.length+' Arten':''}${S.timerMin?' · '+S.timerMin+' Min.':''}</span></button></div>
+      ${challengeCard()}${bdCard()}
       ${posts}${!list.length?mitmachCard(0):''}${fp&&!fp.length?feedEmpty():''}${S.rp&&S.rp.length&&S.rpMore?`<button class="btn-ghost w-full" onclick="this.textContent='Lädt …';feedLoad(true)">Mehr laden</button>`:''}${guest}
     </section>${rightRail()}</div>`;
 }
@@ -3148,13 +3358,13 @@ function drawPlayer(){
   if(post&&post.mk&&p.i<limit()) return drawMkSlide(p,post);
   const inner = p.i>=limit() ? `<div class="h-full flex flex-col items-center justify-center gap-4 p-8 text-center"><p class="font-serif text-2xl">Mehr sehen?</p><p class="text-muted">Melde dich kostenlos an, um weiterzuschauen.</p><a href="#login" onclick="closeModal()" class="btn-gold">Kostenlos anmelden</a></div>` : `
     ${post.bg?bgSvg(post.bg):''}${post.vor?tplHtml(post.vor,post.raw,'story'):''}
-    ${post.video?`<video src="${post.video}" class="absolute inset-0 w-full h-full object-cover" autoplay playsinline loop ${S.muted===false?'':'muted'} onclick="S.muted=!this.muted?true:false;this.muted=!this.muted"></video>`:''}${post.img?`<img src="${post.img}" class="absolute inset-0 w-full h-full object-contain bg-black">`:''}
+    ${post.video?`<video src="${post.video}" class="absolute inset-0 w-full h-full object-cover" autoplay playsinline loop ${S.muted===false?'':'muted'} onclick="S.muted=!this.muted?true:false;this.muted=!this.muted"></video>`:''}${post.imgs?galPl(post):post.img?`<img src="${post.img}" class="absolute inset-0 w-full h-full object-contain bg-black">`:''}
     ${post.vid!==undefined?`<img src="${VIDS[post.vid]}" class="vidimg absolute inset-0 w-full h-full object-cover ${p.paused?'':'kb'}">`:''}
     <div class="relative h-full flex items-center justify-center p-10 select-none" onclick="togglePause()">
       ${(post.vid!==undefined||post.img||post.video||post.vor)?'':`<p class="font-serif text-2xl leading-relaxed text-center">${post.t}</p>`}</div>
     ${p.paused?`<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><svg width="64" height="64" viewBox="0 0 64 64" style="filter:drop-shadow(0 2px 10px rgba(0,0,0,.45))" aria-label="Pausiert"><rect x="17" y="12" width="10" height="40" rx="3" fill="#fff"/><rect x="37" y="12" width="10" height="40" rx="3" fill="#fff"/></svg></div>`:''}
     <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-      <div ${post.real?`onclick="memberModal(${post.mid})" class="cursor-pointer"`:''}>${nameRank(post.a,post.r)}</div>${post.real&&S.member?(post.mine?`<span class="flex gap-4 mt-1"><button onclick="event.stopPropagation();hlToggle(${post.id},this)" class="text-xs font-semibold" style="color:${post.hl?'#F1D58A':'rgba(255,255,255,.85)'}">${post.hl?'★ Highlight':'☆ Highlight'}</button><button onclick="event.stopPropagation();profToggle(${post.id},this)" class="text-xs" style="color:rgba(255,255,255,.75)">${post.imp===false?'Im Profil zeigen':'Nur im Feed'}</button><button onclick="event.stopPropagation();delPost(${post.id})" class="text-xs" style="color:rgba(255,255,255,.75)">Zurückziehen</button></span>`:`<button onclick="event.stopPropagation();reportPost(${post.id})" class="text-xs mt-1" style="color:rgba(255,255,255,.75)">Melden</button>`):''}${(post.vid!==undefined||post.img||post.video)?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
+      <div ${post.real?`onclick="memberModal(${post.mid})" class="cursor-pointer"`:''}>${nameRank(post.a,post.r)}</div>${post.real&&S.member?(post.mine?`<span class="flex gap-4 mt-1"><button onclick="event.stopPropagation();hlToggle(${post.id},this)" class="text-xs font-semibold" style="color:${post.hl?'#F1D58A':'rgba(255,255,255,.85)'}">${post.hl?'★ Highlight':'☆ Highlight'}</button><button onclick="event.stopPropagation();profToggle(${post.id},this)" class="text-xs" style="color:rgba(255,255,255,.75)">${post.imp===false?'Im Profil zeigen':'Nur im Feed'}</button><button onclick="event.stopPropagation();postEdit(${post.id})" class="text-xs" style="color:rgba(255,255,255,.75)">Bearbeiten</button><button onclick="event.stopPropagation();delPost(${post.id})" class="text-xs" style="color:rgba(255,255,255,.75)">Zurückziehen</button></span>`:`<button onclick="event.stopPropagation();reportPost(${post.id})" class="text-xs mt-1" style="color:rgba(255,255,255,.75)">Melden</button>`):''}${(post.vid!==undefined||post.img||post.video)?`<p class="text-sm mt-1 text-white/90">${post.t}</p>`:''}
       <div class="mt-3">${actionBar(post,'player')}</div>
     </div>`;
   document.getElementById('modal').innerHTML = `
@@ -3456,8 +3666,7 @@ function settings(){
       <div><p class="font-semibold mb-2">Profilbild</p><div class="flex flex-wrap gap-2"><label class="btn-ghost text-sm cursor-pointer">Bild auswählen<input type="file" accept="image/*" class="hidden" onchange="setAvatar(this)"></label>${S.member?'':`<button class="btn-ghost text-sm" onclick="this.outerHTML='<span class=\'text-xs text-gold\'>✨ KI-Profilbild wird erstellt… (in der Vorschau simuliert)</span>'">✨ KI-Profilbild erstellen</button>`}</div></div></div>
     <div class="card p-4 flex justify-between items-center"><div><p class="font-semibold">Darstellung</p><p class="text-xs text-muted">Tag- oder Nacht-Modus</p></div>
       <div class="flex gap-2"><button onclick="if(isLight())toggleTheme()" class="${isLight()?'btn-ghost':'btn-gold'} text-sm">Nacht</button><button onclick="if(!isLight())toggleTheme()" class="${isLight()?'btn-gold':'btn-ghost'} text-sm">Tag</button></div></div>
-    <div class="card p-4"><p class="font-semibold mb-1">Was willst du im Feed sehen?</p><p class="text-xs text-muted mb-3">Jeder Beitrag hat ein Thema (die KI schlägt es beim Posten vor, das Mitglied bestätigt) – du entscheidest, welche Themen bei dir erscheinen.</p>
-      <div class="flex flex-wrap gap-2">${FTOPICS.map(t=>`<button onclick="toggleTopic('${t}')" class="${(!S.topics||S.topics.includes(t))?'btn-gold':'btn-ghost'} text-sm">${t}</button>`).join('')}</div></div>
+    ${feedSetCard()}
     <div class="card p-4"><p class="font-semibold mb-3">Welche Abzeichen sollen im Profil angezeigt werden?</p>
       ${ME.badges.map(b=>`<label class="flex items-center gap-3 py-2 cursor-pointer"><input type="checkbox" ${S.badgesShown.includes(b)?'checked':''} onchange="toggleBadge('${b}')" style="accent-color:#087A4B;width:16px;height:16px"> ${badgePill(b)}</label>`).join('')}</div>
     <div class="card p-4"><p class="font-semibold mb-1">Member einladen</p><p class="text-xs text-muted mb-3">Schick deinen Link an Closer, Setter und Vertriebler, die du kennst. Die erste Person, die darüber beitritt, bekommt ein Jahr lang 25&nbsp;% Rabatt auf Plus und Premium. Alle weiteren kannst du ohne Rabatt einladen. Jede wird dir zugeordnet. Ab 3 geworbenen Membern bekommst du das Abzeichen „Recruiter“.</p>
@@ -3733,6 +3942,7 @@ const PAGES = {mitglied,designs,markt,werbung,vorteile,feed,jobs,forum,messages,
 function render(){
   if(S.recover){ document.getElementById('app').innerHTML=recoverView(); return; }
   if(S.invite){ document.getElementById('app').innerHTML=inviteView(); return; }
+  if(S.signup&&!S.member){ document.getElementById('app').innerHTML=signupView(); return; }
   const r=route();
   if(r==='login'){ document.getElementById('app').innerHTML=login(); return; }
   if(r==='zentrale'){ document.getElementById('app').innerHTML=zentrale(); return; }
