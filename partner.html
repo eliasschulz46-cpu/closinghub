@@ -75,6 +75,11 @@ textarea.in{resize:vertical}
 .tabs{display:flex;gap:6px;margin-bottom:14px}
 .tabs button{flex:1}
 .tabs .on{background:var(--ink);border-color:var(--ink);color:#fff}
+.slot{display:grid;grid-template-columns:1fr 120px 38px;gap:8px;align-items:end;margin-top:8px}
+.lst{border-top:1px solid var(--rule);padding:10px 0;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;font-size:14px}
+.lst:first-child{border-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:12.5px;padding:3px 10px;border-radius:99px;background:var(--deal-soft);color:var(--deal-press);border:1px solid #B9DFCB}
 </style>
 </head>
 <body>
@@ -98,6 +103,7 @@ let SESSION=null; try{ SESSION=JSON.parse(store.get(SKEY)); }catch(e){}
 const keep=s=>{ SESSION=s; store.set(SKEY, s?JSON.stringify(s):null); };
 let ME=null, GUESTS=[], authMode='login', MSG='';
 let TAB='profil', KONTAKT, MSGS, THREAD=null;   // KONTAKT/MSGS bleiben undefined, solange die Datenbank dafür noch nicht eingerichtet ist
+let CALLS, FREI, MELD, STAT;                     // Runde 17: undefined = Datenbank noch nicht eingerichtet
 
 // Einladungslink merken, bis das Konto angemeldet ist
 (function(){ const t=new URLSearchParams(location.search).get('einladung'); if(t&&/^[a-f0-9]{16,40}$/.test(t)){ store.set(TKEY,t); history.replaceState(null,'',location.pathname); } })();
@@ -177,7 +183,8 @@ async function doLogin(ev){
 async function load(){
   const t=store.get(TKEY);
   if(t){ const j=await api('rpc/partner_beitreten',{method:'POST',body:{p_token:t}}).catch(()=>null); if(j&&j.ok) store.set(TKEY,null); else if(j&&j.grund==='link'){ store.set(TKEY,null); toast('Die Einladung passt nicht zu diesem Konto oder ist nicht mehr gültig.'); } }
-  const rows=await api('partners?select=id,status,profile,draft,draft_at&limit=1'); ME=rows&&rows[0]||null;
+  let rows; try{ rows=await api('partners?select=id,status,profile,draft,draft_at,themenbereich,leistungen,ausbilder&limit=1'); }catch(e){ rows=await api('partners?select=id,status,profile,draft,draft_at&limit=1'); }
+  ME=rows&&rows[0]||null;
   if(!ME){ const kt=await api('rpc/konto_typ',{method:'POST',body:{}}).catch(()=>null);
     if(kt&&!kt.admin&&(kt.mitglied||kt.auftraggeber)){ keep(null); ME=null; GUESTS=[]; render._loaded=false; MSG=['bad',kt.mitglied?'Dieses Konto ist ein Mitgliedskonto. Mitglieder melden sich in der App an: getclosinghub.com/app':'Dieses Konto ist ein Auftraggeberkonto. Auftraggeber melden sich im Auftraggeber-Portal an.']; throw new Error('Kein Zugang'); } }
   GUESTS=ME&&ME.status==='aktiv'?(await api('partner_guests?select=*&order=slot.asc').catch(()=>[]))||[]:[];
@@ -185,6 +192,11 @@ async function load(){
   if(ME&&ME.status==='aktiv'){
     try{ const k=await api(`partners?select=kontakt&id=eq.${ME.id}`); KONTAKT=(k&&k[0]&&k[0].kontakt)||{}; }catch(e){}
     try{ MSGS=(await api('partner_messages?select=*&order=created_at.asc'))||[]; }catch(e){}
+    CALLS=undefined; FREI=undefined; MELD=undefined; STAT=undefined;
+    try{ const c=await api('rpc/partner_calls',{method:'POST',body:{}}); if(c&&c.ok) CALLS=c; }catch(e){}
+    try{ FREI=(await api('rpc/partner_freigaben_liste',{method:'POST',body:{}}))||[]; }catch(e){}
+    try{ MELD=(await api('partner_meldungen?select=*&order=id.desc'))||[]; }catch(e){}
+    try{ STAT=await api('rpc/partner_statistik',{method:'POST',body:{}}); }catch(e){}
   }
 }
 
@@ -200,12 +212,14 @@ function portal(){
   <div class="card" style="margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border-color:var(--seal,#087A4B)"><div style="min-width:0;flex:1"><b>Dein Konto in der App</b><p class="muted" style="margin-top:2px">Als Partner bekommst du ein Premium-Konto mit Partner-Design und dem Abzeichen „Partner“. Gleiches Login wie hier – kein neues Passwort nötig.</p></div><button class="btn go" onclick="partnerApp(this)">Zur App →</button></div>
   <div class="nav" id="nav">${navHtml()}</div>
   <div class="card" style="margin-top:10px"><div class="row" style="justify-content:space-between"><div style="min-width:0;flex:1"><b>Dein Empfehlungslink</b><p class="muted" style="overflow-wrap:anywhere">${myLink()}</p></div><button class="btn sm go" onclick="copyMyLink()">Link kopieren</button></div>
-    <p class="muted" style="margin-top:6px">Wer sich über diesen Link bei ClosingHub anmeldet, wird dir dauerhaft zugeordnet und spart 10&nbsp;% auf seine Mitgliedschaft, monatlich wie jährlich. Teile ihn in Storys, Reels oder Nachrichten.</p>
+    <p class="muted" style="margin-top:6px">Wer sich innerhalb von 30 Tagen nach dem Klick auf deinen Link bei ClosingHub anmeldet, wird dir zugeordnet. Hat jemand die Links mehrerer Partner angeklickt, zählt der zuletzt angeklickte. Neue Mitglieder sparen über deinen Link 10&nbsp;% auf ihr erstes Jahr (den ersten Jahresbeitrag oder die ersten 12 Monatsbeiträge), danach gilt der normale Preis. Der Rabatt ist nicht mit anderen Rabatten oder Aktionen kombinierbar. Teile den Link in Storys, Reels oder Nachrichten und kennzeichne solche Beiträge als Werbung (zum Beispiel mit „Anzeige“).</p>
     <div class="grid" style="margin-top:12px;gap:10px">
-      <div class="note ok" style="margin:0"><b>25&nbsp;% Provision</b><br>auf alle Zahlungen im ersten Jahr der Mitgliedschaft</div>
+      <div class="note ok" style="margin:0"><b>25&nbsp;% Provision</b><br>auf die Zahlungen für die ersten 12 Monate einer Mitgliedschaft</div>
       <div class="note ok" style="margin:0"><b>10&nbsp;% Provision</b><br>auf alle weiteren Zahlungen, solange das Mitglied bleibt</div>
     </div>
-    <p class="muted" style="margin-top:8px;font-size:12px">Grundlage ist der gezahlte Betrag nach Rabatt. Abgerechnet wird monatlich bis zum 10. für Zahlungen, die mindestens 30 Tage zurückliegen, per Überweisung mit Gutschrift. Endet die Partnerschaft, endet auch die Provision. Deine geworbenen Mitglieder und deine Provision siehst du hier, sobald die Mitgliedschaften starten.</p></div>
+    ${STAT?`<div class="row" style="margin-top:12px;gap:8px"><span class="pill ok">${+STAT.geworben||0} geworbene Mitglieder</span>${+STAT.warteliste?`<span class="pill wait">${+STAT.warteliste} auf der Warteliste</span>`:''}<span class="muted">Aus Datenschutzgründen siehst du nur Anzahl und Beträge, keine Namen.</span></div>`:''}
+    <p class="muted" style="margin-top:8px;font-size:12px">Grundlage ist der gezahlte Nettobetrag ohne Umsatzsteuer, im ersten Jahr nach Abzug des Rabatts. Provision gibt es auf die Mitgliedsbeiträge für Plus und Premium, nicht auf andere Leistungen wie Kurse, Events oder Käufe im Marktplatz. Keine Provision gibt es für dein eigenes Konto, deine Gäste und die kostenlose Zeit von Day-One-Mitgliedern. Abgerechnet wird monatlich bis zum 10. für Zahlungen, die mindestens 30 Tage zurückliegen. Du bekommst dafür eine Gutschrift, die deine Rechnung ersetzt. Einwände gegen eine Abrechnung bitte innerhalb von 8 Wochen. Was nach einem Vertragsende gilt, regelt § 10 deines Kooperationsvertrags. Beträge und Gutschriften siehst du hier, sobald die ersten Mitgliedschaften bezahlt werden.</p></div>
+  ${ME.themenbereich?`<div class="card" style="margin-top:10px"><b>Dein Hoheitsbereich: ${esc(ME.themenbereich)}</b><p class="muted" style="margin-top:2px">In diesem Bereich gibt es auf ClosingHub keinen anderen Partner, und Mitglieder dürfen dazu im Marktplatz nichts anbieten. Deine eigenen Angebote müssen in diesem Bereich liegen.</p>${(ME.leistungen||[]).length?`<div class="chips">${ME.leistungen.map(l=>`<span class="chip">${esc(l)}</span>`).join('')}</div>`:''}</div>`:''}
   ${sec('profil',`${ME.draft?`<div class="note wait">Deine letzte Änderung wartet auf Freigabe. Du kannst sie hier weiter anpassen und erneut senden.</div>`:(ME.profile&&ME.profile.s?`<div class="note ok">Dein Profil ist live in der App.</div>`:`<div class="note wait">Dein Profil ist noch nicht ausgefüllt. Trag deine Angaben ein und sende sie zur Freigabe.</div>`)}
   <div class="card"><h2>Dein Profil</h2><p class="muted">Pflicht sind nur dein Name und wofür du Partner bist. Leere Felder erscheinen im Profil nicht. Änderungen prüft ClosingHub kurz, danach sind sie in der App sichtbar.</p>
     <div class="row" style="margin:14px 0"><img class="photo" id="p-img" src="${esc(p.img||'')}" alt="" style="${p.img?'':'visibility:hidden'}">
@@ -215,18 +229,21 @@ function portal(){
       ${fld('role','Beruf oder Rolle','Mindset-Coach',p.role)}${fld('meta','Erfahrung und Land (optional)','8 Jahre Vertrieb, Deutschland',p.meta)}
       ${fld('bk','Text auf dem grünen Knopf','Coaching anfragen',p.bk)}${fld('live','Hinweis auf deine Live-Termine (optional)','Mo–Do, 7:30 Uhr live in der App',p.live)}${fld('link','Link zu deinem Profil (Instagram, LinkedIn oder Website)','https://instagram.com/deinname',p.link)}
       ${fld('k0','Zahl, mit der du überzeugst (optional)','312',k[0])}${fld('k1','Was die Zahl bedeutet','Calls analysiert',k[1])}
-      ${fld('d0','Rabatt für Member (optional)','−20 % für Member',d[0])}${fld('d1','Worauf der Rabatt gilt','auf das erste Coaching',d[1])}
-      ${fld('d2','Rabattcode','PAUL20',d[2])}
+      ${fld('d0','Rabatt für Member auf deine eigenen Angebote (optional)','−20 % für Member',d[0])}${fld('d1','Worauf der Rabatt gilt','auf das erste Coaching',d[1])}
+      ${fld('d2','Rabattcode für deine Angebote (optional)','PAUL20',d[2])}
     </div>
     <label class="f" style="margin-top:12px">Kurze Vorstellung in ein bis zwei Sätzen<textarea class="in" data-f="bio" rows="3" maxlength="300">${esc(p.bio||'')}</textarea></label>
     <label class="row muted" style="margin-top:12px"><input type="checkbox" data-f="fem" ${p.fem?'checked':''}> Im Profil „Partnerin“ statt „Partner“ schreiben</label>
     ${send}</div>`)}
-  ${sec('angebote',`<div class="card"><h2>Deine Angebote für Member</h2><p class="muted">Bis zu ${MAXO} Angebote mit Titel und Preis. Sie erscheinen in deinem Profil in der App, sobald ClosingHub die Änderung freigegeben hat.</p>
+  ${sec('angebote',`<div class="card"><h2>Deine Angebote für Member</h2><p class="muted">Bis zu ${MAXO} Angebote mit Titel und Preis, ausschließlich in deinem Themenbereich${ME.themenbereich?' („'+esc(ME.themenbereich)+'“)':''}. Sie erscheinen in deinem Profil in der App, sobald ClosingHub die Änderung freigegeben hat. Für Coachings, Ausbildungen, Programme und Pläne gilt die Vermittlungsprovision aus deinem Vertrag.</p>
     <div id="offers">${offersHtml((p.offers||[]).slice(0,MAXO))}</div>
     ${send}</div>`)}
   ${sec('postfach',`<div class="card" id="postfach">${postfachHtml()}</div>`)}
   ${sec('gaeste',`<div class="card"><h2>Deine Gäste</h2><p class="muted">Du kannst bis zu drei Personen einladen. Sie bekommen die Plus-Mitgliedschaft kostenlos, solange deine Partnerschaft besteht.</p>
     ${[1,2,3].map(guestRow).join('')}</div>`)}
+  ${sec('calls',`<div class="card" id="calls">${callsHtml()}</div>`)}
+  ${sec('freigaben',`<div class="card" id="freigaben">${freiHtml()}</div>`)}
+  ${sec('meldungen',`<div class="card" id="meldungen">${meldHtml()}</div>`)}
   ${sec('kontakt',`<div class="card">${kontaktHtml()}</div>`)}`;
 }
 async function partnerApp(b){
@@ -244,7 +261,10 @@ async function copyMyLink(){ try{ await navigator.clipboard.writeText(myLink());
 const kontaktFehlt=()=>KONTAKT!==undefined&&!['strasse','plz','ort','land','tel','mail'].every(x=>(KONTAKT||{})[x]);
 function navHtml(){
   const n=MSGS?threads().reduce((a,t)=>a+unread(t),0):0;
-  return [['profil','Profil'],['angebote','Angebote'],['postfach','Postfach'+(n?` <span class="cnt">${n}</span>`:'')],['gaeste','Gäste'],['kontakt','Kontaktdaten'+(kontaktFehlt()?' <span class="cnt" style="background:var(--seal)">!</span>':'')]]
+  const nc=CALLS?(CALLS.buchungen||[]).filter(b=>b.status==='gebucht'&&new Date(b.start)>new Date()).length:0;
+  const nf=FREI?FREI.filter(x=>x.status==='aenderung').length:0;
+  const callsFehlen=CALLS&&!(CALLS.slots||[]).length;
+  return [['profil','Profil'],['angebote','Angebote'],['postfach','Postfach'+(n?` <span class="cnt">${n}</span>`:'')],['calls','Partner-Calls'+(callsFehlen?' <span class="cnt" style="background:var(--seal)">!</span>':nc?` <span class="cnt">${nc}</span>`:'')],['freigaben','Freigaben'+(nf?` <span class="cnt" style="background:var(--seal)">${nf}</span>`:'')],['meldungen','Meldungen'],['gaeste','Gäste'],['kontakt','Kontaktdaten'+(kontaktFehlt()?' <span class="cnt" style="background:var(--seal)">!</span>':'')]]
     .map(([id,l])=>`<button type="button" class="${TAB===id?'on':''}" onclick="showTab('${id}')">${l}</button>`).join('');
 }
 function showTab(t){ TAB=t; document.querySelectorAll('.sec').forEach(x=>x.classList.toggle('on',x.dataset.sec===t)); $('nav').innerHTML=navHtml(); }
@@ -294,13 +314,15 @@ function threads(){
   return Object.values(m).sort((a,b)=>String(b.msgs[b.msgs.length-1].created_at).localeCompare(String(a.msgs[a.msgs.length-1].created_at)));
 }
 const unread=t=>t.msgs.filter(x=>x.von==='member'&&!x.read_at).length;
+// Anfrage-Nummer: brauchst du für Meldungen (Buchung oder Bestandskontakt)
+const anfrageNr=t=>{ const f=t.msgs.find(x=>x.von==='member')||t.msgs[0]; return 'A-'+ME.id+'-'+(f?f.id:0); };
 const when=iso=>{ const d=new Date(iso); return isNaN(d)?'':d.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); };
 function postfachHtml(){
-  const head=`<h2>Postfach</h2><p class="muted">Nur für geschäftliche Anfragen. Mitglieder schreiben dich über dein Profil in der App an, du antwortest hier. Du kannst niemanden zuerst anschreiben.</p>`;
+  const head=`<h2>Postfach</h2><p class="muted">Nur für geschäftliche Anfragen. Mitglieder schreiben dich über dein Profil in der App an, du antwortest hier. Du kannst niemanden zuerst anschreiben. Jede Anfrage hat eine Anfrage-Nummer, die du für Meldungen brauchst. Gespräche mit Mitgliedern zeichnest du nicht auf, auch nicht per KI-Transkript, außer das Mitglied stimmt vorher schriftlich zu.</p>`;
   if(MSGS===undefined) return head+`<div class="note wait">Das Postfach wird gerade eingerichtet und ist in Kürze verfügbar.</div>`;
   const th=threads(); if(!th.length) return head+`<div class="note ok">Noch keine Anfragen. Sobald Mitglieder dich in der App anschreiben, landen ihre Nachrichten hier.</div>`;
   const cur=th.find(t=>t.id===THREAD);
-  return head+`<div class="box2"><div>${th.map(t=>{ const l=t.msgs[t.msgs.length-1], u=unread(t); return `<button type="button" class="thr ${cur&&cur.id===t.id?'on':''}" onclick="openThread('${esc(t.id)}')"><b>${esc(t.name)}</b>${u?` <span class="pill ok">${u} neu</span>`:''}<small>${l.von==='partner'?'Du: ':''}${esc(l.text)}</small></button>`; }).join('')}</div>
+  return head+`<div class="box2"><div>${th.map(t=>{ const l=t.msgs[t.msgs.length-1], u=unread(t); return `<button type="button" class="thr ${cur&&cur.id===t.id?'on':''}" onclick="openThread('${esc(t.id)}')"><b>${esc(t.name)}</b>${u?` <span class="pill ok">${u} neu</span>`:''}<small style="color:var(--ink-2)">Anfrage-Nr. ${anfrageNr(t)}</small><small>${l.von==='partner'?'Du: ':''}${esc(l.text)}</small></button>`; }).join('')}</div>
     <div>${cur?`<div class="chat" id="chat">${cur.msgs.map(x=>`<div class="msg ${x.von==='partner'?'me':''}">${esc(x.text)}<small>${x.von==='partner'?'Du':esc(cur.name)} · ${when(x.created_at)}</small></div>`).join('')}</div>
       <textarea class="in" id="pm-text" rows="3" maxlength="2000" style="margin-top:10px" placeholder="Antwort an ${esc(cur.name)} …"></textarea>
       <div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn go" onclick="sendMsg(this)">Antwort senden</button></div>`
@@ -318,6 +340,126 @@ async function sendMsg(b){
   try{ const rows=await api('partner_messages',{method:'POST',prefer:'return=representation',body:{partner_id:ME.id,member_id:THREAD,von:'partner',text}}); if(rows&&rows[0]) MSGS.push(rows[0]); drawPostfach(); toast('Gesendet'); }
   catch(e){ toast('Das hat nicht geklappt: '+e.message); b.disabled=false; }
 }
+/* ===== Partner-Calls (Gutscheine der Mitglieder) ===== */
+const WT=['','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+const dt=iso=>{ const d=new Date(iso); return isNaN(d)?'':d.toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' Uhr'; };
+let SLOTS=null;
+function slotRows(){ return (SLOTS||[]).map((x,i)=>`<div class="slot"><label class="f">Wochentag<select class="in" data-sd="${i}" onchange="SLOTS[${i}].d=+this.value">${WT.slice(1).map((w,k)=>`<option value="${k+1}" ${+x.d===k+1?'selected':''}>${w}</option>`).join('')}</select></label>
+    <label class="f">Uhrzeit<input class="in" type="time" step="300" value="${esc(x.t||'')}" onchange="SLOTS[${i}].t=this.value"></label>
+    <button type="button" class="btn" style="height:42px" aria-label="Zeitfenster entfernen" onclick="SLOTS.splice(${i},1);$('slotlist').innerHTML=slotRows()">×</button></div>`).join('')||'<p class="muted" style="margin-top:8px">Noch keine Zeitfenster. Ohne Zeitfenster können Mitglieder keinen Call bei dir buchen.</p>'; }
+function callsHtml(){
+  const head=`<h2>Partner-Calls</h2><p class="muted">Mitglieder bekommen über das Punktesystem Gutscheine für einen 10-minütigen 1:1-Call mit einem Partner. Du legst fest, wie viele Calls du pro Woche anbietest (mindestens 1) und zu welchen Zeiten. Mitglieder buchen dann selbst einen freien Termin. Mehr als dein Wochenlimit musst du nie leisten. Ist alles belegt, kommen Mitglieder auf eine Warteliste.</p>`;
+  if(CALLS===undefined) return head+`<div class="note wait">Dieser Bereich wird gerade eingerichtet und ist in Kürze verfügbar.</div>`;
+  if(SLOTS===null) SLOTS=(CALLS.slots||[]).map(x=>({d:+x.d,t:x.t}));
+  const bs=(CALLS.buchungen||[]), now=new Date(), kommend=bs.filter(b=>b.status==='gebucht'&&new Date(b.start)>=now), offen=bs.filter(b=>b.status==='gebucht'&&new Date(b.start)<now), alt=bs.filter(b=>b.status!=='gebucht').slice(-10).reverse();
+  const ST={erledigt:'erledigt',abgesagt:'abgesagt',nicht_erschienen:'nicht erschienen'};
+  return head+`
+    ${CALLS.limit_neu?`<div class="note wait">Dein neues Wochenlimit von ${+CALLS.limit_neu} gilt ab ${deDate(CALLS.limit_ab)}. Bis dahin gilt ${+CALLS.limit}.</div>`:''}
+    ${+CALLS.warteschlange?`<div class="note wait">${+CALLS.warteschlange} ${+CALLS.warteschlange===1?'Mitglied wartet':'Mitglieder warten'} auf einen freien Termin bei dir.</div>`:''}
+    <div class="grid" style="margin-top:14px">
+      <label class="f">Calls pro Woche (mindestens 1)<input class="in" id="c-limit" type="number" min="1" max="50" step="1" value="${+(CALLS.limit_neu||CALLS.limit)||1}"></label>
+      <label class="f">Link für den Call (Zoom, Google Meet …)<input class="in" id="c-link" type="url" placeholder="https://zoom.us/j/…" value="${esc(CALLS.link||'')}"></label>
+    </div>
+    <p class="muted" style="margin-top:6px">Ein geändertes Wochenlimit gilt nach 14 Tagen. Bereits gebuchte Calls bleiben bestehen. Den Link sehen Mitglieder erst nach der Buchung.</p>
+    <h2 style="font-size:17px;margin-top:16px">Deine Zeitfenster (jede Woche)</h2>
+    <div id="slotlist">${slotRows()}</div>
+    <div class="row" style="margin-top:10px"><button type="button" class="btn sm" onclick="SLOTS.push({d:2,t:'18:00'});$('slotlist').innerHTML=slotRows()">+ Zeitfenster</button></div>
+    <div class="row" style="margin-top:16px"><button class="btn go" onclick="saveCalls(this)">Einstellungen speichern</button></div>
+    <h2 style="font-size:17px;margin-top:22px">Gebuchte Calls</h2>
+    ${kommend.length?kommend.map(b=>`<div class="lst"><span><b>${dt(b.start)}</b> · ${esc(b.name||'Mitglied')} <span class="muted">· ${esc(b.nr)}</span></span><button class="btn sm" onclick="callSet(${b.id},'abgesagt',this)">Absagen</button></div>`).join(''):'<p class="muted">Keine anstehenden Calls.</p>'}
+    ${offen.length?`<p class="muted" style="margin-top:10px">Bitte kurz eintragen, wie diese Calls gelaufen sind:</p>`+offen.map(b=>`<div class="lst"><span><b>${dt(b.start)}</b> · ${esc(b.name||'Mitglied')}</span><span class="row"><button class="btn sm go" onclick="callSet(${b.id},'erledigt',this)">Hat stattgefunden</button><button class="btn sm" onclick="callSet(${b.id},'nicht_erschienen',this)">Nicht erschienen</button></span></div>`).join(''):''}
+    ${alt.length?`<details style="margin-top:10px"><summary class="muted" style="cursor:pointer">Letzte Calls</summary>${alt.map(b=>`<div class="lst"><span>${dt(b.start)} · ${esc(b.name||'Mitglied')}</span><span class="pill">${ST[b.status]||b.status}</span></div>`).join('')}</details>`:''}
+    <p class="muted" style="margin-top:12px;font-size:12px">Musst du einen Call absagen, dann bitte mindestens 24 Stunden vorher. Der Gutschein des Mitglieds bleibt gültig, und es wird bevorzugt neu eingeplant. Erscheint ein Mitglied nicht, verfällt sein Gutschein. Calls zeichnest du nicht auf.</p>`;
+}
+async function saveCalls(b){
+  const lim=Math.round(+$('c-limit').value), link=($('c-link').value||'').trim();
+  if(!(lim>=1&&lim<=50)) return toast('Bitte ein Wochenlimit zwischen 1 und 50 eintragen');
+  if(link&&!/^https:\/\/\S+$/.test(link)) return toast('Der Link muss mit https:// beginnen');
+  const sl=(SLOTS||[]).filter(x=>x.d>=1&&x.d<=7&&/^([01]\d|2[0-3]):[0-5]\d$/.test(x.t||''));
+  if(!sl.length&&!confirm('Ohne Zeitfenster kann dich niemand buchen. Trotzdem speichern?')) return;
+  b.disabled=true;
+  try{ const j=await api('rpc/partner_call_einstellungen',{method:'POST',body:{p_limit:lim,p_slots:sl,p_link:link||null}});
+    if(!j||!j.ok) throw new Error(j&&j.grund==='link'?'Link ungültig':'Speichern nicht möglich');
+    const c=await api('rpc/partner_calls',{method:'POST',body:{}}); if(c&&c.ok) CALLS=c; SLOTS=null; $('calls').innerHTML=callsHtml(); $('nav').innerHTML=navHtml();
+    toast(j.ab?'Gespeichert. Das neue Wochenlimit gilt ab '+deDate(j.ab)+'.':'Gespeichert'); }
+  catch(e){ toast('Das hat nicht geklappt: '+e.message); b.disabled=false; }
+}
+async function callSet(id,st,b){
+  if(st==='abgesagt'){ const x=(CALLS.buchungen||[]).find(z=>z.id===id); const kurz=x&&new Date(x.start)-new Date()<24*3600e3;
+    if(!confirm(kurz?'Der Call ist in weniger als 24 Stunden. Laut Vertrag sagst du mindestens 24 Stunden vorher ab. Trotzdem absagen?':'Diesen Call absagen? Das Mitglied wird benachrichtigt und bevorzugt neu eingeplant.')) return; }
+  b.disabled=true;
+  try{ const j=await api('rpc/partner_call_status',{method:'POST',body:{p_buchung:id,p_status:st}}); if(!j||!j.ok) throw new Error('nicht möglich');
+    const c=await api('rpc/partner_calls',{method:'POST',body:{}}); if(c&&c.ok) CALLS=c; $('calls').innerHTML=callsHtml(); $('nav').innerHTML=navHtml(); toast('Gespeichert'); }
+  catch(e){ toast('Das hat nicht geklappt'); b.disabled=false; }
+}
+
+/* ===== Freigaben: Beiträge über ClosingHub und Ersatzvideos ===== */
+const FR_ST={eingereicht:['wait','wartet auf Freigabe'],freigegeben:['ok','freigegeben'],freigegeben_frist:['ok','freigegeben (Frist abgelaufen)'],aenderung:['','Änderung gewünscht']};
+function freiHtml(){
+  const head=`<h2>Freigaben</h2><p class="muted">Beiträge, in denen du ClosingHub bewirbst, reichst du hier vor dem Posten ein. ClosingHub gibt sie innerhalb von 2 Werktagen frei oder nennt Änderungswünsche. Kommt in dieser Zeit keine Antwort, gilt der Beitrag als freigegeben. Kannst du einen Vortrag nicht live halten, lädst du hier dein Ersatzvideo hoch, spätestens 7 Tage vor dem Termin.</p>`;
+  if(FREI===undefined) return head+`<div class="note wait">Dieser Bereich wird gerade eingerichtet und ist in Kürze verfügbar.</div>`;
+  return head+`<div class="tabs" style="margin-top:14px"><button type="button" class="btn ${FR_ART==='beitrag'?'on':''}" onclick="FR_ART='beitrag';$('freigaben').innerHTML=freiHtml()">Beitrag einreichen</button><button type="button" class="btn ${FR_ART==='ersatzvideo'?'on':''}" onclick="FR_ART='ersatzvideo';$('freigaben').innerHTML=freiHtml()">Ersatzvideo hochladen</button></div>
+    ${FR_ART==='beitrag'?`<label class="f">Worum geht es? (z. B. Reel zum Start)<input class="in" id="fr-t" maxlength="120"></label>
+      <label class="f" style="margin-top:10px">Text oder Caption des Beitrags<textarea class="in" id="fr-x" rows="4" maxlength="3000" placeholder="Denk an die Kennzeichnung als Werbung, z. B. „Anzeige“."></textarea></label>
+      <label class="f" style="margin-top:10px">Link zum Entwurf (Video oder Bild, z. B. Google Drive, Dropbox oder WeTransfer)<input class="in" id="fr-l" type="url" placeholder="https://…"></label>`
+    :`<label class="f">Für welchen Termin? (Datum des Vortrags oder Calls)<input class="in" id="fr-d" type="date"></label>
+      <label class="f" style="margin-top:10px">Titel des Videos<input class="in" id="fr-t" maxlength="120" placeholder="Vortrag Dezember: Einwände souverän lösen"></label>
+      <label class="f" style="margin-top:10px">Link zum Video (Google Drive, Dropbox oder WeTransfer)<input class="in" id="fr-l" type="url" placeholder="https://…" required></label>
+      <label class="f" style="margin-top:10px">Hinweis (optional)<textarea class="in" id="fr-x" rows="2" maxlength="3000"></textarea></label>`}
+    <div class="row" style="margin-top:14px"><button class="btn go" onclick="sendFrei(this)">${FR_ART==='beitrag'?'Zur Freigabe einreichen':'Ersatzvideo einreichen'}</button></div>
+    <h2 style="font-size:17px;margin-top:22px">Bisher eingereicht</h2>
+    ${FREI.length?FREI.map(x=>{ const st=FR_ST[x.status]||['',x.status]; return `<div class="lst"><span style="min-width:0;flex:1"><b>${x.art==='ersatzvideo'?'🎬 Ersatzvideo':'📣 Beitrag'}: ${esc(x.titel)}</b>${x.termin?` <span class="muted">· Termin ${deDate(x.termin)}</span>`:''}${x.zu_spaet?' <span class="pill wait">weniger als 7 Tage vorher</span>':''}
+      ${x.status==='eingereicht'?`<br><span class="muted">Antwort bis ${dt(x.frist_bis)}</span>`:''}${x.antwort?`<br><span class="muted">ClosingHub: ${esc(x.antwort)}</span>`:''}</span><span class="pill ${st[0]}">${st[1]}</span></div>`; }).join(''):'<p class="muted">Noch nichts eingereicht.</p>'}`;
+}
+let FR_ART='beitrag';
+async function sendFrei(b){
+  const t=($('fr-t').value||'').trim(), x=($('fr-x').value||'').trim(), l=($('fr-l').value||'').trim(), d=$('fr-d')?$('fr-d').value:null;
+  if(t.length<2) return toast('Bitte einen Titel eintragen');
+  if(l&&!/^https:\/\/\S+$/.test(l)) return toast('Der Link muss mit https:// beginnen');
+  if(FR_ART==='ersatzvideo'){ if(!d) return toast('Bitte das Datum des Termins eintragen'); if(!l) return toast('Bitte den Link zum Video eintragen');
+    const tage=(new Date(d)-new Date(new Date().toDateString()))/864e5; if(tage<7&&!confirm('Der Termin ist in weniger als 7 Tagen. Laut Vertrag reichst du Ersatzvideos spätestens 7 Tage vorher ein. Trotzdem einreichen?')) return; }
+  else if(!x&&!l) return toast('Bitte Text oder Link zum Entwurf angeben');
+  b.disabled=true;
+  try{ const j=await api('rpc/partner_freigabe_einreichen',{method:'POST',body:{p_art:FR_ART,p_titel:t,p_text:x,p_link:l||null,p_termin:FR_ART==='ersatzvideo'?d:null}});
+    if(!j||!j.ok) throw new Error('Einreichen nicht möglich'); FREI=(await api('rpc/partner_freigaben_liste',{method:'POST',body:{}}))||[]; $('freigaben').innerHTML=freiHtml(); $('nav').innerHTML=navHtml(); toast('Eingereicht'); }
+  catch(e){ toast('Das hat nicht geklappt: '+e.message); b.disabled=false; }
+}
+
+/* ===== Meldungen: Buchungen vermittelter Kunden und Bestandskontakte ===== */
+let ME_ART='buchung';
+function anfrageOptionen(){
+  const o=[]; if(MSGS) threads().forEach(t=>o.push([anfrageNr(t),anfrageNr(t)+' · '+t.name]));
+  if(CALLS) (CALLS.buchungen||[]).forEach(b=>o.push([b.nr,b.nr+' · Call mit '+(b.name||'Mitglied')+' am '+deDate(String(b.start).slice(0,10))]));
+  return o;
+}
+function meldHtml(){
+  const head=`<h2>Meldungen</h2><p class="muted">Kommt ein Kunde über ClosingHub zu dir (Anfrage über dein Profil oder den Marktplatz, ClosingHub-Link oder gebuchter Partner-Call) und bucht ein Coaching, eine Ausbildung, ein Programm oder einen Plan, meldest du das hier innerhalb von 7 Tagen nach Zahlungseingang. Darauf fallen 10&nbsp;% Vermittlungsprovision vom Nettobetrag an, für alle Buchungen dieses Kunden innerhalb von 12 Monaten. Namen und Rechnungen deiner Kunden schickst du nicht mit. War jemand schon vorher dein Kontakt, meldest du das innerhalb von 14 Tagen nach der Anfrage als Bestandskontakt. Dann fällt keine Provision an.</p>`;
+  if(MELD===undefined) return head+`<div class="note wait">Dieser Bereich wird gerade eingerichtet und ist in Kürze verfügbar.</div>`;
+  const opts=anfrageOptionen(), sel=`<label class="f">Anfrage-Nummer${opts.length?'':' (steht im Postfach bei der Anfrage)'}${opts.length?`<select class="in" id="m-nr">${opts.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select>`:`<input class="in" id="m-nr" maxlength="40" placeholder="A-…">`}</label>`;
+  const ST={neu:['wait','eingegangen'],geprueft:['ok','geprüft']};
+  return head+`<div class="tabs" style="margin-top:14px"><button type="button" class="btn ${ME_ART==='buchung'?'on':''}" onclick="ME_ART='buchung';$('meldungen').innerHTML=meldHtml()">Buchung melden</button><button type="button" class="btn ${ME_ART==='bestandskontakt'?'on':''}" onclick="ME_ART='bestandskontakt';$('meldungen').innerHTML=meldHtml()">Bestandskontakt melden</button></div>
+    ${ME_ART==='buchung'?`<div class="grid">${sel}<label class="f">Datum des Zahlungseingangs<input class="in" id="m-d" type="date"></label>
+      <label class="f">Gebuchte Leistung<input class="in" id="m-l" maxlength="120" placeholder="1:1 Closing-Coaching, 8 Wochen"></label><label class="f">Nettobetrag ohne Umsatzsteuer (€)<input class="in" id="m-n" type="number" min="0" step="0.01" placeholder="1500"></label></div>
+      <p class="muted" style="margin-top:6px">Raten meldest du jeweils, wenn sie bezahlt sind.</p>`
+    :`<div class="grid">${sel}<label class="f">Datum des früheren Kontakts<input class="in" id="m-d" type="date"></label></div>
+      <label class="f" style="margin-top:10px">Woran man den früheren Kontakt erkennt<input class="in" id="m-x" maxlength="600" placeholder="z. B. Instagram-Nachricht vom 02.10.2026 oder Eintrag in meinem CRM"></label>
+      <p class="muted" style="margin-top:6px">Den Nachweis legst du nur auf Nachfrage vor, ohne weitere Inhalte.</p>`}
+    <div class="row" style="margin-top:14px"><button class="btn go" onclick="sendMeld(this)">Meldung senden</button></div>
+    <h2 style="font-size:17px;margin-top:22px">Deine Meldungen</h2>
+    ${MELD.length?MELD.map(x=>`<div class="lst"><span><b>${x.art==='buchung'?'Buchung':'Bestandskontakt'}</b> · ${esc(x.anfrage_nr)} · ${deDate(x.datum)}${x.art==='buchung'?` · ${esc(x.leistung||'')} · ${(+x.netto).toLocaleString('de-DE',{minimumFractionDigits:2})} € netto`:''}</span><span class="pill ${(ST[x.status]||[''])[0]}">${(ST[x.status]||['',x.status])[1]}</span></div>`).join(''):'<p class="muted">Noch keine Meldungen.</p>'}`;
+}
+async function sendMeld(b){
+  const nr=($('m-nr').value||'').trim(), d=$('m-d').value;
+  if(nr.length<2) return toast('Bitte die Anfrage-Nummer angeben'); if(!d) return toast('Bitte ein Datum eintragen');
+  const body={p_art:ME_ART,p_anfrage:nr,p_datum:d,p_leistung:null,p_netto:null,p_nachweis:null};
+  if(ME_ART==='buchung'){ body.p_leistung=($('m-l').value||'').trim(); body.p_netto=+$('m-n').value; if(body.p_leistung.length<2) return toast('Bitte die gebuchte Leistung eintragen'); if(!($('m-n').value)||!(body.p_netto>=0)) return toast('Bitte den Nettobetrag eintragen'); }
+  else{ body.p_nachweis=($('m-x').value||'').trim(); if(body.p_nachweis.length<5) return toast('Bitte kurz beschreiben, woran man den früheren Kontakt erkennt'); }
+  b.disabled=true;
+  try{ const j=await api('rpc/partner_meldung',{method:'POST',body}); if(!j||!j.ok) throw new Error('Angaben unvollständig');
+    MELD=(await api('partner_meldungen?select=*&order=id.desc'))||[]; $('meldungen').innerHTML=meldHtml(); toast('Meldung gesendet'); }
+  catch(e){ toast('Das hat nicht geklappt: '+e.message); b.disabled=false; }
+}
+
 function readProfile(){
   const g=k=>{ const el=document.querySelector(`[data-f="${k}"]`); return el?(el.type==='checkbox'?el.checked:clean(el.value)):''; };
   const p={n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^(https:\/\/|data:image\/(jpeg|png|webp);base64,)/.test(g('img'))?g('img'):'',live:g('live').slice(0,90),link:/^https:\/\/\S+$/.test(g('link'))?g('link').slice(0,200):'',fem:!!g('fem')};

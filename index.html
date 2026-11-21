@@ -1649,7 +1649,7 @@ form.addEventListener('submit',async e=>{
   if(!$('#ok').checked){$('#ok').focus();return showErr('Setz den Haken, damit wir dir schreiben dürfen.')}
   btn.disabled=true;btn.textContent='Wird eingetragen …';
   const name=d.name.trim(), email=d.email.trim().toLowerCase(), abo=d.abo||'dayone';
-  const QUELLE=(()=>{try{const pt=localStorage.getItem('ch_partner');if(pt)return 'partner:'+pt;const c=localStorage.getItem('ch_ref');return c?'einladung:'+c:'landingpage'}catch(e){return 'landingpage'}})();
+  const QUELLE=(()=>{try{const pt=localStorage.getItem('ch_partner'),at=+localStorage.getItem('ch_partner_at');if(pt&&/^\d{1,6}$/.test(pt)&&at&&Date.now()-at<=30*864e5)return 'partner:'+pt+'@'+at;const c=localStorage.getItem('ch_ref');return c?'einladung:'+c:'landingpage'}catch(e){return 'landingpage'}})();
   try{
     let r=await sb('waitlist',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({name,email,abo,quelle:QUELLE})});
     if(!r.ok&&r.status!==409&&QUELLE!=='landingpage'){r=await sb('waitlist',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({name,email,abo,quelle:'landingpage'})})}
@@ -2448,7 +2448,7 @@ new IntersectionObserver(([e])=>{heroOut=!e.isIntersecting;updDock()},{threshold
 
 /* ---------- Empfehlungslink eines Partners (?partner=nummer) ---------- */
 (function(){ let c=null; try{ c=new URLSearchParams(location.search).get('partner'); }catch(e){}
-  if(!c||!/^\d{1,6}$/.test(c)) return; try{ localStorage.setItem('ch_partner',c); }catch(e){}
+  if(!c||!/^\d{1,6}$/.test(c)) return; try{ localStorage.setItem('ch_partner',c); localStorage.setItem('ch_partner_at',String(Date.now())); }catch(e){}
   const b=document.createElement('div'); b.setAttribute('role','status');
   b.style.cssText='position:fixed;left:16px;right:16px;top:16px;z-index:90;max-width:520px;margin:0 auto;background:#0E1A2B;color:#fff;padding:14px 16px;border-radius:12px;font-size:15px;line-height:1.45;box-shadow:0 14px 34px -10px rgba(14,26,43,.45)';
   b.textContent='Du kommst über die Empfehlung eines ClosingHub-Partners. Trag dich jetzt ein und sei von Anfang an dabei.';

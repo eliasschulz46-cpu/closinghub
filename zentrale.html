@@ -311,7 +311,7 @@ async function loadAll(){
   D.waitlist = wl.map(w=>({ id:w.id, name:w.name, email:w.email, abo:w.abo, at:w.created_at, quelle:w.quelle||'', token:w.invite_token||null, member:w.member_id||null }));
   D.requests = cr.map(r=>({ id:r.id, type:r.typ==='werbung'?'Werbung':r.typ==='sonstiges'?'Sonstiges':'Auftraggeber', name:r.firma ? `${r.firma} · ${r.name}` : r.name, email:r.email, text:r.nachricht||'', at:fmtAt(r.created_at), st:r.status }));
   const S = Object.fromEntries(st.map(x=>[x.key,x.value]));
-  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.gate=S.app_gate||{}; fxLoad(S); setTimeout(()=>{ mxLoad(); meldLoad(); ptzLoad(); },600); D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
+  const p=S.preise||{}, d1=S.dayone||{}, li=S.limits||{}, h=S.hero||{}; D.recht=S.recht||{}; D.gate=S.app_gate||{}; fxLoad(S); setTimeout(()=>{ mxLoad(); meldLoad(); ptzLoad(); paLoad(); },600); D.markt=(S.markt&&Array.isArray(S.markt.services)&&S.markt.services.length)?S.markt.services:MARKT_DEFAULT.slice();
   D.settings = { ...DEFAULT_SETTINGS, ...p, dayoneTotal:d1.total??250, dayoneFreeMonths:d1.freeMonths??12, dayonePremiumMonths:d1.premiumMonths??3,
     maxPerCountry:li.maxPerCountry??1000, perCategory:li.perCategory??10, heroTop:h.top??DEFAULT_SETTINGS.heroTop, heroGold:h.gold??DEFAULT_SETTINGS.heroGold, heroSub:h.sub??DEFAULT_SETTINGS.heroSub, heroLead:h.lead??DEFAULT_SETTINGS.heroLead,
     features:{ ...DEFAULT_SETTINGS.features, ...(S.features||{}) } };
@@ -347,7 +347,7 @@ const NAV = [
   ['rechnungen','Rechnungen','invoice', ()=>D.invoices.filter(i=>i.st==='überfällig').length],
   ['laufband','Laufband & Angebote','ticker'],
   ['anfragen','Anfragen & Warteliste','inbox', ()=>D.requests.filter(r=>r.st==='neu').length],
-  ['partner','Partner','users', ()=>(D.prow||[]).filter(r=>r.draft).length],
+  ['partner','Partner','users', ()=>(D.prow||[]).filter(r=>r.draft).length+((D.pa&&D.pa.freigaben)||[]).filter(x=>x.status==='eingereicht').length+((D.pa&&D.pa.meldungen)||[]).filter(x=>x.status==='neu').length],
   ['Community'],
   ['support','Support','support', ()=>D.tickets.filter(t=>t.st==='offen').length],
   ['member','Member','users', ()=>(D.proofs||[]).filter(p=>p.status==='offen').length],
@@ -906,7 +906,7 @@ async function saveTicket(b){
 
 /* ===== Member: Rang nach Erfahrung, Nachweise ===== */
 const RANG=['','Starter','Rising','Performer','Dealmaker','Rainmaker'];
-const PROOF_ART={ausbildung:'Ausbildungszertifikat',abrechnung:'Abrechnung / Provision',high_ticket:'High-Ticket-Abschluss (ab 5.000 €)',dauer:'Nachweis über die Dauer im Vertrieb',ausweis:'Ausweis',sonstiges:'Sonstiges'};
+const PROOF_ART={ausbildung:'Ausbildungszertifikat (nur vom Ausbilder-Partner)',abrechnung:'Abrechnung / Provision',high_ticket:'High-Ticket-Abschluss (ab 5.000 €)',dauer:'Nachweis über die Dauer im Vertrieb',ausweis:'Ausweis',sonstiges:'Sonstiges'};
 let mbSel=null, mbQ='';
 const mbProofs = id => (D.proofs||[]).filter(p=>p.member_id===id);
 const mbMonths = m => { if(!m.im_vertrieb_seit) return 0; const a=new Date(m.im_vertrieb_seit), b=new Date(); return Math.max(0,(b.getFullYear()-a.getFullYear())*12+b.getMonth()-a.getMonth()-(b.getDate()<a.getDate()?1:0)); };
@@ -1072,7 +1072,8 @@ function partner(){
   return `<h1 class="h1">Partner</h1><p class="sub">Höchstens 5 Partner. Jeder pflegt sein Profil im Partnerportal und lädt dort bis zu 3 Gäste ein. Änderungen der Partner gehen erst nach deiner Freigabe live. Du kannst alles auch selbst bearbeiten.</p>
   <div class="card"><div class="row between"><div><h3>Partner · ${act.length} von 5</h3><p class="muted" style="font-size:13px;margin-top:2px">In der App erscheinen nur aktive Partner mit ausgefülltem Profil. Solange es keinen gibt, zeigt die App die Beispiel-Partner.</p></div>${act.length<5?`<button class="btn gold-b" onclick="ptInvite()">Partner einladen</button>`:''}</div>
     ${act.map(p=>ptCard(p,D.partners.indexOf(p))).join('')||'<div class="empty" style="margin-top:12px">Noch kein Partner angelegt. Klick auf „Partner einladen“.</div>'}</div>
-  ${old.length?`<div class="card"><h3>Beendete Partnerschaften</h3>${old.map(p=>`<div class="row between" style="margin-top:10px"><span>${esc(p.n||'ohne Namen')} <span class="muted">· beendet am ${deDate(p._row.ended_at)}</span></span><span class="muted" style="font-size:13px">${(D.guests||[]).filter(g=>g.partner_id===p.id).map(g=>esc(g.name||'Gast')+' (kostenlos bis '+deDate(g.free_until)+')').join(', ')||'keine Gäste'}</span></div>`).join('')}</div>`:''}`;
+  ${paCards()}
+  ${old.length?`<div class="card"><h3>Beendete Partnerschaften</h3>${old.map(p=>`<div style="margin-top:12px;border-top:1px solid var(--line,#D5DAD3);padding-top:10px"><div class="row between"><span>${esc(p.n||'ohne Namen')} <span class="muted">· beendet am ${deDate(p._row.ended_at)}</span></span><span class="muted" style="font-size:13px">${(D.guests||[]).filter(g=>g.partner_id===p.id).map(g=>esc(g.name||'Gast')+' (kostenlos bis '+deDate(g.free_until)+')').join(', ')||'keine Gäste'}</span></div>${loeschHtml(p)}</div>`).join('')}</div>`:''}`;
 }
 const PT_LABEL={n:'Name',s:'Wofür Partner',role:'Beruf oder Rolle',meta:'Erfahrung und Land',bio:'Vorstellung',bk:'Knopf-Text',live:'Live-Hinweis',k:'Zahl',deal:'Rabatt',offers:'Angebote',img:'Foto',fem:'Partnerin'};
 function ptDiff(r){
@@ -1088,15 +1089,15 @@ function ptCard(p,i){
     ${r.draft?`<div class="demo" style="margin-top:10px"><b>${esc(p.n||'Der Partner')} möchte sein Profil ändern</b> <span class="muted">(${deDate(r.draft_at)})</span>${ptDiff(r)}
       <div class="row" style="margin-top:10px"><button class="btn gold-b sm" onclick="ptApprove(${i},true)">Freigeben</button><button class="btn sm" onclick="ptApprove(${i},false)">Ablehnen</button></div></div>`:''}
     ${r.status==='eingeladen'?`<div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap"><span class="muted" style="font-size:13px">Zugang zum Partnerportal für ${esc(r.invite_email||'(E-Mail fehlt)')}:</span><button class="btn sm gold-b" onclick="ptLink(${i},'mail')">Einladung senden</button><button class="btn sm" onclick="ptLink(${i},'copy')">Link kopieren</button></div>`:''}
-    <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap;font-size:13px"><b>Empfehlungslink:</b><span class="muted">${refLink(p.id)}</span><button class="btn sm" onclick="copyRef('${esc(p.id)}',this)">Kopieren</button><span class="pill ${refCount(p.id)?'p-ok':''}">${refCount(p.id)} auf der Warteliste</span></div>
+    <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap;font-size:13px"><b>Empfehlungslink:</b><span class="muted">${refLink(p.id)}</span><button class="btn sm" onclick="copyRef('${esc(p.id)}',this)">Kopieren</button><span class="pill ${refCount(p.id)?'p-ok':''}">${refCount(p.id)} auf der Warteliste</span><span class="pill ${(D.pa&&D.pa.geworben&&D.pa.geworben[p.id])?'p-ok':''}">${(D.pa&&D.pa.geworben&&D.pa.geworben[p.id])||0} geworbene Mitglieder</span></div>
     ${r.status==='aktiv'?`<div style="font-size:13px;margin-top:10px"><b>Kontaktdaten:</b> <span class="muted">${(c=>c&&c.strasse?esc([c.firma,c.strasse,[c.plz,c.ort].filter(Boolean).join(' '),c.land,c.tel,c.mail,c.steuer?'Steuer-Nr. '+c.steuer:'',c.iban?'IBAN '+c.iban:''].filter(Boolean).join(' · ')):'vom Partner noch nicht hinterlegt')(r.kontakt)}</span></div>`:''}
     <div class="grid g2" style="gap:10px;margin-top:10px">
       ${f('n','Name','Paul')}${f('s','Wofür er Partner ist (steht groß im Profilkopf)','Morgen-Call')}
       ${f('role','Beruf oder Rolle','Mindset-Coach')}${f('meta','Erfahrung und Land (optional)','8 Jahre Vertrieb, Deutschland')}
       ${f('bk','Text auf dem grünen Knopf','Coaching anfragen')}${f('live','Hinweis auf seine Live-Termine (optional)','Mo–Do, 7:30 Uhr live in der App')}${f('link','Link zu seinem Profil (Instagram, LinkedIn oder Website)','https://instagram.com/name')}
       ${f('k0','Zahl, mit der er überzeugt (optional)','312',(p.k||[])[0]||'')}${f('k1','Was die Zahl bedeutet','Calls analysiert',(p.k||[])[1]||'')}
-      ${f('d0','Rabatt für Member (optional)','−20 % für Member',(p.deal||[])[0]||'')}${f('d1','Worauf der Rabatt gilt','auf das erste Coaching',(p.deal||[])[1]||'')}
-      ${f('d2','Rabattcode','PAUL20',(p.deal||[])[2]||'')}
+      ${f('d0','Rabatt für Member auf seine eigenen Angebote (optional)','−20 % für Member',(p.deal||[])[0]||'')}${f('d1','Worauf der Rabatt gilt','auf das erste Coaching',(p.deal||[])[1]||'')}
+      ${f('d2','Rabattcode für seine Angebote (optional)','PAUL20',(p.deal||[])[2]||'')}
       <div style="font-size:12px" class="muted">Profilfoto
         <div class="row" style="gap:10px;margin-top:4px;align-items:center"><img id="pt-img-${i}" src="${esc(p.img||'')}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--bg2,#E4E8E2);${p.img?'':'visibility:hidden'}">
           <label class="btn sm" style="cursor:pointer">Foto auswählen<input type="file" accept="image/*" style="display:none" onchange="ptPhoto(this,${i})"></label>
@@ -1105,6 +1106,7 @@ function ptCard(p,i){
     <label style="display:block;font-size:12px;margin-top:10px" class="muted">Kurze Vorstellung in ein bis zwei Sätzen<textarea class="in" data-pt="${i}" data-f="bio" rows="2" style="margin-top:4px">${esc(p.bio||'')}</textarea></label>
     <label style="display:block;font-size:12px;margin-top:10px" class="muted">Seine Angebote für Member, eines pro Zeile: Titel | Preis in Euro<textarea class="in" data-pt="${i}" data-f="offers" rows="3" style="margin-top:4px" placeholder="1:1 Mindset-Coaching (60 Min.) | 89">${esc((p.offers||[]).map(o=>o.t+' | '+o.pr).join('\n'))}</textarea></label>
     <div class="row" style="margin-top:10px"><label class="muted" style="font-size:13px"><input type="checkbox" data-pt="${i}" data-f="fem" ${p.fem?'checked':''}> Im Profil „Partnerin“ statt „Partner“ schreiben</label></div>
+    ${vertragHtml(p,i)}
     <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="ptSave(${i},this)">Profil speichern (sofort live)</button><button class="btn" style="margin-left:auto" onclick="partnerEnd(${i})">${r.status==='aktiv'?'Partnerschaft beenden':'Einladung zurückziehen'}</button></div>
     ${guestBlock(p,i)}
   </details>`;
@@ -1202,9 +1204,68 @@ async function partnerEnd(i){
     if(!confirm('Einladung für „'+(p.n||'Partner')+'“ zurückziehen? Der Einladungslink wird ungültig und der Platz wieder frei.')) return;
     ptKeep(); await q(`partners?id=eq.${p.id}`,{method:'DELETE'}); await ptReload(); render(); return toast('Einladung zurückgezogen');
   }
-  if(!confirm('Partnerschaft mit „'+p.n+'“ beenden?\n\nDas Partnerprofil verschwindet sofort aus der App. Seine Gäste bleiben bis zum Monatsende kostenlos dabei und werden benachrichtigt.')) return;
-  ptKeep(); const n=await q('rpc/partner_beenden',{method:'POST',body:{p_partner:p.id}}); await ptReload(); render(); toast('Partnerschaft beendet · '+(n||0)+' Gäste benachrichtigt');
+  if(!confirm('Partnerschaft mit „'+p.n+'“ beenden?\n\n• Das Partnerprofil verschwindet sofort aus der App, Premium und Partner-Design seines App-Kontos entfallen.\n• Seine Gäste bleiben bis zum Monatsende kostenlos und werden benachrichtigt.\n• Gebuchte Partner-Calls werden abgesagt. Offene Gutscheine werden wieder frei und können bei einem anderen Partner eingelöst werden.\n• Das Abzeichen mit Partner-Bild wird bei allen Mitgliedern neutral.\n• Es startet die Löschliste: Medien des Partners innerhalb von 30 Tagen löschen (§ 7 Nr. 4).')) return;
+  ptKeep(); const n=await q('rpc/partner_beenden',{method:'POST',body:{p_partner:p.id}}); await ptReload(); D.pa=undefined; paLoad(); render(); toast('Partnerschaft beendet · '+(n||0)+' Gäste benachrichtigt · Löschliste angelegt');
 }
+
+/* ===== Runde 17: Vertragsregeln der Partner ===== */
+const PT_VORLAGEN={
+  'Vertriebsausbildung und Vertriebscoaching':['Closing-Coaching','Closer-Ausbildung','Setter-Coaching','Chat-Setting-Training','Einwandbehandlung-Training','Kaltakquise-Training','Call-Analyse','Chat-Analyse','Skripte anfertigen','Fertige Skripte nach Branche','Vorlagen und Leitfäden für den Vertrieb','Mini-Kurse für Einsteiger im Vertrieb'],
+  'Motivation, Mindset und Organisation':['Motivationscoaching','Mindset-Coaching','Selbstorganisation','Zeitmanagement'],
+  'Fitness, Longevity und Ernährung':['Fitness-Coaching','Trainingscoaching','Ernährungscoaching','Trainingspläne','Ernährungspläne','Longevity']
+};
+async function paLoad(){ try{ D.pa=(await api('rpc/partner_aufgaben_admin',{method:'POST',body:{}}))||{}; if(!D.pa.freigaben) D.pa={off:1}; }catch(e){ D.pa={off:1}; } if(route()==='partner') render(); else drawNav(); }
+function vertragHtml(p,i){
+  const r=p._row; if(!('leistungen' in r)) return `<div class="demo" style="margin-top:12px">Für Hoheitsbereich, Ausbilder und Partner-Calls bitte zuerst „closinghub-runde17.sql“ in Supabase ausführen.</div>`;
+  const wt=['','Mo','Di','Mi','Do','Fr','Sa','So'], sl=(r.call_slots||[]).map(x=>wt[+x.d]+' '+x.t).join(', ');
+  return `<div style="margin-top:14px;border-top:1px solid var(--line,#D5DAD3);padding-top:12px"><b>Vertrag: Hoheitsbereich (Anlage 1)</b>
+    <p class="muted" style="font-size:12.5px;margin-top:2px">In diesem Bereich nimmst du keinen weiteren Partner auf. Mitglieder können zu den hier eingetragenen Leistungen im Marktplatz nichts einreichen (die App und die Datenbank sperren das automatisch, auch bei ähnlichen Bezeichnungen).</p>
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">${Object.keys(PT_VORLAGEN).map(k=>`<button class="btn sm" onclick="ptVorlage(${i},'${esc(k)}')">Vorlage: ${esc(k)}</button>`).join('')}</div>
+    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Themenbereich (steht im Partnerportal)<input class="in" id="pv-b-${i}" value="${esc(r.themenbereich||'')}" maxlength="80" style="margin-top:4px" placeholder="Vertriebsausbildung und Vertriebscoaching"></label>
+    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Gesperrte Leistungen, eine pro Zeile<textarea class="in" id="pv-l-${i}" rows="4" style="margin-top:4px">${esc((r.leistungen||[]).join('\n'))}</textarea></label>
+    <label class="muted" style="font-size:13px;display:block;margin-top:8px"><input type="checkbox" id="pv-a-${i}" ${r.ausbilder?'checked':''}> Ausbilder-Partner: Nur seine Absolventen bekommen das Abzeichen „Ausgebildet von …“ (mit seinem Namen)</label>
+    <div class="row" style="margin-top:8px"><button class="btn sm gold-b" onclick="ptVertragSave(${i},this)">Hoheitsbereich speichern</button></div>
+    <p class="muted" style="font-size:12.5px;margin-top:10px"><b>Partner-Calls:</b> ${r.call_gesetzt?`${+r.call_limit} pro Woche${r.call_limit_neu?` (ab ${deDate(r.call_limit_ab)}: ${+r.call_limit_neu})`:''} · ${sl||'keine Zeitfenster'}${r.call_link?' · Link hinterlegt':' · kein Link'}`:'noch nicht eingerichtet (der Partner macht das im Partnerportal)'}</p></div>`;
+}
+function ptVorlage(i,k){ const l=PT_VORLAGEN[k]; if(!l) return; $('pv-b-'+i).value=k; $('pv-l-'+i).value=l.join('\n'); }
+async function ptVertragSave(i,b){
+  const p=D.partners[i], c=x=>String(x||'').replace(/[<>"'`]/g,'').trim();
+  const bereich=c($('pv-b-'+i).value).slice(0,80), seen=new Set(), l=$('pv-l-'+i).value.split('\n').map(x=>c(x).slice(0,80)).filter(x=>x&&!seen.has(x.toLowerCase())&&seen.add(x.toLowerCase())).slice(0,30);
+  const ausb=$('pv-a-'+i).checked;
+  if(ausb&&D.partners.some((x,k)=>k!==i&&x._st==='aktiv'&&x._row.ausbilder)&&!confirm('Ein anderer Partner ist schon als Ausbilder markiert. Trotzdem auch diesen markieren?')) return;
+  b.disabled=true; try{ ptKeep(); await q(`partners?id=eq.${p.id}`,{method:'PATCH',body:{themenbereich:bereich||null,leistungen:l,ausbilder:ausb}}); await ptReload(); render(); toast('Hoheitsbereich gespeichert'); }finally{ b.disabled=false; }
+}
+const PA_ST={eingereicht:['p-warn','wartet'],freigegeben:['p-ok','freigegeben'],freigegeben_frist:['p-ok','freigegeben (Frist abgelaufen)'],aenderung:['','Änderung gewünscht']};
+function paCards(){
+  const P=D.pa; if(P===undefined){ D.pa=null; paLoad(); }
+  if(!P||P.off) return P&&P.off?`<div class="card"><div class="demo">Freigaben, Meldungen und Partner-Calls erscheinen hier, sobald „closinghub-runde17.sql“ in Supabase ausgeführt ist.</div></div>`:'';
+  const fr=P.freigaben||[], me=P.meldungen||[], ca=P.calls||[];
+  const dts=iso=>new Date(iso).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  return `<div class="card"><div class="row between"><h3 style="margin:0">Freigaben aus den Partnerportalen (${fr.filter(x=>x.status==='eingereicht').length} offen)</h3><button class="btn sm" onclick="D.pa=undefined;render()">Aktualisieren</button></div>
+      <p class="muted" style="font-size:12.5px;margin-top:4px">Beiträge über ClosingHub gibst du innerhalb von 2 Werktagen frei oder nennst Änderungswünsche. Danach gelten sie automatisch als freigegeben (§ 8 Nr. 5). Ersatzvideos müssen 7 Tage vor dem Termin da sein.</p>
+      ${fr.map(x=>{ const st=PA_ST[x.status]||['',x.status]; return `<div class="item"><div class="ico">${x.art==='ersatzvideo'?'🎬':'📣'}</div><div style="flex:1"><div class="row between"><b>${esc(x.partner||'Partner')}: ${esc(x.titel)}</b><span class="pill ${st[0]}">${st[1]}</span></div>
+        <div class="muted" style="font-size:12.5px;margin-top:2px">${x.art==='ersatzvideo'?'Ersatzvideo für den Termin am '+deDate(x.termin)+(x.zu_spaet?' · <b style="color:#B42318">weniger als 7 Tage vorher</b>':''):'Beitrag'} · eingereicht ${dts(x.created_at)}${x.status==='eingereicht'?' · Antwort bis '+dts(x.frist_bis):''}</div>
+        ${x.text?`<p style="font-size:13.5px;margin:6px 0 0;white-space:pre-line">${esc(x.text)}</p>`:''}${x.link?`<p style="font-size:13px;margin:4px 0 0"><a class="gold" href="${esc(x.link)}" target="_blank" rel="noopener">Entwurf öffnen</a></p>`:''}${x.antwort?`<p class="muted" style="font-size:12.5px;margin:4px 0 0">Deine Antwort: ${esc(x.antwort)}</p>`:''}
+        ${x.status==='eingereicht'?`<div class="row" style="margin-top:8px"><button class="btn sm gold-b" onclick="paFrei(${x.id},true,this)">Freigeben</button><button class="btn sm" onclick="paFrei(${x.id},false,this)">Änderung wünschen</button></div>`:''}</div></div>`; }).join('')||'<div class="empty">Noch nichts eingereicht.</div>'}</div>
+    <div class="card"><h3>Meldungen der Partner (${me.filter(x=>x.status==='neu').length} neu)</h3>
+      <p class="muted" style="font-size:12.5px;margin-top:4px">Buchungen vermittelter Kunden: 10 % Vermittlungsprovision vom Nettobetrag, monatlich in Rechnung stellen, zahlbar in 14 Tagen oder mit der Partner-Provision verrechnen (§ 6). Bestandskontakte sind davon ausgenommen. Anfrage-Nummern: A-… = Anfrage im Postfach, C-… = gebuchter Partner-Call.</p>
+      ${me.map(x=>`<div class="item"><div class="ico">${x.art==='buchung'?'💶':'🗂️'}</div><div style="flex:1"><div class="row between"><b>${esc(x.partner||'Partner')} · ${x.art==='buchung'?'Buchung':'Bestandskontakt'} · ${esc(x.anfrage_nr)}</b><span class="pill ${x.status==='neu'?'p-warn':'p-ok'}">${x.status==='neu'?'neu':'geprüft'}</span></div>
+        <div class="muted" style="font-size:12.5px;margin-top:2px">${deDate(x.datum)}${x.art==='buchung'?` · ${esc(x.leistung||'')} · ${Number(x.netto).toLocaleString('de-DE',{minimumFractionDigits:2})} € netto · <b>Provision ${Number(x.provision).toLocaleString('de-DE',{minimumFractionDigits:2})} €</b>`:` · ${esc(x.nachweis||'')}`}</div>
+        ${x.status==='neu'?`<div class="row" style="margin-top:8px"><button class="btn sm" onclick="paMeld(${x.id},this)">Als geprüft markieren</button></div>`:''}</div></div>`).join('')||'<div class="empty">Noch keine Meldungen.</div>'}</div>
+    <div class="card"><h3>Partner-Calls (letzte 60 Tage)</h3>
+      ${ca.map(x=>`<div class="row between" style="padding:6px 0;border-top:1px solid var(--line);font-size:13px"><span>${dts(x.start)} · ${esc(x.partner||'')} mit ${esc(x.mitglied||'')}</span><span class="pill ${x.status==='erledigt'?'p-ok':x.status==='gebucht'?'p-gold':''}">${x.status==='abgesagt'?'abgesagt'+(x.abgesagt_von?' ('+esc(x.abgesagt_von)+')':'')+(x.zu_spaet?' · zu spät':''):x.status==='nicht_erschienen'?'nicht erschienen':x.status}</span></div>`).join('')||'<div class="empty">Noch keine gebuchten Calls.</div>'}</div>`;
+}
+async function paFrei(id,ok,b){ let a=null; if(!ok){ a=prompt('Was soll der Partner ändern?'); if(!a) return; } b.disabled=true;
+  try{ await q('rpc/partner_freigabe_entscheiden',{method:'POST',body:{p_id:id,p_ok:ok,p_antwort:a}}); D.pa=undefined; render(); toast(ok?'Freigegeben':'Änderungswunsch gesendet'); }catch(e){ b.disabled=false; } }
+async function paMeld(id,b){ b.disabled=true; try{ await q('rpc/partner_meldung_geprueft',{method:'POST',body:{p_id:id}}); D.pa=undefined; render(); }catch(e){ b.disabled=false; } }
+const LOESCH_PUNKTE=[['plattform','Partnerprofil und Abzeichen auf der Plattform (passiert automatisch)'],['website','Website und Landingpages'],['social','Instagram, TikTok, LinkedIn: Beiträge, Storys, Highlights'],['investoren','Investoren-Unterlagen: Vorstellungsvideo, Pitch-Decks'],['mitschnitte','Mitschnitte von Vorträgen und Calls, Clips'],['bestaetigung','Löschung dem Partner auf Wunsch in Textform bestätigt']];
+function loeschHtml(p){ const l=p._row.loeschliste||{}; if(!l.frist) return '';
+  const done=new Set(l.erledigt||[]), alle=LOESCH_PUNKTE.every(([k])=>done.has(k)), ueber=!alle&&new Date(l.frist)<new Date();
+  return `<div style="margin-top:8px;font-size:13px"><b>Löschliste (§ 7 Nr. 4)</b> <span class="pill ${alle?'p-ok':ueber?'':'p-warn'}">${alle?'erledigt':'Frist '+deDate(l.frist)+(ueber?' – überschritten!':'')}</span>
+    ${LOESCH_PUNKTE.map(([k,t])=>`<label style="display:block;margin-top:4px"><input type="checkbox" ${done.has(k)?'checked':''} onchange="loeschSet('${esc(p.id)}','${k}',this.checked)"> ${t}</label>`).join('')}
+    <p class="muted" style="font-size:12px;margin-top:4px">Ausgenommen sind Unterlagen, die vor dem Vertragsende schon an Dritte verschickt wurden. Die verschickst du nicht erneut.</p></div>`; }
+async function loeschSet(pid,k,on){ const p=D.partners.find(x=>x.id===pid); if(!p) return; const l=new Set((p._row.loeschliste||{}).erledigt||[]); on?l.add(k):l.delete(k);
+  try{ await q('rpc/partner_loeschliste',{method:'POST',body:{p_partner:Number(pid),p_erledigt:[...l]}}); p._row.loeschliste={...(p._row.loeschliste||{}),erledigt:[...l]}; render(); }catch(e){} }
 async function saveMarkt(b){
   const seen=new Set(), l=$('mkList').value.split('\n').map(x=>x.replace(/[<>"'`]/g,'').trim()).filter(x=>x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase()));
   if(!l.length) return toast('Mindestens eine Dienstleistung eintragen');
@@ -1460,18 +1521,21 @@ async function mxLoad(){ try{ D.mx=(await q('rpc/markt_antraege',{method:'POST',
 const FORUM_KATS=['ClosingHub','Einwandbehandlung','Setting & Terminierung','High-Ticket Closing','Motivation & Absagen','Tagesplanung','CRM & Dialer','Erfolge feiern'];
 function marktx(){
   if(D.mx===undefined){ D.mx=null; mxLoad(); }
-  const l=D.mx||[], offen=l.filter(x=>x.status==='beantragt'), aktiv=l.filter(x=>x.status==='aktiv');
+  const l=D.mx||[], offen=l.filter(x=>x.status==='beantragt'), aktiv=l.filter(x=>x.status==='aktiv'), wl=l.filter(x=>x.status==='warteliste');
+  const bel=x=>{ const b=x.belegung||{}; if(x.hoheit) return ' · ⚠️ Hoheitsbereich von '+x.hoheit; if(!b.aktiv_bis) return ' · frei'; return b.warteliste?' · vergeben + Warteliste voll':' · vergeben bis '+new Date(b.aktiv_bis).toLocaleDateString('de-DE')+' → kommt auf die Warteliste'; };
+  const fbtn=x=>{ const b=x.belegung||{}; return x.hoheit?'Gesperrt (Hoheitsbereich)':!b.aktiv_bis?'Freigeben (6 Monate)':b.warteliste?'Warteliste voll':'Freigeben → Warteliste'; };
   const card=(x,neu)=>`<div class="item"><div class="ico">${ic('users',16)}</div><div style="flex:1">
-    <div class="row between"><b>${esc(x.titel)} · ${Number(x.preis).toLocaleString('de-DE')} €</b><span class="pill">${esc(x.kategorie)}${neu?(x.belegt?' · schon vergeben':' · frei'):''}</span></div>
-    <div class="muted" style="font-size:12.5px;margin-top:4px">von <a class="gold" href="#member" onclick="mbSel=${x.member_id}">${esc(x.name)}</a> (Rang ${x.rang}) · ${esc(x.email||'')} · ${neu?'eingereicht '+new Date(x.created_at).toLocaleDateString('de-DE'):'sichtbar bis '+new Date(x.laeuft_bis).toLocaleDateString('de-DE')}</div>
+    <div class="row between"><b>${esc(x.titel)} · ${Number(x.preis).toLocaleString('de-DE')} €</b><span class="pill ${neu&&x.hoheit?'p-warn':''}">${esc(x.kategorie)}${neu?bel(x):x.status==='warteliste'?' · Warteliste':''}</span></div>
+    <div class="muted" style="font-size:12.5px;margin-top:4px">von <a class="gold" href="#member" onclick="mbSel=${x.member_id}">${esc(x.name)}</a> (Rang ${x.rang}) · ${esc(x.email||'')} · ${neu?'eingereicht '+new Date(x.created_at).toLocaleDateString('de-DE'):x.status==='warteliste'?'rückt am '+new Date(x.nachruecken_ab).toLocaleDateString('de-DE')+' nach':'sichtbar bis '+new Date(x.laeuft_bis).toLocaleDateString('de-DE')}</div>
     ${x.beschreibung?`<p style="font-size:13.5px;margin:6px 0 0">${esc(x.beschreibung)}</p>`:''}
     ${(x.medien||[]).length?`<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${x.medien.map(m=>m.typ==='video'?`<video src="${esc(m.url)}" style="height:90px;border-radius:10px" controls preload="metadata"></video>`:`<a href="${esc(m.url)}" target="_blank"><img src="${esc(m.url)}" style="height:90px;border-radius:10px;object-fit:cover"></a>`).join('')}</div>`:''}
-    <div class="row" style="margin-top:8px">${neu?`<button class="btn sm gold-b" onclick="mxDo(${x.id},true,this)" ${x.belegt?'disabled title="Leistung schon vergeben"':''}>Freigeben (6 Monate)</button><button class="btn sm red" onclick="mxDo(${x.id},false,this)">Ablehnen</button><button class="btn sm" onclick="mxMsgOpen(${x.id})">💬 Nachricht an Anbieter</button>`:`<button class="btn sm" onclick="mxDo(${x.id},false,this)">Vorzeitig beenden</button>`}</div>${D.mxMsg===x.id?`<div style="margin-top:10px"><textarea class="in" id="mxm-${x.id}" rows="3" maxlength="2000" placeholder="z. B. Hi! Dein Angebot gefällt mir. Kannst du beim Preis noch genauer sagen, was enthalten ist?"></textarea><div class="row" style="justify-content:flex-end;gap:8px;margin-top:6px"><button class="btn sm" onclick="D.mxMsg=null;render()">Abbrechen</button><button class="btn sm gold-b" onclick="mxMsgSend(${x.id},this)">Senden</button></div><p class="muted" style="font-size:12px;margin-top:4px">Geht als normale Chat-Nachricht von deinem App-Konto an ${esc(x.name)}. Die Antwort siehst du in der App unter Nachrichten.</p></div>`:''}</div></div>`;
-  return `<h1 class="h1">Marktplatz & Forum</h1><p class="sub">Angebote von Mitgliedern freigeben und im Forum als ClosingHub Fragen stellen.</p>
+    <div class="row" style="margin-top:8px">${neu?`<button class="btn sm gold-b" onclick="mxDo(${x.id},true,this)" ${x.hoheit?'disabled title="Fällt in den Hoheitsbereich eines Partners. Falls das ein Irrtum ist: Leistung umbenennen."':(x.belegung||{}).aktiv_bis&&(x.belegung||{}).warteliste?'disabled title="Angebot und Warteliste sind schon belegt"':''}>${fbtn(x)}</button><button class="btn sm red" onclick="mxDo(${x.id},false,this)">Ablehnen</button><button class="btn sm" onclick="mxKat(${x.id},'${esc(x.kategorie).replace(/'/g,'')}')">Leistung umbenennen</button><button class="btn sm" onclick="mxMsgOpen(${x.id})">💬 Nachricht an Anbieter</button>`:`<button class="btn sm" onclick="mxDo(${x.id},false,this)">${x.status==='warteliste'?'Von der Warteliste nehmen':'Vorzeitig beenden'}</button>`}</div>${D.mxMsg===x.id?`<div style="margin-top:10px"><textarea class="in" id="mxm-${x.id}" rows="3" maxlength="2000" placeholder="z. B. Hi! Dein Angebot gefällt mir. Kannst du beim Preis noch genauer sagen, was enthalten ist?"></textarea><div class="row" style="justify-content:flex-end;gap:8px;margin-top:6px"><button class="btn sm" onclick="D.mxMsg=null;render()">Abbrechen</button><button class="btn sm gold-b" onclick="mxMsgSend(${x.id},this)">Senden</button></div><p class="muted" style="font-size:12px;margin-top:4px">Geht als normale Chat-Nachricht von deinem App-Konto an ${esc(x.name)}. Die Antwort siehst du in der App unter Nachrichten.</p></div>`:''}</div></div>`;
+  return `<h1 class="h1">Marktplatz & Forum</h1><p class="sub">Angebote von Mitgliedern freigeben und im Forum als ClosingHub Fragen stellen. Mitglieder dürfen jede Leistung anbieten, außer in den Hoheitsbereichen der Partner. Je Leistung gibt es einen Anbieter (6 Monate) und einen Platz auf der Warteliste. Wer danach kommt, bekommt automatisch die Nachricht „Warteliste voll, bitte am … wieder bewerben“. Gleiche Leistungen mit anderem Namen führst du über „Leistung umbenennen“ zusammen.</p>
   <div class="card" style="margin-bottom:16px"><div class="row between"><h3 style="margin:0">Angebote zur Prüfung (${offen.length})</h3><button class="btn sm" onclick="D.mx=undefined;render()">Aktualisieren</button></div>
     ${D.mx===null?'<p class="muted">Lade …</p>':offen.map(x=>card(x,true)).join('')||'<div class="empty">Keine offenen Anträge. Mitglieder reichen Angebote in der App unter Marktplatz → „Angebot einreichen“ ein.</div>'}</div>
   <div class="grid g2">
-    <div class="card"><h3>Aktive Angebote (${aktiv.length})</h3>${aktiv.map(x=>card(x,false)).join('')||'<div class="empty">Noch keine aktiven Angebote.</div>'}</div>
+    <div class="card"><h3>Aktive Angebote (${aktiv.length})</h3>${aktiv.map(x=>card(x,false)).join('')||'<div class="empty">Noch keine aktiven Angebote.</div>'}
+      ${wl.length?`<h3 style="margin-top:18px">Warteliste (${wl.length})</h3>${wl.map(x=>card(x,false)).join('')}`:''}</div>
     <div class="card"><h3>Forum: Frage als ClosingHub stellen</h3><p class="muted" style="font-size:12.5px">Zum Start stellst du die ersten Fragen. Sie erscheinen mit dem ClosingHub-Logo.</p>
       <label class="f">Kategorie<select class="in" id="fq-k">${FORUM_KATS.map(k=>`<option>${k}</option>`).join('')}</select></label>
       <label class="f" style="margin-top:10px">Frage<input class="in" id="fq-t" maxlength="140" placeholder="z. B. Wie reagiert ihr auf „zu teuer“?"></label>
@@ -1480,7 +1544,9 @@ function marktx(){
   </div>`;
 }
 async function mxDo(id,ok,b){ let notiz=null; if(!ok){ notiz=prompt('Kurze Begründung für das Mitglied (optional):'); if(notiz===null) return; }
-  b.disabled=true; try{ const j=await q('rpc/markt_entscheiden',{method:'POST',body:{p_id:id,p_ok:ok,p_notiz:notiz}}); if(j&&j.grund==='vergeben') toast('Leistung hat schon einen Anbieter'); else toast(ok?'Freigegeben – 6 Monate sichtbar':'Erledigt'); D.mx=undefined; render(); }catch(e){ b.disabled=false; } }
+  b.disabled=true; try{ const j=await q('rpc/markt_entscheiden',{method:'POST',body:{p_id:id,p_ok:ok,p_notiz:notiz}}); if(j&&j.grund==='voll') toast('Warteliste voll – das Mitglied wurde benachrichtigt'); else if(j&&j.grund==='vergeben') toast('Leistung hat schon einen Anbieter'); else toast(!ok?'Erledigt':j&&j.ergebnis==='warteliste'?'Freigegeben – steht auf der Warteliste':'Freigegeben – 6 Monate sichtbar'); D.mx=undefined; render(); }catch(e){ b.disabled=false; } }
+async function mxKat(id,alt){ const k=(prompt('Neuer Name der Leistung (gleiche Leistungen sollten gleich heißen):',alt)||'').replace(/[<>"'`]/g,'').trim(); if(!k||k===alt) return;
+  try{ const j=await q('rpc/markt_leistung_setzen',{method:'POST',body:{p_id:id,p_kat:k}}); toast(j&&j.ok?'Leistung umbenannt':'Nicht möglich'); D.mx=undefined; render(); }catch(e){} }
 async function fqSend(b){ const t=$('fq-t').value.trim(); if(t.length<5) return toast('Bitte eine Frage eingeben'); b.disabled=true;
   try{ await q('rpc/forum_frage_admin',{method:'POST',body:{p_kat:$('fq-k').value,p_titel:t,p_text:$('fq-x').value}}); toast('Frage ist im Forum'); $('fq-t').value=''; $('fq-x').value=''; }catch(e){ toast('Fehlt noch: closinghub-forum-markt.sql in Supabase ausführen'); } b.disabled=false; }
 
@@ -1579,8 +1645,8 @@ function punktex(){
       <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn gold-b" onclick="pmSend(this)">Vergeben</button></div></div>
     <div class="card"><h3>Partner-Call-Gutscheine</h3>
       <div class="row" style="gap:8px;align-items:flex-end"><label class="f" style="flex:1">Gutschein alle … Punkte (gesamt)<input class="in" type="number" min="100" id="pc-g" value="${P.cfg?P.cfg.gutschein_punkte:1500}"></label><button class="btn sm" style="margin-bottom:4px" onclick="pcSave(this)">Speichern</button></div>
-      <p class="muted" style="font-size:12.5px;margin-top:8px">Eingelöste Gutscheine landen als Nachricht beim Partner. Hier hakst du ab, wenn der Call stattgefunden hat.</p>
-      ${(P.gutscheine||[]).map(g=>`<div class="item"><div class="ico">🎟️</div><div style="flex:1"><b>${esc(g.name)}</b><div class="muted" style="font-size:12.5px">${g.status==='offen'?'noch nicht eingelöst · seit '+new Date(g.created_at).toLocaleDateString('de-DE'):'eingelöst bei '+esc(g.partner||'Partner')+' · '+new Date(g.eingeloest_at).toLocaleDateString('de-DE')}</div></div>${g.status==='eingeloest'?`<button class="btn sm gold-b" onclick="gzDone(${g.id},this)">Call erledigt</button>`:''}</div>`).join('')||'<div class="empty">Noch keine Gutscheine.</div>'}</div>
+      <p class="muted" style="font-size:12.5px;margin-top:8px">Mitglieder buchen einen freien Termin beim Partner (Wochenlimit des Partners, mindestens 1). Ist alles belegt, kommen sie auf die Warteliste. Gutscheine gelten 6 Monate. Partner tragen im Portal ein, ob der Call stattgefunden hat. Bei Partnern ohne Zeitfenster läuft es weiter über eine Nachricht, dann hakst du hier ab.</p>
+      ${(P.gutscheine||[]).map(g=>`<div class="item"><div class="ico">🎟️</div><div style="flex:1"><b>${esc(g.name)}</b><div class="muted" style="font-size:12.5px">${g.status==='offen'?'noch nicht eingelöst · seit '+new Date(g.created_at).toLocaleDateString('de-DE')+(g.gueltig_bis?' · gültig bis '+new Date(g.gueltig_bis).toLocaleDateString('de-DE'):''):g.status==='warteschlange'?'Warteliste bei '+esc(g.partner||'Partner'):g.status==='gebucht'?'Call mit '+esc(g.partner||'Partner')+(g.termin?' am '+new Date(g.termin).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''):'eingelöst bei '+esc(g.partner||'Partner')+' · '+new Date(g.eingeloest_at).toLocaleDateString('de-DE')}</div></div>${g.status==='eingeloest'?`<button class="btn sm gold-b" onclick="gzDone(${g.id},this)">Call erledigt</button>`:''}</div>`).join('')||'<div class="empty">Noch keine Gutscheine.</div>'}</div>
   </div>
   <div class="card" style="margin-bottom:16px"><h3>Punkte pro Aktion</h3><p class="muted" style="font-size:12.5px">Limit leer = kein Limit. Über dem Limit zählt die Aktion trotzdem für Medaillen, bringt aber keine Punkte mehr.</p>
     <div class="tw"><table><thead><tr><th>Aktion</th><th>Punkte</th><th>pro Tag</th><th>pro Monat</th><th>Aktiv</th><th></th></tr></thead><tbody>${(P.regeln||[]).filter(r=>r.aktion!=='manuell').map(rr).join('')}</tbody></table></div></div>
