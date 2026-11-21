@@ -1,6 +1,7 @@
 /* ===== ClosingHub App-Plus =====
-   Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight mit vollem Text,
-   Feed-Aktionen rechts übereinander, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
+   Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
+   Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
+   geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
    Mitteilungen und Nachrichten links, Highlights beim Posten, Profil mit Highlights zuerst,
    Einstellungen als Kacheln mit Unterseiten.
    Einbinden: in app.html direkt vor </body>:  <script src="app-plus.js"></script> */
@@ -29,20 +30,40 @@
   .st-halt .st-pz{opacity:1}
   .st-halt .st-hd,.st-halt .st-bars,.st-halt form{opacity:.25;transition:opacity .2s}
   /* Spotlight */
-  .bt-spot2{background:#0E1A2B;border:1px solid #22324A;border-radius:1rem;padding:14px 16px;margin-bottom:10px;color:#fff}
-  .bt-spot2 .k{display:flex;align-items:center;gap:8px;color:#3FBF86;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-  .bt-spot2 .a{margin:10px 0 0;font-size:16px;line-height:1.5;color:#fff;white-space:pre-line;overflow-wrap:anywhere}
-  .bt-spot2 .w{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#C9D3E3;flex-wrap:wrap}
-  .bt-spot2 .w b{color:#fff}
-  .bt-spot2 .q{color:#8A9BB0;font-size:12.5px}
-  /* Feed-Aktionen rechts */
-  .fa-col{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex!important;flex-direction:column;gap:14px!important;align-items:center;z-index:3;color:#fff}
-  .fa-col>button{display:flex!important;flex-direction:column;align-items:center;gap:3px!important;margin:0!important;color:#fff}
-  .fa-col .icbox{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(10,14,22,.42);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-  .fa-col .icbox svg{color:#fff;stroke:#fff}
-  .fa-col .icon-on .icbox svg,.fa-col .icon-on .icbox svg *{color:#ff3b5c!important;stroke:#ff3b5c!important;fill:#ff3b5c!important}
-  .fa-col .text-sm{font-size:12px;font-weight:700;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-  .fa-empty{display:none!important}
+  .sp-card{background:#0E1A2B;border:1px solid #22324A;border-radius:14px;color:#fff;margin-bottom:10px;overflow:hidden}
+  aside .sp-card{margin-bottom:0}
+  .sp-h{width:100%;display:flex;align-items:center;gap:8px;padding:10px 14px;text-align:left;color:#fff}
+  .sp-cr{color:#F1D58A;width:16px;height:16px}
+  .sp-k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#3FBF86}
+  .sp-n{display:flex;align-items:center;gap:6px;margin-left:auto;min-width:0;font-size:13px}
+  .sp-n b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+  .sp-ch{flex-shrink:0;opacity:.7;transition:transform .2s}
+  .sp-card.open .sp-ch{transform:rotate(180deg)}
+  .sp-b{display:none;padding:0 14px 12px}
+  .sp-card.open .sp-b{display:block}
+  .sp-a{font-size:14.5px;line-height:1.5;margin:0;white-space:pre-line;overflow-wrap:anywhere}
+  .sp-q{font-size:12px;color:#8A9BB0;margin:6px 0 0}
+  /* Geteilte Beiträge im Chat */
+  .lkp{position:relative;display:block;width:min(300px,72vw);border-radius:14px;overflow:hidden;background:#0E1A2B;padding:0;border:1px solid rgb(var(--line));cursor:pointer}
+  .lkp .m{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;filter:blur(3px) saturate(1.05);transform:scale(1.04)}
+  .lkp .tx{display:block;padding:22px 18px;min-height:150px;font-family:Georgia,serif;font-size:17px;line-height:1.45;color:#fff;white-space:pre-line;overflow-wrap:anywhere;filter:blur(2.2px);text-align:left}
+  .lkp .lab{position:absolute;top:8px;left:8px;z-index:2;font-size:11px;font-weight:600;color:#fff;background:rgba(0,0,0,.5);padding:3px 8px;border-radius:999px;max-width:calc(100% - 16px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lkp .go{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center}
+  .lkp .go span{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.6);color:#fff;font-weight:700;font-size:14px;padding:9px 18px;border-radius:999px;backdrop-filter:blur(4px)}
+  .lkp:hover .go span{background:#087A4B}
+  /* Nachweise: Vorschau */
+  .nw-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+  .nw-t{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid rgb(var(--line));background:rgb(var(--bg));display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:rgb(var(--muted));cursor:pointer;padding:0}
+  .nw-t img{width:100%;height:100%;object-fit:cover}
+  .nw-t .st{position:absolute;left:4px;right:4px;bottom:4px;font-size:10px;font-weight:700;border-radius:6px;padding:2px 4px;background:rgba(0,0,0,.62);color:#fff}
+  .nw-ov{position:fixed;inset:0;z-index:80;background:rgba(4,8,14,.7);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px}
+  .nw-box{background:rgb(var(--panel));border-radius:18px;width:min(520px,100%);max-height:92vh;overflow:auto;padding:18px}
+  .nw-pv{border-radius:12px;overflow:hidden;border:1px solid rgb(var(--line));background:rgb(var(--bg));display:flex;align-items:center;justify-content:center;min-height:180px}
+  .nw-pv img{max-width:100%;max-height:60vh;display:block}
+  .nw-pv iframe{width:100%;height:60vh;border:0}
+  /* Profil: eigene Story */
+  .pf-st{cursor:pointer;border-radius:50%;padding:3px;background:conic-gradient(#D9B45A,#087A4B,#D9B45A)}
+  .pf-st>*{box-shadow:0 0 0 3px rgb(var(--bg));border-radius:50%}
   /* Pause-Symbol im Player: kurz einblenden */
   .pz-flash{animation:pzFlash 1s ease forwards}
   @keyframes pzFlash{0%{opacity:0;transform:scale(.7)}18%{opacity:1;transform:scale(1)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.15)}}
@@ -70,19 +91,7 @@
   render = function(){ const r=route(); if(r!=='einstellungen') S.setSub=null; document.documentElement.dataset.r=r; const out=_render.apply(this,arguments); fixAll(); return out; };
   let fixQ=0; const fixSoon=()=>{ if(fixQ) return; fixQ=requestAnimationFrame(()=>{ fixQ=0; fixAll(); }); };
   new MutationObserver(fixSoon).observe(document.body,{childList:true,subtree:true});
-  function fixAll(){ try{ fixFeed(); }catch(e){} try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} }
-
-  /* ---------- Feed: Herz, Kommentar, Teilen rechts übereinander ---------- */
-  function fixFeed(){
-    document.querySelectorAll('#app article.card').forEach(art=>{
-      if(art.dataset.fa) return;
-      const bar=[...art.querySelectorAll('div.flex.gap-4.items-center')].find(d=>d.querySelector('[onclick*="toggleLike"]')&&d.querySelector('[aria-label="Teilen"]'));
-      const box=art.querySelector('div.relative[onclick*="startPlayer"]')||art.querySelector('div.relative.aspect-square');
-      art.dataset.fa='1'; if(!bar||!box) return;
-      const wrap=bar.parentElement; box.appendChild(bar); bar.classList.add('fa-col');
-      if(wrap && !wrap.children.length && !wrap.textContent.trim()) wrap.classList.add('fa-empty');
-    });
-  }
+  function fixAll(){ try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
 
   /* ---------- Marktplatz: Siegel am Partnerbild, im Partner-Fenster nur einmal ---------- */
   function fixPartners(){
@@ -99,18 +108,23 @@
     partnerModal = function(){ const r=_pm.apply(this,arguments); try{ const s=document.querySelector('#modal .-mt-6 .relative.shrink-0 > img[alt^="Siegel"]'); if(s) s.remove(); }catch(e){} return r; };
   }
 
-  /* ---------- Spotlight: dunkles Fenster, kompletter Text ---------- */
+  /* ---------- Spotlight: kleines, aufklappbares Fenster (Desktop rechts über „Neueste Jobs“) ---------- */
+  const DESK = () => window.matchMedia('(min-width:1024px)').matches;
+  function spotData(){ try{ const b=bState(); const i=b?b.i-1:-1; const w=i>=0&&b.q&&b.q[i]?bWinner(i):null; return w?{w,q:b.q[i]}:null; }catch(e){ return null; } }
+  window.APLUS_sp = () => { S.spOpen=!S.spOpen; try{ localStorage.setItem('ch_sp_open',S.spOpen?'1':'0'); }catch(e){} document.querySelectorAll('.sp-card').forEach(c=>c.classList.toggle('open',S.spOpen)); };
+  try{ S.spOpen = localStorage.getItem('ch_sp_open')==='1'; }catch(e){}
+  function spotCard(){ const d=spotData(); if(!d) return '';
+    return `<div class="sp-card ${S.spOpen?'open':''}"><button class="sp-h" onclick="APLUS_sp()" aria-label="Spotlight aufklappen"><svg class="ci sp-cr"><use href="#i-krone"/></svg><span class="sp-k">Spotlight</span><span class="sp-n">${skAv(d.w.n,22,avatar(d.w.n),'shrink-0')}<b>${esc2(d.w.n)}</b></span><svg class="sp-ch" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="sp-b"><p class="sp-a">„${esc2(d.w.t)}“</p><p class="sp-q">Sieger des letzten Einwand-Battles · auf „${esc2(d.q)}“</p></div></div>`; }
   function fixSpot(){
-    const old=document.querySelector('#battle .bt-spot'); if(!old) return;
-    let html='';
-    try{
-      const b=bState(); const i=b?b.i-1:-1; const w=i>=0&&b.q[i]?bWinner(i):null;
-      if(w) html=`<div class="bt-spot2"><div class="k"><svg class="ci"><use href="#i-krone"/></svg>Spotlight · Sieger des letzten Battles</div>
-        <p class="a">„${esc2(w.t)}“</p>
-        <div class="w">${skAv(w.n,28,avatar(w.n),'shrink-0')}<b>${esc2(w.n)}</b><span class="q">auf „${esc2(b.q[i])}“</span></div></div>`;
-    }catch(e){}
-    if(!html){ old.querySelectorAll('.truncate').forEach(e=>{ e.classList.remove('truncate'); e.style.whiteSpace='normal'; }); old.style.alignItems='flex-start'; old.classList.replace('bt-spot','bt-spot-x'); return; }
-    old.outerHTML=html;
+    const old=document.querySelector('#battle .bt-spot, #battle .bt-spot2, #battle .bt-spot-x'); if(!old) return;
+    if(DESK()){ old.remove(); return; }
+    const h=spotCard(); if(h) old.outerHTML=h; else old.remove();
+  }
+  if(typeof rightRail==='function'){
+    const _rr = rightRail;
+    rightRail = function(){ let h=_rr.apply(this,arguments); try{ const c=spotCard(); if(c){ const k='<div class="card p-4"><div class="flex justify-between mb-2"><p class="text-xs uppercase tracking-wider text-muted">Neueste Jobs'; const i=h.indexOf(k);
+      h = i>0 ? h.slice(0,i)+c+h.slice(i) : h.replace(/(<aside[^>]*>)/, '$1'+c); } }catch(e){} return h; };
   }
 
   /* ---------- Player: Pause-Symbol nur kurz einblenden ---------- */
@@ -214,7 +228,6 @@
     ['profil','Profil bearbeiten','Bild, Angaben und Profiltext','profil',t=>/^(Profilbild|Über dich|Profiltext|Angaben)/.test(t)],
     ['cv','Lebenslauf & Nachweise','Für Bewerbungen und deinen Rang','dokument',t=>/^(Lebenslauf|Nachweise)/.test(t)],
     ['feed','Feed','Themen, Atempause und Timer','feedeinstellungen',t=>/^Feed/.test(t)],
-    ['darstellung','Darstellung','Tag- oder Nacht-Modus','dunkel',t=>/^Darstellung/.test(t)],
     ['abzeichen','Abzeichen','Was in deinem Profil zu sehen ist','medaille',t=>/^(Welche Abzeichen|Abzeichen mit Partner)/.test(t)],
     ['einladen','Freunde einladen','Dein persönlicher Einladungslink','handschlag',t=>/^Member einladen/.test(t)],
     ['benachrichtigungen','Benachrichtigungen','Was du mitbekommst','mitteilungen',t=>/^Benachrichtigung/.test(t)],
@@ -224,7 +237,7 @@
   function setCards(){
     const d=document.createElement('div'); d.innerHTML=_settings(); const root=d.firstElementChild||d;
     const groups={}; [...root.children].forEach(c=>{ if(/^H1$/.test(c.tagName)) return;
-      const tt=c.querySelector('.font-semibold'); const t=((tt||c).textContent||'').replace(/\s+/g,' ').trim(); const g=(SET.find(s=>s[4](t))||['weitere'])[0];
+      const tt=c.querySelector('.font-semibold'); const t=((tt||c).textContent||'').replace(/\s+/g,' ').trim(); if(/^Darstellung/.test(t)) return; const g=(SET.find(s=>s[4](t))||['weitere'])[0];
       (groups[g]=groups[g]||[]).push(c.outerHTML); });
     return groups;
   }
@@ -245,6 +258,86 @@
     return `<div class="ch-left sm px-4 py-6"><h1 class="font-serif text-2xl mb-4">Einstellungen</h1>
       <div class="set-grid">${tiles.map(s=>`<button class="set-t" onclick="S.setSub='${s[0]}';render();scrollTo(0,0)"><span class="i"><svg class="ci" style="width:20px;height:20px"><use href="#i-${s[3]}"/></svg></span><span><b>${s[1]}</b><span class="s">${s[2]}</span></span></button>`).join('')}</div></div>`;
   };
+
+  /* ---------- Player: Ränge passend zum Hintergrund ---------- */
+  function lumOf(css){ const c=colorsIn(css)[0]; return c?lum(...c):0; }
+  function mix(c,t,a){ return c.map((v,i)=>Math.round(v*(1-a)+t[i]*a)); }
+  function fixPlayerRk(){
+    const ov=document.querySelector('#modal .bg-gradient-to-t'); if(!ov || ov.dataset.rk) return; ov.dataset.rk='1';
+    // Hintergrund der Namenszeile: Bild darunter, abgedunkelt durch den Verlauf
+    let bg=0.05; const img=document.querySelector('#modal img.vidimg, #modal img.object-cover, #modal img');
+    try{ if(img && img.complete && img.naturalWidth){ const c=document.createElement('canvas'); c.width=24; c.height=8; const x=c.getContext('2d'); x.drawImage(img,0,img.naturalHeight*.82,img.naturalWidth,img.naturalHeight*.18,0,0,24,8); const d=x.getImageData(0,0,24,8).data; let L=0,n=0; for(let k=0;k<d.length;k+=4){ L+=lum(d[k],d[k+1],d[k+2]); n++; } bg=(L/n)*0.18; } }catch(e){}
+    const light = bg>0.5;
+    ov.querySelectorAll('.rk').forEach(rk=>{
+      const c=colorsIn(getComputedStyle(rk).color)[0]||[200,200,200], L=lum(...c);
+      let nc=c; if(!light && L<0.5) nc=mix(c,[255,255,255],0.62); if(light && L>0.25) nc=mix(c,[0,0,0],0.65);
+      const col=`rgb(${nc.join(',')})`;
+      rk.style.setProperty('color',col,'important'); rk.style.setProperty('border-color',`rgba(${nc.join(',')},.7)`,'important');
+      rk.style.setProperty('background',light?'rgba(255,255,255,.55)':'rgba(0,0,0,.28)','important');
+    });
+  }
+
+  /* ---------- Profil: eigene Story über das Profilbild ---------- */
+  function fixProfilStory(){
+    if(route()!=='profile' || !S.member || S.member.partner) return;
+    const av=document.querySelector('#app .flex.items-center.gap-5 > .relative.shrink-0'); if(!av || av.dataset.st) return; av.dataset.st='1';
+    if(S.st===undefined){ S.st=null; stLoad().then(()=>{ av.dataset.st=''; fixProfilStory(); }); return; }
+    const l=S.st||[], own=l.findIndex(g=>g.ich);
+    av.style.cursor='pointer'; av.title=own>=0?'Deinen Status ansehen':'Status posten';
+    if(own>=0) av.classList.add('pf-st');
+    av.onclick=()=>{ if(own>=0) stOpen(own); else if(typeof postMode==='function') postMode('status'); };
+  }
+
+  /* ---------- Nachrichten: geteilte Beiträge ganz zeigen, leicht verpixelt, „Ansehen“ in der Mitte ---------- */
+  if(typeof lkData==='function' && typeof linkCard==='function'){
+    const _lkd = lkData, _lkc = linkCard;
+    lkData = async function(k,id){
+      if(k!=='p') return _lkd.apply(this,arguments);
+      const key=k+id; if(key in S.lkc) return S.lkc[key]; S.lkc[key]=null; let d=null;
+      try{ const r=await rpc('post_laden',{p_id:id}); if(r) d={t:'Beitrag von '+String(r.name||'').split(' ')[0],full:r.text||'',img:r.media_typ==='bild'?(r.media_url||r.thumb_url):(r.thumb_url||null),vid:!r.thumb_url&&r.media_typ==='video'?r.media_url:null,s:(r.text||'').slice(0,140)}; }catch(e){}
+      S.lkc[key]=d||{gone:1}; document.querySelectorAll(`[data-lk="${key}"]`).forEach(el=>{ el.outerHTML=linkCard(k,id); }); try{ cmStick(); }catch(e){} return S.lkc[key];
+    };
+    linkCard = function(k,id){
+      if(k!=='p') return _lkc.apply(this,arguments);
+      const key=k+id, d=S.lkc[key]; if(d===undefined) setTimeout(()=>lkData(k,id),0);
+      if(!d || d.gone || d.full===undefined) return _lkc.apply(this,arguments);
+      const media = d.img?`<img class="m" src="${esc2(d.img)}" alt="" onload="try{cmStick()}catch(e){}">`:d.vid?`<video class="m" src="${esc2(d.vid)}#t=0.1" muted playsinline preload="metadata" onloadedmetadata="try{cmStick()}catch(e){}"></video>`:`<span class="tx">${esc2(d.full||'Beitrag')}</span>`;
+      return `<button type="button" class="lkp" onclick="openLink('p',${id})">${media}<span class="lab">${esc2(d.t)}</span><span class="go"><span><svg class="ci"><use href="#i-ansehen"/></svg> Ansehen</span></span></button>`;
+    };
+  }
+
+  /* ---------- Lebenslauf & Nachweise: Vorschau vor dem Absenden + hochgeladene Dateien als Bild ---------- */
+  const NW_ST={offen:'In Prüfung',bestaetigt:'Geprüft',abgelehnt:'Abgelehnt'};
+  S.nwUrl=S.nwUrl||{};
+  async function nwSign(path){ if(S.nwUrl[path]) return S.nwUrl[path]; const t=await sesToken(); const r=await fetch(`${SB_URL}/storage/v1/object/sign/nachweise/${path}`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:3600})});
+    const j=await r.json().catch(()=>({})); const u=j.signedURL||j.signedUrl; if(!r.ok||!u) throw 0; S.nwUrl[path]=/^https?:/.test(u)?u:`${SB_URL}/storage/v1${u.startsWith('/')?'':'/'}${u}`; return S.nwUrl[path]; }
+  window.APLUS_nwOpen = async (path) => { try{ const u=await nwSign(path); if(/\.pdf$/i.test(path)) window.open(u,'_blank','noopener'); else if(typeof lightbox==='function') lightbox(u); else window.open(u,'_blank','noopener'); }catch(e){ alert('Die Datei konnte nicht geladen werden.'); } };
+  function nwGallery(list){ if(!list.length) return '';
+    return `<div class="nw-g">${list.map(p=>{ const pdf=/\.pdf$/i.test(p.datei_url||''); return `<button type="button" class="nw-t" ${p.datei_url?`data-nwp="${esc2(p.datei_url)}" onclick="APLUS_nwOpen('${esc2(p.datei_url)}')"`:''} title="${esc2((PROOF_ART&&PROOF_ART[p.art])||p.titel||'')}">${pdf||!p.datei_url?`<span><svg class="ci" style="width:26px;height:26px"><use href="#i-dokument"/></svg><br>${pdf?'PDF':'Datei'}</span>`:'<span>Lädt …</span>'}<span class="st">${esc2(NW_ST[p.status]||p.status)}</span></button>`; }).join('')}</div>`; }
+  function fixNwThumbs(){
+    document.querySelectorAll('.nw-t[data-nwp]').forEach(b=>{ const p=b.dataset.nwp; if(b.dataset.ld||/\.pdf$/i.test(p)) return; b.dataset.ld='1';
+      nwSign(p).then(u=>{ const sp=b.querySelector('span:not(.st)'); if(sp) sp.outerHTML=`<img src="${esc2(u)}" alt="" loading="lazy">`; }).catch(()=>{ const sp=b.querySelector('span:not(.st)'); if(sp) sp.textContent='Vorschau nicht verfügbar'; }); });
+  }
+  const injectGallery = (html, list) => { if(!list.length) return html; const i=html.indexOf('</p></div>'); return i>0 ? html.slice(0,i+10)+nwGallery(list)+html.slice(i+10) : html; };
+  if(typeof cvCard==='function'){ const _cv=cvCard; cvCard=function(){ const h=_cv.apply(this,arguments); if(!h) return h; return injectGallery(h,(S.proofs||[]).filter(p=>p.art==='lebenslauf').slice(0,3)); }; }
+  if(typeof nachweiseCard==='function'){ const _nw=nachweiseCard; nachweiseCard=function(){ const h=_nw.apply(this,arguments); if(!h) return h; return injectGallery(h,(S.proofs||[]).filter(p=>p.art!=='lebenslauf')); }; }
+  function nwPreview(file, title, onOk){
+    const url=URL.createObjectURL(file), pdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name);
+    const ov=document.createElement('div'); ov.className='nw-ov';
+    ov.innerHTML=`<div class="nw-box"><div class="flex items-start justify-between gap-3 mb-3"><div><p class="font-serif text-xl leading-tight">${esc2(title)} prüfen</p><p class="text-xs text-muted mt-1">Schau dir die Datei an, bevor du sie abschickst. Ist alles gut lesbar?</p></div><button class="text-muted text-xl leading-none" data-x aria-label="Schließen"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>
+      <div class="nw-pv">${pdf?`<iframe src="${url}" title="Vorschau"></iframe>`:file.type.startsWith('image/')?`<img src="${url}" alt="Vorschau">`:`<p class="text-sm text-muted p-6">${esc2(file.name)}</p>`}</div>
+      <p class="text-xs text-muted mt-2">${esc2(file.name)} · ${(file.size/1024/1024).toFixed(1).replace('.',',')} MB</p>
+      <div class="grid grid-cols-2 gap-2 mt-4"><button class="btn-ghost" data-x>Andere Datei</button><button class="btn-gold" data-ok>Jetzt absenden</button></div></div>`;
+    const close=()=>{ ov.remove(); URL.revokeObjectURL(url); };
+    ov.addEventListener('click',e=>{ if(e.target===ov||e.target.closest('[data-x]')) close(); if(e.target.closest('[data-ok]')){ close(); onOk(); } });
+    document.body.appendChild(ov);
+  }
+  if(typeof cvSend==='function'){ const _cs=cvSend; cvSend=function(inp){ const f=inp.files&&inp.files[0]; if(!f) return; inp.value='';
+      if(f.size>15*1024*1024){ const e=$('cvErr'); if(e) e.textContent='Die Datei ist größer als 15 MB.'; return; }
+      nwPreview(f,'Lebenslauf',()=>_cs({files:[f]})); }; }
+  if(typeof nwSend==='function'){ const _ns=nwSend; nwSend=function(inp){ const f=inp.files&&inp.files[0]; if(!f) return; inp.value='';
+      if(f.size>15*1024*1024){ const e=$('nwErr'); if(e) e.textContent='Die Datei ist größer als 15 MB.'; return; }
+      const art=$('nwArt'); nwPreview(f,(art&&art.selectedOptions[0]&&art.selectedOptions[0].textContent)||'Nachweis',()=>_ns({files:[f]})); }; }
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
