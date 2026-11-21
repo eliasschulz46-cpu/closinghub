@@ -3226,14 +3226,11 @@ const _chGo16=chGo; chGo=function(i){ const t=chToday(); if(!t) return; const a=
   if(a.k==='vortrag'||a.k==='qa'){ if(confirm(a.t+' – erledigt?')) chEv(a.k); return; }
   return _chGo16(i); };
 
-// Willkommens-Video beim ersten Start (wenn in der Zentrale hinterlegt)
-function welcomeCheck(){ const v=S.launch&&S.launch.video; if(!v||!S.member||isBasic()) return; try{ if(localStorage.getItem('ch_welcome')===v) return; localStorage.setItem('ch_welcome',v); }catch(e){ return; }
-  const yt=(v.match(/(?:youtu\.be\/|v=|shorts\/)([\w-]{11})/)||[])[1];
-  const media=yt?`<iframe src="https://www.youtube.com/embed/${yt}?autoplay=1&rel=0" style="width:100%;aspect-ratio:9/16;max-height:70vh;border:0;border-radius:14px" allow="autoplay; encrypted-media" allowfullscreen></iframe>`:`<video src="${esc(v)}" controls autoplay playsinline style="width:100%;max-height:70vh;border-radius:14px;background:#000"></video>`;
-  const d=document.createElement('div'); d.id='wlMd'; d.className='fixed inset-0 flex justify-center ks-wrap'; d.style.cssText='z-index:330;background:rgba(4,8,14,.7)'; d.onclick=e=>{ if(e.target===d) d.remove(); };
-  d.innerHTML=`<div class="w-full bg-panel ks-sheet" style="max-width:420px"><p class="font-serif text-xl mb-1">Willkommen bei ClosingHub, ${esc(ME.name||'')}!</p><p class="text-sm text-muted mb-3">Eine kurze Nachricht von Elias.</p>${media}<button class="btn-gold w-full mt-3" onclick="document.getElementById('wlMd').remove()">Los geht's</button></div>`;
-  document.body.appendChild(d); }
-setInterval(()=>{ if(S.member&&S.launch&&!S._wlDone){ S._wlDone=1; welcomeCheck(); } },1500);
+// Video oben im Feed, solange das Gewinnspiel läuft (Link in der Zentrale)
+function vidCard(){ const v=S.launch&&S.launch.video; if(!v||!gwAktiv()||S.vidOff) return '';
+  const yt=(v.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/)||[])[1];
+  const media=yt?`<iframe src="https://www.youtube.com/embed/${yt}?rel=0&playsinline=1" title="Video von Elias" style="width:100%;aspect-ratio:9/16;max-height:72vh;border:0;display:block;background:#000" allow="encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`:`<video src="${esc(v)}" controls playsinline preload="metadata" style="width:100%;max-height:72vh;display:block;background:#000"></video>`;
+  return `<div class="card overflow-hidden" style="padding:0"><div class="flex items-center justify-between gap-2 px-4 py-3"><p class="text-sm font-semibold">🎬 Willkommen bei ClosingHub</p><button class="text-xs text-muted" onclick="S.vidOff=1;render()">Ausblenden</button></div>${media}</div>`; }
 
 function feed(){
   const ft = S.ptopics || S.topics;
@@ -3256,7 +3253,7 @@ function feed(){
   const guest = S.user?'':`<div class="card p-6 text-center space-y-3"><p class="font-serif text-xl">Du willst mehr sehen?</p><p class="text-muted text-sm">Melde dich kostenlos an – Feed, Jobs, Forum und dein Rang warten.</p><a href="#login" class="btn-gold">Kostenlos anmelden</a></div>`;
   return `<div class="flex justify-center gap-10 px-4">
     <section class="w-full max-w-[480px] py-6 space-y-6">
-      ${basicBanner()}${storiesRow()}${gwCard()}
+      ${basicBanner()}${storiesRow()}${vidCard()}${gwCard()}
       ${wheelCard()}
       ${battleCard()}
       ${challengeCard()}${bdCard()}

@@ -1766,13 +1766,13 @@ async function gwzSet(id,st){ try{ await q('rpc/gewinnspiel_gewinner_setzen',{me
 function gewinnspiel(){ if(D.gwT===undefined){ D.gwT=null; gwzLoad(); }
   const L=D.launch||{}, T=D.gwT||[], W=D.gwW||[], byId=Object.fromEntries(T.map(t=>[t.id,t])), lose=T.reduce((a,t)=>a+(+t.lose||0),0), ok=W.filter(w=>w.status!=='ungueltig').length;
   const stc={gezogen:['Prüfen','#B8892E'],bestaetigt:['Bestätigt','#087A4B'],ungueltig:['Ungültig','#c0392b']};
-  return `<div><h1 class="h1">Start & Gewinnspiel</h1><p class="sub">Launch-Datum, Gründungsmitglieder, Willkommens-Video und die Auslosung des Start-Gewinnspiels.</p>
+  return `<div><h1 class="h1">Start & Gewinnspiel</h1><p class="sub">Launch-Datum, Gründungsmitglieder, Feed-Video und die Auslosung des Start-Gewinnspiels.</p>
   <div class="card"><h3 style="margin:0 0 6px">Launch</h3><p class="muted" style="font-size:12.5px;margin:0 0 12px">Ab dem Startdatum läuft die 14-Tage-Challenge für alle. Wer in den ersten Tagen Plus oder Premium nimmt, wird automatisch Gründungsmitglied.</p>
     <div class="row" style="gap:12px;flex-wrap:wrap;align-items:flex-end">
       <label style="font-size:12px">Start (Livestream)<br><input type="date" class="in" id="ln-start" value="${esc(L.start||'2026-12-13')}"></label>
       <label style="font-size:12px">Gründer-Zeitraum (Tage)<br><input type="number" class="in" id="ln-tage" min="1" max="30" style="width:90px" value="${+L.gruender_tage||7}"></label>
       <label style="font-size:12px">Gewinnspiel-Ende<br><input type="date" class="in" id="ln-ende" value="${esc(L.gewinnspiel_ende||'')}"></label>
-      <label style="font-size:12px;flex:1;min-width:240px">Willkommens-Video (YouTube- oder Video-Link)<br><input class="in" id="ln-video" placeholder="https://youtube.com/shorts/…" value="${esc(L.video||'')}"></label>
+      <label style="font-size:12px;flex:1;min-width:240px">Video oben im Feed während des Gewinnspiels (YouTube- oder Video-Link)<br><input class="in" id="ln-video" placeholder="https://youtube.com/shorts/…" value="${esc(L.video||'')}"></label>
       <button class="btn gold" onclick="gwzLaunch(this)">Speichern</button></div></div>
   <div class="card" style="margin-top:16px"><div class="row between"><h3 style="margin:0">Teilnehmer im Lostopf</h3><button class="btn sm" onclick="gwzLoad()">Aktualisieren</button></div>
     <p class="muted" style="font-size:12.5px;margin:6px 0 12px">Nur zahlende Mitglieder, die alle 4 Instagram-Schritte abgehakt und einen Beitrag gepostet haben. 1 Los + 1 Extra-Los pro geschafftem Challenge-Tag.</p>
