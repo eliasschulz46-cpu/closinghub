@@ -178,6 +178,8 @@ async function load(){
   const t=store.get(TKEY);
   if(t){ const j=await api('rpc/partner_beitreten',{method:'POST',body:{p_token:t}}).catch(()=>null); if(j&&j.ok) store.set(TKEY,null); else if(j&&j.grund==='link'){ store.set(TKEY,null); toast('Die Einladung passt nicht zu diesem Konto oder ist nicht mehr gültig.'); } }
   const rows=await api('partners?select=id,status,profile,draft,draft_at&limit=1'); ME=rows&&rows[0]||null;
+  if(!ME){ const kt=await api('rpc/konto_typ',{method:'POST',body:{}}).catch(()=>null);
+    if(kt&&!kt.admin&&(kt.mitglied||kt.auftraggeber)){ keep(null); ME=null; GUESTS=[]; render._loaded=false; MSG=['bad',kt.mitglied?'Dieses Konto ist ein Mitgliedskonto. Mitglieder melden sich in der App an: getclosinghub.com/app':'Dieses Konto ist ein Auftraggeberkonto. Auftraggeber melden sich im Auftraggeber-Portal an.']; throw new Error('Kein Zugang'); } }
   GUESTS=ME&&ME.status==='aktiv'?(await api('partner_guests?select=*&order=slot.asc').catch(()=>[]))||[]:[];
   KONTAKT=undefined; MSGS=undefined;
   if(ME&&ME.status==='aktiv'){
@@ -201,7 +203,7 @@ function portal(){
     <p class="muted" style="margin-top:6px">Wer sich über diesen Link bei ClosingHub anmeldet, wird dir dauerhaft zugeordnet und spart 10&nbsp;% auf seine Mitgliedschaft, monatlich wie jährlich. Teile ihn in Storys, Reels oder Nachrichten.</p>
     <div class="grid" style="margin-top:12px;gap:10px">
       <div class="note ok" style="margin:0"><b>25&nbsp;% Provision</b><br>auf alle Zahlungen im ersten Jahr der Mitgliedschaft</div>
-      <div class="note ok" style="margin:0"><b>15&nbsp;% Provision</b><br>auf alle weiteren Zahlungen, solange das Mitglied bleibt</div>
+      <div class="note ok" style="margin:0"><b>10&nbsp;% Provision</b><br>auf alle weiteren Zahlungen, solange das Mitglied bleibt</div>
     </div>
     <p class="muted" style="margin-top:8px;font-size:12px">Grundlage ist der gezahlte Betrag nach Rabatt. Abgerechnet wird monatlich bis zum 10. für Zahlungen, die mindestens 30 Tage zurückliegen, per Überweisung mit Gutschrift. Endet die Partnerschaft, endet auch die Provision. Deine geworbenen Mitglieder und deine Provision siehst du hier, sobald die Mitgliedschaften starten.</p></div>
   ${sec('profil',`${ME.draft?`<div class="note wait">Deine letzte Änderung wartet auf Freigabe. Du kannst sie hier weiter anpassen und erneut senden.</div>`:(ME.profile&&ME.profile.s?`<div class="note ok">Dein Profil ist live in der App.</div>`:`<div class="note wait">Dein Profil ist noch nicht ausgefüllt. Trag deine Angaben ein und sende sie zur Freigabe.</div>`)}
