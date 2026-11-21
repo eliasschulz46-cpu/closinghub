@@ -442,7 +442,7 @@ span>.gal-dots{position:static}
 @media (hover:hover){.gal-a{display:flex;opacity:0;transition:opacity .15s}*:hover>.gal-a,.gal-a.pl{opacity:1}}.gal-a.pl{z-index:6}
 </style><style>.gw-bar{height:6px;border-radius:99px;background:rgba(217,180,90,.2);margin-top:10px;overflow:hidden}.gw-bar i{display:block;height:100%;background:linear-gradient(90deg,#D9B45A,#B8892E);border-radius:99px;transition:width .3s}
 .gw-row{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:8px 2px;border-top:1px solid rgb(var(--line));font-size:13.5px}.gw-row:first-child{border-top:0}
-.gw-bx{flex:none;width:22px;height:22px;border-radius:7px;border:1.6px solid rgb(var(--line));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff}.gw-bx.on{background:#087A4B;border-color:#087A4B}.gw-bx.lock{border-style:dashed;font-size:11px}</style></head>
+.gw-bx{flex:none;width:22px;height:22px;border-radius:7px;border:1.6px solid rgb(var(--line));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff}.gw-bx.on{background:#087A4B;border-color:#087A4B}.gw-bx.lock{border-style:dashed;font-size:11px}</style><style>.gw-off{opacity:.45}.gw-bx.wait{border-color:#D9B45A;background:rgba(217,180,90,.15);font-size:11px}</style></head>
 <body>
 <script>/* ===== Start-Animation: Lichtpunkt schreibt „closing“, „HUB“ zündet wie Neon, Linie + Slogan, dann auf ===== */
 function chSplash(force){
@@ -3231,6 +3231,45 @@ function vidCard(){ const v=S.launch&&S.launch.video; if(!v||!gwAktiv()||S.vidOf
   const yt=(v.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/)||[])[1];
   const media=yt?`<iframe src="https://www.youtube.com/embed/${yt}?rel=0&playsinline=1" title="Video von Elias" style="width:100%;aspect-ratio:9/16;max-height:72vh;border:0;display:block;background:#000" allow="encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`:`<video src="${esc(v)}" controls playsinline preload="metadata" style="width:100%;max-height:72vh;display:block;background:#000"></video>`;
   return `<div class="card overflow-hidden" style="padding:0"><div class="flex items-center justify-between gap-2 px-4 py-3"><p class="text-sm font-semibold">🎬 Willkommen bei ClosingHub</p><button class="text-xs text-muted" onclick="S.vidOff=1;render()">Ausblenden</button></div>${media}</div>`; }
+
+// ===== Runde 17: Gewinnspiel mit Nachweisen (Instagram-Name Pflicht, Kommentar automatisch, Story-Screenshot) =====
+const GW_ERR={insta:'Trag zuerst deinen Instagram-Namen ein.',name:'Der Instagram-Name darf nur Buchstaben, Zahlen, Punkt und Unterstrich enthalten.',vergeben:'Dieser Instagram-Name ist schon bei einem anderen Mitglied eingetragen. Melde dich bei uns, falls das deiner ist.',datei:'Der Screenshot konnte nicht übernommen werden.'};
+gwSet=async function(k,v){ if(!S.gw) return; if(!S.gw.insta){ toastMsg(GW_ERR.insta); const i=document.getElementById('gwInsta'); if(i) i.focus(); return; }
+  S.gw[k]=v; gwDraw(); const j=await rpc('gewinnspiel_setzen',{p_schritt:k,p_wert:v}).catch(()=>null);
+  if(j&&j.info){ S.gw=j.info; gwDraw(); if(typeof chLoad==='function') chLoad(); } else { S.gw[k]=!v; gwDraw(); toastMsg(GW_ERR[j&&j.grund]||'Hat nicht geklappt – versuch es nochmal.'); } };
+gwInsta=async function(inp){ const v=inp.value.trim().replace(/^@/,''); const h=document.getElementById('gwInstaOk');
+  const j=await rpc('gewinnspiel_setzen',{p_schritt:'insta',p_wert:false,p_insta:v}).catch(()=>null);
+  if(j&&j.info){ S.gw=j.info; gwDraw(); } else if(h){ h.style.color='#c0392b'; h.textContent=GW_ERR[j&&j.grund]||'Nicht gespeichert'; } };
+function toastMsg(t){ if(typeof toast==='function') return toast(t); alert(t); }
+async function gwShot(inp){ const f=inp.files&&inp.files[0]; if(!f) return; if(!S.gw||!S.gw.insta){ inp.value=''; return toastMsg(GW_ERR.insta); }
+  const b=document.getElementById('gwShotBtn'); if(b){ b.disabled=true; b.textContent='Lädt …'; }
+  try{ const url=await upload(f,p=>{ if(b) b.textContent=Math.round(p*100)+' %'; }); const j=await rpc('gewinnspiel_beweis',{p_url:url});
+    if(!j||!j.ok) throw new Error(GW_ERR[j&&j.grund]||'Hat nicht geklappt.'); S.gw=j.info; gwDraw(); if(typeof chLoad==='function') chLoad(); }
+  catch(e){ toastMsg(e.message); if(b){ b.disabled=false; b.textContent='Screenshot hochladen'; } } }
+gwCard=function(){
+  if(!S.member||!gwAktiv()) return '<div id="gwcard"></div>';
+  if(!S.gw){ gwLoad(); return '<div id="gwcard"></div>'; }
+  const g=S.gw, basic=g.basic, ins=!!g.insta, acc=(g.account||'').replace(/^@/,'');
+  const ok={insta:ins,folgen:ins&&g.folgen,liken:ins&&g.liken,kommentar:!!g.kommentar_ok,story:!!g.story_beweis,beitrag:!!g.beitrag};
+  const done=Object.values(ok).filter(Boolean).length, all=done===6, lose=all?1+(+g.extra||0):0;
+  const box=(on,lock,wait)=>`<span class="gw-bx ${on?'on':''} ${lock?'lock':''} ${wait?'wait':''}">${on?'✓':lock?'🔒':wait?'⏳':''}</span>`;
+  const dis=ins?'':'gw-off', link=acc?` <a href="https://instagram.com/${encodeURIComponent(acc)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:#B8892E;text-decoration:underline">@${esc(acc)}</a>`:'';
+  const tick=(k,t)=>`<button class="gw-row ${dis}" onclick="gwSet('${k}',${!g[k]})">${box(ok[k])}<span class="${ok[k]?'text-muted':''}">${t}</span></button>`;
+  const kom=ok.kommentar?`<div class="gw-row">${box(true)}<span class="text-muted flex-1">Kommentar mit 2 markierten Vertriebskollegen <span class="block text-[11.5px]" style="color:#087A4B">✓ automatisch erkannt</span></span></div>`
+    :`<button class="gw-row ${dis}" onclick="gwSet('markiert',${!g.markiert})">${box(false,false,g.markiert)}<span class="flex-1">Unter dem Gewinnspiel-Beitrag kommentieren und 2 Vertriebskollegen markieren <span class="block text-[11.5px] ${g.markiert?'':'text-muted'}" style="${g.markiert?'color:#B8892E':''}">${g.markiert?'Wird geprüft – wir lesen die Kommentare alle 15 Minuten aus. Kommentiere mit genau dem Instagram-Namen von oben.':'Wird automatisch erkannt, sobald du kommentiert hast'}</span></span></button>`;
+  const story=`<div class="gw-row ${dis}">${box(ok.story)}<span class="flex-1 ${ok.story?'text-muted':''}">Beitrag in deine Story teilen <span class="block text-[11.5px] text-muted">${ok.story?'✓ Screenshot hochgeladen':'Mach einen Screenshot deiner Story und lad ihn hier hoch'}</span></span>
+    <label class="btn-gold text-xs whitespace-nowrap" style="padding:5px 10px;cursor:pointer${ok.story?';background:transparent;color:inherit;border:1px solid rgb(var(--line))':''}"><input type="file" accept="image/*" style="display:none" onchange="gwShot(this)" ${ins?'':'disabled'}><span id="gwShotBtn">${ok.story?'Ändern':'Screenshot hochladen'}</span></label></div>`;
+  const beitrag=basic?`<button class="gw-row" onclick="plusModal('am Gewinnspiel teilnehmen')">${box(false,true)}<span><b>Einen Beitrag auf ClosingHub posten</b><span class="block text-[11.5px]" style="color:#B8892E">Dir fehlt nur noch dein Ticket – mit Plus</span></span></button>`
+    :`<div class="gw-row">${box(ok.beitrag)}<span class="flex-1 ${ok.beitrag?'text-muted':''}">Einen Beitrag auf ClosingHub posten <span class="block text-[11.5px] text-muted">zählt auch für Challenge-Tag 1</span></span>${ok.beitrag?'':`<button class="btn-gold text-xs" style="padding:5px 10px" onclick="S.cmode='beitrag';go('create')">Posten</button>`}</div>`;
+  return `<div id="gwcard" class="card p-4 gw" style="border-color:#D9B45A">
+    <div class="flex items-center justify-between gap-2"><p class="text-xs uppercase tracking-wider font-semibold" style="color:#B8892E">🎁 Start-Gewinnspiel · Tag 1</p><span class="text-xs text-muted">${done} von 6</span></div>
+    <p class="font-semibold mt-1">${all?'Du bist im Lostopf!':ins?'Hak ab, was du schon erledigt hast':'Starte mit deinem Instagram-Namen'}</p>
+    <div class="gw-bar"><i style="width:${Math.round(done/6*100)}%"></i></div>
+    <div class="gw-row" style="border-top:0;flex-wrap:wrap">${box(ins)}<span class="flex-1" style="min-width:150px">Dein Instagram-Name <span class="block text-[11.5px] text-muted">Pflicht – damit wir deinen Kommentar zuordnen können</span></span>
+      <input id="gwInsta" class="input text-sm" style="padding:6px 10px;max-width:170px" placeholder="@deinname" value="${esc(g.insta?'@'+g.insta:'')}" onchange="gwInsta(this)" autocomplete="off" autocapitalize="off"><span id="gwInstaOk" class="text-[11.5px] w-full"></span></div>
+    ${tick('folgen','Dem ClosingHub-Account auf Instagram folgen'+link)}${tick('liken','Den Gewinnspiel-Beitrag liken')}${kom}${story}${beitrag}
+    <p class="text-xs mt-3 border-t border-line pt-2 ${all?'font-semibold':''}" style="${all?'color:#087A4B':''}">${all?`Deine Lose: ${lose} (1 Teilnahme + ${+g.extra||0} Extra-${(+g.extra||0)===1?'Los':'Lose'} aus der Challenge). Jeder geschaffte Challenge-Tag bringt ein weiteres Los.`:'In den Lostopf kommst du, sobald alle 6 Punkte grün sind. Jeder geschaffte Challenge-Tag bringt dir ein Extra-Los.'}${g.ende?` Teilnahme bis ${g.ende.slice(8)}.${g.ende.slice(5,7)}.`:''} Folgen und Like prüfen wir bei der Auslosung. <a href="#" onclick="event.preventDefault();legalOpen&&legalOpen('gewinnspiel')" style="text-decoration:underline">Teilnahmebedingungen</a></p></div>`; };
+setInterval(()=>{ const g=S.gw; if(g&&g.insta&&g.markiert&&!g.kommentar_ok&&document.getElementById('gwcard')&&!document.hidden) gwLoad(); },90000);
 
 function feed(){
   const ft = S.ptopics || S.topics;
