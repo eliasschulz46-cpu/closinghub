@@ -1711,7 +1711,7 @@ function fpCard(){ if(D.fposts===undefined){ D.fposts=null; fpLoad(); }
         <select class="in" style="width:auto" onchange="fpSet(${p.id},this.value,this)">${FK.map(k=>`<option ${k===p.kategorie?'selected':''}>${k}</option>`).join('')}</select></div>`; }).join('')}</div>`:'<div class="empty">Keine Beiträge.</div>'}</div>`; }
 const _feedx0=feedx; feedx=function(){ return _feedx0()+fpCard(); };
 /* ===== Kategorien des Feeds verwalten ===== */
-const KZ_DEF=[['Erfolg','Abschluss, Umsatz, Provision, Meilenstein','🏆'],['Tipp','Konkreter Praxistipp, oft als kurzes Video','💡'],['Wissen','Psychologie, Verkaufstechnik, Fakten','🧠'],['Mindset','Einstellung, Disziplin, Motivation','🔥'],['Zitat','Kurzer Spruch, Text im Vordergrund','❝'],['Story','Persönliche Geschichte, Erlebnis','📖'],['Lifestyle','Alltag, Reisen, Freiheit durch Vertrieb','🌴'],['Comedy','Lustiges aus dem Vertriebsalltag','😂'],['Meme','Meme-Bild oder -Video','🤣'],['Gedicht','Verse, Reime, Lyrik','✒️'],['Achtsamkeit','Ruhe, Pause, Gesundheit, Balance','🧘'],['Seminar-Ausschnitt','Bühne, Vortrag, Webinar','🎤'],['Film-Ausschnitt','Szene aus Film oder Serie','🎬']].map(([n,d,i])=>({n,d,i}));
+const KZ_DEF=[['Erfolg','Abschluss, Umsatz, Provision, Meilenstein','🏆'],['Tipp','Konkreter Praxistipp, oft als kurzes Video','💡'],['Wissen','Psychologie, Verkaufstechnik, Fakten','🧠'],['Mindset','Einstellung, Disziplin, Motivation','🔥'],['Zitat','Kurzer Spruch, Text im Vordergrund','❝'],['Story','Persönliche Geschichte, Erlebnis','📖'],['Lifestyle','Alltag, Reisen, Freiheit durch Vertrieb','🌴'],['Comedy','Lustiges aus dem Vertriebsalltag','😂'],['Meme','Meme-Bild oder -Video','🤣'],['Gedicht','Verse, Reime, Lyrik','✒️'],['Achtsamkeit','Ruhe, Pause, Gesundheit, Balance','🧘'],['Seminar-Ausschnitt','Bühne, Vortrag, Webinar','🎤'],['Film-Ausschnitt','Szene aus Film oder Serie','🎬'],['Lektion','Fail und was man daraus gelernt hat','🙈'],['Einwand','Ein Einwand und wie man ihn knackt','🛡️'],['Arbeitsalltag','Hinter den Kulissen, Setup, Day in the Life','💼'],['Community-Frage','Frage an alle – hol dir Meinungen','❓']].map(([n,d,i])=>({n,d,i}));
 D.kz=undefined; D.kzEdit=null;
 function kzSync(){ FK.length=0; (D.kz||KZ_DEF).forEach(k=>FK.push(k.n)); }
 async function kzLoad(){ D.kz=null; try{ const r=await api('settings?select=value&key=eq.kategorien'); const l=r&&r[0]&&r[0].value&&r[0].value.liste; D.kz=(l&&l.length?l:KZ_DEF).map(k=>({n:k.n,d:k.d||'',i:k.i||(KZ_DEF.find(x=>x.n===k.n)||{}).i||'✦'})); }catch(e){ D.kz=KZ_DEF.slice(); } kzSync(); if((location.hash||'').includes('feedx')) render(); }
@@ -1820,5 +1820,6 @@ render();
   new MutationObserver(()=>{ if(done) document.querySelectorAll('.lgi').forEach(el=>{ if(!el._lg) draw(el,END); }); }).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
+<script src="zentrale-news.js"></script>
 </body>
 </html>
