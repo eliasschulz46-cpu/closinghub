@@ -14,6 +14,9 @@
   const css = document.createElement('style');
   css.textContent = `
   .left-3{left:.75rem}
+  .object-contain{-o-object-fit:contain;object-fit:contain}
+  .pl-fit{object-fit:contain!important;background:transparent!important;z-index:1}
+  .pl-bd{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;filter:blur(28px) brightness(.55) saturate(1.2);z-index:0;pointer-events:none}
   /* Stories */
   .st-hd{left:12px!important;right:12px!important;justify-content:flex-start}
   .st-hd>button{flex:1 1 auto;justify-content:flex-start;text-align:left}
@@ -131,7 +134,7 @@
   if(typeof drawPlayer==='function' && typeof togglePause==='function'){
     const _dp = drawPlayer;
     drawPlayer = function(){ const ov=document.querySelector('#modal video[autoplay]'); const keep=ov?{src:ov.currentSrc||ov.src,t:ov.currentTime}:null;
-      const r=_dp.apply(this,arguments); try{ plSound(keep); }catch(e){} try{
+      const r=_dp.apply(this,arguments); try{ plFit(); }catch(e){} try{ plSound(keep); }catch(e){} try{
       const pz=document.querySelector('[aria-label="Pausiert"]'); const box=pz&&pz.parentElement;
       const p=S.player, dt=p&&p.pzAt?Date.now()-p.pzAt:99999;
       if(box){ if(dt<1000){ box.classList.add('pz-flash'); box.style.animationDelay=(-dt)+'ms'; } else box.remove(); }
@@ -139,6 +142,18 @@
     }catch(e){} return r; };
     const _tp = togglePause;
     togglePause = function(){ if(S.player){ S.player.pzAt=Date.now(); S.player.pzPlay=!!S.player.paused; } return _tp.apply(this,arguments); };
+  }
+
+  /* ---------- Player: Bilder und Videos im richtigen Seitenverhältnis (nichts gestreckt oder beschnitten) ---------- */
+  function plFit(){
+    document.querySelectorAll('#modal img.absolute.inset-0, #modal video.absolute.inset-0').forEach(m=>{
+      if(m.classList.contains('vidimg') || m.classList.contains('pl-bd') || m.dataset.fit) return;
+      const r=m.getBoundingClientRect(); if(r.width<200) return;
+      m.dataset.fit='1'; m.classList.add('pl-fit');
+      const host=m.parentElement; if(!host) return; if(getComputedStyle(host).position==='static') host.style.position='relative'; host.style.overflow='hidden';
+      if(m.tagName==='IMG' && !host.querySelector('.pl-bd')){ const bd=document.createElement('img'); bd.className='pl-bd'; bd.src=m.currentSrc||m.src; bd.alt=''; bd.setAttribute('aria-hidden','true'); host.insertBefore(bd,m); }
+      if(m.tagName==='VIDEO'){ host.style.background='#000'; }
+    });
   }
 
   /* ---------- Player: Kurzvideos mit Ton (im Feed bleiben sie stumm) ---------- */
