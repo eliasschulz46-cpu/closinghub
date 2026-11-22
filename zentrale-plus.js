@@ -383,13 +383,13 @@
     const p={ typ:g('lv-typ'), titel:g('lv-titel'), sprecher:g('lv-spr'), partner_id:g('lv-pid'), start_at:new Date(d+'T'+t).toISOString(),
               dauer_min:g('lv-dauer')||60, wiederholung:g('lv-wdh'), bis:g('lv-bis'), yt_url:g('lv-yt'), aktiv:g('lv-akt') };
     b.disabled=true;
-    try{ const r=await RPC('live_event_speichern',{p_id:LV.edit||null,p}); if(!r||!r.ok) throw 0; toast(LV.edit?'Gespeichert':'Live-Termin angelegt'); LV.edit=null; ZP.typed=0; await lvLoad(); }
+    try{ const r=await RPC('live_event_speichern',{p_id:LV.edit||null,p}); if(!r||!r.ok) throw 0; { const ms=new Date(p.start_at).getTime()-Date.now(); toast(ms>15*6e4&&p.wiederholung==='einmal'?'Gespeichert – Balken erscheint am '+new Date(p.start_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' minus 15 Min':(LV.edit?'Gespeichert':'Live-Termin angelegt')); } LV.edit=null; ZP.typed=0; await lvLoad(); }
     catch(e){ b.disabled=false; toast('Hat nicht geklappt. Ist closinghub-runde22-live-calls.sql ausgeführt?'); }
   };
   ZP.lvTyp = v => { const s=$('lv-titel'); if(s && !s.value) s.value = v==='motivation' ? 'Motivations-Call' : ''; const w=$('lv-wdh'); if(w && v==='motivation' && w.value==='einmal'){ w.value='werktags'; } };
   ZP.lvQ = async (id,st) => { try{ await RPC('live_frage_status',{p_id:id,p_status:st}); }catch(e){} await lvLoad(); };
   function lvForm(e){
-    const s=e?new Date(e.start_at):new Date(Date.now()+864e5), P=(LV.d&&LV.d.partner)||[];
+    const s=e?new Date(e.start_at):new Date(Math.ceil((Date.now()+5*6e4)/9e5)*9e5), P=(LV.d&&LV.d.partner)||[];
     const val=(x,d='')=>esc(x==null?d:x);
     return `<div class="card"><h3 style="margin:0 0 10px">${e?'Live-Termin bearbeiten':'Neuer Live-Termin'}</h3>
       <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
@@ -398,7 +398,7 @@
         <label class="f">Sprecher (Name in der App)<input class="in" id="lv-spr" maxlength="60" value="${val(e&&e.sprecher)}" placeholder="z. B. Paul"></label>
         <label class="f">Partner-Konto (darf Fragen markieren)<select class="in" id="lv-pid"><option value="">keins</option>${P.map(p=>`<option value="${p.id}" ${e&&+e.partner_id===+p.id?'selected':''}>${esc(p.n||('Partner '+p.id))}</option>`).join('')}</select></label>
         <label class="f">Datum (erster Termin)<input class="in" type="date" id="lv-d" value="${s.getFullYear()}-${lvP2(s.getMonth()+1)}-${lvP2(s.getDate())}"></label>
-        <label class="f">Uhrzeit<input class="in" type="time" id="lv-t" value="${e?lvP2(s.getHours())+':'+lvP2(s.getMinutes()):'07:30'}"></label>
+        <label class="f">Uhrzeit<input class="in" type="time" id="lv-t" value="${lvP2(s.getHours())+':'+lvP2(s.getMinutes())}"></label>
         <label class="f">Dauer in Minuten<input class="in" type="number" min="5" max="600" id="lv-dauer" value="${val(e&&e.dauer_min,60)}"></label>
         <label class="f">Wiederholen<select class="in" id="lv-wdh"><option value="einmal" ${!e||e.wiederholung==='einmal'?'selected':''}>Nur einmal</option><option value="werktags" ${e&&e.wiederholung==='werktags'?'selected':''}>Jeden Werktag (Mo–Fr)</option><option value="taeglich" ${e&&e.wiederholung==='taeglich'?'selected':''}>Jeden Tag</option></select></label>
         <label class="f">Wiederholen bis (leer = offen)<input class="in" type="date" id="lv-bis" value="${val(e&&e.bis)}"></label>
