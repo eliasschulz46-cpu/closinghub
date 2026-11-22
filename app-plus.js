@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r14 · Like ohne Flackern in Feed + Player) =====
+/* ===== ClosingHub App-Plus (r15 · Feed-Logik: beliebt, Mitmach 10er, ClosingHub 7er, Kontaktvorschläge) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -151,7 +151,7 @@
   render = function(){ const r=route(); if(r!=='einstellungen') S.setSub=null; document.documentElement.dataset.r=r; try{ htFix(); }catch(e){} const out=_render.apply(this,arguments); fixAll(); return out; };
   let fixQ=0; const fixSoon=()=>{ if(fixQ) return; fixQ=requestAnimationFrame(()=>{ fixQ=0; fixAll(); }); };
   new MutationObserver(fixSoon).observe(document.body,{childList:true,subtree:true});
-  function fixAll(){ try{ fixTop(); }catch(e){}  try{ fixNav(); }catch(e){} try{ fixProfil(); }catch(e){} try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
+  function fixAll(){ try{ fixSeen(); }catch(e){} try{ fixOrt(); }catch(e){}  try{ fixTop(); }catch(e){}  try{ fixNav(); }catch(e){} try{ fixProfil(); }catch(e){} try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
 
   /* ---------- Handy: Plus-Knopf unten, Profil aufgeräumt, Einstellungen im Profil ---------- */
   function fixNav(){
@@ -682,6 +682,112 @@
     S.liked[id]=!S.liked[id]; paint(S.liked[id]);
     if(id>=1e6 && S.member) rpc('post_like',{p_post:id-1e6}).then(j=>{ if(j&&j.ok&&j.liked!==S.liked[id]){ S.liked[id]=j.liked; paint(j.liked); } }).catch(()=>{});
   };
+
+  /* ---------- Feed-Logik (r15) ----------
+     Stellen zählen über alle Karten: Mitmach 10/20/30 …, Kontaktvorschlag 17/34 …, ClosingHub-Beitrag 7/14 …,
+     beliebter ungesehener Beitrag 1/3/6/9 …, sonst neueste. Gleiche Stelle: Mitmach > Kontakt > ClosingHub > beliebt;
+     Verdrängtes rutscht auf die nächste freie Stelle. Gilt für Feed und Player (mkSlot/mkPL/mkIdx). */
+  const FL_PRIO=['mk','kv','ed','pop'];
+  function flRules(k){ const r=[]; if(k%10===0) r.push('mk'); if(k%17===0) r.push('kv'); if(k%7===0) r.push('ed'); if(k===1||k%3===0) r.push('pop'); return r; }
+  window.APLUS_flPlan=function(news,pop,ed,kvN,mkOn,more){
+    const items=[], after=[]; let ni=0,pi=0,ei=0,kvi=0,mki=0,carry=[];
+    const have={pop:()=>pi<pop.length, ed:()=>ei<ed.length, kv:()=>kvi<kvN, mk:()=>!!mkOn};
+    const left=()=>ni<news.length||pi<pop.length;   // ClosingHub-Beiträge nur auf ihren 7er-Stellen, nie als Lückenfüller
+    for(let k=1;k<5000;k++){
+      if(!left()) break;
+      const want=[...new Set([...carry,...flRules(k)])].filter(t=>have[t]());
+      let pick=FL_PRIO.find(t=>want.includes(t)); carry=want.filter(t=>t!==pick);
+      if(pick==='mk'||pick==='kv'){ if(!items.length){ carry.push(pick); pick=null; } else { (after[items.length-1]=after[items.length-1]||[]).push(pick==='mk'?{t:'mk',slot:mki++}:{t:'kv',i:kvi++}); continue; } }
+      if(pick==='pop') items.push(pop[pi++]);
+      else if(pick==='ed') items.push(ed[ei++]);
+      else if(ni<news.length) items.push(news[ni++]);
+      else if(pi<pop.length) items.push(pop[pi++]);
+      else break;
+    }
+    if(mkOn && items.length && !after.some(a=>a&&a.some(x=>x.t==='mk'))) (after[items.length-1]=after[items.length-1]||[]).push({t:'mk',slot:0});
+    return {items,after};
+  };
+  function flLoadExtras(force){
+    const kats=S.ptopics||S.topics||null, jobs=[];
+    if(force||(S.pop===undefined&&!S._popL)){ S._popL=1; jobs.push(rpc('feed_beliebt',{p_kats:kats&&kats.length?kats:null,p_limit:30}).then(r=>{ S.pop=(r||[]).map(mapPost); }).catch(()=>{ S.pop=S.pop||[]; }).finally(()=>{ S._popL=0; })); }
+    if(S.member&&(force||(S.kv===undefined&&!S._kvL))){ S._kvL=1; jobs.push(rpc('kontakt_vorschlaege',{p_limit:10}).then(r=>{ S.kv=(r&&r.liste)||[]; S.kvMe=r||null; }).catch(()=>{ S.kv=S.kv||[]; }).finally(()=>{ S._kvL=0; })); }
+    return Promise.all(jobs);
+  }
+  feedPool=function(){
+    if(!S.rp) return null;
+    if(S.pop===undefined||(S.member&&S.kv===undefined)){ if(!S._popL&&!S._kvL) flLoadExtras().then(()=>{ if(route()==='feed'&&!S.player) render(); }); }
+    if(!S.rp.length&&!S.member&&!(S.pop||[]).length) return null;
+    const ft=S.ptopics||S.topics, okK=p=>!ft||ft.includes(p.k);
+    const pop=(S.pop||[]).filter(okK), popIds=new Set(pop.map(p=>p.id));
+    const news=S.rp.filter(p=>okK(p)&&!popIds.has(p.id)), ed=EDIT_POSTS.filter(okK);
+    const mkOn=typeof mkCards==='function'&&mkCards().length>0;
+    const plan=APLUS_flPlan(news,pop,ed,(S.kv||[]).length,mkOn,!!S.rpMore);
+    S.flAfter=plan.after; S.flItems=plan.items; return plan.items;
+  };
+  function kvHtml(m,big){
+    const av=m.avatar_url?`<img src="${esc(m.avatar_url)}" class="w-full h-full object-cover" loading="lazy">`:initAv(m.name);
+    const sz=big?84:52, ort=[m.rolle,m.stadt||m.land].filter(Boolean).map(esc).join(' · ');
+    return `<article class="card p-4 kv-card"${big?' style="background:transparent;border:0;box-shadow:none"':''}>
+      <p class="text-xs uppercase tracking-wider ${big?'':'text-muted'} mb-3"${big?' style="color:#C9D3E3"':''}>Kontaktvorschlag · ${m.gleiche_stadt?'aus deiner Stadt':'aus deinem Land'}</p>
+      <div class="flex ${big?'flex-col text-center':''} items-center gap-3">
+        <span class="rounded-full overflow-hidden shrink-0 cursor-pointer" style="width:${sz}px;height:${sz}px" onclick="event.stopPropagation();${big?'closeModal();stopPlayer();':''}memberModal(${m.id})">${av}</span>
+        <span class="min-w-0 flex-1"${big?' style="color:#fff"':''}><span class="block">${nameRank(esc(m.name),RANKS[(m.rang||1)-1])}</span><span class="text-xs ${big?'':'text-muted'}"${big?' style="color:#C9D3E3"':''}>${ort}</span></span>
+        <button class="btn-gold text-sm kv-fol" style="padding:7px 16px" onclick="event.stopPropagation();APLUS_kvFol(${m.id},this)">Folgen</button>
+      </div></article>`;
+  }
+  window.APLUS_kvFol=async(mid,btn)=>{ btn.disabled=true; try{ const j=await rpc('folgen_umschalten',{p_member:mid}); if(j&&j.ok){ document.querySelectorAll('.kv-fol[onclick*="APLUS_kvFol('+mid+',"]').forEach(b=>{ b.textContent=j.folge?'Folge ich ✓':'Folgen'; b.classList.toggle('btn-gold',!j.folge); b.classList.toggle('btn-ghost',!!j.folge); }); } }catch(e){} btn.disabled=false; };
+  const _mkSlot=mkSlot;
+  mkSlot=function(i,n){
+    if(!S.flAfter||S.feedList!==S.flItems&&!(S.feedList&&S.flItems&&S.feedList.length<=S.flItems.length&&S.feedList[0]===S.flItems[0])) return _mkSlot.apply(this,arguments);
+    return (S.flAfter[i]||[]).map(c=>c.t==='mk'?mitmachCard(c.slot):(S.kv&&S.kv[c.i]?kvHtml(S.kv[c.i]):'')).join('');
+  };
+  const _mkPL=mkPL;
+  mkPL=function(base){
+    if(!S.plMk||!base||!base.length) return base;
+    if(!S.flAfter||base!==S.feedList) return _mkPL.apply(this,arguments);
+    const out=[]; base.forEach((p,i)=>{ out.push(p); (S.flAfter[i]||[]).forEach(c=>{ if(c.t==='mk') out.push({mk:1,slot:c.slot}); else if(S.kv&&S.kv[c.i]) out.push({mk:1,kv:1,m:S.kv[c.i]}); }); });
+    return out;
+  };
+  const _mkIdx=mkIdx;
+  mkIdx=function(i){
+    if(!S.plMk) return i; if(!S.flAfter||S.plist!==S.feedList) return _mkIdx.apply(this,arguments);
+    let n=i; for(let k=0;k<i;k++) n+=(S.flAfter[k]||[]).filter(c=>c.t==='mk'||(S.kv&&S.kv[c.i])).length; return n;
+  };
+  const _dms=drawMkSlide;
+  drawMkSlide=function(p,post){
+    if(!post||!post.kv) return _dms.apply(this,arguments);
+    const _mc=mitmachCard; mitmachCard=()=>kvHtml(post.m,true);
+    try{ _dms.apply(this,arguments); } finally { mitmachCard=_mc; }
+    const t=[...document.querySelectorAll('#modal p')].find(x=>x.textContent.trim()==='Mitmachen'); if(t) t.textContent='Kontakte';
+  };
+  // Laden: beliebte (ungesehene) Beiträge + Kontaktvorschläge, einmal pro frischem Feed-Laden (nicht bei "Mehr laden")
+  const _fl=feedLoad;
+  feedLoad=async function(more){
+    if(!more) await flLoadExtras(true);
+    return _fl.apply(this,arguments);
+  };
+  // Gesehen: Beitrag mind. 1 s zu 60 % sichtbar im Feed oder im Player angezeigt
+  const flSeen=new Set(), flQ=new Set(); let flT={};
+  function flMark(id){ if(!S.member||!(id>=1e6)) return; const pid=id-1e6; if(flSeen.has(pid)) return; flSeen.add(pid); flQ.add(pid); }
+  function flFlush(){ if(!flQ.size||!S.member) return; const ids=[...flQ].slice(0,100); ids.forEach(i=>flQ.delete(i)); rpc('posts_gesehen',{p_ids:ids}).catch(()=>ids.forEach(i=>flQ.add(i))); }
+  setInterval(flFlush,5000); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') flFlush(); });
+  const flIO='IntersectionObserver' in window ? new IntersectionObserver(es=>es.forEach(e=>{ const id=+e.target.dataset.flid;
+    if(e.isIntersecting&&e.intersectionRatio>=.6){ flT[id]=setTimeout(()=>flMark(id),1000); } else { clearTimeout(flT[id]); } }),{threshold:[0,.6]}) : null;
+  function fixSeen(){ if(!flIO||route()!=='feed') return; document.querySelectorAll('#app article.card').forEach(a=>{ if(a.dataset.flid) return; const b=a.querySelector('[onclick*="toggleLike("]'); if(!b) return;
+    const m=(b.getAttribute('onclick')||'').match(/toggleLike\((\d+),/); if(!m) return; a.dataset.flid=m[1]; flIO.observe(a); }); }
+  const _dpFl=drawPlayer; drawPlayer=function(){ const r=_dpFl.apply(this,arguments); try{ const post=PL()[S.player.i]; if(post&&!post.mk&&post.real) flMark(post.id); }catch(e){} return r; };
+  // Profil: Stadt (freiwillig) + "In Vorschlägen anzeigen"
+  function fixOrt(){ const land=document.getElementById('pfLand'); if(!land||document.getElementById('pfStadt')) return;
+    const me=S.kvMe||{}; const lab=land.closest('label');
+    lab.insertAdjacentHTML('afterend',`<label class="text-xs text-muted">Stadt <span class="opacity-70">(freiwillig)</span><input id="pfStadt" class="input text-sm mt-1" maxlength="60" value="${esc(me.stadt||'')}" placeholder="z. B. Köln"></label>`);
+    const grid=land.closest('.grid'); if(grid) grid.insertAdjacentHTML('afterend',`<label class="flex items-start gap-2 text-sm"><input id="pfVor" type="checkbox" class="mt-1" ${me.sichtbar===false?'':'checked'}><span>In Kontaktvorschlägen anzeigen<span class="block text-xs text-muted">Für Mitglieder aus deiner Stadt bzw. deinem Land</span></span></label>`);
+    if(!S.kvMe&&S.member) rpc('kontakt_vorschlaege',{p_limit:1}).then(r=>{ S.kvMe=r; const s=document.getElementById('pfStadt'), v=document.getElementById('pfVor'); if(s&&!s.value) s.value=r.stadt||''; if(v) v.checked=r.sichtbar!==false; }).catch(()=>{}); }
+  const _spd=saveProfilDb;
+  saveProfilDb=async function(p){ const s=document.getElementById('pfStadt'), v=document.getElementById('pfVor');
+    if(p&&('land' in p)&&s){ const st=s.value, sv=v?v.checked:true; const r=await _spd.apply(this,arguments);
+      const j=await rpc('profil_ort_speichern',{p_stadt:st,p_sichtbar:sv}); if(!j||!j.ok) throw new Error('Stadt konnte nicht gespeichert werden.');
+      S.kvMe=Object.assign(S.kvMe||{},{stadt:st.trim()||null,sichtbar:sv}); return r; }
+    return _spd.apply(this,arguments); };
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
