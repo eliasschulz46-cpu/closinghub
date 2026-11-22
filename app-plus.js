@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r18 · Player flüssig: Videos vorladen) =====
+/* ===== ClosingHub App-Plus (r19 · Handy: Buttons beim ersten Tippen) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -905,6 +905,19 @@
     setTimeout(plPreload,60);
   }
   const _stopPre=stopPlayer; stopPlayer=function(){ const r=_stopPre.apply(this,arguments); for(const [u,v] of PRE){ try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){} v.remove(); } PRE.clear(); return r; };
+
+  /* ---------- Handy: Buttons reagieren beim ersten Tippen (r19) ----------
+     iOS behandelt den ersten Tipp als "Hover", wenn dabei etwas sichtbar animiert oder eingeblendet wird.
+     Die Strich-Animation der Icons (drawGold) und die nur per Hover sichtbaren Kommentar-Aktionen
+     haben deshalb einen zweiten Tipp verlangt. Auf Touch-Geräten sind diese Hover-Effekte jetzt aus. */
+  (function(){ const st=document.createElement('style'); st.textContent=`
+    button,a,[onclick],[role="button"],label,summary,.ht,.ht-chip{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+    @media (hover:none),(pointer:coarse){
+      a:hover .icbox svg *,button:hover .icbox svg *,.icbox:hover svg *,button:hover>svg *,a:hover>svg *{animation:none!important;stroke-dasharray:none!important}
+      a:hover .icbox,button:hover .icbox,.icbox:hover{box-shadow:none!important}
+      .cm-row .cm-act{opacity:1!important}
+      .admarq:hover .admarq-track{animation-play-state:running!important}
+    }`; document.head.appendChild(st); })();
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
