@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r19 · Handy: Buttons beim ersten Tippen) =====
+/* ===== ClosingHub App-Plus (r20 · Live-Calls) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -918,6 +918,176 @@
       .cm-row .cm-act{opacity:1!important}
       .admarq:hover .admarq-track{animation-play-state:running!important}
     }`; document.head.appendChild(st); })();
+
+  /* ---------- Live-Calls (r20) ----------
+     Fester Balken oben ab 15 Minuten vor Start bis zum Ende. Stream direkt in der App (YouTube, ohne Cookies).
+     Partner-Vortrag: nur Premium, mit Fragen an den Sprecher. Motivations-Call: ab Plus, ohne Chat.
+     Termine pflegt Elias in der Zentrale unter "Live". Braucht closinghub-runde22-live-calls.sql. */
+  (function(){
+    try{ if(typeof PLUS_LIST!=='undefined' && !PLUS_LIST.some(t=>/Motivations/.test(t))) PLUS_LIST.push('Motivations-Call jeden Morgen live'); }catch(e){}
+    const st=document.createElement('style'); st.textContent=`
+    .chlv{position:sticky;top:56px;z-index:29;display:flex;align-items:center;gap:10px;padding:9px 12px;margin:0;cursor:pointer;
+      background:linear-gradient(90deg,rgba(184,137,46,.16),rgba(184,137,46,.05));border-bottom:1px solid rgba(184,137,46,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+    @media(min-width:768px){.chlv{top:0;padding:10px 18px}}
+    html:not(.light) .chlv{background:linear-gradient(90deg,rgba(40,30,12,.92),rgba(20,17,12,.92))}
+    html.light .chlv,.light .chlv{background:linear-gradient(90deg,rgba(255,246,226,.96),rgba(255,251,242,.96))}
+    .chlv .lv-dot{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.06em;padding:4px 8px;border-radius:999px;color:#fff;background:#e5484d}
+    .chlv .lv-dot i{width:7px;height:7px;border-radius:50%;background:#fff;animation:lvP 1.4s infinite}
+    .chlv .lv-dot.bald{background:#B8892E}
+    .chlv .lv-dot.bald i{animation:none;opacity:.85}
+    @keyframes lvP{0%,100%{opacity:1}50%{opacity:.25}}
+    .chlv .lv-t{min-width:0;flex:1;line-height:1.2}
+    .chlv .lv-t b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .chlv .lv-t span{display:block;font-size:12px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .chlv .lv-b{flex:none;font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:999px;background:#B8892E;color:#111;white-space:nowrap}
+    .chlv .lv-b.lock{background:transparent;color:#B8892E;border:1px solid #B8892E}
+    .chlv .lv-more{flex:none;font-size:11px;opacity:.7}
+    #chlvo{position:fixed;inset:0;z-index:300;display:flex;align-items:stretch;justify-content:center;background:rgba(4,6,10,.78);backdrop-filter:blur(4px)}
+    #chlvo .lvo-in{width:100%;max-width:980px;display:flex;flex-direction:column;background:rgb(var(--bg,12 12 14));color:rgb(var(--fg,240 240 240));overflow:hidden}
+    @media(min-width:768px){#chlvo{align-items:center;padding:24px} #chlvo .lvo-in{border-radius:20px;max-height:92vh;border:1px solid rgba(184,137,46,.4)}}
+    #chlvo .lvo-h{display:flex;align-items:center;gap:10px;padding:12px 14px;padding-top:max(12px,env(safe-area-inset-top))}
+    #chlvo .lvo-h b{font-size:15px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #chlvo .lvo-h small{font-size:12px;opacity:.65}
+    #chlvo .lvo-x{margin-left:auto;flex:none;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;background:rgba(127,127,127,.15)}
+    #chlvo .lvo-v{position:relative;width:100%;aspect-ratio:16/9;background:#000;flex:none}
+    #chlvo .lvo-v iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+    #chlvo .lvo-v .lvo-wait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;text-align:center;padding:20px}
+    #chlvo .lvo-v .lvo-wait b{font-size:34px;font-variant-numeric:tabular-nums;color:#E3B85C}
+    #chlvo .lvo-q{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid rgba(127,127,127,.2)}
+    #chlvo .lvo-ql{flex:1;min-height:120px;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+    #chlvo .lvo-qi{font-size:14px;line-height:1.35;padding:8px 11px;border-radius:12px;background:rgba(127,127,127,.1)}
+    #chlvo .lvo-qi.me{background:rgba(184,137,46,.14)}
+    #chlvo .lvo-qi.ok{opacity:.55}
+    #chlvo .lvo-qi.hid{opacity:.4;text-decoration:line-through}
+    #chlvo .lvo-qi b{font-size:12px;display:block;opacity:.75;margin-bottom:2px}
+    #chlvo .lvo-qi .lvo-qa{display:flex;gap:6px;margin-top:6px}
+    #chlvo .lvo-qi .lvo-qa button{font-size:11.5px;padding:4px 9px;border-radius:999px;border:1px solid rgba(127,127,127,.35)}
+    #chlvo .lvo-f{display:flex;gap:8px;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));border-top:1px solid rgba(127,127,127,.2)}
+    #chlvo .lvo-f input{flex:1;min-width:0;font-size:16px;padding:10px 14px;border-radius:999px;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.25);color:inherit;outline:none}
+    #chlvo .lvo-f button{flex:none;font-weight:700;padding:0 16px;border-radius:999px;background:#B8892E;color:#111}
+    #chlvo .lvo-err{font-size:12px;color:#e5484d;padding:0 14px 6px}
+    #chlvo .lvo-note{padding:16px 16px max(16px,env(safe-area-inset-bottom));font-size:14px;opacity:.75;text-align:center}
+    #chlvo .lvo-empty{margin:auto;font-size:13px;opacity:.6;text-align:center;padding:12px}`;
+    document.head.appendChild(st);
+
+    const LV = window.APLUS_LV = { ev:[], at:0, off:0, open:null, qt:0, seenT:0, sent:0 };
+    const now = () => Date.now()+LV.off;
+    const T = x => new Date(x).getTime();
+    const hm = x => new Date(x).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    const cd = ms => { ms=Math.max(0,ms); const m=Math.floor(ms/60000), s=Math.floor(ms/1000)%60; return m+':'+String(s).padStart(2,'0'); };
+    const ytId = u => { u=String(u||''); const m=u.match(/(?:youtu\.be\/|v=|\/live\/|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/)||u.match(/^([A-Za-z0-9_-]{11})$/); return m?m[1]:null; };
+    const label = e => e.typ==='vortrag' ? ('Partner-Vortrag'+(e.sprecher?' · '+e.sprecher:'')) : ('Motivations-Call'+(e.sprecher?' mit '+e.sprecher:''));
+    const lockTxt = e => e.typ==='vortrag' ? 'Mit Premium live dabei' : 'Mit Plus live dabei';
+    const cur = () => { const t=now(); const L=LV.ev.filter(e=>T(e.e)>t && T(e.s)-15*60000<=t); L.sort((a,b)=>((T(a.s)<=t)?0:1)-((T(b.s)<=t)?0:1) || T(a.s)-T(b.s)); return L; };
+
+    async function load(){
+      if(!S.member){ LV.ev=[]; draw(); return; }
+      try{ const j=await rpc('live_aktuell',{}); if(j&&j.ok){ LV.ev=j.events||[]; if(j.jetzt) LV.off=T(j.jetzt)-Date.now(); } }catch(e){ }
+      LV.at=Date.now(); draw();
+    }
+
+    function barHtml(L){
+      const e=L[0], t=now(), live=T(e.s)<=t;
+      const tag = live ? '<span class="lv-dot"><i></i>LIVE</span>' : `<span class="lv-dot bald"><i></i><span data-lvcd>${cd(T(e.s)-t)}</span></span>`;
+      const btn = e.zugang ? `<span class="lv-b">${live?'Jetzt ansehen':'Öffnen'}</span>` : `<span class="lv-b lock">${lockTxt(e)}</span>`;
+      return `${tag}<span class="lv-t"><b>${esc2(e.titel)}</b><span>${esc2(label(e))} · ${live?'bis '+hm(e.e):'ab '+hm(e.s)}</span></span>${L.length>1?`<span class="lv-more">+${L.length-1}</span>`:''}${btn}`;
+    }
+    function draw(){
+      const L=S.member?cur():[];
+      document.querySelectorAll('.chlv').forEach(b=>{ if(!L.length) b.remove(); });
+      if(!L.length) return;
+      const head=document.querySelector('header.md\\:hidden.sticky'); if(!head||!head.parentNode) return;
+      let bar=head.nextElementSibling; if(!bar||!bar.classList.contains('chlv')){ bar=document.createElement('div'); bar.className='chlv'; bar.setAttribute('role','button'); head.after(bar); }
+      const k=L.map(e=>e.id+':'+e.termin+':'+(T(e.s)<=now())+':'+e.zugang).join('|');
+      if(bar.dataset.k!==k){ bar.dataset.k=k; bar.innerHTML=barHtml(L); bar.onclick=()=>openLive(L[0].id,L[0].termin); }
+    }
+    function tick(){
+      const L=S.member?cur():[];
+      const bar=document.querySelector('.chlv');
+      if(bar&&L.length){ const c=bar.querySelector('[data-lvcd]'); if(c) c.textContent=cd(T(L[0].s)-now()); }
+      if(!!bar!==!!L.length || (bar&&L.length&&!bar.dataset.k.startsWith(L[0].id+':'))) draw();
+      else if(bar&&L.length&&bar.dataset.k.split('|')[0].split(':')[2]!==String(T(L[0].s)<=now())) draw();
+      if(LV.open) ovTick();
+      if(Date.now()-LV.at>60000) load();
+    }
+
+    /* ----- Fenster mit Stream ----- */
+    function find(id,termin){ return LV.ev.find(e=>e.id===id&&e.termin===termin); }
+    window.APLUS_lvOpen = openLive;
+    function openLive(id,termin){
+      const e=find(id,termin); if(!e) return;
+      if(!e.zugang){
+        if(e.typ==='motivation' && typeof plusModal==='function') return plusModal('beim Motivations-Call live dabei sein');
+        return lockSheet(e);
+      }
+      LV.open={id,termin}; LV.sent=0; LV.seenT=Date.now();
+      let o=$('chlvo'); if(o) o.remove();
+      o=document.createElement('div'); o.id='chlvo';
+      o.innerHTML=`<div class="lvo-in"><div class="lvo-h"><span class="lv-dot" style="display:none"></span><span style="min-width:0"><b>${esc2(e.titel)}</b><small>${esc2(label(e))} · ${hm(e.s)}–${hm(e.e)}</small></span><button class="lvo-x" aria-label="Schließen" onclick="APLUS_lvClose()">×</button></div>
+        <div class="lvo-v" id="lvo-v"></div>
+        ${e.fragen?`<div class="lvo-q"><div class="lvo-ql" id="lvo-ql"><div class="lvo-empty">Noch keine Fragen. Stell die erste!</div></div><div class="lvo-err" id="lvo-err" hidden></div>
+          <form class="lvo-f" onsubmit="event.preventDefault();APLUS_lvAsk()"><input id="lvo-in" maxlength="300" autocomplete="off" enterkeyhint="send" placeholder="Frage an ${esc2(e.sprecher||'den Sprecher')} …"><button type="submit">Senden</button></form></div>`
+        :`<div class="lvo-note">Kein Chat – einfach zuhören, mitmachen und stark in den Tag starten.</div>`}</div>`;
+      o.onclick=ev=>{ if(ev.target===o) APLUS_lvClose(); };
+      document.body.appendChild(o); document.documentElement.style.overflow='hidden';
+      try{ if(S.player) S.player.paused=true; document.querySelectorAll('video').forEach(v=>{ if(!v.closest('#chlvo')) v.pause(); }); }catch(err){}
+      drawVideo(true); if(e.fragen) loadQ();
+    }
+    function drawVideo(force){
+      const e=LV.open&&find(LV.open.id,LV.open.termin), box=$('lvo-v'); if(!e||!box) return;
+      const t=now(), id=ytId(e.yt), started=T(e.s)<=t;
+      const want = id ? (started||T(e.s)-t<5*60000 ? 'yt' : 'wait') : 'nolink';
+      if(!force && box.dataset.m===want) return; box.dataset.m=want;
+      if(want==='yt') box.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="${esc2(e.titel)}"></iframe>`;
+      else if(want==='wait') box.innerHTML=`<div class="lvo-wait"><span style="opacity:.75;font-size:13px">Startet in</span><b data-lvo-cd>${cd(T(e.s)-t)}</b><span style="opacity:.6;font-size:12px">Lass das Fenster offen, der Stream startet hier.</span></div>`;
+      else box.innerHTML=`<div class="lvo-wait"><span style="opacity:.75;font-size:13px">${started?'Gleich geht\'s los':'Startet in'}</span>${started?'':`<b data-lvo-cd>${cd(T(e.s)-t)}</b>`}<span style="opacity:.6;font-size:12px">Der Stream erscheint hier automatisch.</span></div>`;
+    }
+    function ovTick(){
+      const e=find(LV.open.id,LV.open.termin);
+      if(!e || T(e.e)<=now()){ const b=$('lvo-v'); if(b&&b.dataset.m!=='end'){ b.dataset.m='end'; b.innerHTML='<div class="lvo-wait"><b style="font-size:20px;color:#fff">Danke fürs Dabeisein!</b><span style="opacity:.7;font-size:13px">Der Call ist vorbei.</span></div>'; } return; }
+      const c=document.querySelector('[data-lvo-cd]'); if(c) c.textContent=cd(T(e.s)-now());
+      drawVideo(false);
+      if(!LV.sent && T(e.s)<=now() && Date.now()-LV.seenT>5*60000){ LV.sent=1; rpc('live_dabei',{p_event:e.id}).catch(()=>{}); }
+      if(e.fragen && Date.now()-LV.qt>6000) loadQ();
+    }
+    window.APLUS_lvClose=function(){ const o=$('chlvo'); if(o) o.remove(); LV.open=null; document.documentElement.style.overflow=''; try{ if(S.player){ S.player.paused=false; } }catch(e){} };
+    async function loadQ(){
+      LV.qt=Date.now(); const e=LV.open&&find(LV.open.id,LV.open.termin); if(!e) return;
+      try{ const j=await rpc('live_fragen_laden',{p_event:e.id}); if(!j||!j.ok) return; drawQ(j.liste||[],e); }catch(err){}
+    }
+    function drawQ(L,e){
+      const box=$('lvo-ql'); if(!box) return; const atEnd=box.scrollHeight-box.scrollTop-box.clientHeight<40;
+      const k=JSON.stringify(L.map(q=>[q.id,q.status])); if(box.dataset.k===k) return; box.dataset.k=k;
+      box.innerHTML = L.length ? L.map(q=>`<div class="lvo-qi ${q.eigene?'me':''} ${q.status==='beantwortet'?'ok':''} ${q.status==='versteckt'?'hid':''}"><b>${esc2(q.name)}${q.eigene?' (du)':''}${q.status==='beantwortet'?' · beantwortet':''}</b>${esc2(q.text)}${e.speaker?`<div class="lvo-qa">${q.status!=='beantwortet'?`<button onclick="APLUS_lvQs(${q.id},'beantwortet')">Beantwortet</button>`:`<button onclick="APLUS_lvQs(${q.id},'offen')">Wieder offen</button>`}${q.status!=='versteckt'?`<button onclick="APLUS_lvQs(${q.id},'versteckt')">Ausblenden</button>`:''}</div>`:''}</div>`).join('') : '<div class="lvo-empty">Noch keine Fragen. Stell die erste!</div>';
+      if(atEnd) box.scrollTop=box.scrollHeight;
+    }
+    window.APLUS_lvQs=async(id,s)=>{ try{ await rpc('live_frage_status',{p_id:id,p_status:s}); }catch(e){} loadQ(); };
+    window.APLUS_lvAsk=async function(){
+      const i=$('lvo-in'), er=$('lvo-err'), e=LV.open&&find(LV.open.id,LV.open.termin); if(!i||!e) return;
+      const t=i.value.trim(); if(t.length<2) return;
+      const show=m=>{ er.textContent=m; er.hidden=!m; };
+      try{ if(window.chFilter){ const f=window.chFilter(t); if(f) return show(f); } }catch(x){}
+      const b=i.form.querySelector('button'); b.disabled=true;
+      try{ const j=await rpc('live_frage_neu',{p_event:e.id,p_text:t});
+        if(j&&j.ok){ i.value=''; show(''); LV.qt=0; loadQ(); }
+        else show(({filter:j&&j.text,tempo:'Kurz warten, dann kannst du die nächste Frage stellen.',limit:'Du hast schon 10 Fragen gestellt.',vorbei:'Der Vortrag ist vorbei.',premium:'Fragen stellen geht mit Premium.'})[j&&j.grund]||'Hat nicht geklappt. Versuch es nochmal.');
+      }catch(x){ show('Hat nicht geklappt. Versuch es nochmal.'); }
+      b.disabled=false;
+    };
+    function lockSheet(e){
+      const html=`<div class="text-center space-y-3"><p class="font-serif text-2xl leading-tight">Mit Premium live dabei</p>
+        <p class="text-sm text-muted">„${esc2(e.titel)}“${e.sprecher?' mit '+esc2(e.sprecher):''} ist ein Partner-Vortrag. Live zuschauen und Fragen stellen geht mit Premium.</p></div>
+        <ul class="space-y-2 text-sm my-2">${['Wöchentliche Live-Vorträge von unseren Partnern','Fragen direkt an den Sprecher','Neue Jobs 24 h vor allen anderen','10 statt 5 Bewerbungen pro Monat'].map(t=>`<li class="flex items-center gap-2"><span style="color:#B8892E;font-weight:800">✓</span>${t}</li>`).join('')}</ul>
+        <a class="btn-gold w-full block text-center" style="padding:12px" href="https://www.getclosinghub.com/#preise" target="_blank" rel="noopener">Premium ansehen</a>
+        <button class="text-sm text-muted w-full" onclick="closeSheet()">Später</button>`;
+      if(typeof sheet==='function') sheet(html);
+    }
+
+    new MutationObserver(()=>{ if(LV.ev.length && !document.querySelector('.chlv') && cur().length) draw(); }).observe(document.body,{childList:true,subtree:true});
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden && Date.now()-LV.at>15000) load(); });
+    setInterval(tick,1000);
+    let tries=0; const boot=setInterval(()=>{ tries++; if(S.member||tries>40){ clearInterval(boot); load(); } },500);
+  })();
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
