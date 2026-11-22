@@ -15,13 +15,14 @@
   css.textContent = `
   .left-3{left:.75rem}
   .object-contain{-o-object-fit:contain;object-fit:contain}
-  .pl-fit{object-fit:contain!important;background:transparent!important;z-index:1}
+  .pl-fit{object-fit:contain!important;background:transparent!important}
+  #modal .bg-gradient-to-t{z-index:25}
   .pl-acts{margin-left:auto;display:inline-flex;align-items:center;gap:10px;position:relative}
   .pl-menu{display:none;position:absolute;right:0;bottom:calc(100% + 10px);min-width:200px;background:rgba(14,26,43,.96);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:6px;z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.4)}
   .pl-menu.open{display:block}
   .pl-mi{display:flex!important;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 12px!important;border-radius:10px;font-size:14px!important;color:#fff!important;margin:0!important;background:none}
   .pl-mi:hover{background:rgba(255,255,255,.08)}
-  .pl-bd{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;filter:blur(28px) brightness(.55) saturate(1.2);z-index:0;pointer-events:none}
+  .pl-bd{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;filter:blur(28px) brightness(.55) saturate(1.2);pointer-events:none}
   /* Stories */
   .st-hd{left:12px!important;right:12px!important;justify-content:flex-start}
   .st-hd>button{flex:1 1 auto;justify-content:flex-start;text-align:left}
