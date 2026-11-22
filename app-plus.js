@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r15 · Feed-Logik: beliebt, Mitmach 10er, ClosingHub 7er, Kontaktvorschläge) =====
+/* ===== ClosingHub App-Plus (r16 · Feed-Logik + Stadt im Profil) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -786,8 +786,21 @@
   saveProfilDb=async function(p){ const s=document.getElementById('pfStadt'), v=document.getElementById('pfVor');
     if(p&&('land' in p)&&s){ const st=s.value, sv=v?v.checked:true; const r=await _spd.apply(this,arguments);
       const j=await rpc('profil_ort_speichern',{p_stadt:st,p_sichtbar:sv}); if(!j||!j.ok) throw new Error('Stadt konnte nicht gespeichert werden.');
-      S.kvMe=Object.assign(S.kvMe||{},{stadt:st.trim()||null,sichtbar:sv}); return r; }
+      S.kvMe=Object.assign(S.kvMe||{},{stadt:st.trim()||null,sichtbar:sv}); S.myOrt=Object.assign(S.myOrt||{},{stadt:st.trim()||null}); return r; }
     return _spd.apply(this,arguments); };
+
+  /* ---------- Stadt im Profil anzeigen (r16) ---------- */
+  const _pLine=profLine;
+  profLine=function(){
+    if(!S.member) return _pLine.apply(this,arguments);
+    if(S.myOrt===undefined&&!S._myOrtL){ S._myOrtL=1; rpc('profil_ort',{p_member:S.member.id}).then(o=>{ S.myOrt=o||{}; if(route()==='profile') render(); }).catch(()=>{ S.myOrt={}; }); }
+    const st=S.myOrt&&S.myOrt.stadt, ort=[st,ME.country].filter(Boolean).map(x=>esc(String(x))).join(', ');
+    const l=[ME.role+' <svg class="ci"><use href="#i-stern_voll"/></svg>']; if(ME.years) l.push(ME.years+' Jahre Erfahrung'); if(ort) l.push(ort); if(ME.langs) l.push(ME.langs); return l.join(' · ');
+  };
+  const _rpcOrt=rpc;
+  rpc=async function(fn,body){ const r=await _rpcOrt.apply(this,arguments);
+    if(fn==='profil_laden'&&r&&body&&body.p_member){ try{ const o=await _rpcOrt('profil_ort',{p_member:body.p_member}); if(o&&o.stadt) r.land=[o.stadt,r.land].filter(Boolean).join(', '); }catch(e){} }
+    return r; };
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
