@@ -376,35 +376,110 @@
   const lvOffen = () => { const d=LV.d; if(!d||!d.fragen) return 0; const t=Date.now(); const lauf=new Set((d.termine||[]).filter(x=>lvT(x.s)-9e5<=t&&lvT(x.e)>t).map(x=>x.event_id+'|'+x.termin)); return d.fragen.filter(f=>f.status==='offen'&&lauf.has(f.event_id+'|'+f.termin)).length; };
   async function lvLoad(){ try{ const r=await RPC('live_admin'); if(r&&r.ok){ LV.d=r; LV.err=0; } else { LV.d=LV.d||{}; LV.err=1; } }catch(e){ LV.d=LV.d||{}; LV.err=1; } if(route()==='live') render(); else drawNav(); }
   ZP.lvEdit = id => { LV.edit=id; ZP.typed=0; render(); };
-  ZP.lvSave = async b => {
+  const LV_WT=['Mo','Di','Mi','Do','Fr','Sa','So'];
+  const LV_NR={'1':'1.','2':'2.','3':'3.','4':'4.','-1':'letzten','0':'gleichen Datum'};
+  const lvIso = d => { const x=new Date(d); return x.getFullYear()+'-'+lvP2(x.getMonth()+1)+'-'+lvP2(x.getDate()); };
+  // Klartext der Wiederholung, z. B. "Jeden Di · alle 2 Wochen"
+  function lvRegel(e){
+    const wd0=((new Date(e.start_at).getDay()+6)%7)+1, tage=(e.tage&&e.tage.length?e.tage:[wd0]);
+    let t = ({einmal:'Einmalig',taeglich:'Jeden Tag',werktags:'Mo–Fr'})[e.wiederholung];
+    if(e.wiederholung==='woechentlich') t=(+e.alle_wochen>1?'Alle '+e.alle_wochen+' Wochen ':'Jeden ')+tage.map(n=>LV_WT[n-1]).join(', ');
+    if(e.wiederholung==='monatlich') t= !+e.monat_nr ? 'Monatlich am '+new Date(e.start_at).getDate()+'.' : 'Jeden '+LV_NR[String(e.monat_nr)]+' '+LV_WT[(tage[0]||wd0)-1]+' im Monat';
+    if(e.bis) t+=' bis '+new Date(e.bis).toLocaleDateString('de-DE');
+    if(e.ausfall&&e.ausfall.length) t+=' · '+e.ausfall.length+' Ausfall'+(e.ausfall.length>1?'tage':'tag');
+    return t||e.wiederholung;
+  }
+  // Gleiche Regeln wie live_termine in der Datenbank, für die Vorschau im Formular
+  function lvVorschau(p,n){
+    const s0=new Date(p.start_at); if(isNaN(s0)) return [];
+    const d0=new Date(s0.getFullYear(),s0.getMonth(),s0.getDate()), bis=p.bis?new Date(p.bis+'T23:59'):null, out=[];
+    const wd=d=>((d.getDay()+6)%7)+1, tage=p.tage&&p.tage.length?p.tage.map(Number):[wd(d0)], wk0=new Date(d0); wk0.setDate(d0.getDate()-(wd(d0)-1));
+    const today=new Date(); today.setHours(0,0,0,0);
+    for(let i=0;i<800&&out.length<n;i++){
+      const d=new Date(d0); d.setDate(d0.getDate()+i); if(bis&&d>bis) break;
+      const iso=lvIso(d); if((p.ausfall||[]).includes(iso)) continue;
+      let ok=false; const w=wd(d);
+      if(p.wiederholung==='einmal') ok=i===0;
+      else if(p.wiederholung==='taeglich') ok=true;
+      else if(p.wiederholung==='werktags') ok=w<6;
+      else if(p.wiederholung==='woechentlich') ok=tage.includes(w) && (Math.floor(Math.round((d-wk0)/864e5)/7)%Math.max(1,+p.alle_wochen||1))===0;
+      else if(p.wiederholung==='monatlich'){ const nr=+p.monat_nr||0; const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+        if(nr===0) ok=d.getDate()===Math.min(d0.getDate(),last); else if(nr===-1) ok=w===tage[0]&&d.getDate()+7>last; else ok=w===tage[0]&&Math.ceil(d.getDate()/7)===nr; }
+      if(ok && d>=today){ const s=new Date(d); s.setHours(s0.getHours(),s0.getMinutes(),0,0); out.push(s); }
+      if(p.wiederholung==='einmal') break;
+    }
+    return out;
+  }
+  function lvLesen(){
     const g=id=>{ const e=$(id); return e?(e.type==='checkbox'?e.checked:e.value.trim()):''; };
-    const d=g('lv-d'), t=g('lv-t');
-    if(!g('lv-titel')||!d||!t){ toast('Titel, Datum und Uhrzeit fehlen'); return; }
-    const p={ typ:g('lv-typ'), titel:g('lv-titel'), sprecher:g('lv-spr'), partner_id:g('lv-pid'), start_at:new Date(d+'T'+t).toISOString(),
-              dauer_min:g('lv-dauer')||60, wiederholung:g('lv-wdh'), bis:g('lv-bis'), yt_url:g('lv-yt'), aktiv:g('lv-akt') };
-    b.disabled=true;
-    try{ const r=await RPC('live_event_speichern',{p_id:LV.edit||null,p}); if(!r||!r.ok) throw 0; { const ms=new Date(p.start_at).getTime()-Date.now(); toast(ms>15*6e4&&p.wiederholung==='einmal'?'Gespeichert – Balken erscheint am '+new Date(p.start_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' minus 15 Min':(LV.edit?'Gespeichert':'Live-Termin angelegt')); } LV.edit=null; ZP.typed=0; await lvLoad(); }
-    catch(e){ b.disabled=false; toast('Hat nicht geklappt. Ist closinghub-runde22-live-calls.sql ausgeführt?'); }
+    const d=g('lv-d'), t=g('lv-t'), w=g('lv-wdh');
+    return { typ:g('lv-typ'), titel:g('lv-titel'), sprecher:g('lv-spr'), partner_id:g('lv-pid'),
+      start_at: d&&t ? new Date(d+'T'+t).toISOString() : null, dauer_min:g('lv-dauer')||60, wiederholung:w, bis:g('lv-bis'),
+      yt_url:g('lv-yt'), aktiv:g('lv-akt'),
+      tage: w==='woechentlich' ? [...document.querySelectorAll('.lv-wt.on')].map(b=>+b.dataset.t) : (w==='monatlich' ? [+g('lv-mwt')||1] : []),
+      alle_wochen: w==='woechentlich' ? (+g('lv-alle')||1) : 1,
+      monat_nr: w==='monatlich' ? g('lv-mnr') : '',
+      ausfall: LV.aus||[] };
+  }
+  ZP.lvUpd = () => {
+    try{ const dv=$('lv-d')&&$('lv-d').value; if(dv){ const wdx=((new Date(dv+'T12:00').getDay()+6)%7)+1;
+      if(!LV.wtTouched) document.querySelectorAll('.lv-wt').forEach(b=>b.classList.toggle('on',+b.dataset.t===wdx));
+      const m=$('lv-mwt'); if(m&&!LV.mwTouched) m.value=String(wdx); } }catch(e){}
+    const p=lvLesen(), w=p.wiederholung;
+    const show=(id,on)=>{ const e=$(id); if(e) e.style.display=on?'':'none'; };
+    show('lv-box-woche', w==='woechentlich'); show('lv-box-monat', w==='monatlich'); show('lv-box-bis', w!=='einmal');
+    const mw=$('lv-mwt-wrap'); if(mw) mw.style.display = w==='monatlich' && p.monat_nr!=='0' ? '' : 'none';
+    const box=$('lv-vorschau'); if(!box) return;
+    const L=lvVorschau(p,6);
+    box.innerHTML = L.length ? L.map(s=>`<span class="pill" style="margin:0 6px 6px 0">${s.toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})} · ${lvHM(s)}</span>`).join('') : '<span class="muted">Keine kommenden Termine mit diesen Einstellungen.</span>';
+    const a=$('lv-aus-list'); if(a) a.innerHTML=(LV.aus||[]).map(x=>`<span class="pill" style="margin:0 6px 6px 0">${new Date(x+'T12:00').toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})} <a href="javascript:void 0" onclick="ZP.lvAusWeg('${x}')" style="margin-left:4px">✕</a></span>`).join('') || '<span class="muted" style="font-size:12px">Keine</span>';
   };
-  ZP.lvTyp = v => { const s=$('lv-titel'); if(s && !s.value) s.value = v==='motivation' ? 'Motivations-Call' : ''; const w=$('lv-wdh'); if(w && v==='motivation' && w.value==='einmal'){ w.value='werktags'; } };
-  ZP.lvQ = async (id,st) => { try{ await RPC('live_frage_status',{p_id:id,p_status:st}); }catch(e){} await lvLoad(); };
+  ZP.lvWt = b => { LV.wtTouched=1; b.classList.toggle('on'); ZP.lvUpd(); };
+  ZP.lvAusDazu = () => { const e=$('lv-aus-d'); if(!e||!e.value) return; LV.aus=[...new Set([...(LV.aus||[]),e.value])].sort(); e.value=''; ZP.lvUpd(); };
+  ZP.lvAusWeg = x => { LV.aus=(LV.aus||[]).filter(y=>y!==x); ZP.lvUpd(); };
+  ZP.lvPartner = sel => { const P=(LV.d&&LV.d.partner)||[], p=P.find(x=>String(x.id)===sel.value), s=$('lv-spr'); if(p&&s&&!s.value) s.value=p.n||''; };
+  ZP.lvSave = async b => {
+    const p=lvLesen();
+    if(!p.titel||!p.start_at){ toast('Titel, Datum und Uhrzeit fehlen'); return; }
+    if(p.wiederholung==='woechentlich'&&!p.tage.length){ toast('Wähle mindestens einen Wochentag'); return; }
+    b.disabled=true;
+    try{ const r=await RPC('live_event_speichern',{p_id:LV.edit||null,p}); if(!r||!r.ok) throw 0;
+      const n=lvVorschau(p,1)[0]; toast(n?'Gespeichert – nächster Termin '+n.toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Gespeichert');
+      LV.edit=null; ZP.typed=0; await lvLoad(); }
+    catch(e){ b.disabled=false; toast('Hat nicht geklappt. Ist closinghub-runde23-live-termine-flexibel.sql ausgeführt?'); }
+  };
+  ZP.lvTyp = v => { const s=$('lv-titel'); if(s && !s.value) s.value = v==='motivation' ? 'Motivations-Call' : ''; const w=$('lv-wdh'); if(w && w.value==='einmal'){ w.value = v==='motivation' ? 'werktags' : 'woechentlich'; } ZP.lvUpd(); };
   function lvForm(e){
     const s=e?new Date(e.start_at):new Date(Math.ceil((Date.now()+5*6e4)/9e5)*9e5), P=(LV.d&&LV.d.partner)||[];
-    const val=(x,d='')=>esc(x==null?d:x);
-    return `<div class="card"><h3 style="margin:0 0 10px">${e?'Live-Termin bearbeiten':'Neuer Live-Termin'}</h3>
+    const val=(x,d='')=>esc(x==null?d:x), wd0=((s.getDay()+6)%7)+1, w=e?e.wiederholung:'einmal';
+    const tage=e&&e.tage&&e.tage.length?e.tage.map(Number):[wd0], mnr=e&&e.monat_nr!=null?String(e.monat_nr):'1';
+    LV.aus=(e&&e.ausfall||[]).map(String);
+    LV.wtTouched=!!(e&&e.tage&&e.tage.length); LV.mwTouched=!!(e&&e.wiederholung==='monatlich');
+    setTimeout(ZP.lvUpd,0);
+    const opt=(v,t,cur)=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${t}</option>`;
+    return `<div class="card" oninput="ZP.lvUpd()" onchange="ZP.lvUpd()"><h3 style="margin:0 0 10px">${e?'Live-Termin bearbeiten':'Neuer Live-Termin'}</h3>
+      <style>.lv-wt{min-width:42px;padding:8px 0;border-radius:10px;border:1px solid var(--line,#ddd);font-weight:600;font-size:13px;background:transparent}.lv-wt.on{background:#B8892E;border-color:#B8892E;color:#111}</style>
       <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
-        <label class="f">Art<select class="in" id="lv-typ" onchange="ZP.lvTyp(this.value)"><option value="vortrag" ${!e||e.typ==='vortrag'?'selected':''}>Partner-Vortrag (nur Premium, mit Fragen)</option><option value="motivation" ${e&&e.typ==='motivation'?'selected':''}>Motivations-Call (ab Plus, ohne Chat)</option></select></label>
+        <label class="f">Art<select class="in" id="lv-typ" onchange="ZP.lvTyp(this.value)">${opt('vortrag','Partner-Vortrag (nur Premium, mit Fragen)',e?e.typ:'vortrag')}${opt('motivation','Motivations-Call (ab Plus, ohne Chat)',e?e.typ:'')}</select></label>
         <label class="f">Titel<input class="in" id="lv-titel" maxlength="120" value="${val(e&&e.titel)}" placeholder="z. B. Einwandbehandlung live"></label>
+        <label class="f">Partner<select class="in" id="lv-pid" onchange="ZP.lvPartner(this)"><option value="">kein Partner (z. B. Motivations-Call)</option>${P.map(p=>`<option value="${p.id}" ${e&&+e.partner_id===+p.id?'selected':''}>${esc(p.n||('Partner '+p.id))}</option>`).join('')}</select></label>
         <label class="f">Sprecher (Name in der App)<input class="in" id="lv-spr" maxlength="60" value="${val(e&&e.sprecher)}" placeholder="z. B. Paul"></label>
-        <label class="f">Partner-Konto (darf Fragen markieren)<select class="in" id="lv-pid"><option value="">keins</option>${P.map(p=>`<option value="${p.id}" ${e&&+e.partner_id===+p.id?'selected':''}>${esc(p.n||('Partner '+p.id))}</option>`).join('')}</select></label>
-        <label class="f">Datum (erster Termin)<input class="in" type="date" id="lv-d" value="${s.getFullYear()}-${lvP2(s.getMonth()+1)}-${lvP2(s.getDate())}"></label>
+        <label class="f">Startdatum (erster Termin ab)<input class="in" type="date" id="lv-d" value="${lvIso(s)}"></label>
         <label class="f">Uhrzeit<input class="in" type="time" id="lv-t" value="${lvP2(s.getHours())+':'+lvP2(s.getMinutes())}"></label>
         <label class="f">Dauer in Minuten<input class="in" type="number" min="5" max="600" id="lv-dauer" value="${val(e&&e.dauer_min,60)}"></label>
-        <label class="f">Wiederholen<select class="in" id="lv-wdh"><option value="einmal" ${!e||e.wiederholung==='einmal'?'selected':''}>Nur einmal</option><option value="werktags" ${e&&e.wiederholung==='werktags'?'selected':''}>Jeden Werktag (Mo–Fr)</option><option value="taeglich" ${e&&e.wiederholung==='taeglich'?'selected':''}>Jeden Tag</option></select></label>
-        <label class="f">Wiederholen bis (leer = offen)<input class="in" type="date" id="lv-bis" value="${val(e&&e.bis)}"></label>
+        <label class="f">Wiederholen<select class="in" id="lv-wdh">${opt('einmal','Nur einmal',w)}${opt('woechentlich','Wöchentlich (Tage wählen)',w)}${opt('monatlich','Monatlich',w)}${opt('werktags','Jeden Werktag (Mo–Fr)',w)}${opt('taeglich','Jeden Tag',w)}</select></label>
+        <div id="lv-box-woche" style="grid-column:1/-1;display:none"><div class="f" style="margin-bottom:6px">An diesen Tagen</div>
+          <div class="row" style="gap:6px;flex-wrap:wrap">${LV_WT.map((t,i)=>`<button type="button" class="lv-wt ${tage.includes(i+1)?'on':''}" data-t="${i+1}" onclick="ZP.lvWt(this)">${t}</button>`).join('')}
+          <select class="in" id="lv-alle" style="width:auto;margin-left:8px">${[1,2,3,4].map(n=>opt(n,n===1?'jede Woche':'alle '+n+' Wochen',e?e.alle_wochen||1:1)).join('')}</select></div></div>
+        <div id="lv-box-monat" style="grid-column:1/-1;display:none"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><span class="f" style="margin:0">Jeden</span>
+          <select class="in" id="lv-mnr" style="width:auto">${['1','2','3','4','-1','0'].map(n=>opt(n,n==='0'?'Monat am gleichen Datum':LV_NR[n],mnr)).join('')}</select>
+          <span id="lv-mwt-wrap"><select class="in" id="lv-mwt" style="width:auto" onchange="ZLV.mwTouched=1">${LV_WT.map((t,i)=>opt(i+1,['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'][i],tage[0])).join('')}</select> <span class="f" style="margin:0">im Monat</span></span></div></div>
+        <label class="f" id="lv-box-bis">Wiederholen bis (leer = offen)<input class="in" type="date" id="lv-bis" value="${val(e&&e.bis)}"></label>
+        <div class="f" style="grid-column:1/-1">Fällt aus am (z. B. Feiertage, Urlaub)<div class="row" style="gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap"><input class="in" type="date" id="lv-aus-d" style="width:auto"><button type="button" class="btn sm" onclick="ZP.lvAusDazu()">Hinzufügen</button><span id="lv-aus-list"></span></div></div>
         <label class="f" style="grid-column:1/-1">YouTube-Link (Livestream, „nicht gelistet“)<input class="in" id="lv-yt" value="${val(e&&e.yt_url)}" placeholder="https://youtube.com/live/…"></label>
         <label class="row" style="gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="lv-akt" ${!e||e.aktiv?'checked':''}> Aktiv (in der App sichtbar)</label>
       </div>
+      <div style="margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(184,137,46,.08)"><div class="f" style="margin-bottom:6px">Vorschau: die nächsten Termine</div><div id="lv-vorschau"></div></div>
       <div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn" onclick="ZLV.edit=null;ZP.typed=0;render()">Abbrechen</button><button class="btn gold-b" onclick="ZP.lvSave(this)">${e?'Speichern':'Anlegen'}</button></div></div>`;
   }
   PAGES.live = function(){
@@ -415,7 +490,7 @@
     if(LV.err && !LV.d.events) return head+'<div class="card empty">Fehlt noch: Führe einmal <b>closinghub-runde22-live-calls.sql</b> in Supabase aus.</div>';
     const E=LV.d.events||[], byId=Object.fromEntries(E.map(e=>[e.id,e])), t=Date.now();
     const T=(LV.d.termine||[]).filter(x=>byId[x.event_id]);
-    const lauf=T.filter(x=>lvT(x.s)-9e5<=t&&lvT(x.e)>t), next=T.filter(x=>lvT(x.s)-9e5>t).slice(0,12), alt=T.filter(x=>lvT(x.e)<=t).slice(-6).reverse();
+    const lauf=T.filter(x=>lvT(x.s)-9e5<=t&&lvT(x.e)>t), next=T.filter(x=>lvT(x.s)-9e5>t).slice(0,20), alt=T.filter(x=>lvT(x.e)<=t).slice(-6).reverse();
     const typP=e=>e.typ==='vortrag'?'<span class="pill p-gold">Vortrag · Premium</span>':'<span class="pill p-ok">Motivation · ab Plus</span>';
     const wdh={einmal:'einmal',werktags:'Mo–Fr',taeglich:'täglich'};
     const row=(x,st)=>{ const e=byId[x.event_id]; return `<tr><td style="padding-left:16px"><b>${lvDT(x.s)}</b><div class="muted" style="font-size:11.5px">bis ${lvHM(x.e)}</div></td><td>${typP(e)}</td><td><b>${esc(e.titel)}</b><div class="muted" style="font-size:11.5px">${esc(e.sprecher||'')}</div></td><td>${st}</td><td>${num(x.dabei)}</td><td>${e.typ==='vortrag'?num(x.fragen):'–'}</td><td>${e.yt_url?'':'<span class="pill p-bad">Link fehlt</span>'}</td></tr>`; };
@@ -427,9 +502,9 @@
       <div class="card" style="padding:0;overflow:hidden;margin-top:16px"><h3 style="margin:14px 16px 6px">Jetzt (Balken in der App sichtbar)</h3>${tbl(lauf,x=>lvT(x.s)<=t?'<span class="pill p-bad">LIVE</span>':'<span class="pill p-warn">in '+Math.ceil((lvT(x.s)-t)/6e4)+' Min</span>','Gerade läuft nichts.')}</div>
       ${F.length?`<div class="card" style="margin-top:16px"><h3 style="margin:0 0 8px">Fragen aus dem Vortrag</h3>${F.map(f=>`<div class="item" style="align-items:flex-start;gap:10px;${f.status==='versteckt'?'opacity:.45':''}"><div style="flex:1"><b style="font-size:13px">${esc(f.name)}</b> <span class="muted" style="font-size:11.5px">${lvHM(f.at)} · ${esc((byId[f.event_id]||{}).titel||'')}</span><div style="font-size:14px;margin-top:2px">${esc(f.text)}</div></div>
           ${f.status!=='beantwortet'?`<button class="btn sm" onclick="ZP.lvQ(${f.id},'beantwortet')">Beantwortet</button>`:`<span class="pill p-ok">beantwortet</span>`}${f.status!=='versteckt'?`<button class="btn sm" onclick="ZP.lvQ(${f.id},'versteckt')">Ausblenden</button>`:`<button class="btn sm" onclick="ZP.lvQ(${f.id},'offen')">Wieder zeigen</button>`}</div>`).join('')}</div>`:''}
-      <div class="card" style="padding:0;overflow:hidden;margin-top:16px"><h3 style="margin:14px 16px 6px">Nächste Termine (14 Tage)</h3>${tbl(next,'<span class="pill">geplant</span>','Noch nichts geplant. Leg oben einen Live-Termin an.')}</div>
+      <div class="card" style="padding:0;overflow:hidden;margin-top:16px"><h3 style="margin:14px 16px 6px">Nächste Termine</h3>${tbl(next,'<span class="pill">geplant</span>','Noch nichts geplant. Leg oben einen Live-Termin an.')}</div>
       <div class="card" style="padding:0;overflow:hidden;margin-top:16px"><h3 style="margin:14px 16px 6px">Alle Live-Termine</h3>${E.length?`<div style="overflow:auto"><table class="zp-tbl"><thead><tr><th style="padding-left:16px">Titel</th><th>Art</th><th>Start</th><th>Wiederholung</th><th>Status</th><th></th></tr></thead><tbody>
-        ${E.map(e=>`<tr class="k" onclick="ZP.lvEdit(${e.id})"><td style="padding-left:16px"><b>${esc(e.titel)}</b><div class="muted" style="font-size:11.5px">${esc(e.sprecher||'')}</div></td><td>${typP(e)}</td><td>${lvDT(e.start_at)} · ${num(e.dauer_min)} Min</td><td>${wdh[e.wiederholung]||e.wiederholung}${e.bis?' bis '+new Date(e.bis).toLocaleDateString('de-DE'):''}</td><td>${e.aktiv?'<span class="pill p-ok">aktiv</span>':'<span class="pill">aus</span>'}</td><td><button class="btn sm" onclick="event.stopPropagation();ZP.lvEdit(${e.id})">Bearbeiten</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty" style="padding:18px">Noch keine Live-Termine.</div>'}</div>
+        ${E.map(e=>`<tr class="k" onclick="ZP.lvEdit(${e.id})"><td style="padding-left:16px"><b>${esc(e.titel)}</b><div class="muted" style="font-size:11.5px">${esc(e.sprecher||'')}</div></td><td>${typP(e)}</td><td>${lvDT(e.start_at)} · ${num(e.dauer_min)} Min</td><td>${esc(lvRegel(e))}</td><td>${e.aktiv?'<span class="pill p-ok">aktiv</span>':'<span class="pill">aus</span>'}</td><td><button class="btn sm" onclick="event.stopPropagation();ZP.lvEdit(${e.id})">Bearbeiten</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty" style="padding:18px">Noch keine Live-Termine.</div>'}</div>
       ${alt.length?`<div class="card" style="padding:0;overflow:hidden;margin-top:16px"><h3 style="margin:14px 16px 6px">Zuletzt</h3>${tbl(alt,'<span class="pill">vorbei</span>','')}</div>`:''}
       <div class="card" style="margin-top:16px"><h3 style="margin:0 0 6px">So richtest du den Stream ein</h3><p class="muted" style="font-size:13px;margin:0">YouTube Studio → Livestream planen → Sichtbarkeit <b>„Nicht gelistet“</b> → unter Einstellungen <b>„Einbetten zulassen“</b> an → Link hier eintragen. Der Link wird nur an Member mit Zugang geschickt. Den täglichen Morgen-Call kannst du einmal als „Jeden Werktag“ anlegen; wechselt der Stream-Link, hier einfach aktualisieren.</p></div>`;
   };
