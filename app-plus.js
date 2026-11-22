@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r16 · Feed-Logik + Stadt im Profil) =====
+/* ===== ClosingHub App-Plus (r17 · Jobs am Handy + Glocke für Job-Benachrichtigungen) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -151,7 +151,7 @@
   render = function(){ const r=route(); if(r!=='einstellungen') S.setSub=null; document.documentElement.dataset.r=r; try{ htFix(); }catch(e){} const out=_render.apply(this,arguments); fixAll(); return out; };
   let fixQ=0; const fixSoon=()=>{ if(fixQ) return; fixQ=requestAnimationFrame(()=>{ fixQ=0; fixAll(); }); };
   new MutationObserver(fixSoon).observe(document.body,{childList:true,subtree:true});
-  function fixAll(){ try{ fixSeen(); }catch(e){} try{ fixOrt(); }catch(e){}  try{ fixTop(); }catch(e){}  try{ fixNav(); }catch(e){} try{ fixProfil(); }catch(e){} try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
+  function fixAll(){ try{ fixJobs(); }catch(e){}  try{ fixSeen(); }catch(e){} try{ fixOrt(); }catch(e){}  try{ fixTop(); }catch(e){}  try{ fixNav(); }catch(e){} try{ fixProfil(); }catch(e){} try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
 
   /* ---------- Handy: Plus-Knopf unten, Profil aufgeräumt, Einstellungen im Profil ---------- */
   function fixNav(){
@@ -801,6 +801,77 @@
   rpc=async function(fn,body){ const r=await _rpcOrt.apply(this,arguments);
     if(fn==='profil_laden'&&r&&body&&body.p_member){ try{ const o=await _rpcOrt('profil_ort',{p_member:body.p_member}); if(o&&o.stadt) r.land=[o.stadt,r.land].filter(Boolean).join(', '); }catch(e){} }
     return r; };
+
+  /* ---------- Jobs am Handy (r17): sauberes Layout + Glocke für Job-Benachrichtigungen ---------- */
+  (function(){ const st=document.createElement('style'); st.textContent=`
+    .jbell{display:none}
+    @media (max-width:767px){
+      html[data-r="jobs"] #app{overflow-x:hidden}
+      html[data-r="jobs"] #app .jobs-grid{display:block}
+      html[data-r="jobs"] #app .jobs-grid > .jobs-detail{display:none}
+      html[data-r="jobs"] #app .jsub-card{display:none}
+      html[data-r="jobs"] #app .jobs-grid > div:first-child > * + *{margin-top:12px}
+      html[data-r="jobs"] #app .jrole-wrap{display:flex;align-items:center;gap:8px}
+      html[data-r="jobs"] #app .jrole-row{flex:1;min-width:0;flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;padding-bottom:0!important}
+      html[data-r="jobs"] #app .jrole-row::-webkit-scrollbar{display:none}
+      html[data-r="jobs"] #app .jrole-row > button{flex:none;padding:6px 12px!important;font-size:13px!important}
+      .jbell{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:50%;border:1px solid rgb(var(--line));background:rgb(var(--panel));position:relative;color:inherit}
+      .jbell.on{border-color:#087A4B;color:#087A4B}
+      .jbell b{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#087A4B;color:#fff;font-size:10px;line-height:17px;font-weight:700}
+      html[data-r="jobs"] #app .jd-wrap{padding-top:18px!important;padding-bottom:24px}
+      html[data-r="jobs"] #app .jd-wrap > button:first-child{display:inline-flex;margin-bottom:12px}
+      .jd-card .p-5{padding:16px!important}
+      .jd-card h1{font-size:23px!important;line-height:1.22!important}
+      .jd-card .font-serif.mt-0\\.5{font-size:20px!important}
+      .jd-card *{overflow-wrap:anywhere;min-width:0}
+      .jd-card .grid.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .jd-card .grid.grid-cols-2 > .jd-wide{grid-column:1/-1}
+      .jd-card .grid.grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .jd-card .grid.grid-cols-3 > *{padding-left:6px!important;padding-right:6px!important}
+      html[data-r="jobs"] #app .jobs-list-card{overflow-wrap:anywhere}
+      .jd-card .flex.justify-between.items-center.gap-3{flex-wrap:wrap}
+      .jd-card .flex.justify-between.items-center.gap-3 > button{flex:1 1 100%;white-space:normal}
+    }
+    .jb-sheet{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+    .jb-box{width:100%;max-width:480px;background:rgb(var(--bg));border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+    @media (min-width:768px){ .jb-sheet{align-items:center} .jb-box{border-radius:20px} }
+    .jb-row{display:flex;align-items:center;justify-content:space-between;padding:12px 2px;border-top:1px solid rgb(var(--line) / .6)}
+    .jb-sw{width:44px;height:26px;border-radius:13px;background:rgb(var(--line));position:relative;transition:background .15s;flex:none}
+    .jb-sw::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    .jb-sw.on{background:#087A4B} .jb-sw.on::after{left:21px}
+  `; document.head.appendChild(st); })();
+  const BELL='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>';
+  // Auswahl aus der Datenbank laden und Änderungen speichern (auch die Chips am PC)
+  function jsLoad(){ if(!S.member||S._jsL!==undefined) return; S._jsL=1; rpc('job_abos_laden').then(r=>{ if(r&&Array.isArray(r.abos)){ S.jsubs=r.abos.slice(); S._jsSaved=JSON.stringify(S.jsubs); if(route()==='jobs') render(); } }).catch(()=>{}); }
+  let jsT=null; function jsSave(){ if(!S.member||S._jsSaved===undefined) return; const cur=JSON.stringify(S.jsubs||[]); if(cur===S._jsSaved) return;
+    clearTimeout(jsT); jsT=setTimeout(()=>{ const v=(S.jsubs||[]).slice(); rpc('job_abos_speichern',{p_abos:v}).then(j=>{ if(j&&j.ok) S._jsSaved=JSON.stringify(v); }).catch(()=>{}); },400); }
+  window.APLUS_jbell=function(){
+    if(!S.user){ go('login'); return; }
+    const m=document.getElementById('modal'); const on=c=>(S.jsubs||[]).includes(c);
+    const draw=()=>{ m.innerHTML=`<div class="jb-sheet" onclick="if(event.target===this)APLUS_jbClose()"><div class="jb-box">
+      <div class="flex items-center justify-between mb-1"><p class="font-semibold text-lg">Job-Benachrichtigungen</p><button onclick="APLUS_jbClose()" class="text-muted text-2xl leading-none" aria-label="Schließen">×</button></div>
+      <p class="text-sm text-muted mb-3">Wähle, über welche neuen Jobs du sofort eine Mitteilung bekommst.</p>
+      ${JROLES.map(c=>`<button type="button" class="jb-row w-full text-left" onclick="APLUS_jbTog('${c}')"><span class="text-[15px]">${c}</span><span class="jb-sw ${on(c)?'on':''}"></span></button>`).join('')}
+      <button class="btn-gold w-full mt-4" onclick="APLUS_jbClose()">Fertig</button></div></div>`; };
+    window.APLUS_jbTog=c=>{ chEv&&chEv('jobabo'); S.jsubs=on(c)?S.jsubs.filter(x=>x!==c):[...(S.jsubs||[]),c]; jsSave(); draw(); };
+    window.APLUS_jbClose=()=>{ m.innerHTML=''; render(); };
+    draw();
+  };
+  function fixJobs(){
+    if(route()!=='jobs') return; jsLoad(); jsSave();
+    const grid=[...document.querySelectorAll('#app .grid')].find(g=>/grid-cols-\[340px_1fr\]/.test(g.className));
+    if(grid){ grid.classList.add('jobs-grid'); const col=grid.children[0], det=grid.children[1]; if(det) det.classList.add('jobs-detail');
+      if(col){ [...col.children].forEach(c=>{ if(c.classList.contains('card')&&/Job-Benachrichtigungen/.test(c.textContent)) c.classList.add('jsub-card'); });
+        const row=[...col.children].find(c=>c.classList.contains('flex')&&c.classList.contains('flex-wrap')&&c.querySelector('button')&&JROLES.some(r=>c.textContent.includes(r))&&!c.classList.contains('card'));
+        if(row&&!row.classList.contains('jrole-row')){ row.classList.add('jrole-row'); const w=document.createElement('div'); w.className='jrole-wrap'; row.before(w); w.appendChild(row);
+          w.insertAdjacentHTML('beforeend',`<button class="jbell" onclick="APLUS_jbell()" aria-label="Job-Benachrichtigungen">${BELL}</button>`); }
+        [...col.querySelectorAll(':scope > button')].forEach(b=>b.classList.add('jobs-list-card'));
+        col.querySelectorAll('p,span').forEach(s=>{ if(s.childNodes.length===1&&s.firstChild.nodeType===3&&/(^–\s·\s)|(\s·\s–$)/.test(s.textContent)){ const t=s.textContent.replace(/^(–\s·\s)+/,'').replace(/(\s·\s–)+$/,''); if(t!==s.textContent) s.textContent=t; } }); } }
+    const b=document.querySelector('#app .jbell'); if(b){ const n=(S.jsubs||[]).length; if(b.classList.contains('on')!==(n>0)) b.classList.toggle('on',n>0); const old=b.querySelector('b'); const want=n?String(n):''; if((old?old.textContent:'')!==want){ if(old) old.remove(); if(n) b.insertAdjacentHTML('beforeend',`<b>${n}</b>`); } }
+    document.querySelectorAll('#app .card.overflow-hidden.h-fit').forEach(c=>{ c.classList.add('jd-card');
+      c.querySelectorAll('.grid.grid-cols-2 > div').forEach(f=>{ const v=f.querySelector('p.text-sm'); const wide=!!v&&v.textContent.trim().length>38; if(f.classList.contains('jd-wide')!==wide) f.classList.toggle('jd-wide',wide); }); });
+    const back=[...document.querySelectorAll('#app button')].find(x=>x.textContent.trim()==='← Alle Jobs'); if(back&&back.parentElement) back.parentElement.classList.add('jd-wrap');
+  }
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
