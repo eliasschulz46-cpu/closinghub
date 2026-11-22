@@ -36,6 +36,28 @@
     .admarq-track{display:flex;align-items:center;height:100%;width:max-content;animation-name:admarq;animation-timing-function:linear;animation-iteration-count:infinite;will-change:transform}
     .admarq-it{display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;padding:0 1.25rem;height:100%;font-size:13px}
   }
+  /* Player: Wischen + Aktionen rechts (Handy) */
+  html.pl-open,html.pl-open body{overflow:hidden!important;overscroll-behavior:none}
+  html.pl-open #modal{touch-action:none;overscroll-behavior:contain}
+  html.pl-open #modal #psheet,html.pl-open #modal #plMenu{touch-action:auto}
+  #pbar{transition:width .1s linear}
+  @keyframes plUp{from{transform:translateY(100%)}to{transform:none}}
+  @keyframes plDown{from{transform:translateY(-100%)}to{transform:none}}
+  #modal .slide-up{animation:plUp .3s cubic-bezier(.2,.8,.2,1)!important}
+  #modal .slide-down{animation:plDown .3s cubic-bezier(.2,.8,.2,1)!important}
+  html.pl-open #modal > div{background:#000}
+  .pl-side{position:absolute;right:8px;bottom:22px;display:flex;flex-direction:column;align-items:center;gap:16px;z-index:30}
+  .pl-side>button{display:flex!important;flex-direction:column;align-items:center;gap:3px!important;margin:0!important;color:#fff}
+  .pl-side .icbox{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(10,14,22,.38);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .pl-side .icbox svg{color:#fff;stroke:#fff}
+  .pl-side .icon-on .icbox svg,.pl-side .icon-on .icbox svg *{color:#ff3b5c!important;stroke:#ff3b5c!important;fill:#ff3b5c!important}
+  .pl-side .text-sm{font-size:12px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .pl-av{position:relative;margin-bottom:6px}
+  .pl-av>span{display:block;border-radius:50%;box-shadow:0 0 0 2px #fff}
+  .pl-av button{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:#e5484d;color:#fff;font-weight:800;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;border:0}
+  .pl-av button.on{background:#fff;color:#087A4B}
+  .pl-side #plMenu{right:56px;bottom:0}
+  @media(max-width:767px){ #modal .pl-has-side{padding-right:74px!important} #modal .pl-has-side .pl-acts{display:none} }
   /* Stories */
   .st-hd{left:12px!important;right:12px!important;justify-content:flex-start}
   .st-hd>button{flex:1 1 auto;justify-content:flex-start;text-align:left}
@@ -170,7 +192,7 @@
   if(typeof drawPlayer==='function' && typeof togglePause==='function'){
     const _dp = drawPlayer;
     drawPlayer = function(){ const ov=document.querySelector('#modal video[autoplay]'); const keep=ov?{src:ov.currentSrc||ov.src,t:ov.currentTime}:null;
-      const r=_dp.apply(this,arguments); try{ plFit(); }catch(e){} try{ plMenu(); }catch(e){} try{ plSound(keep); }catch(e){} try{
+      const r=_dp.apply(this,arguments); plOpen(true); try{ plFit(); }catch(e){} try{ plMenu(); }catch(e){} try{ plSide(); }catch(e){} try{ plSound(keep); }catch(e){} try{
       const pz=document.querySelector('[aria-label="Pausiert"]'); const box=pz&&pz.parentElement;
       const p=S.player, dt=p&&p.pzAt?Date.now()-p.pzAt:99999;
       if(box){ if(dt<1000){ box.classList.add('pz-flash'); box.style.animationDelay=(-dt)+'ms'; } else box.remove(); }
@@ -249,6 +271,56 @@
   document.addEventListener('play', e=>{ if(e.target && e.target.matches && e.target.matches('#modal video[autoplay]') && !rafOn){ rafOn=true; requestAnimationFrame(plRaf); } }, true);
   document.addEventListener('timeupdate', e=>{ if(e.target && e.target.matches && e.target.matches('#modal video[autoplay]')) try{ updBar(); }catch(x){} }, true);
   document.addEventListener('loadedmetadata', e=>{ if(e.target && e.target.matches && e.target.matches('#modal video[autoplay]')) try{ updBar(); }catch(x){} }, true);
+
+  /* ---------- Player: Wischen wie bei TikTok (folgt dem Finger, gleitet weich weiter, lädt nach) ---------- */
+  const plBox = () => { const f=document.querySelector('#modal > div'); return f && f.firstElementChild; };
+  const plBlocked = t => !!(t.closest && (t.closest('#psheet') || t.closest('#plMenu') || t.closest('#chatwrap') || t.closest('.nw-ov') || t.closest('input,textarea,select')));
+  const plOpen = on => document.documentElement.classList.toggle('pl-open', !!on);
+  function canNext(){ const p=S.player; if(!p) return false; return p.i < PL().length-1 || (S.user && S.rpMore && S.plist===S.feedList); }
+  function plMore(){ if(S._plLoad || !S.rpMore || !(S.plist===S.feedList)) return Promise.resolve(false); S._plLoad=true; const n0=(S.feedList||[]).length;
+    return feedLoad(true).then(()=>{ S._plLoad=false; if(route()==='feed' && S.feedList && S.feedList.length>n0){ S.plist=S.feedList; return true; } return false; }).catch(()=>{ S._plLoad=false; return false; }); }
+  function plBump(dir){ const b=plBox(); if(!b) return; b.style.transition='transform .18s ease-out'; b.style.transform=`translateY(${dir*-36}px)`; setTimeout(()=>{ b.style.transform=''; },180);
+    if(dir>0 && S.user && !$('plEnd')){ b.insertAdjacentHTML('beforeend','<div id="plEnd" style="position:absolute;left:50%;bottom:110px;transform:translateX(-50%);z-index:40;background:rgba(14,26,43,.92);color:#fff;font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;white-space:nowrap">Du bist durch – das waren alle Beiträge</div>'); setTimeout(()=>{ const e=$('plEnd'); if(e) e.remove(); },1800); } }
+  if(typeof nextP==='function'){
+    const _np = nextP;
+    nextP = function(){ const p=S.player; if(!p) return; const n=PL().length;
+      if(S.user && p.i>=n-4) plMore();                     // rechtzeitig nachladen
+      if(S.user && p.i>=n-1){ plMore().then(ok=>{ if(ok && S.player) _np(); else plBump(1); }); return; }
+      return _np.apply(this,arguments); };
+  }
+  if(typeof stopPlayer==='function'){ const _sp=stopPlayer; stopPlayer=function(){ plOpen(false); return _sp.apply(this,arguments); }; }
+  if(typeof closeModal==='function'){ const _cm=closeModal; closeModal=function(){ const r=_cm.apply(this,arguments); if(!S.player) plOpen(false); return r; }; }
+  setInterval(()=>{ if(!S.player && document.documentElement.classList.contains('pl-open')) plOpen(false); },1000);
+  let dg=null;
+  document.addEventListener('touchstart', e=>{ if(!S.player || e.touches.length>1 || plBlocked(e.target) || S.breath) { dg=null; return; }
+    dg={y:e.touches[0].clientY, x:e.touches[0].clientX, t:Date.now(), dy:0, dir:null}; const b=plBox(); if(b) b.style.transition='none'; }, {capture:true, passive:true});
+  document.addEventListener('touchmove', e=>{ if(!S.player) return; if(!dg){ if(!plBlocked(e.target)) e.preventDefault(); return; }
+    const dy=e.touches[0].clientY-dg.y, dx=e.touches[0].clientX-dg.x;
+    if(!dg.dir && (Math.abs(dy)>8 || Math.abs(dx)>8)) dg.dir = Math.abs(dy)>Math.abs(dx) ? 'v' : 'h';
+    if(dg.dir!=='h') e.preventDefault();               // kein Scrollen der Seite dahinter, kein Scrollbalken
+    if(dg.dir==='v'){ dg.dy=dy; const b=plBox(); const edge=(dy<0&&!canNext())||(dy>0&&S.player.i===0); if(b) b.style.transform=`translateY(${edge?dy*.22:dy}px)`; }
+  }, {capture:true, passive:false});
+  window.addEventListener('touchend', e=>{ if(!dg) return; const d=dg; dg=null; if(d.dir!=='v' || !S.player) return;
+    e.stopPropagation();                                 // alte Wisch-Erkennung nicht zusätzlich auslösen
+    const b=plBox(), H=window.innerHeight, v=Math.abs(d.dy)/Math.max(1,Date.now()-d.t), go=Math.abs(d.dy)>H*.16 || (v>.45 && Math.abs(d.dy)>30);
+    const out=(dir,fn)=>{ if(!b) return fn(); b.style.transition='transform .22s cubic-bezier(.3,.7,.4,1)'; b.style.transform=`translateY(${dir*105}%)`; setTimeout(()=>{ S._plSwipe=true; fn(); S._plSwipe=false; },200); };
+    if(go && d.dy<0 && canNext()){ if(S.player.i>=PL().length-1){ if(b){ b.style.transition='transform .2s'; b.style.transform=''; } nextP(); } else out(-1,()=>nextP()); }
+    else if(go && d.dy>0 && S.player.i>0) out(1,()=>prevP());
+    else if(b){ b.style.transition='transform .26s cubic-bezier(.2,.8,.2,1)'; b.style.transform=''; if(go && d.dy<0) plBump(1); }
+  }, {capture:true});
+
+  /* ---------- Handy: Aktionen im Player rechts übereinander (wie TikTok / Instagram) ---------- */
+  window.APLUS_fol = async (mid,btn) => { if(btn) btn.disabled=true; try{ const j=await rpc('folgen_umschalten',{p_member:mid}); if(j&&j.ok){ (PL()||[]).forEach(x=>{ if(x&&x.mid===mid) x.folge=j.folge; }); const b=$('plFol'); if(b){ b.classList.toggle('on',!!j.folge); b.innerHTML=j.folge?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>':'+'; } } }catch(e){} if(btn) btn.disabled=false; };
+  function plSide(){
+    if(window.innerWidth>=768) return; const ov=document.querySelector('#modal .bg-gradient-to-t'); if(!ov || ov.querySelector('.pl-side')) return;
+    const p=S.player, post=p&&PL()[p.i]; if(!post) return;
+    const like=ov.querySelector('[onclick*="toggleLike"]'), com=ov.querySelector('[onclick*="commentsP"]'), share=ov.querySelector('[aria-label="Teilen"]'), more=ov.querySelector('.pl-more'); if(!like) return;
+    const col=document.createElement('div'); col.className='pl-side';
+    if(post.real && !post.mine && post.mid){ col.insertAdjacentHTML('beforeend',`<div class="pl-av"><span onclick="event.stopPropagation();closeModal();stopPlayer();openProfile(${post.mid})">${skAv(post.a,46,avatar(post.a),'shrink-0')}</span><button id="plFol" class="${post.folge?'on':''}" onclick="event.stopPropagation();APLUS_fol(${post.mid},this)" aria-label="Folgen">${post.folge?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>':'+'}</button></div>`); }
+    [like,com,share,more].filter(Boolean).forEach(b=>{ b.classList.remove('ml-auto'); col.appendChild(b); });
+    ov.appendChild(col); ov.classList.add('pl-has-side');
+    const pm=$('plMenu'); if(pm) col.appendChild(pm);
+  }
 
   /* ---------- Stories ---------- */
   function lum(r,g,b){ const f=v=>{ v/=255; return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4); }; return .2126*f(r)+.7152*f(g)+.0722*f(b); }
