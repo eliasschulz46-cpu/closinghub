@@ -23,6 +23,19 @@
   .pl-mi{display:flex!important;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 12px!important;border-radius:10px;font-size:14px!important;color:#fff!important;margin:0!important;background:none}
   .pl-mi:hover{background:rgba(255,255,255,.08)}
   .pl-bd{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;filter:blur(28px) brightness(.55) saturate(1.2);pointer-events:none}
+  /* Handy: Plus in der unteren Leiste, Profil, Laufband */
+  .bn-plus{display:flex;align-items:center;justify-content:center}
+  .bn-pl{width:44px;height:34px;border-radius:12px;background:#087A4B;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(8,122,75,.35)}
+  .bn-plus.on .bn-pl{background:#0E1A2B}
+  .pf-set{display:none}
+  @media(max-width:767px){
+    html[data-r="profile"] #app .flex-1.space-y-2 a[href="#create"]{display:none!important}
+    .pf-set{display:flex;position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;align-items:center;justify-content:center;border:1px solid rgb(var(--line));background:rgb(var(--panel));color:rgb(var(--fg));z-index:5}
+    .adlane{display:none!important}
+    .admarq{display:block!important;position:relative;width:100%;height:24px;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
+    .admarq-track{display:flex;align-items:center;height:100%;width:max-content;animation-name:admarq;animation-timing-function:linear;animation-iteration-count:infinite;will-change:transform}
+    .admarq-it{display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;padding:0 1.25rem;height:100%;font-size:13px}
+  }
   /* Stories */
   .st-hd{left:12px!important;right:12px!important;justify-content:flex-start}
   .st-hd>button{flex:1 1 auto;justify-content:flex-start;text-align:left}
@@ -100,7 +113,24 @@
   render = function(){ const r=route(); if(r!=='einstellungen') S.setSub=null; document.documentElement.dataset.r=r; const out=_render.apply(this,arguments); fixAll(); return out; };
   let fixQ=0; const fixSoon=()=>{ if(fixQ) return; fixQ=requestAnimationFrame(()=>{ fixQ=0; fixAll(); }); };
   new MutationObserver(fixSoon).observe(document.body,{childList:true,subtree:true});
-  function fixAll(){ try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
+  function fixAll(){ try{ fixNav(); }catch(e){} try{ fixProfil(); }catch(e){} try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
+
+  /* ---------- Handy: Plus-Knopf unten, Profil aufgeräumt, Einstellungen im Profil ---------- */
+  function fixNav(){
+    const bar=document.querySelector('nav.fixed.bottom-0 .flex.justify-around'); if(!bar) return;
+    let pl=bar.querySelector('.bn-plus');
+    if(!pl){ const feedA=bar.querySelector('a[href="#feed"]'); bar.insertAdjacentHTML('beforeend',`<a href="#create" class="p-2 bn-plus" onclick="S.cmode='beitrag'" aria-label="Beitrag posten"><span class="bn-pl"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></a>`); pl=bar.querySelector('.bn-plus'); const prof=bar.querySelector('a[href="#profile"]'); if(prof) bar.insertBefore(pl,prof); }
+    pl.classList.toggle('on', route()==='create');
+  }
+  function fixProfil(){
+    const r=route(), mob=window.innerWidth<768;
+    const perk=document.querySelector('.perk-label'); const strip=perk&&perk.parentElement; if(strip) strip.style.display=(mob&&r==='profile')?'none':'';
+    if(r!=='profile' || !S.member || S.member.partner) return;
+    const head=document.querySelector('#app .flex.items-center.gap-5'); if(!head) return; const box=head.parentElement;
+    const desc=[...box.children].find(c=>c.classList.contains('mt-5')&&c.classList.contains('space-y-2')&&c.classList.contains('text-left'));
+    if(desc && desc.previousElementSibling!==head){ head.after(desc); desc.classList.remove('mt-5'); desc.style.marginTop='16px'; desc.style.marginBottom='4px'; }
+    if(!box.querySelector('.pf-set')){ if(getComputedStyle(box).position==='static') box.style.position='relative'; box.insertAdjacentHTML('afterbegin',`<a href="#einstellungen" class="pf-set" aria-label="Einstellungen"><svg class="ci" style="width:20px;height:20px"><use href="#i-einstellungen"/></svg></a>`); }
+  }
 
   /* ---------- Marktplatz: Siegel am Partnerbild, im Partner-Fenster nur einmal ---------- */
   function fixPartners(){
@@ -208,8 +238,15 @@
     const _ub = updBar;
     updBar = function(){ const v=document.querySelector('#modal video[autoplay]');
       if(!v || !isFinite(v.duration) || !v.duration) return _ub.apply(this,arguments);
-      const b=$('pbar'), t=$('ptime'); if(b) b.style.width=(v.currentTime/v.duration*100)+'%'; if(t) t.textContent=Math.max(0,Math.ceil(v.duration-v.currentTime))+'s'; };
+      const b=$('pbar'), t=$('ptime'); if(b){ b.style.transition='none'; b.style.width=(v.currentTime/v.duration*100)+'%'; } if(t) t.textContent=Math.max(0,Math.ceil(v.duration-v.currentTime))+'s'; };
   }
+  // flüssig: Balken bei jedem Bild neu setzen, solange ein Video im Player läuft
+  let rafOn=false;
+  function plRaf(){ const v=document.querySelector('#modal video[autoplay]');
+    if(!v){ rafOn=false; return; }
+    if(!v.paused && isFinite(v.duration) && v.duration){ const bb=$('pbar'); if(bb){ bb.style.transition='none'; bb.style.width=(v.currentTime/v.duration*100)+'%'; } const t=$('ptime'); if(t) t.textContent=Math.max(0,Math.ceil(v.duration-v.currentTime))+'s'; }
+    requestAnimationFrame(plRaf); }
+  document.addEventListener('play', e=>{ if(e.target && e.target.matches && e.target.matches('#modal video[autoplay]') && !rafOn){ rafOn=true; requestAnimationFrame(plRaf); } }, true);
   document.addEventListener('timeupdate', e=>{ if(e.target && e.target.matches && e.target.matches('#modal video[autoplay]')) try{ updBar(); }catch(x){} }, true);
   document.addEventListener('loadedmetadata', e=>{ if(e.target && e.target.matches && e.target.matches('#modal video[autoplay]')) try{ updBar(); }catch(x){} }, true);
 
@@ -328,7 +365,7 @@
     }
     const tiles=SET.filter(s=>G[s[0]]||s[0]==='konto');
     if(G.weitere) tiles.push(['weitere','Weitere','Alle übrigen Einstellungen','menue']);
-    return `<div class="ch-left sm px-4 py-6"><h1 class="font-serif text-2xl mb-4">Einstellungen</h1>
+    return `<div class="ch-left sm px-4 py-6">${window.innerWidth<768?'<a class="set-back" href="#profile">‹ Profil</a>':''}<h1 class="font-serif text-2xl mb-4">Einstellungen</h1>
       <div class="set-grid">${tiles.map(s=>`<button class="set-t" onclick="S.setSub='${s[0]}';render();scrollTo(0,0)"><span class="i"><svg class="ci" style="width:20px;height:20px"><use href="#i-${s[3]}"/></svg></span><span><b>${s[1]}</b><span class="s">${s[2]}</span></span></button>`).join('')}</div></div>`;
   };
 
