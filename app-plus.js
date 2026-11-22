@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus =====
+/* ===== ClosingHub App-Plus (r11 · Hashtags) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -14,6 +14,22 @@
   const css = document.createElement('style');
   css.textContent = `
   .left-3{left:.75rem}
+  .ht{color:#087A4B;font-weight:600;cursor:pointer;border-radius:4px}
+  .ht:hover{text-decoration:underline}
+  html:not(.light) .ht{color:#3FCF8E}
+  #modal .ht{color:#7FE6B5}
+  .ht-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .ht-chip{display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:999px;border:1px solid rgb(var(--line,128 128 128) / .35);background:rgb(var(--panel,128 128 128) / .5);font-size:14px;line-height:1}
+  .ht-chip b{color:#087A4B} html:not(.light) .ht-chip b{color:#3FCF8E}
+  .ht-chip span{font-size:11px;opacity:.55;margin-left:4px}
+  .ht-chip:hover{border-color:#087A4B}
+  .ht-hint{font-size:11px;opacity:0;max-height:0;overflow:hidden;transition:opacity .2s,max-height .2s;color:#B4690E;margin:0}
+  .ht-hint.on{opacity:.9;max-height:20px;margin-top:4px}
+  .sr-box{position:relative}
+  .sr-box .sr-ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5;pointer-events:none}
+  .sr-box .input{padding-left:38px;padding-right:36px}
+  .sr-box input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none}
+  .sr-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;font-size:18px;line-height:1;opacity:.55}
   .object-contain{-o-object-fit:contain;object-fit:contain}
   .pl-fit{object-fit:contain!important;background:transparent!important}
   #modal .bg-gradient-to-t{z-index:25}
@@ -132,7 +148,7 @@
 
   /* ---------- Route-Markierung + Nachbearbeitung nach jedem Rendern ---------- */
   const _render = render;
-  render = function(){ const r=route(); if(r!=='einstellungen') S.setSub=null; document.documentElement.dataset.r=r; const out=_render.apply(this,arguments); fixAll(); return out; };
+  render = function(){ const r=route(); if(r!=='einstellungen') S.setSub=null; document.documentElement.dataset.r=r; try{ htFix(); }catch(e){} const out=_render.apply(this,arguments); fixAll(); return out; };
   let fixQ=0; const fixSoon=()=>{ if(fixQ) return; fixQ=requestAnimationFrame(()=>{ fixQ=0; fixAll(); }); };
   new MutationObserver(fixSoon).observe(document.body,{childList:true,subtree:true});
   function fixAll(){ try{ fixNav(); }catch(e){} try{ fixProfil(); }catch(e){} try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
@@ -143,6 +159,12 @@
     let pl=bar.querySelector('.bn-plus');
     if(!pl){ const feedA=bar.querySelector('a[href="#feed"]'); bar.insertAdjacentHTML('beforeend',`<a href="#create" class="p-2 bn-plus" onclick="S.cmode='beitrag'" aria-label="Beitrag posten"><span class="bn-pl"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></a>`); pl=bar.querySelector('.bn-plus'); const prof=bar.querySelector('a[href="#profile"]'); if(prof) bar.insertBefore(pl,prof); }
     pl.classList.toggle('on', route()==='create');
+    let sr=bar.querySelector('.bn-search');
+    if(!sr){ bar.insertAdjacentHTML('beforeend',`<a href="#search" class="p-2 bn-search" aria-label="Suche"><span>${ic('search')}</span></a>`); sr=bar.querySelector('.bn-search'); }
+    const prof=bar.querySelector('a[href="#profile"],a[href="#login"]:last-child'); if(prof && sr.nextElementSibling!==prof) bar.insertBefore(sr,prof);
+    if(pl.nextElementSibling!==sr) bar.insertBefore(pl,sr);
+    sr.firstElementChild.classList.toggle('icon-on', route()==='search');
+    document.querySelectorAll('header.md\\:hidden a[href="#search"]').forEach(a=>a.remove());
   }
   function fixProfil(){
     const r=route(), mob=window.innerWidth<768;
@@ -191,7 +213,7 @@
   /* ---------- Player: Pause-Symbol nur kurz einblenden ---------- */
   if(typeof drawPlayer==='function' && typeof togglePause==='function'){
     const _dp = drawPlayer;
-    drawPlayer = function(){ const ov=document.querySelector('#modal video[autoplay]'); const keep=ov?{src:ov.currentSrc||ov.src,t:ov.currentTime}:null;
+    drawPlayer = function(){ try{ htFix(); }catch(e){} const ov=document.querySelector('#modal video[autoplay]'); const keep=ov?{src:ov.currentSrc||ov.src,t:ov.currentTime}:null;
       const r=_dp.apply(this,arguments); plOpen(true); try{ plFit(); }catch(e){} try{ plMenu(); }catch(e){} try{ plSide(); }catch(e){} try{ plSound(keep); }catch(e){} try{
       const pz=document.querySelector('[aria-label="Pausiert"]'); const box=pz&&pz.parentElement;
       const p=S.player, dt=p&&p.pzAt?Date.now()-p.pzAt:99999;
@@ -520,6 +542,94 @@
   if(typeof nwSend==='function'){ const _ns=nwSend; nwSend=function(inp){ const f=inp.files&&inp.files[0]; if(!f) return; inp.value='';
       if(f.size>15*1024*1024){ const e=$('nwErr'); if(e) e.textContent='Die Datei ist größer als 15 MB.'; return; }
       const art=$('nwArt'); nwPreview(f,(art&&art.selectedOptions[0]&&art.selectedOptions[0].textContent)||'Nachweis',()=>_ns({files:[f]})); }; }
+
+  /* ---------- Hashtags & Suche (r11) ----------
+     Gleiche Regel wie in der Datenbank (closinghub-hashtags.sql · ch_hashtags): max. 5 verschiedene Hashtags pro Beitrag. */
+  const HT_C='0-9A-Za-z_À-ÖØ-öø-ÿ';
+  const HT_RE=()=>new RegExp('(?<!['+HT_C+'&/#])#(['+HT_C+']{1,40})(?!['+HT_C+'])','g');
+  const HT_SLOT=()=>new RegExp('(?<!['+HT_C+'&/#])#(['+HT_C+']*)','g');
+  const htNorm=t=>String(t||'').replace(/^#+/,'').toLowerCase().replace(new RegExp('[^'+HT_C+']','g'),'').slice(0,40);
+  const htList=raw=>{ const out=[]; for(const m of String(raw||'').matchAll(HT_RE())){ const n=m[1].toLowerCase(); if(!out.includes(n)){ out.push(n); if(out.length===5) break; } } return out; };
+  const htSlots=v=>{ const s=new Set(); let empty=0; for(const m of String(v||'').matchAll(HT_SLOT())){ if(m[1]) s.add(m[1].toLowerCase()); else empty++; } return s.size+empty; };
+  window.htHtml=function(raw){ raw=String(raw||''); const ok=htList(raw); let out='', last=0;
+    for(const m of raw.matchAll(HT_RE())){ const n=m[1].toLowerCase(); if(!ok.includes(n)) continue;
+      out+=esc(raw.slice(last,m.index))+`<span class="ht" role="link" tabindex="0" data-ht="${esc2(n)}">#${esc(m[1])}</span>`; last=m.index+m[0].length; }
+    return (out+esc(raw.slice(last))).replace(/\n/g,'<br>'); };
+  const _mapPost=mapPost;
+  mapPost=function(p){ const o=_mapPost.apply(this,arguments); try{ if(o&&p&&p.text&&p.text.includes('#')){ o.t=htHtml(p.text); o._ht=p.text; } }catch(e){} return o; };
+  function htFix(){ try{ [S.rp,S.myPosts,S.plist,S.plistReal,S.feedList,S.htList,S.mp&&S.mp.posts,S.onePost&&[S.onePost],...Object.values(S.hl||{})].forEach(a=>(a||[]).forEach(p=>{ if(p&&p.real&&typeof p.raw==='string'&&p._ht!==p.raw&&(p.raw.includes('#')||p._ht)){ p.t=htHtml(p.raw); p._ht=p.raw; } })); }catch(e){} }
+  window.APLUS_htFix=htFix;
+  function htOpen(tag){ tag=htNorm(tag); if(!tag) return;
+    try{ if(S.player){ stopPlayer(); closeModal(); } }catch(e){} try{ document.getElementById('peEd')?.remove(); }catch(e){}
+    S.sq='#'+tag; S._srNoFocus=1; if(route()==='search'){ const i=$('srIn'); if(i) i.value=S.sq; srRun(); } else go('search'); window.scrollTo(0,0); }
+  window.htOpen=htOpen;
+  document.addEventListener('click',e=>{ const t=e.target.closest&&e.target.closest('[data-ht]'); if(!t) return;
+    if(t.closest('.grid-cols-3')) return;                       // Kachel im Raster: Beitrag öffnen wie bisher
+    e.preventDefault(); e.stopPropagation(); htOpen(t.dataset.ht); },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches&&e.target.matches('.ht[data-ht]')){ e.preventDefault(); htOpen(e.target.dataset.ht); } },true);
+
+  // Schreiben: das 6. Hashtag-Zeichen wird nicht übernommen, dezenter Hinweis
+  const HT_FIELDS='#cfText,#peTx';
+  function htHint(el,on){ let h=el.parentElement&&el.parentElement.querySelector(':scope > .ht-hint');
+    if(on&&!h){ el.insertAdjacentHTML('afterend','<p class="ht-hint">Hashtag-Limit erreicht · max. 5</p>'); h=el.nextElementSibling; }
+    if(h){ h.classList.toggle('on',!!on); clearTimeout(h._t); if(on) h._t=setTimeout(()=>{ if(htSlots(el.value)<5) h.classList.remove('on'); },2600); } }
+  document.addEventListener('beforeinput',e=>{ const el=e.target; if(!el.matches||!el.matches(HT_FIELDS)) return;
+    const d=e.data||(e.dataTransfer&&e.dataTransfer.getData('text/plain'))||''; if(!d.includes('#')) return;
+    const v=el.value, nv=v.slice(0,el.selectionStart)+d+v.slice(el.selectionEnd), n=htSlots(nv);
+    if(n>5 && n>htSlots(v)){ e.preventDefault(); htHint(el,true);
+      if(d.length>1){ const keep=htTrim(nv); const pos=el.selectionStart+d.length-(nv.length-keep.length); el.value=keep; try{ el.setSelectionRange(pos,pos); }catch(x){} el.dispatchEvent(new Event('input',{bubbles:true})); } } },true);
+  function htTrim(v){ let seen=new Set(), empty=0; return String(v).replace(HT_SLOT(),(m,t)=>{ const k=t?t.toLowerCase():null; if(k&&seen.has(k)) return m; if(seen.size+empty<5){ if(k) seen.add(k); else empty++; return m; } return t; }); }
+  document.addEventListener('input',e=>{ const el=e.target; if(!el.matches||!el.matches(HT_FIELDS)) return;
+    const n=htSlots(el.value), was=el._htN==null?5:el._htN;
+    if(n>5 && n>was){ const p=el.selectionStart, v=el.value, nv=htTrim(v); el.value=nv; const q=Math.max(0,p-(v.length-nv.length)); try{ el.setSelectionRange(q,q); }catch(x){} htHint(el,true); }
+    else if(n<5) htHint(el,false);
+    el._htN=htSlots(el.value); },true);
+  document.addEventListener('focusin',e=>{ const el=e.target; if(el.matches&&el.matches(HT_FIELDS)) el._htN=htSlots(el.value); },true);
+
+  // Suche: Mitglieder, Hashtags, Beiträge, Jobs, Marktplatz
+  S.htCache=S.htCache||{};
+  async function htGet(fn,args,key){ const c=S.htCache[key]; if(c&&Date.now()-c.at<20000) return c.v; let v=[]; try{ v=(await rpc(fn,args))||[]; }catch(e){ return c?c.v:[]; } S.htCache[key]={at:Date.now(),v}; return v; }
+  const chip=(t,n)=>`<button type="button" class="ht-chip" onclick="htOpen('${esc2(t)}')"><b>#</b>${esc2(t)}${n?`<span>${n}</span>`:''}</button>`;
+  function htGrid(list){ const keep=S.plistReal; S.htList=list; let h=postGrid(list,false); S.plistReal=keep;
+    return h.replace(/S\.plist=S\.plistReal/g,'S.plist=S.htList').replace('mt-8 grid','grid'); }
+  search=function(){ const nf=S._srNoFocus; S._srNoFocus=0;
+    setTimeout(()=>{ const i=$('srIn'); if(!i) return; if(!nf && !(window.innerWidth<768 && S.sq)) i.focus(); srRun(); },0);
+    return `<div class="ch-left sm px-4 py-6 space-y-4"><h1 class="font-serif text-2xl">Suche</h1>
+      <div class="sr-box"><svg class="sr-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="srIn" class="input" type="search" enterkeyhint="search" placeholder="Name, Job, Angebot oder #Hashtag …" value="${esc(S.sq)}" oninput="S.sq=this.value;clearTimeout(S._srT);S._srT=setTimeout(srRun,250)" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button type="button" class="sr-x" aria-label="Leeren" style="${S.sq?'':'display:none'}" onclick="S.sq='';const i=document.getElementById('srIn');i.value='';i.focus();srRun()">×</button></div>
+      <div id="srRes">${S._srHtml||''}</div></div>`; };
+  try{ PAGES.search=search; }catch(e){}
+  srRun=async function(){ const q=(S.sq||'').trim(), box=$('srRes'); if(!box) return;
+    const sec=(t,h)=>`<p class="text-xs uppercase tracking-wider text-muted mt-5 mb-2">${t}</p>${h}`, still=()=>(S.sq||'').trim()===q && $('srRes')===box;
+    const put=h=>{ if(!still()) return; S._srHtml=h; box.innerHTML=h; };
+    const x=box.parentElement&&box.parentElement.querySelector('.sr-x'); if(x) x.style.display=q?'':'none';
+    if(!q || q==='#'){ const top=await htGet('hashtags_beliebt',{p_q:null,p_limit:15},'top');
+      put(sec('Beliebte Hashtags',top.length?`<div class="ht-chips">${top.map(t=>chip(t.tag,t.n)).join('')}</div>`:'<p class="text-sm text-muted">Noch keine Hashtags. Schreib z. B. <b>#Kaltakquise</b> in deinen Beitrag.</p>')
+        +'<p class="text-xs text-muted mt-4">Tipp: Mit <b>#</b> vorne suchst du nach Hashtags, sonst nach Mitgliedern, Jobs und Angeboten.</p>'); return; }
+    if(q.startsWith('#')){ const t=htNorm(q); if(!t){ put('<p class="text-sm text-muted">Nach dem # bitte Buchstaben oder Zahlen.</p>'); return; }
+      if(!S._srHtml||!S._srHtml.includes('data-q="'+esc2(t)+'"')) box.innerHTML='<p class="text-sm text-muted">Sucht …</p>';
+      const [posts,sug]=await Promise.all([htGet('hashtag_beitraege',{p_tag:t,p_vor:null,p_limit:60},'p:'+t),htGet('hashtags_beliebt',{p_q:t,p_limit:10},'s:'+t)]);
+      if(!still()) return; const list=posts.map(mapPost), more=sug.filter(s=>s.tag!==t);
+      put(`<div data-q="${esc2(t)}"><p class="font-serif text-xl mt-2">#${esc2(t)} <span class="text-sm text-muted font-sans">${list.length?list.length+(list.length===60?'+':'')+' Beiträge':''}</span></p>`
+        +(list.length?`<div class="mt-3">${htGrid(list)}</div>`:`<p class="text-sm text-muted mt-2">Noch keine Beiträge mit #${esc2(t)}.</p>`)
+        +(more.length?sec('Ähnliche Hashtags',`<div class="ht-chips">${more.map(s=>chip(s.tag,s.n)).join('')}</div>`):'')+'</div>'); return; }
+    if(q.length<2){ put('<p class="text-sm text-muted">Tipp mindestens 2 Buchstaben ein.</p>'); return; }
+    if(!S._srHtml||!S._srHtml.includes('data-q="~'+esc2(q)+'"')) box.innerHTML='<p class="text-sm text-muted">Sucht …</p>';
+    const t=htNorm(q);
+    const [mem,sug]=await Promise.all([S.member?htGet('mitglieder_suchen',{p_q:q},'m:'+q.toLowerCase()):Promise.resolve([]), t?htGet('hashtags_beliebt',{p_q:t,p_limit:8},'s:'+t):Promise.resolve([])]);
+    const exact=sug.find(s=>s.tag===t); const posts=exact?await htGet('hashtag_beitraege',{p_tag:t,p_vor:null,p_limit:60},'p:'+t):[];
+    if(!still()) return;
+    const ql=q.toLowerCase(), jobs=(JOBS||[]).filter(j=>(j.live||!S.member)&&[j.t,j.ind,j.p,j.reg,j.roles].join(' ').toLowerCase().includes(ql)).slice(0,6);
+    const offs=(typeof realOffers==='function'&&S.member?realOffers():[]).filter(o=>[o.t,o.cat,o.desc,o.full].join(' ').toLowerCase().includes(ql)).slice(0,6);
+    const list=posts.map(mapPost);
+    put(`<div data-q="~${esc2(q)}"></div>`+(S.member?sec('Mitglieder',mem.length?mem.map(m=>`<button class="w-full flex items-center gap-3 text-left p-3 rounded-xl hover:bg-panel" onclick="openProfile(${m.id})"><span class="w-11 h-11 rounded-full overflow-hidden shrink-0">${m.avatar_url?`<img src="${esc(m.avatar_url)}" class="w-full h-full object-cover">`:initAv(m.name)}</span><span class="min-w-0"><span class="block text-sm">${nameRank(esc(m.name),RANKS[(m.rang||1)-1])}</span><span class="text-xs text-muted">${esc([m.rolle,m.land].filter(Boolean).join(' · '))}</span></span></button>`).join(''):'<p class="text-sm text-muted">Kein Mitglied gefunden.</p>'):sec('Mitglieder','<p class="text-sm text-muted"><a href="#login" class="text-gold">Melde dich an</a>, um Mitglieder zu finden.</p>'))
+      +(sug.length?sec('Hashtags',`<div class="ht-chips">${sug.map(s=>chip(s.tag,s.n)).join('')}</div>`):'')
+      +(list.length?sec(`Beiträge mit #${esc2(t)}`,htGrid(list.slice(0,9))+(list.length>9?`<button class="text-sm text-gold mt-2" onclick="htOpen('${esc2(t)}')">Alle ${list.length} Beiträge ansehen</button>`:'')):'')
+      +sec('Jobs',jobs.length?jobs.map(j=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="S.job=${j.id};S.jopen=1;go('jobs')"><b class="text-sm block">${esc(j.t)}</b><span class="text-xs text-muted">${esc([j.ind,j.reg,j.pay].filter(Boolean).join(' · '))}</span></button>`).join(''):'<p class="text-sm text-muted">Kein Job gefunden.</p>')
+      +(S.member?sec('Marktplatz',offs.length?offs.map(o=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="S.mcat='${esc(o.cat).replace(/'/g,'')}';go('markt')"><b class="text-sm block">${o.t}</b><span class="text-xs text-muted">${esc(o.cat)} · ${esc(o.full||'')}</span></button>`).join(''):'<p class="text-sm text-muted">Kein Angebot gefunden.</p>'):'')); };
+  // Neuer/geänderter Beitrag: Hashtag-Listen frisch laden
+  const _rpcH=rpc; rpc=async function(fn){ const r=await _rpcH.apply(this,arguments); if((fn==='post_neu'||fn==='post_bearbeiten'||fn==='post_loeschen'||fn==='post_zurueckziehen')&&r&&r.ok){ S.htCache={}; S._srHtml=''; } return r; };
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
