@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r20 · Live-Calls) =====
+/* ===== ClosingHub App-Plus (r21 · Live-Balken bremst Player nicht) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -150,7 +150,8 @@
   const _render = render;
   render = function(){ const r=route(); if(r!=='einstellungen') S.setSub=null; document.documentElement.dataset.r=r; try{ htFix(); }catch(e){} const out=_render.apply(this,arguments); fixAll(); return out; };
   let fixQ=0; const fixSoon=()=>{ if(fixQ) return; fixQ=requestAnimationFrame(()=>{ fixQ=0; fixAll(); }); };
-  new MutationObserver(fixSoon).observe(document.body,{childList:true,subtree:true});
+  const lvOwn=m=>{ const t=m.target.nodeType===1?m.target:m.target.parentElement; return !!(t&&t.closest&&t.closest('.chlv,#chlvo')); };
+  new MutationObserver(ms=>{ if(ms.every(lvOwn)) return; fixSoon(); }).observe(document.body,{childList:true,subtree:true});
   function fixAll(){ try{ fixJobs(); }catch(e){}  try{ fixSeen(); }catch(e){} try{ fixOrt(); }catch(e){}  try{ fixTop(); }catch(e){}  try{ fixNav(); }catch(e){} try{ fixProfil(); }catch(e){} try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
 
   /* ---------- Handy: Plus-Knopf unten, Profil aufgeräumt, Einstellungen im Profil ---------- */
@@ -927,7 +928,7 @@
     try{ if(typeof PLUS_LIST!=='undefined' && !PLUS_LIST.some(t=>/Motivations/.test(t))) PLUS_LIST.push('Motivations-Call jeden Morgen live'); }catch(e){}
     const st=document.createElement('style'); st.textContent=`
     .chlv{position:sticky;top:56px;z-index:29;display:flex;align-items:center;gap:10px;padding:9px 12px;margin:0;cursor:pointer;
-      background:linear-gradient(90deg,rgba(184,137,46,.16),rgba(184,137,46,.05));border-bottom:1px solid rgba(184,137,46,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+      background:linear-gradient(90deg,rgba(184,137,46,.16),rgba(184,137,46,.05));border-bottom:1px solid rgba(184,137,46,.45);contain:layout paint}
     @media(min-width:768px){.chlv{top:0;padding:10px 18px}}
     html:not(.light) .chlv{background:linear-gradient(90deg,rgba(40,30,12,.92),rgba(20,17,12,.92))}
     html.light .chlv,.light .chlv{background:linear-gradient(90deg,rgba(255,246,226,.96),rgba(255,251,242,.96))}
@@ -942,7 +943,7 @@
     .chlv .lv-b{flex:none;font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:999px;background:#B8892E;color:#111;white-space:nowrap}
     .chlv .lv-b.lock{background:transparent;color:#B8892E;border:1px solid #B8892E}
     .chlv .lv-more{flex:none;font-size:11px;opacity:.7}
-    #chlvo{position:fixed;inset:0;z-index:300;display:flex;align-items:stretch;justify-content:center;background:rgba(4,6,10,.78);backdrop-filter:blur(4px)}
+    #chlvo{position:fixed;inset:0;z-index:300;display:flex;align-items:stretch;justify-content:center;background:rgba(4,6,10,.86)}
     #chlvo .lvo-in{width:100%;max-width:980px;display:flex;flex-direction:column;background:rgb(var(--bg,12 12 14));color:rgb(var(--fg,240 240 240));overflow:hidden}
     @media(min-width:768px){#chlvo{align-items:center;padding:24px} #chlvo .lvo-in{border-radius:20px;max-height:92vh;border:1px solid rgba(184,137,46,.4)}}
     #chlvo .lvo-h{display:flex;align-items:center;gap:10px;padding:12px 14px;padding-top:max(12px,env(safe-area-inset-top))}
@@ -1002,13 +1003,14 @@
       if(bar.dataset.k!==k){ bar.dataset.k=k; bar.innerHTML=barHtml(L); bar.onclick=()=>openLive(L[0].id,L[0].termin); }
     }
     function tick(){
+      if(Date.now()-LV.at>60000) load();
+      if(S.player && !LV.open) return;   // Player offen: nichts am Balken ändern, damit Videos flüssig laufen
       const L=S.member?cur():[];
       const bar=document.querySelector('.chlv');
-      if(bar&&L.length){ const c=bar.querySelector('[data-lvcd]'); if(c) c.textContent=cd(T(L[0].s)-now()); }
+      if(bar&&L.length){ const c=bar.querySelector('[data-lvcd]'); if(c){ const v=cd(T(L[0].s)-now()); if(c.textContent!==v) c.textContent=v; } }
       if(!!bar!==!!L.length || (bar&&L.length&&!bar.dataset.k.startsWith(L[0].id+':'))) draw();
       else if(bar&&L.length&&bar.dataset.k.split('|')[0].split(':')[2]!==String(T(L[0].s)<=now())) draw();
       if(LV.open) ovTick();
-      if(Date.now()-LV.at>60000) load();
     }
 
     /* ----- Fenster mit Stream ----- */
@@ -1083,7 +1085,7 @@
       if(typeof sheet==='function') sheet(html);
     }
 
-    new MutationObserver(()=>{ if(LV.ev.length && !document.querySelector('.chlv') && cur().length) draw(); }).observe(document.body,{childList:true,subtree:true});
+    new MutationObserver(()=>{ if(S.player) return; if(LV.ev.length && !document.querySelector('.chlv') && cur().length) draw(); }).observe(document.body,{childList:true,subtree:true});
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden && Date.now()-LV.at>15000) load(); });
     setInterval(tick,1000);
     let tries=0; const boot=setInterval(()=>{ tries++; if(S.member||tries>40){ clearInterval(boot); load(); } },500);
