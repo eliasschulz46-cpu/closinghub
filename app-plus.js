@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r11 · Hashtags) =====
+/* ===== ClosingHub App-Plus (r12 · Nachtcheck: Inhaltsfilter) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -151,7 +151,7 @@
   render = function(){ const r=route(); if(r!=='einstellungen') S.setSub=null; document.documentElement.dataset.r=r; try{ htFix(); }catch(e){} const out=_render.apply(this,arguments); fixAll(); return out; };
   let fixQ=0; const fixSoon=()=>{ if(fixQ) return; fixQ=requestAnimationFrame(()=>{ fixQ=0; fixAll(); }); };
   new MutationObserver(fixSoon).observe(document.body,{childList:true,subtree:true});
-  function fixAll(){ try{ fixNav(); }catch(e){} try{ fixProfil(); }catch(e){} try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
+  function fixAll(){ try{ fixTop(); }catch(e){}  try{ fixNav(); }catch(e){} try{ fixProfil(); }catch(e){} try{ fixPartners(); }catch(e){} try{ fixSpot(); }catch(e){} try{ fixProfilStory(); }catch(e){} try{ fixPlayerRk(); }catch(e){} try{ fixNwThumbs(); }catch(e){} }
 
   /* ---------- Handy: Plus-Knopf unten, Profil aufgeräumt, Einstellungen im Profil ---------- */
   function fixNav(){
@@ -630,6 +630,46 @@
       +(S.member?sec('Marktplatz',offs.length?offs.map(o=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="S.mcat='${esc(o.cat).replace(/'/g,'')}';go('markt')"><b class="text-sm block">${o.t}</b><span class="text-xs text-muted">${esc(o.cat)} · ${esc(o.full||'')}</span></button>`).join(''):'<p class="text-sm text-muted">Kein Angebot gefunden.</p>'):'')); };
   // Neuer/geänderter Beitrag: Hashtag-Listen frisch laden
   const _rpcH=rpc; rpc=async function(fn){ const r=await _rpcH.apply(this,arguments); if((fn==='post_neu'||fn==='post_bearbeiten'||fn==='post_loeschen'||fn==='post_zurueckziehen')&&r&&r.ok){ S.htCache={}; S._srHtml=''; } return r; };
+
+  /* ---------- Inhaltsfilter (r12) – gleiche Regeln wie nachricht_pruefen in der Datenbank ---------- */
+  const W='[\\p{L}\\p{N}_]', B='(?<!'+W+')', E='(?!'+W+')';
+  const SOC='(insta|instagram|ig|tiktok|tik tok|linkedin|linked in|facebook|fb|twitter|youtube|snapchat|snap)';
+  const R=(s)=>new RegExp(s,'u');
+  window.chFilter=function(t){
+    let u=' '+String(t||'').toLowerCase()+' ';
+    u=u.replace(/(https?:\/\/)?(www\.)?getclosinghub\.com[^\s]*/g,' ');
+    if(/(closerportal|yeahbase|top[ -]?closer|remote sales army)/.test(u)) return 'Werbung für andere Plattformen ist auf ClosingHub nicht erlaubt.';
+    if(/(https?:\/\/|www\.)/.test(u)||/[a-z0-9-]+\.(de|com|net|org|io|at|ch|eu|info|biz|me|co|app|ly|gl|to|tv|shop|online|site|link|xyz|ee|gg|page|club|pro|digital|agency|academy|es|it|fr|nl|uk|us)([/?#:]|[\s.,!;)]|$)/.test(u)) return 'Links zu anderen Seiten sind auf ClosingHub nicht erlaubt.';
+    if(/[a-z0-9._%+-]+@[a-z0-9-]+\.[a-z]{2,}/.test(u)) return 'E-Mail-Adressen dürfen hier nicht geteilt werden. Bleibt bitte im ClosingHub-Chat.';
+    for(const m of u.matchAll(/(?:\+|00)?[0-9][0-9 /()-]{6,}[0-9]/g)) if(m[0].replace(/[^0-9]/g,'').length>=8) return 'Telefonnummern dürfen hier nicht geteilt werden. Bleibt bitte im ClosingHub-Chat.';
+    if(R(B+'(whats ?app|whatsapp|telegram|discord|threema|snapchat)'+E).test(u)||/(wa\.me|t\.me|chat\.whatsapp)/.test(u)) return 'Bitte bleibt im ClosingHub-Chat – Wechsel zu anderen Messengern ist nicht erlaubt.';
+    if((R(B+SOC+E).test(u)&&/(^|[\s(:])@[a-z0-9._]{3,30}/.test(u))||R(B+SOC+E+'\\s*[:@]').test(u)||R('(folg|add|abonnier|schreib)'+W+'*\\s+(mir|mich|uns)\\s+(auf|bei|über|ueber)\\s+'+SOC).test(u)) return 'Bitte teile hier keine Social-Media-Profile. Folgen geht direkt über ClosingHub.';
+    if(R(B+'(komm|wechsel|steig)'+W+'*\\s(\\S+\\s){0,5}(zu uns|bei uns ein|in (mein|unser)'+W+'* team|zu mir ins team)').test(u)||/willst du (zu uns|bei uns anfangen|in (mein|unser)\S* team)/.test(u)
+      ||/wir (zahlen|bieten|geben) (dir |euch )?(mehr|bessere|höhere|hoehere)/.test(u)||R('(höhere|hoehere|bessere|mehr) provisions?'+W+'* (bei|von) (uns|mir)').test(u)
+      ||/(an|ohne) closinghub vorbei/.test(u)||/außerhalb (von |der )?(closinghub|plattform|app)/.test(u)
+      ||R('(schreib|meld|kontaktier)'+W+'* (mir|dich|mich|uns) (mal )?(privat|direkt außerhalb)').test(u)||/(lass|lasst) uns (privat|woanders|außerhalb)/.test(u)
+      ||/(direkt|privat) (bei|über|ueber) (mir|uns) (buchen|kaufen|bezahlen|zahlen|abschließen|abschliessen)/.test(u)
+      ||R('(buch|kauf|bezahl|zahl)'+W+'*\\s(\\S+\\s){0,2}(direkt|privat) (bei|über|ueber) (mir|uns)').test(u)
+      ||/(handy)?nummern? (austauschen|tauschen)/.test(u)||/gib mir (mal )?(deine|eure) (handy)?(nummer|mail|e-mail|kontaktdaten)/.test(u)) return 'Abwerbung und Kontakt außerhalb von ClosingHub sind nicht erlaubt.';
+    return null; };
+  const FTXT={post_neu:1,post_bearbeiten:1,story_neu:1,kommentar_neu:1,kommentar_antwort:1};
+  let chSupp=0; const _alert=window.alert.bind(window);
+  window.alert=function(m){ if(Date.now()-chSupp<1500 && /nicht geklappt|nochmal/.test(String(m||''))) return; return _alert(m); };
+  const _rpcFi=rpc;
+  rpc=async function(fn,body){
+    if(FTXT[fn] && body && body.p_text){ const f=chFilter(body.p_text);
+      if(f){ if(fn==='post_neu'||fn==='story_neu') throw new Error(f);
+        if(fn==='post_bearbeiten') setTimeout(()=>{ const e=document.getElementById('peErr'); if(e) e.textContent=f; },0);
+        else { _alert(f); chSupp=Date.now(); }
+        return {ok:false,grund:'filter',text:f}; } }
+    return _rpcFi.apply(this,arguments); };
+
+  /* ---------- Top-Job-Preis aus den Einstellungen (statt fest 19 €) ---------- */
+  let TOPP=null;
+  (async()=>{ try{ const r=await fetch(SB_URL+'/rest/v1/settings?select=value&key=eq.preise',{headers:{apikey:SB_KEY}}); const j=await r.json();
+    const v=j&&j[0]&&j[0].value&&j[0].value.topJob; if(v!=null){ TOPP=String(v).replace('.',',')+' €'; fixTop(); } }catch(e){} })();
+  function fixTop(){ if(!TOPP) return; document.querySelectorAll('.border-dashed .text-gold').forEach(s=>{
+    if(s.parentElement && s.parentElement.textContent.includes('Freier Top-Platz') && /€/.test(s.textContent) && s.textContent!==TOPP) s.textContent=TOPP; }); }
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
