@@ -67,11 +67,12 @@
   setNav('gewinnspiel',[undefined,'Start & Gewinnspiel','gift']);
   setNav('support',[undefined,'Support','support']);
   if(!navItem('affiliate')) NAV.push(['affiliate','Affiliates','link',()=>afNeu()]);
+  if(!navItem('live')) NAV.push(['live','Live-Calls','bell',()=>lvOffen()]);
 
   const LAYOUT = [
     ['Übersicht',            ['dashboard','mitteilungen']],
     ['Launch & Wachstum',    ['gewinnspiel','affiliate','partner','news','anfragen']],
-    ['Community & Feed',     ['feedx','mitmachx','marktx','punktex','moderation']],
+    ['Community & Feed',     ['live','feedx','mitmachx','marktx','punktex','moderation']],
     ['Mitglieder & Support', ['member','support']],
     ['Geschäft',             ['auftraggeber','rechnungen','laufband']],
     ['System',               ['inhalte','einstellungen']]
@@ -125,6 +126,7 @@
     ['news', ()=>api('news_ausgaben?select=*&order=nummer.desc'), r=>{ if(window.NEWS) NEWS.list=r; }, ()=>!!window.NEWS],
     ['aff',  ()=>RPC('affiliate_admin'), r=>{ if(r&&r.ok){ AF.d=r; AF.err=0; } }],
     ['pt',   ()=>api('partners?select=*&order=sort.asc,id.asc'), r=>{ ptSet(r); }, ()=>route()!=='partner'],
+    ['live', ()=>RPC('live_admin'), r=>{ if(r&&r.ok){ ZLV.d=r; ZLV.err=0; } }],
     ['fp',   ()=>api('posts?select=id,kategorie,ki_kategorie,text,media_url,media_typ,thumb_url,created_at,member_id,versteckt&order=created_at.desc&limit=80'), r=>{ D.fposts=r||[]; }, ()=>route()==='feedx']
   ];
   const sig = v => { const s=JSON.stringify(v); let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return s.length+':'+h; };
@@ -363,8 +365,77 @@
       <p class="muted" style="font-size:12px;margin-top:14px">Provision geschätzt mit den aktuellen Abo-Preisen (Plus ${eur(pr.plus||0)}, Premium ${eur(pr.premium||0)} pro Monat), bis die Zahlungen über Stripe laufen. Day-One-Mitglieder zählen erst, wenn sie bezahlen.</p>`;
   };
 
+  /* ---------- Live-Calls (Runde 22) ----------
+     Partner-Vorträge (nur Premium, mit Fragen) und Motivations-Call (ab Plus, ohne Chat).
+     In der App erscheint 15 Minuten vor Start ein fester Balken oben, bis der Call vorbei ist. */
+  const LV = window.ZLV = { d:undefined, edit:null, err:0 };
+  const lvT = x => new Date(x).getTime();
+  const lvDT = x => new Date(x).toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const lvHM = x => new Date(x).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  const lvP2 = n => String(n).padStart(2,'0');
+  const lvOffen = () => { const d=LV.d; if(!d||!d.fragen) return 0; const t=Date.now(); const lauf=new Set((d.termine||[]).filter(x=>lvT(x.s)-9e5<=t&&lvT(x.e)>t).map(x=>x.event_id+'|'+x.termin)); return d.fragen.filter(f=>f.status==='offen'&&lauf.has(f.event_id+'|'+f.termin)).length; };
+  async function lvLoad(){ try{ const r=await RPC('live_admin'); if(r&&r.ok){ LV.d=r; LV.err=0; } else { LV.d=LV.d||{}; LV.err=1; } }catch(e){ LV.d=LV.d||{}; LV.err=1; } if(route()==='live') render(); else drawNav(); }
+  ZP.lvEdit = id => { LV.edit=id; ZP.typed=0; render(); };
+  ZP.lvSave = async b => {
+    const g=id=>{ const e=$(id); return e?(e.type==='checkbox'?e.checked:e.value.trim()):''; };
+    const d=g('lv-d'), t=g('lv-t');
+    if(!g('lv-titel')||!d||!t){ toast('Titel, Datum und Uhrzeit fehlen'); return; }
+    const p={ typ:g('lv-typ'), titel:g('lv-titel'), sprecher:g('lv-spr'), partner_id:g('lv-pid'), start_at:new Date(d+'T'+t).toISOString(),
+              dauer_min:g('lv-dauer')||60, wiederholung:g('lv-wdh'), bis:g('lv-bis'), yt_url:g('lv-yt'), aktiv:g('lv-akt') };
+    b.disabled=true;
+    try{ const r=await RPC('live_event_speichern',{p_id:LV.edit||null,p}); if(!r||!r.ok) throw 0; toast(LV.edit?'Gespeichert':'Live-Termin angelegt'); LV.edit=null; ZP.typed=0; await lvLoad(); }
+    catch(e){ b.disabled=false; toast('Hat nicht geklappt. Ist closinghub-runde22-live-calls.sql ausgeführt?'); }
+  };
+  ZP.lvTyp = v => { const s=$('lv-titel'); if(s && !s.value) s.value = v==='motivation' ? 'Motivations-Call' : ''; const w=$('lv-wdh'); if(w && v==='motivation' && w.value==='einmal'){ w.value='werktags'; } };
+  ZP.lvQ = async (id,st) => { try{ await RPC('live_frage_status',{p_id:id,p_status:st}); }catch(e){} await lvLoad(); };
+  function lvForm(e){
+    const s=e?new Date(e.start_at):new Date(Date.now()+864e5), P=(LV.d&&LV.d.partner)||[];
+    const val=(x,d='')=>esc(x==null?d:x);
+    return `<div class="card"><h3 style="margin:0 0 10px">${e?'Live-Termin bearbeiten':'Neuer Live-Termin'}</h3>
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
+        <label class="f">Art<select class="in" id="lv-typ" onchange="ZP.lvTyp(this.value)"><option value="vortrag" ${!e||e.typ==='vortrag'?'selected':''}>Partner-Vortrag (nur Premium, mit Fragen)</option><option value="motivation" ${e&&e.typ==='motivation'?'selected':''}>Motivations-Call (ab Plus, ohne Chat)</option></select></label>
+        <label class="f">Titel<input class="in" id="lv-titel" maxlength="120" value="${val(e&&e.titel)}" placeholder="z. B. Einwandbehandlung live"></label>
+        <label class="f">Sprecher (Name in der App)<input class="in" id="lv-spr" maxlength="60" value="${val(e&&e.sprecher)}" placeholder="z. B. Paul"></label>
+        <label class="f">Partner-Konto (darf Fragen markieren)<select class="in" id="lv-pid"><option value="">keins</option>${P.map(p=>`<option value="${p.id}" ${e&&+e.partner_id===+p.id?'selected':''}>${esc(p.n||('Partner '+p.id))}</option>`).join('')}</select></label>
+        <label class="f">Datum (erster Termin)<input class="in" type="date" id="lv-d" value="${s.getFullYear()}-${lvP2(s.getMonth()+1)}-${lvP2(s.getDate())}"></label>
+        <label class="f">Uhrzeit<input class="in" type="time" id="lv-t" value="${e?lvP2(s.getHours())+':'+lvP2(s.getMinutes()):'07:30'}"></label>
+        <label class="f">Dauer in Minuten<input class="in" type="number" min="5" max="600" id="lv-dauer" value="${val(e&&e.dauer_min,60)}"></label>
+        <label class="f">Wiederholen<select class="in" id="lv-wdh"><option value="einmal" ${!e||e.wiederholung==='einmal'?'selected':''}>Nur einmal</option><option value="werktags" ${e&&e.wiederholung==='werktags'?'selected':''}>Jeden Werktag (Mo–Fr)</option><option value="taeglich" ${e&&e.wiederholung==='taeglich'?'selected':''}>Jeden Tag</option></select></label>
+        <label class="f">Wiederholen bis (leer = offen)<input class="in" type="date" id="lv-bis" value="${val(e&&e.bis)}"></label>
+        <label class="f" style="grid-column:1/-1">YouTube-Link (Livestream, „nicht gelistet“)<input class="in" id="lv-yt" value="${val(e&&e.yt_url)}" placeholder="https://youtube.com/live/…"></label>
+        <label class="row" style="gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="lv-akt" ${!e||e.aktiv?'checked':''}> Aktiv (in der App sichtbar)</label>
+      </div>
+      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn" onclick="ZLV.edit=null;ZP.typed=0;render()">Abbrechen</button><button class="btn gold-b" onclick="ZP.lvSave(this)">${e?'Speichern':'Anlegen'}</button></div></div>`;
+  }
+  PAGES.live = function(){
+    if(LV.d===undefined){ LV.d=null; lvLoad(); }
+    const head=`<div class="row between" style="align-items:flex-start;gap:12px;flex-wrap:wrap"><div><h1 class="h1">Live-Calls</h1><p class="sub" style="max-width:760px">15 Minuten vor Start erscheint in der App oben ein fester Balken, bis der Call vorbei ist. <b>Partner-Vorträge</b> sehen nur Premium-Member (inkl. Day One in den Premium-Monaten), mit Fragen an den Sprecher. Den <b>Motivations-Call</b> sehen alle ab Plus, ohne Chat.</p></div>
+      <button class="btn gold-b" onclick="ZP.lvEdit(0)">+ Live-Termin</button></div>`;
+    if(LV.d===null) return head+'<p class="muted">Lade …</p>';
+    if(LV.err && !LV.d.events) return head+'<div class="card empty">Fehlt noch: Führe einmal <b>closinghub-runde22-live-calls.sql</b> in Supabase aus.</div>';
+    const E=LV.d.events||[], byId=Object.fromEntries(E.map(e=>[e.id,e])), t=Date.now();
+    const T=(LV.d.termine||[]).filter(x=>byId[x.event_id]);
+    const lauf=T.filter(x=>lvT(x.s)-9e5<=t&&lvT(x.e)>t), next=T.filter(x=>lvT(x.s)-9e5>t).slice(0,12), alt=T.filter(x=>lvT(x.e)<=t).slice(-6).reverse();
+    const typP=e=>e.typ==='vortrag'?'<span class="pill p-gold">Vortrag · Premium</span>':'<span class="pill p-ok">Motivation · ab Plus</span>';
+    const wdh={einmal:'einmal',werktags:'Mo–Fr',taeglich:'täglich'};
+    const row=(x,st)=>{ const e=byId[x.event_id]; return `<tr><td style="padding-left:16px"><b>${lvDT(x.s)}</b><div class="muted" style="font-size:11.5px">bis ${lvHM(x.e)}</div></td><td>${typP(e)}</td><td><b>${esc(e.titel)}</b><div class="muted" style="font-size:11.5px">${esc(e.sprecher||'')}</div></td><td>${st}</td><td>${num(x.dabei)}</td><td>${e.typ==='vortrag'?num(x.fragen):'–'}</td><td>${e.yt_url?'':'<span class="pill p-bad">Link fehlt</span>'}</td></tr>`; };
+    const tbl=(L,st,leer)=>L.length?`<div style="overflow:auto"><table class="zp-tbl"><thead><tr><th style="padding-left:16px">Wann</th><th>Art</th><th>Titel</th><th>Status</th><th>Dabei</th><th>Fragen</th><th></th></tr></thead><tbody>${L.map(x=>row(x,typeof st==='function'?st(x):st)).join('')}</tbody></table></div>`:`<div class="empty" style="padding:18px">${leer}</div>`;
+    const F=(LV.d.fragen||[]).filter(f=>lauf.some(x=>x.event_id===f.event_id&&x.termin===f.termin)||alt.slice(0,1).some(x=>x.event_id===f.event_id&&x.termin===f.termin));
+    const ed=LV.edit===null?null:(LV.edit?byId[LV.edit]:0);
+    return head+`
+      ${ed!==null?lvForm(ed||null):''}
+      <div class="card" style="padding:0;overflow:hidden;margin-top:16px"><h3 style="margin:14px 16px 6px">Jetzt (Balken in der App sichtbar)</h3>${tbl(lauf,x=>lvT(x.s)<=t?'<span class="pill p-bad">LIVE</span>':'<span class="pill p-warn">in '+Math.ceil((lvT(x.s)-t)/6e4)+' Min</span>','Gerade läuft nichts.')}</div>
+      ${F.length?`<div class="card" style="margin-top:16px"><h3 style="margin:0 0 8px">Fragen aus dem Vortrag</h3>${F.map(f=>`<div class="item" style="align-items:flex-start;gap:10px;${f.status==='versteckt'?'opacity:.45':''}"><div style="flex:1"><b style="font-size:13px">${esc(f.name)}</b> <span class="muted" style="font-size:11.5px">${lvHM(f.at)} · ${esc((byId[f.event_id]||{}).titel||'')}</span><div style="font-size:14px;margin-top:2px">${esc(f.text)}</div></div>
+          ${f.status!=='beantwortet'?`<button class="btn sm" onclick="ZP.lvQ(${f.id},'beantwortet')">Beantwortet</button>`:`<span class="pill p-ok">beantwortet</span>`}${f.status!=='versteckt'?`<button class="btn sm" onclick="ZP.lvQ(${f.id},'versteckt')">Ausblenden</button>`:`<button class="btn sm" onclick="ZP.lvQ(${f.id},'offen')">Wieder zeigen</button>`}</div>`).join('')}</div>`:''}
+      <div class="card" style="padding:0;overflow:hidden;margin-top:16px"><h3 style="margin:14px 16px 6px">Nächste Termine (14 Tage)</h3>${tbl(next,'<span class="pill">geplant</span>','Noch nichts geplant. Leg oben einen Live-Termin an.')}</div>
+      <div class="card" style="padding:0;overflow:hidden;margin-top:16px"><h3 style="margin:14px 16px 6px">Alle Live-Termine</h3>${E.length?`<div style="overflow:auto"><table class="zp-tbl"><thead><tr><th style="padding-left:16px">Titel</th><th>Art</th><th>Start</th><th>Wiederholung</th><th>Status</th><th></th></tr></thead><tbody>
+        ${E.map(e=>`<tr class="k" onclick="ZP.lvEdit(${e.id})"><td style="padding-left:16px"><b>${esc(e.titel)}</b><div class="muted" style="font-size:11.5px">${esc(e.sprecher||'')}</div></td><td>${typP(e)}</td><td>${lvDT(e.start_at)} · ${num(e.dauer_min)} Min</td><td>${wdh[e.wiederholung]||e.wiederholung}${e.bis?' bis '+new Date(e.bis).toLocaleDateString('de-DE'):''}</td><td>${e.aktiv?'<span class="pill p-ok">aktiv</span>':'<span class="pill">aus</span>'}</td><td><button class="btn sm" onclick="event.stopPropagation();ZP.lvEdit(${e.id})">Bearbeiten</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty" style="padding:18px">Noch keine Live-Termine.</div>'}</div>
+      ${alt.length?`<div class="card" style="padding:0;overflow:hidden;margin-top:16px"><h3 style="margin:14px 16px 6px">Zuletzt</h3>${tbl(alt,'<span class="pill">vorbei</span>','')}</div>`:''}
+      <div class="card" style="margin-top:16px"><h3 style="margin:0 0 6px">So richtest du den Stream ein</h3><p class="muted" style="font-size:13px;margin:0">YouTube Studio → Livestream planen → Sichtbarkeit <b>„Nicht gelistet“</b> → unter Einstellungen <b>„Einbetten zulassen“</b> an → Link hier eintragen. Der Link wird nur an Member mit Zugang geschickt. Den täglichen Morgen-Call kannst du einmal als „Jeden Werktag“ anlegen; wechselt der Stream-Link, hier einfach aktualisieren.</p></div>`;
+  };
+
   /* ---------- Start ---------- */
   drawNav(); liveDraw();
-  if(LOADED){ if(['affiliate','mitteilungen'].includes(route())) render(); }
+  if(LOADED){ if(['affiliate','mitteilungen','live'].includes(route())) render(); }
   setTimeout(()=>poll(true), 300);
 })();
