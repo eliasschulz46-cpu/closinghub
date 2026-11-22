@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r17 · Jobs am Handy + Glocke für Job-Benachrichtigungen) =====
+/* ===== ClosingHub App-Plus (r18 · Player flüssig: Videos vorladen) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -214,7 +214,7 @@
   if(typeof drawPlayer==='function' && typeof togglePause==='function'){
     const _dp = drawPlayer;
     drawPlayer = function(){ try{ htFix(); }catch(e){} const ov=document.querySelector('#modal video[autoplay]'); const keep=ov?{src:ov.currentSrc||ov.src,t:ov.currentTime}:null;
-      const r=_dp.apply(this,arguments); plOpen(true); try{ plFit(); }catch(e){} try{ plMenu(); }catch(e){} try{ plSide(); }catch(e){} try{ plSound(keep); }catch(e){} try{
+      const r=_dp.apply(this,arguments); try{ plSwap(); }catch(e){} plOpen(true); try{ plFit(); }catch(e){} try{ plMenu(); }catch(e){} try{ plSide(); }catch(e){} try{ plSound(keep); }catch(e){} try{
       const pz=document.querySelector('[aria-label="Pausiert"]'); const box=pz&&pz.parentElement;
       const p=S.player, dt=p&&p.pzAt?Date.now()-p.pzAt:99999;
       if(box){ if(dt<1000){ box.classList.add('pz-flash'); box.style.animationDelay=(-dt)+'ms'; } else box.remove(); }
@@ -872,6 +872,39 @@
       c.querySelectorAll('.grid.grid-cols-2 > div').forEach(f=>{ const v=f.querySelector('p.text-sm'); const wide=!!v&&v.textContent.trim().length>38; if(f.classList.contains('jd-wide')!==wide) f.classList.toggle('jd-wide',wide); }); });
     const back=[...document.querySelectorAll('#app button')].find(x=>x.textContent.trim()==='← Alle Jobs'); if(back&&back.parentElement) back.parentElement.classList.add('jd-wrap');
   }
+
+  /* ---------- Player flüssig wie Instagram (r18): nächste Videos vorladen und beim Wischen das fertige Video einsetzen ---------- */
+  const PRE=new Map(); let preBox=null;
+  function preHost(){ if(!preBox){ preBox=document.createElement('div'); preBox.setAttribute('aria-hidden','true'); preBox.style.cssText='position:fixed;left:-9999px;top:0;width:2px;height:2px;overflow:hidden;opacity:0;pointer-events:none'; document.body.appendChild(preBox); } return preBox; }
+  function preGet(post){
+    if(!post||post.mk||!post.video) return null; const url=post.video; if(PRE.has(url)) return PRE.get(url);
+    const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.setAttribute('muted',''); v.preload='auto'; v.loop=true;
+    if(post.thumb) v.poster=post.thumb; v.src=url; preHost().appendChild(v);
+    try{ v.load(); const pr=v.play(); if(pr&&pr.then) pr.then(()=>{ if(v.parentElement===preBox){ v.pause(); } }).catch(()=>{}); }catch(e){}
+    PRE.set(url,v); return v;
+  }
+  function plPreload(){
+    const p=S.player; if(!p) return; const list=PL(); const want=new Set();
+    [p.i+1,p.i+2,p.i-1].forEach(k=>{ const post=list[k]; if(post&&!post.mk&&post.video){ want.add(post.video); preGet(post); } });
+    const cur=list[p.i]; if(cur&&cur.video) want.add(cur.video);
+    for(const [u,v] of PRE){ if(!want.has(u)&&v.parentElement===preBox){ try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){} v.remove(); PRE.delete(u); } }
+  }
+  function plSwap(){
+    const p=S.player; if(!p) return; const post=PL()[p.i];
+    const nv=document.querySelector('#modal video[autoplay]');
+    if(nv&&post&&!post.mk&&post.video){
+      if(post.thumb&&!nv.poster) nv.poster=post.thumb;
+      const pre=PRE.get(post.video);
+      if(pre&&pre!==nv&&pre.parentElement===preBox&&pre.readyState>=2){
+        [...nv.attributes].forEach(a=>{ if(a.name!=='src') pre.setAttribute(a.name,a.value); });
+        pre.removeAttribute('preload'); pre.style.cssText=nv.style.cssText; pre.className=nv.className;
+        nv.replaceWith(pre); PRE.delete(post.video);
+        try{ const pr=pre.play(); if(pr&&pr.catch) pr.catch(()=>{}); }catch(e){}
+      }
+    }
+    setTimeout(plPreload,60);
+  }
+  const _stopPre=stopPlayer; stopPlayer=function(){ const r=_stopPre.apply(this,arguments); for(const [u,v] of PRE){ try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){} v.remove(); } PRE.clear(); return r; };
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
