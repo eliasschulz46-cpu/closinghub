@@ -16,6 +16,11 @@
   .left-3{left:.75rem}
   .object-contain{-o-object-fit:contain;object-fit:contain}
   .pl-fit{object-fit:contain!important;background:transparent!important;z-index:1}
+  .pl-acts{margin-left:auto;display:inline-flex;align-items:center;gap:10px;position:relative}
+  .pl-menu{display:none;position:absolute;right:0;bottom:calc(100% + 10px);min-width:200px;background:rgba(14,26,43,.96);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:6px;z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+  .pl-menu.open{display:block}
+  .pl-mi{display:flex!important;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 12px!important;border-radius:10px;font-size:14px!important;color:#fff!important;margin:0!important;background:none}
+  .pl-mi:hover{background:rgba(255,255,255,.08)}
   .pl-bd{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;filter:blur(28px) brightness(.55) saturate(1.2);z-index:0;pointer-events:none}
   /* Stories */
   .st-hd{left:12px!important;right:12px!important;justify-content:flex-start}
@@ -134,7 +139,7 @@
   if(typeof drawPlayer==='function' && typeof togglePause==='function'){
     const _dp = drawPlayer;
     drawPlayer = function(){ const ov=document.querySelector('#modal video[autoplay]'); const keep=ov?{src:ov.currentSrc||ov.src,t:ov.currentTime}:null;
-      const r=_dp.apply(this,arguments); try{ plFit(); }catch(e){} try{ plSound(keep); }catch(e){} try{
+      const r=_dp.apply(this,arguments); try{ plFit(); }catch(e){} try{ plMenu(); }catch(e){} try{ plSound(keep); }catch(e){} try{
       const pz=document.querySelector('[aria-label="Pausiert"]'); const box=pz&&pz.parentElement;
       const p=S.player, dt=p&&p.pzAt?Date.now()-p.pzAt:99999;
       if(box){ if(dt<1000){ box.classList.add('pz-flash'); box.style.animationDelay=(-dt)+'ms'; } else box.remove(); }
@@ -152,8 +157,35 @@
       m.dataset.fit='1'; m.classList.add('pl-fit');
       const host=m.parentElement; if(!host) return; if(getComputedStyle(host).position==='static') host.style.position='relative'; host.style.overflow='hidden';
       if(m.tagName==='IMG' && !host.querySelector('.pl-bd')){ const bd=document.createElement('img'); bd.className='pl-bd'; bd.src=m.currentSrc||m.src; bd.alt=''; bd.setAttribute('aria-hidden','true'); host.insertBefore(bd,m); }
+      if(m.tagName==='IMG'){ const fit=()=>plBand(m,host); if(m.complete&&m.naturalWidth) fit(); else m.addEventListener('load',fit,{once:true}); }
       if(m.tagName==='VIDEO'){ host.style.background='#000'; }
     });
+  }
+
+  // Bild genau auf seine sichtbare Fläche setzen und die Kanten weich in den Hintergrund auslaufen lassen
+  function plBand(m,host){
+    const W=host.clientWidth, H=host.clientHeight, nw=m.naturalWidth, nh=m.naturalHeight; if(!W||!H||!nw||!nh) return;
+    const sc=Math.min(W/nw,H/nh), w=nw*sc, h=nh*sc, top=(H-h)/2, left=(W-w)/2;
+    Object.assign(m.style,{inset:'auto',top:top+'px',left:left+'px',width:w+'px',height:h+'px',objectFit:'fill'});
+    const g = h<H-4 ? 'linear-gradient(to bottom,transparent 0,#000 9%,#000 91%,transparent 100%)' : w<W-4 ? 'linear-gradient(to right,transparent 0,#000 9%,#000 91%,transparent 100%)' : 'none';
+    m.style.webkitMaskImage=g; m.style.maskImage=g;
+  }
+  window.addEventListener('resize',()=>{ document.querySelectorAll('#modal img.pl-fit').forEach(m=>plBand(m,m.parentElement)); });
+
+  /* ---------- Player: Highlight, Nur im Feed, Bearbeiten, Zurückziehen bzw. Melden im Menü neben „Senden“ ---------- */
+  window.APLUS_plm = e => { if(e) e.stopPropagation(); const mn=$('plMenu'); if(mn) mn.classList.toggle('open'); };
+  document.addEventListener('pointerdown', e=>{ const mn=$('plMenu'); if(mn && mn.classList.contains('open') && !e.target.closest('#plMenu') && !e.target.closest('.pl-more')) mn.classList.remove('open'); }, true);
+  function plMenu(){
+    const ov=document.querySelector('#modal .bg-gradient-to-t'); if(!ov || ov.querySelector('.pl-more')) return;
+    const row=ov.querySelector('span.flex.gap-4.mt-1'), rep=ov.querySelector('button[onclick*="reportPost"]'), share=ov.querySelector('[aria-label="Teilen"]');
+    if(!share || (!row && !rep)) return;
+    const items=row?[...row.children]:[rep];
+    const mn=document.createElement('div'); mn.id='plMenu'; mn.className='pl-menu';
+    items.forEach(b=>{ b.className='pl-mi'; b.style.color=''; const f=b.getAttribute('onclick')||''; b.setAttribute('onclick',f+';var m=document.getElementById(\'plMenu\');if(m)m.classList.remove(\'open\')'); mn.appendChild(b); });
+    if(row) row.remove();
+    const wrap=document.createElement('span'); wrap.className='pl-acts'; share.replaceWith(wrap); share.classList.remove('ml-auto');
+    wrap.insertAdjacentHTML('beforeend',`<button class="pl-more" onclick="APLUS_plm(event)" aria-label="Einstellungen zum Beitrag"><span class="icbox"><svg class="ci" style="width:20px;height:20px"><use href="#i-einstellungen"/></svg></span></button>`);
+    wrap.appendChild(share); wrap.appendChild(mn);
   }
 
   /* ---------- Player: Kurzvideos mit Ton (im Feed bleiben sie stumm) ---------- */
