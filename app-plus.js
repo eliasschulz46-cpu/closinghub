@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r12 · Nachtcheck: Inhaltsfilter) =====
+/* ===== ClosingHub App-Plus (r13 · Like ohne Flackern) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -670,6 +670,18 @@
     const v=j&&j[0]&&j[0].value&&j[0].value.topJob; if(v!=null){ TOPP=String(v).replace('.',',')+' €'; fixTop(); } }catch(e){} })();
   function fixTop(){ if(!TOPP) return; document.querySelectorAll('.border-dashed .text-gold').forEach(s=>{
     if(s.parentElement && s.parentElement.textContent.includes('Freier Top-Platz') && /€/.test(s.textContent) && s.textContent!==TOPP) s.textContent=TOPP; }); }
+
+  /* ---------- Like im Feed ohne Neuzeichnen (kein Flackern bei Videos) ---------- */
+  const _tl=toggleLike;
+  toggleLike=function(id,ctx){
+    if(ctx!=='feed' || !S.user) return _tl.apply(this,arguments);
+    const btns=[...document.querySelectorAll('[onclick*="toggleLike('+id+',"]')];
+    if(!btns.length) return _tl.apply(this,arguments);
+    const paint=(on)=>btns.forEach(b=>{ const was=b.classList.contains('icon-on'); b.classList.toggle('icon-on',!!on); const s=b.querySelector('span');
+      if(s && was!==!!on){ const n=parseInt(s.textContent,10)||0; s.textContent=Math.max(0,n+(on?1:-1)); } });
+    S.liked[id]=!S.liked[id]; paint(S.liked[id]);
+    if(id>=1e6 && S.member) rpc('post_like',{p_post:id-1e6}).then(j=>{ if(j&&j.ok&&j.liked!==S.liked[id]){ S.liked[id]=j.liked; paint(j.liked); } }).catch(()=>{});
+  };
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
