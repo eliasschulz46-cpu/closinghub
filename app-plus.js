@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r21 · Live-Balken bremst Player nicht) =====
+/* ===== ClosingHub App-Plus (r22 · Player: Vorschaubild statt Schwarz) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -557,7 +557,7 @@
       out+=esc(raw.slice(last,m.index))+`<span class="ht" role="link" tabindex="0" data-ht="${esc2(n)}">#${esc(m[1])}</span>`; last=m.index+m[0].length; }
     return (out+esc(raw.slice(last))).replace(/\n/g,'<br>'); };
   const _mapPost=mapPost;
-  mapPost=function(p){ const o=_mapPost.apply(this,arguments); try{ if(o&&p&&p.text&&p.text.includes('#')){ o.t=htHtml(p.text); o._ht=p.text; } }catch(e){} return o; };
+  mapPost=function(p){ const o=_mapPost.apply(this,arguments); try{ if(o&&p&&p.thumb_url&&!o.thumb) o.thumb=p.thumb_url; }catch(e){} try{ if(o&&p&&p.text&&p.text.includes('#')){ o.t=htHtml(p.text); o._ht=p.text; } }catch(e){} return o; };
   function htFix(){ try{ [S.rp,S.myPosts,S.plist,S.plistReal,S.feedList,S.htList,S.mp&&S.mp.posts,S.onePost&&[S.onePost],...Object.values(S.hl||{})].forEach(a=>(a||[]).forEach(p=>{ if(p&&p.real&&typeof p.raw==='string'&&p._ht!==p.raw&&(p.raw.includes('#')||p._ht)){ p.t=htHtml(p.raw); p._ht=p.raw; } })); }catch(e){} }
   window.APLUS_htFix=htFix;
   function htOpen(tag){ tag=htNorm(tag); if(!tag) return;
@@ -907,6 +907,20 @@
   }
   const _stopPre=stopPlayer; stopPlayer=function(){ const r=_stopPre.apply(this,arguments); for(const [u,v] of PRE){ try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){} v.remove(); } PRE.clear(); return r; };
 
+
+  /* ---------- Player: Vorschaubild statt Schwarz (r22) ----------
+     Videos zeigen sofort ihr Vorschaubild, bis das erste Bild geladen ist. Beiträge, die vor dem Laden
+     von app-plus.js geholt wurden, bekommen ihr Vorschaubild hier nachgetragen. */
+  const THB={};
+  async function thumbFor(post){ if(!post||!post.video||post.thumb) return post&&post.thumb; const id=post.id-1e6; if(!(id>0)) return null;
+    if(THB[id]===undefined){ THB[id]=rpc('post_laden',{p_id:id}).then(r=>r&&r.thumb_url||null).catch(()=>null); }
+    const t=await THB[id]; if(t) post.thumb=t; return t; }
+  function thumbsFill(){ try{ [S.feedList,S.plist,S.pop].forEach(L=>(L||[]).forEach(p=>{ if(p&&p.video&&!p.thumb) thumbFor(p); })); }catch(e){} }
+  setTimeout(thumbsFill,1500); setInterval(thumbsFill,15000);
+  const _dpT=drawPlayer; drawPlayer=function(){ const r=_dpT.apply(this,arguments);
+    try{ const post=PL()[S.player.i], v=document.querySelector('#modal video[autoplay]');
+      if(v&&post&&post.video){ v.style.background='#000'; if(post.thumb){ if(!v.poster) v.poster=post.thumb; } else thumbFor(post).then(t=>{ if(t&&v.isConnected&&!v.poster) v.poster=t; }); } }catch(e){}
+    return r; };
   /* ---------- Handy: Buttons reagieren beim ersten Tippen (r19) ----------
      iOS behandelt den ersten Tipp als "Hover", wenn dabei etwas sichtbar animiert oder eingeblendet wird.
      Die Strich-Animation der Icons (drawGold) und die nur per Hover sichtbaren Kommentar-Aktionen
