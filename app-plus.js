@@ -130,7 +130,8 @@
   /* ---------- Player: Pause-Symbol nur kurz einblenden ---------- */
   if(typeof drawPlayer==='function' && typeof togglePause==='function'){
     const _dp = drawPlayer;
-    drawPlayer = function(){ const r=_dp.apply(this,arguments); try{
+    drawPlayer = function(){ const ov=document.querySelector('#modal video[autoplay]'); const keep=ov?{src:ov.currentSrc||ov.src,t:ov.currentTime}:null;
+      const r=_dp.apply(this,arguments); try{ plSound(keep); }catch(e){} try{
       const pz=document.querySelector('[aria-label="Pausiert"]'); const box=pz&&pz.parentElement;
       const p=S.player, dt=p&&p.pzAt?Date.now()-p.pzAt:99999;
       if(box){ if(dt<1000){ box.classList.add('pz-flash'); box.style.animationDelay=(-dt)+'ms'; } else box.remove(); }
@@ -138,6 +139,20 @@
     }catch(e){} return r; };
     const _tp = togglePause;
     togglePause = function(){ if(S.player){ S.player.pzAt=Date.now(); S.player.pzPlay=!!S.player.paused; } return _tp.apply(this,arguments); };
+  }
+
+  /* ---------- Player: Kurzvideos mit Ton (im Feed bleiben sie stumm) ---------- */
+  const SPK_ON='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+  const SPK_OFF='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+  window.APLUS_snd = e => { if(e) e.stopPropagation(); const v=document.querySelector('#modal video[autoplay]'); if(!v) return; S.muted=!v.muted; v.muted=S.muted; if(!S.muted){ v.volume=1; v.play().catch(()=>{}); } const b=$('plSnd'); if(b) b.innerHTML=v.muted?SPK_OFF:SPK_ON; };
+  function plSound(keep){
+    const v=document.querySelector('#modal video[autoplay]'); if(!v) return;
+    v.removeAttribute('onclick'); v.onclick=null;
+    if(keep && keep.src && v.src===keep.src.split('#')[0] || keep && keep.src && (v.currentSrc||v.src)===keep.src){ if(keep.t>0){ const st=()=>{ try{ v.currentTime=keep.t; }catch(e){} }; if(v.readyState>=1) st(); else v.addEventListener('loadedmetadata',st,{once:true}); } }
+    v.muted = S.muted===true; v.volume=1;
+    if(S.player && S.player.paused){ v.pause(); }
+    else { const p=v.play(); if(p) p.catch(()=>{ v.muted=true; v.play().catch(()=>{}); const b=$('plSnd'); if(b) b.innerHTML=SPK_OFF; }); }
+    if(!$('plSnd')){ const host=v.closest('.relative')||v.parentElement; host.insertAdjacentHTML('beforeend',`<button id="plSnd" onclick="APLUS_snd(event)" aria-label="Ton an oder aus" style="position:absolute;top:58px;right:14px;z-index:30;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);color:#fff">${v.muted?SPK_OFF:SPK_ON}</button>`); }
   }
 
   /* ---------- Stories ---------- */
