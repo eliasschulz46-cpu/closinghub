@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r13 · Like ohne Flackern) =====
+/* ===== ClosingHub App-Plus (r14 · Like ohne Flackern in Feed + Player) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -671,10 +671,10 @@
   function fixTop(){ if(!TOPP) return; document.querySelectorAll('.border-dashed .text-gold').forEach(s=>{
     if(s.parentElement && s.parentElement.textContent.includes('Freier Top-Platz') && /€/.test(s.textContent) && s.textContent!==TOPP) s.textContent=TOPP; }); }
 
-  /* ---------- Like im Feed ohne Neuzeichnen (kein Flackern bei Videos) ---------- */
+  /* ---------- Like in Feed und Player ohne Neuzeichnen (kein Flackern bei Videos) ---------- */
   const _tl=toggleLike;
   toggleLike=function(id,ctx){
-    if(ctx!=='feed' || !S.user) return _tl.apply(this,arguments);
+    if(!S.user) return _tl.apply(this,arguments);   // Feed UND Player: nur Herz + Zahl aktualisieren
     const btns=[...document.querySelectorAll('[onclick*="toggleLike('+id+',"]')];
     if(!btns.length) return _tl.apply(this,arguments);
     const paint=(on)=>btns.forEach(b=>{ const was=b.classList.contains('icon-on'); b.classList.toggle('icon-on',!!on); const s=b.querySelector('span');
