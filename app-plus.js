@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r22 · Player: Vorschaubild statt Schwarz) =====
+/* ===== ClosingHub App-Plus (r23 · Start-Challenge 750 + Bonus-Lauf) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -1103,6 +1103,157 @@
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden && Date.now()-LV.at>15000) load(); });
     setInterval(tick,1000);
     let tries=0; const boot=setInterval(()=>{ tries++; if(S.member||tries>40){ clearInterval(boot); load(); } },500);
+  })();
+
+  /* ---------- r23: Start-Challenge 750 + Bonus-Lauf ---------- */
+  (function(){
+    const st = document.createElement('style');
+    st.textContent = `
+    .chp{margin-top:12px}
+    .chp-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px}
+    .chp-top b{font-size:15px;color:#087A4B} html:not(.light) .chp-top b{color:#3FCF8E}
+    .chp-bar{height:8px;border-radius:99px;background:rgb(var(--line,128 128 128) / .35);overflow:hidden;margin-top:6px}
+    .chp-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#087A4B,#D9B45A);transition:width .8s ease}
+    .chm{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px}
+    .chm div{border:1px solid rgb(var(--line,128 128 128) / .6);border-radius:10px;padding:6px 4px;text-align:center;font-size:10.5px;line-height:1.25;color:rgb(var(--muted,120 120 120))}
+    .chm div b{display:block;font-size:12px;color:inherit}
+    .chm div.on{background:#087A4B;border-color:#087A4B;color:#fff}
+    .chm div.nx{border-color:#D9B45A;color:inherit}
+    .bl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px;margin-top:14px}
+    .bl-f{position:relative;min-height:58px;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px 6px;border-radius:12px;border:1px solid rgb(var(--line,128 128 128) / .7);background:rgb(var(--panel,255 255 255));font:600 12.5px/1.25 Inter,sans-serif;transition:background .12s,color .12s,box-shadow .12s,transform .12s}
+    .bl-f.on{background:#087A4B;color:#fff;border-color:#087A4B;box-shadow:0 0 0 2px #D9B45A,0 0 18px rgba(217,180,90,.55);transform:scale(1.04)}
+    .bl-f.win{background:linear-gradient(135deg,#D9B45A,#F0D88C);color:#0E1A2B;border-color:#D9B45A;box-shadow:0 0 0 2px #087A4B,0 0 22px rgba(217,180,90,.7);animation:blWin 1.1s ease-in-out 3}
+    .bl-f.off{opacity:.45}
+    @keyframes blWin{0%,100%{transform:scale(1.04)}50%{transform:scale(1.1)}}
+    .bl-res{margin-top:14px;padding:14px;border-radius:12px;background:linear-gradient(135deg,rgba(217,180,90,.18),rgba(8,122,75,.12));text-align:center}
+    .bl-res b{display:block;font:600 21px Lora,serif;margin:2px 0}
+    .bl-go{margin-top:14px;width:100%;padding:12px!important}
+    .chf-ic{width:64px;height:64px;border-radius:50%;margin:0 auto 6px;display:grid;place-items:center;background:linear-gradient(135deg,#087A4B,#0b9a5f);color:#fff;font-size:28px;box-shadow:0 0 0 4px rgba(217,180,90,.5)}
+    .chf-ic .ci{width:30px;height:30px}
+    @media (prefers-reduced-motion:reduce){ .bl-f,.chp-bar i{transition:none} .bl-f.win{animation:none} }`;
+    document.head.appendChild(st);
+
+    const ic = n => `<svg class="ci"><use href="#i-${n}"/></svg>`;
+    const de = n => (+n||0).toLocaleString('de-DE');
+
+    /* Konfetti */
+    window.APLUS_konfetti = function(stark){
+      try{ if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return; }catch(e){}
+      const c=document.createElement('canvas'); c.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999';
+      document.body.appendChild(c); const x=c.getContext('2d'), W=c.width=innerWidth, H=c.height=innerHeight;
+      const col=['#087A4B','#D9B45A','#F0D88C','#3FCF8E','#ffffff'], n=stark?170:90;
+      const P=Array.from({length:n},()=>({x:W/2+(Math.random()-.5)*W*.3,y:H*.38,vx:(Math.random()-.5)*13,vy:-Math.random()*13-4,s:5+Math.random()*6,r:Math.random()*6,vr:(Math.random()-.5)*.35,c:col[Math.floor(Math.random()*col.length)]}));
+      const t0=performance.now();
+      (function f(t){ const k=(t-t0)/2600; x.clearRect(0,0,W,H);
+        P.forEach(p=>{ p.vy+=.32; p.vx*=.99; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; x.save(); x.globalAlpha=Math.max(0,1-k); x.translate(p.x,p.y); x.rotate(p.r); x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/3,p.s,p.s*.66); x.restore(); });
+        if(k<1) requestAnimationFrame(f); else c.remove(); })(t0);
+    };
+
+    /* ===== Start-Challenge-Karte ===== */
+    const _chReal = window.challengeReal;
+    window.challengeReal = function(){
+      const c=S.chs; if(!c || c.ziel==null) return _chReal();
+      const T=chToday(); if(!T) return '<div id="chcard"></div>';
+      const full=v=>v===3, cnt=c.geschafft||0, d=T.d, tp=+c.tag_punkte||0, ms=c.ms||{}, er=c.erreicht||[];
+      const dot=i=>{ const v=c.tage[i]||0; const s=full(v)?'background:#087A4B;border-color:#087A4B;color:#fff':(i===d-1?'border-color:#087A4B;color:#087A4B':(i<d-1?'color:rgb(var(--muted));opacity:.5':'color:rgb(var(--muted))')); return `<span class="aspect-square rounded-full border border-line flex items-center justify-center text-[9px] font-semibold" style="${s}">${full(v)?ic('erledigt'):i+1}</span>`; };
+      const row=(a,i)=>{ const done=!!(T.bits&(1<<i)); return `<div class="flex items-center justify-between gap-3 py-2.5 border-t border-line"><span class="text-sm ${done?'text-muted line-through':''}" style="line-height:1.4">${done?ic('erledigt')+' ':''}${esc(a.t)}</span>${done?'<span class="text-xs text-gold font-semibold whitespace-nowrap">Erledigt</span>':`<button onclick="chGo(${i})" class="btn-gold text-xs whitespace-nowrap" style="padding:.35rem .8rem">${a.typ==='selbst'?'Abhaken':'Los'}</button>`}</div>`; };
+      const ziel=+c.ziel||750, p=Math.max(0,+c.punkte14||0), pct=Math.min(100,Math.round(p/ziel*100));
+      const stufen=[[3,ms['3']?'+'+ms['3']:'Tag 3'],[7,ms['7']?'+'+ms['7']:'Woche'],[10,'Abzeichen'],[14,ms['14']?'+'+ms['14']:'Finale']];
+      const nx=stufen.find(s=>!er.includes(s[0]));
+      return `<div id="chcard" class="card p-4" style="border-color:#087A4B">
+        <div class="flex items-center justify-between gap-2"><p class="text-xs uppercase tracking-wider text-gold font-semibold">Start-Challenge</p><span class="text-xs text-muted">Tag ${d} von 14</span></div>
+        <p class="font-semibold mt-1">Deine Aufgaben für heute</p>
+        <div class="chp"><div class="chp-top"><span><b>${de(p)}</b> von ${de(ziel)} Punkten</span><span class="text-muted">${p>=ziel?'Ziel geknackt! '+ic('feier'):'in deinen ersten 14 Tagen'}</span></div><div class="chp-bar"><i style="width:${pct}%"></i></div></div>
+        <div class="mt-3" style="display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:3px">${Array.from({length:14},(_,i)=>dot(i)).join('')}</div>
+        <div class="mt-3">${T.t.map(row).join('')}</div>
+        <p class="text-xs mt-2 ${full(T.bits)?'text-gold font-semibold':'text-muted'}">${full(T.bits)?ic('feier')+` Tag geschafft! +${tp} Punkte`:`Belohnung heute: +${tp} Punkte, wenn du beide Aufgaben schaffst`}</p>
+        <div class="chm">${stufen.map(s=>`<div class="${er.includes(s[0])?'on':(nx&&nx[0]===s[0]?'nx':'')}"><b>${er.includes(s[0])?ic('erledigt'):s[0]+' Tage'}</b>${s[1]}</div>`).join('')}</div>
+        <p class="text-xs text-muted mt-2 border-t border-line pt-2">${cnt} von 14 Tagen geschafft.${cnt<10?' Schaffe 10 der 14 Tage und sichere dir das Abzeichen „Challenger“.':''}</p></div>`;
+    };
+
+    /* Erfolgsmoment bei Meilensteinen */
+    const FEIER={
+      3:['flamme','Du bist drin!',p=>`3 Challenge-Tage geschafft.${p?` +${p} Punkte sind gutgeschrieben.`:''} Bleib dran!`],
+      7:['staerke','Eine Woche durchgezogen!',p=>`7 Challenge-Tage geschafft.${p?` +${p} Punkte sind gutgeschrieben.`:''}`],
+      10:['medaille','Abzeichen „Challenger“!',()=>'10 von 14 Tagen. Das Abzeichen steht jetzt in deinem Profil.'],
+      14:['pokal','Alle 14 Tage geschafft!',p=>`Du hast die Start-Challenge komplett durchgezogen.${p?` +${p} Punkte sind gutgeschrieben.`:''}`]};
+    let feierAn=false;
+    function feiern(){
+      const l=(S.chs&&S.chs.feiern)||[]; if(!l.length || feierAn) return;
+      const m=$('modal'); if(!m || m.innerHTML.trim() || S.player) return;
+      const f=l[l.length-1], F=FEIER[f.stufe]; if(!F) return; feierAn=true;
+      m.innerHTML=`<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="APLUS_chfZu()"><div class="card w-full max-w-sm p-6 relative text-center space-y-3" onclick="event.stopPropagation()">
+        <div class="chf-ic">${ic(F[0])}</div><p class="text-xs uppercase tracking-wider text-gold font-semibold">Start-Challenge</p>
+        <p class="font-serif" style="font-size:26px;line-height:1.2">${F[1]}</p><p class="text-sm text-muted">${F[2](+f.punkte||0)}</p>
+        ${f.stufe===7?`<button class="btn-gold w-full" onclick="APLUS_chfZu();setTimeout(()=>chBilanz(),50)">Wochenbilanz ansehen</button><button class="text-sm text-muted w-full" onclick="APLUS_chfZu()">Weiter</button>`:`<button class="btn-gold w-full" onclick="APLUS_chfZu()">Weiter geht's</button>`}</div></div>`;
+      APLUS_konfetti(f.stufe>=10);
+      rpc('challenge_gefeiert',{p_stufe:f.stufe}).catch(()=>{});
+      S.chs.feiern=[];
+    }
+    window.APLUS_chfZu=()=>{ feierAn=false; closeModal(); };
+    const _chLoad=window.chLoad;
+    window.chLoad=async function(){ const r=await _chLoad.apply(this,arguments); try{ feiern(); }catch(e){} return r; };
+    let chAt=0; const chAgain=()=>{ if(!S.member||document.hidden||Date.now()-chAt<15000) return; chAt=Date.now(); chLoad(); };
+    window.addEventListener('hashchange',chAgain); document.addEventListener('visibilitychange',chAgain);
+
+    /* Punkte im eigenen Monat (Ranglisten bleiben beim Kalendermonat) */
+    if(typeof window.ptCard==='function'){ const _pt=window.ptCard;
+      window.ptCard=function(){ let h=_pt.apply(this,arguments); const p=S.pt; if(!h||!p||p.pm_punkte==null||!p.pm_ab) return h;
+        const ab=new Date(p.pm_ab+'T12:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+        return h.replace(/(<p class="text-xs text-muted">)diesen Monat(<\/p><p class="font-semibold text-gold">)[^<]*/,`$1dein Monat seit ${ab}$2${de(p.pm_punkte)}`); }; }
+
+    /* ===== Bonus-Lauf (statt Glücksrad) ===== */
+    const BL_DEMO=['+25 Punkte','+50 Punkte','+1 Bewerbung','1 Tag Premium','+100 Punkte','Partner-Rabatt'];
+    const blDemo = () => !(S.gr&&S.gr.felder&&S.gr.felder.length);
+    const blFelder = () => blDemo()?BL_DEMO.map((t,i)=>({id:'d'+i,t,demo:1})):S.gr.felder;
+    const blDemoDone = () => { try{ return localStorage.getItem('ch_gr_demo')===grWeek(); }catch(e){ return false; } };
+    function blArt(){
+      const g=S.gr;
+      if(g && g.w_offen && !blDemo()) return 'willkommen';
+      if(blDemo()) return grFriday()&&!blDemoDone()?'freitag':null;
+      return g.offen && !g.gedreht ? 'freitag' : null;
+    }
+    window.wheelCard=function(){
+      const R=S.blRun, art=R?R.art:blArt(); if(!art) return '<div id="grcard" hidden></div>';
+      const f=R?R.f:blFelder(), demo=!!(f[0]&&f[0].demo), w=art==='willkommen';
+      const done=R&&R.done, lit=R?R.i:-1;
+      const tiles=f.map((x,i)=>`<div class="bl-f${done?(i===R.k?' win':' off'):(i===lit?' on':'')}">${esc(x.t)}</div>`).join('');
+      const res=done?`<div class="bl-res"><span class="mk-t">${w?'Dein Willkommens-Gewinn':'Dein Freitags-Gewinn'}</span><b>${esc(R.t)}</b><span class="mk-t">${demo?'Beispiel – echte Gewinne kommen bald.':(+R.p>0?`+${de(R.p)} Punkte sind gutgeschrieben.`:'Wir melden uns bei dir zum Einlösen.')}</span></div>`:'';
+      return `<article class="card mk" id="grcard"><div class="mk-hd"><div class="mk-logo">HUB</div><div><div class="mk-n">ClosingHub${demo?'<span class="mk-demo">Beispiel</span>':''}</div><div class="mk-t">${w?'Willkommen · dein erster Lauf':'Freitag · 1 Lauf pro Woche'}</div></div><span class="mk-chip" style="background:rgba(217,180,90,.2);color:#8a6a12">Bonus-Lauf</span></div>
+        <div class="mk-bd" style="text-align:center"><p class="mk-q">${done?(w?'Willkommen bei ClosingHub!':'Starker Freitag!')+' '+ic('feier'):(w?'Dein Willkommens-Lauf wartet':'Dein Freitags-Lauf wartet')+' '+ic('geschenk')}</p>
+        <p class="mk-t" style="margin-top:4px">${done?(w?'Ab jetzt gibt es jeden Freitag ab 8 Uhr einen neuen Lauf.':'Nächsten Freitag ab 8 Uhr gibt es den nächsten Lauf.'):(w?'Ein Geschenk zum Start: Das Licht läuft über die Felder und bleibt auf deinem Gewinn stehen.':'Einmal pro Woche, nur heute bis 23:59 Uhr.')}</p>
+        <div class="bl-grid">${tiles}</div>
+        ${R?'':`<button class="btn-gold bl-go" onclick="APLUS_blGo(this)">Lauf starten</button>`}${res}</div></article>`;
+    };
+    window.grRefresh=function(){ const e=$('grcard'); if(e) e.outerHTML=wheelCard(); };
+    const blPaint=()=>{ const t=document.querySelectorAll('#grcard .bl-f'); t.forEach((e,i)=>e.classList.toggle('on',i===S.blRun.i)); };
+    window.APLUS_blGo=async function(b){
+      if(S.blRun) return; const art=blArt(); if(!art) return; b.disabled=true; b.textContent='Läuft …';
+      const f=blFelder(), demo=!!(f[0]&&f[0].demo); let k,t,p=0;
+      if(demo){ k=Math.floor(Math.random()*f.length); t=f[k].t; try{ localStorage.setItem('ch_gr_demo',grWeek()); }catch(e){} }
+      else{ const j=await rpc('bonuslauf_starten',{p_art:art}).catch(()=>null);
+        if(!j||!j.ok){ b.disabled=false; b.textContent='Lauf starten'; const g=j&&j.grund; alert(g==='gedreht'?'Den Lauf hast du schon gemacht.':g==='zu'?'Der Lauf ist gerade nicht offen.':'Das hat gerade nicht geklappt. Versuch es gleich nochmal.'); return; }
+        k=Math.max(0,f.findIndex(x=>x.id===j.id)); t=j.t; p=+j.punkte||0; }
+      S.blRun={art,f,k,t,p,i:0,done:false}; grRefresh();
+      const n=f.length, steps=n*3+k, fast=55, slow=420; let s=0;
+      const step=()=>{ if(!S.blRun) return; S.blRun.i=s%n; blPaint();
+        if(s>=steps){ setTimeout(fertig,350); return; }
+        const q=s/steps; s++; setTimeout(step, fast+(slow-fast)*q*q*q); };
+      step();
+      function fertig(){
+        if(!S.blRun) return; S.blRun.done=true;
+        if(!demo&&S.gr){ if(art==='willkommen'){ S.gr.w_offen=false; S.gr.w_gedreht=true; S.gr.w_gewinn=t; } else { S.gr.gedreht=true; S.gr.gewinn=t; } }
+        grRefresh(); APLUS_konfetti(false);
+        if(p>0 && typeof ptLoad==='function') ptLoad();
+        if(art==='willkommen' && typeof chLoad==='function') setTimeout(()=>chLoad(),400);
+        setTimeout(()=>{ const c=$('grcard'); S.blRun=null; const nxt=wheelCard();
+          if(!c) return; if(!/hidden><\/div>$/.test(nxt)){ c.outerHTML=nxt; return; }
+          c.style.transition='opacity .6s,max-height .6s,margin .6s'; c.style.overflow='hidden'; c.style.maxHeight=c.offsetHeight+'px';
+          requestAnimationFrame(()=>{ c.style.opacity=0; c.style.maxHeight='0px'; c.style.margin='0'; }); setTimeout(()=>{ c.outerHTML=nxt; },700); }, 9000);
+      }
+    };
+    window.grSpin=window.APLUS_blGo;
+    if(typeof route==='function'&&route()==='feed') setTimeout(()=>{ try{ grRefresh(); }catch(e){} },0);
   })();
 
   /* ---------- Start ---------- */

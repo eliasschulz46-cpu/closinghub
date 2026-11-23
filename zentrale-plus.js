@@ -121,7 +121,7 @@
     ['mkz',  ()=>RPC('mitmach_admin_liste'), r=>{ D.mkz=r||[]; D.mkzErr=0; }],
     ['gwW',  ()=>RPC('gewinnspiel_gewinner_liste'), r=>{ D.gwW=r||[]; }],
     ['gwT',  ()=>RPC('gewinnspiel_teilnehmer'), r=>{ D.gwT=r||[]; }, ()=>route()==='gewinnspiel'],
-    ['grz',  ()=>RPC('gluecksrad_admin'), r=>{ D.grz=r||{}; }, ()=>route()==='mitmachx'],
+    ['grz',  ()=>RPC('gluecksrad_admin'), r=>{ D.grz=r||{}; }, ()=>['mitmachx','bonuslauf'].includes(route())],
     ['chz',  ()=>RPC('challenge_admin'), r=>{ D.chz=r||null; }, ()=>route()==='punktex'],
     ['news', ()=>api('news_ausgaben?select=*&order=nummer.desc'), r=>{ if(window.NEWS) NEWS.list=r; }, ()=>!!window.NEWS],
     ['aff',  ()=>RPC('affiliate_admin'), r=>{ if(r&&r.ok){ AF.d=r; AF.err=0; } }],
@@ -509,8 +509,121 @@
       <div class="card" style="margin-top:16px"><h3 style="margin:0 0 6px">So richtest du den Stream ein</h3><p class="muted" style="font-size:13px;margin:0">YouTube Studio → Livestream planen → Sichtbarkeit <b>„Nicht gelistet“</b> → unter Einstellungen <b>„Einbetten zulassen“</b> an → Link hier eintragen. Der Link wird nur an Member mit Zugang geschickt. Den täglichen Morgen-Call kannst du einmal als „Jeden Werktag“ anlegen; wechselt der Stream-Link, hier einfach aktualisieren.</p></div>`;
   };
 
+  /* ---------- r24: Bonus-Lauf + Start-Challenge-Belohnungen ---------- */
+  (function(){
+    const zc = document.createElement('style');
+    zc.textContent = `
+    .bl-t{width:100%;border-collapse:collapse;font-size:13px}
+    .bl-t th{text-align:left;font-size:11.5px;color:var(--muted);font-weight:600;padding:6px;border-bottom:1px solid var(--line);white-space:nowrap}
+    .bl-t td{padding:6px;border-bottom:1px solid var(--line);vertical-align:middle}
+    .bl-t .in{padding:7px 9px}
+    .bl-t input[type=number]{width:74px}
+    .bl-ck{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;margin-bottom:4px;cursor:pointer;white-space:nowrap}
+    .bl-t input.in:disabled{opacity:.35}
+    .bl-pc{display:block;font-size:11px;color:var(--muted);margin-top:3px;width:74px;text-align:center}
+    .bl-art{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+    .bl-art.w{background:rgba(217,180,90,.22);color:#8a6a12}
+    .bl-art.f{background:rgba(8,122,75,.12);color:#087A4B}
+    .bl-sw{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
+    .bl-sw input{width:18px;height:18px}
+    .bl-ms{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    @media(max-width:820px){ .bl-ms{grid-template-columns:1fr 1fr} .bl-wrap{overflow-x:auto} }`;
+    document.head.appendChild(zc);
+    if(typeof MKZ==='object') delete MKZ.gr;
+    if(!navItem('bonuslauf')) NAV.push(['bonuslauf','Bonus-Lauf','gift',()=>((D.grz||{}).drehs||[]).filter(d=>!d.erledigt).length]);
+    { const g=LAYOUT.find(x=>x[0]==='Community & Feed'); if(g&&!g[1].includes('bonuslauf')) g[1].splice(g[1].indexOf('mitmachx')+1,0,'bonuslauf'); }
+    const BL = { filter:'alle', tab:'gw_free' };
+    const STUFEN=[['gw_free','Basic'],['gw_plus','Plus'],['gw_premium','Premium']];
+    const v = id => { const e=$(id); return e?e.value.trim():''; };
+    const reload = async () => { try{ D.grz=(await RPC('gluecksrad_admin'))||{}; }catch(e){} render(); };
+
+    PAGES.bonuslauf = function(){
+      if(D.grz===undefined){ D.grz=null; reload(); }
+      const head=`<h1 class="h1">Bonus-Lauf</h1><p class="sub">Willkommens-Lauf am ersten Tag und jeden Freitag ab 8 Uhr ein Lauf pro Woche. Das Licht läuft über die Gewinnfelder und bleibt auf dem Gewinn stehen, den der Server zieht. Jedes Mitglied sieht und gewinnt nur die Gewinne seiner Stufe.</p>`;
+      const g=D.grz||{}, l=g.gewinne||[], dr=g.drehs||[], cfg=g.cfg||{};
+      if(D.grz===null) return head+'<p class="muted">Lade …</p>';
+      if(l.length && l[0].gw_free===undefined || !g.cfg) return head+`<div class="card"><div class="empty">Fehlt noch: closinghub-runde24-start-challenge-bonuslauf.sql in Supabase ausführen.</div></div>`;
+      const offen=dr.filter(d=>!d.erledigt).length, T=BL.tab;
+      const tabs=[...STUFEN.map(([k,n])=>[k,`${n} <span style="font-weight:400;opacity:.7">${l.filter(x=>x.aktiv&&+x[k]>0).length}</span>`]),['laeufe',`Läufe${offen?` <span class="zp-new">${offen}</span>`:''}`]]
+        .map(([k,t])=>`<button class="btn ${k===T?'gold-b':''}" onclick="ZP.blTab('${k}')">${t}</button>`).join('');
+      const top=head+`<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:16px">${tabs}</div>`;
+      if(T==='laeufe'){
+        const runs=dr.filter(d=>BL.filter==='alle'||!d.erledigt), fmt=t=>new Date(t).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'});
+        return top+`<div class="grid g2"><div class="card"><h3>Wann gibt es einen Lauf?</h3>
+          <p class="muted" style="font-size:12.5px">Jeden Freitag ab 8 Uhr einen Lauf pro Woche, für Basic, Plus und Premium. Dazu einmal den Willkommens-Lauf am ersten Tag, egal an welchem Wochentag. Fällt der erste Tag auf einen Freitag, gibt es beide.</p>
+          <label class="bl-sw" style="margin-top:10px"><input type="checkbox" id="bl-wk" ${cfg.willkommen!==false?'checked':''} onchange="ZP.blWk(this)"> Willkommens-Lauf an Tag 1 aktiv</label></div>
+          <div class="card"><h3>Läufe (letzte 45 Tage)</h3>
+          <div class="row" style="gap:6px;margin-bottom:8px"><button class="btn sm ${BL.filter==='alle'?'gold-b':''}" onclick="ZP.blFil('alle')">Alle</button><button class="btn sm ${BL.filter==='offen'?'gold-b':''}" onclick="ZP.blFil('offen')">Nicht erledigt</button></div>
+          ${runs.length?`<div class="bl-wrap"><table class="bl-t"><thead><tr><th>Wann</th><th>Mitglied</th><th>Art</th><th>Gewinn</th><th>Erledigt</th></tr></thead><tbody>${runs.map(d=>`<tr>
+            <td style="white-space:nowrap">${fmt(d.created_at)}</td><td><b>${esc(d.name||'')}</b><div class="muted" style="font-size:11.5px">${esc(d.email||'')}${d.stufe?' · '+esc(d.stufe==='free'?'Basic':d.stufe[0].toUpperCase()+d.stufe.slice(1)):''}</div></td>
+            <td><span class="bl-art ${d.art==='willkommen'?'w':'f'}">${d.art==='willkommen'?'Willkommen':'Freitag'}</span></td>
+            <td>${esc(d.gewinn)}${+d.punkte>0?` <span class="muted" style="font-size:11.5px">· automatisch</span>`:''}</td>
+            <td style="text-align:center"><input type="checkbox" ${d.erledigt?'checked':''} onchange="ZP.blDone(${d.id},this)"></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${dr.length?'Alles erledigt.':'Noch kein Lauf.'}</div>`}</div></div>`;
+      }
+      const name=(STUFEN.find(s=>s[0]===T)||[])[1], drin=l.filter(x=>+x[T]>0), raus=l.filter(x=>!(+x[T]>0));
+      const sum=drin.filter(x=>x.aktiv).reduce((a,x)=>a+(+x[T]||0),0);
+      const auch=x=>STUFEN.filter(([k])=>k!==T&&+x[k]>0).map(([,n])=>n).join(', ');
+      const row=x=>`<tr><td style="min-width:200px"><input class="in" id="bl-t${x.id}" maxlength="40" value="${esc(x.text)}"><div class="muted" style="font-size:11px;margin-top:3px">${auch(x)?'Auch bei: '+auch(x)+' (Text und Punkte gelten überall)':'Nur bei '+name}</div></td>
+        <td><input class="in" id="bl-p${x.id}" type="number" min="0" max="10000" value="${+x.punkte||0}"></td>
+        <td><input class="in" id="bl-w${x.id}" type="number" min="1" max="1000" value="${+x[T]}"></td>
+        <td style="white-space:nowrap"><b>${x.aktiv&&sum?Math.round(+x[T]/sum*1000)/10:0} %</b></td>
+        <td style="text-align:center"><input type="checkbox" id="bl-a${x.id}" ${x.aktiv?'checked':''}></td>
+        <td style="white-space:nowrap"><button class="btn sm" onclick="ZP.blSave(${x.id},this)">Speichern</button> <button class="btn sm red" onclick="ZP.blRaus(${x.id},this)">Entfernen</button></td></tr>`;
+      return top+`<div class="card"><h3>Gewinne für ${name}</h3>
+        <p class="muted" style="font-size:12.5px">Das Gewicht bestimmt, wie oft ein Gewinn fällt, die Chance steht daneben in %. Gewinne mit Punkten werden automatisch gutgeschrieben, alles andere landet unter „Läufe“ zum Einlösen. „Entfernen“ nimmt den Gewinn nur bei ${name} raus.${T==='gw_premium'?' Day One zählt in den Premium-Monaten als Premium.':T==='gw_plus'?' Day One zählt nach den Premium-Monaten als Plus.':''}</p>
+        ${drin.length?`<div class="bl-wrap"><table class="bl-t"><thead><tr><th>Gewinn</th><th>Punkte</th><th>Gewicht</th><th>Chance</th><th>Aktiv</th><th></th></tr></thead><tbody>${drin.map(row).join('')}</tbody></table></div>`:`<div class="empty">Noch kein Gewinn für ${name}. ${name}-Mitglieder bekommen dann keinen Bonus-Lauf.</div>`}</div>
+      <div class="grid g2" style="margin-top:16px">
+        <div class="card"><h3>Neuer Gewinn</h3>
+          <div class="row" style="gap:8px;align-items:flex-end"><label class="f" style="flex:3">Gewinn<input class="in" id="bl-t0" maxlength="40" placeholder="z. B. +50 Punkte"></label><label class="f" style="flex:1">Punkte<input class="in" id="bl-p0" type="number" min="0" value="0"></label><label class="f" style="flex:1">Gewicht<input class="in" id="bl-w0" type="number" min="1" value="10"></label></div>
+          <div class="row" style="gap:14px;margin-top:10px;flex-wrap:wrap">${STUFEN.map(([k,n])=>`<label class="bl-ck"><input type="checkbox" id="bl-n-${k}" ${k===T?'checked':''}> ${n}</label>`).join('')}</div>
+          <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn gold-b" onclick="ZP.blSave(0,this)">Hinzufügen</button></div></div>
+        <div class="card"><h3>Vorhandenen Gewinn übernehmen</h3>
+          ${raus.length?`<p class="muted" style="font-size:12.5px">Gewinne aus den anderen Stufen, die bei ${name} noch fehlen.</p><div class="row" style="gap:8px;align-items:flex-end"><select class="in" id="bl-dazu" style="flex:1">${raus.map(x=>`<option value="${x.id}">${esc(x.text)}${auch(x)?' · '+auch(x):''}</option>`).join('')}</select><button class="btn gold-b" onclick="ZP.blDazu(this)">Zu ${name} hinzufügen</button></div>`:`<div class="empty">Alle Gewinne sind schon bei ${name} drin.</div>`}</div></div>`;
+    };
+    ZP.blTab = t => { BL.tab=t; render(); };
+    const blSend = async (x,patch,b,msg) => { if(b) b.disabled=true; const n={...x,...patch};
+      try{ const j=await RPC('bonuslauf_gewinn_speichern',{p_id:x.id||null,p_text:n.text,p_punkte:+n.punkte||0,p_aktiv:n.aktiv!==false,p_gw_free:+n.gw_free||0,p_gw_plus:+n.gw_plus||0,p_gw_premium:+n.gw_premium||0});
+        if(!j||!j.ok) throw 0; toast(msg); await reload(); }catch(e){ if(b) b.disabled=false; toast('Speichern hat nicht geklappt'); } };
+    const blFind = id => ((D.grz||{}).gewinne||[]).find(x=>x.id===id);
+    ZP.blFil = f => { BL.filter=f; render(); };
+    ZP.blSave = (id,b) => { const t=v('bl-t'+id); if(!t) return toast('Bitte einen Gewinn eintragen');
+      const w=Math.max(1,Math.round(+v('bl-w'+id)||10)), pk=Math.max(0,Math.round(+v('bl-p'+id)||0));
+      if(!id){ const st={}; STUFEN.forEach(([k])=>{ st[k]=$('bl-n-'+k)&&$('bl-n-'+k).checked?w:0; });
+        if(!STUFEN.some(([k])=>st[k]>0)) return toast('Hak mindestens eine Stufe an');
+        return blSend({id:0,text:t,punkte:pk,aktiv:true,...st},{},b,'Gewinn hinzugefügt'); }
+      const x=blFind(id); if(!x) return; blSend(x,{text:t,punkte:pk,aktiv:$('bl-a'+id).checked,[BL.tab]:w},b,'Gespeichert'); };
+    ZP.blRaus = (id,b) => { const x=blFind(id); if(!x) return; const n=(STUFEN.find(s=>s[0]===BL.tab)||[])[1];
+      if(!confirm(`„${x.text}“ bei ${n} rausnehmen? In den anderen Stufen bleibt er.`)) return;
+      blSend(x,{[BL.tab]:0},b,`Bei ${n} entfernt`); };
+    ZP.blDazu = b => { const x=blFind(+v('bl-dazu')); if(!x) return; blSend(x,{[BL.tab]:10},b,'Hinzugefügt'); };
+    ZP.blDone = async (id,cb) => { cb.disabled=true;
+      try{ const j=await RPC('bonuslauf_erledigt',{p_id:id,p_wert:cb.checked}); if(!j||!j.ok) throw 0; const d=((D.grz||{}).drehs||[]).find(x=>x.id===id); if(d) d.erledigt=cb.checked; cb.defaultChecked=cb.checked; toast(cb.checked?'Als erledigt markiert':'Wieder offen'); render(); }
+      catch(e){ cb.checked=!cb.checked; toast('Hat nicht geklappt'); } cb.disabled=false; };
+    ZP.blWk = async cb => { cb.disabled=true;
+      try{ const j=await RPC('start_challenge_speichern',{p_cfg:{willkommen:cb.checked}}); if(!j||!j.ok) throw 0; cb.defaultChecked=cb.checked; if(D.grz) D.grz.cfg=j.cfg; toast(cb.checked?'Willkommens-Lauf an':'Willkommens-Lauf aus'); }
+      catch(e){ cb.checked=!cb.checked; toast('Hat nicht geklappt'); } cb.disabled=false; };
+
+    /* Start-Challenge-Belohnungen im Punktesystem */
+    const _pk = PAGES.punktex;
+    if(typeof _pk==='function') PAGES.punktex = function(){
+      const h=_pk.apply(this,arguments), c=D.chz; if(!c||!c.cfg) return h;
+      const f=c.cfg, m=c.meilensteine||{}, tp=+c.tag_punkte||0;
+      const fld=(k,lab,sub)=>`<label class="f">${lab}<input class="in" id="chc-${k}" type="number" min="0" max="10000" value="${+f[k]||0}"><span class="muted" style="font-size:11.5px;font-weight:400">${sub}</span></label>`;
+      const card=`<div class="card" style="margin-bottom:16px"><h3>Start-Challenge: Belohnungen</h3>
+        <p class="muted" style="font-size:12.5px">Jeder geschaffte Tag (2 von 2 Aufgaben) bringt <b>${tp} Punkte</b> (Regel „Start-Challenge: Tag geschafft“ unten). Dazu Meilensteine nach geschafften Tagen – jeder nur einmal pro Mitglied, mit Konfetti und Mitteilung in der App. Der Balken in der Challenge-Karte zeigt die Punkte seit dem ersten Tag, nur in den 14 Tagen. Monats-Medaillen laufen im persönlichen Monat ab dem ersten Tag jedes Mitglieds – Ranglisten und Spotlight bleiben beim Kalendermonat.</p>
+        <div class="bl-ms">${fld('m3','3 Tage (Punkte)',`„Du bist drin“ · ${+m['3']||0}× erreicht`)}${fld('m7','7 Tage (Punkte)',`+ Wochenbilanz · ${+m['7']||0}× erreicht`)}
+          <label class="f">10 Tage<input class="in" value="Abzeichen „Challenger“" disabled><span class="muted" style="font-size:11.5px;font-weight:400">${+m['10']||0}× erreicht</span></label>${fld('m14','14 Tage (Punkte)',`${+m['14']||0}× erreicht`)}</div>
+        <div class="row" style="gap:10px;align-items:flex-end;margin-top:12px"><label class="f" style="max-width:220px">Ziel im Balken (Punkte)<input class="in" id="chc-ziel" type="number" min="0" max="100000" value="${+f.ziel||750}"></label>
+          <button class="btn gold-b" style="margin-left:auto" onclick="ZP.chcSave(this)">Speichern</button></div></div>`;
+      const i=h.indexOf('</p>'); return i<0?h:h.slice(0,i+4)+card+h.slice(i+4);
+    };
+    ZP.chcSave = async b => { const n=k=>Math.max(0,Math.round(+v('chc-'+k)||0)); b.disabled=true;
+      try{ const j=await RPC('start_challenge_speichern',{p_cfg:{m3:n('m3'),m7:n('m7'),m14:n('m14'),ziel:n('ziel')}}); if(!j||!j.ok) throw 0; if(D.chz) D.chz.cfg=j.cfg;
+        document.querySelectorAll('[id^=chc-]').forEach(e=>e.defaultValue=e.value); toast('Gespeichert'); render(); }catch(e){ toast('Speichern hat nicht geklappt'); } b.disabled=false; };
+  })();
+
   /* ---------- Start ---------- */
   drawNav(); liveDraw();
-  if(LOADED){ if(['affiliate','mitteilungen','live'].includes(route())) render(); }
+  if(LOADED){ if(['affiliate','mitteilungen','live','mitmachx','punktex','bonuslauf'].includes(route())) render(); }
   setTimeout(()=>poll(true), 300);
 })();
