@@ -3310,7 +3310,7 @@ gwCard=function(){
   if(!S.gw){ gwLoad(); return '<div id="gwcard"></div>'; }
   const g=S.gw, basic=g.basic, ins=!!g.insta, acc=(g.account||'').replace(/^@/,'');
   const ok={insta:ins,folgen:ins&&g.folgen,liken:ins&&g.liken,kommentar:!!g.kommentar_ok,story:!!g.story_beweis,beitrag:!!g.beitrag};
-  const done=Object.values(ok).filter(Boolean).length, all=done===6, lose=all?1+(+g.extra||0):0;
+  const done=Object.values(ok).filter(Boolean).length, all=!basic&&ok.beitrag, lose=all?(g.lose!=null?+g.lose:done+(+g.extra||0)):0, maxL=+g.max_lose||13;
   const box=(on,lock,wait)=>`<span class="gw-bx ${on?'on':''} ${lock?'lock':''} ${wait?'wait':''}">${on?'<svg class="ci"><use href="#i-erledigt"/></svg>':lock?'<svg class="ci"><use href="#i-sperren"/></svg>':wait?'<svg class="ci"><use href="#i-sanduhr"/></svg>':''}</span>`;
   const dis=ins?'':'gw-off', link=acc?` <a href="https://instagram.com/${encodeURIComponent(acc)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:#B8892E;text-decoration:underline">@${esc(acc)}</a>`:'';
   const tick=(k,t)=>`<button class="gw-row ${dis}" onclick="gwSet('${k}',${!g[k]})">${box(ok[k])}<span class="${ok[k]?'text-muted':''}">${t}</span></button>`;
@@ -3327,7 +3327,7 @@ gwCard=function(){
     <div class="gw-row" style="border-top:0;flex-wrap:wrap">${box(ins)}<span class="flex-1" style="min-width:150px">Dein Instagram-Name <span class="block text-[11.5px] text-muted">Pflicht – damit wir deinen Kommentar zuordnen können</span></span>
       <input id="gwInsta" class="input text-sm" style="padding:6px 10px;max-width:170px" placeholder="@deinname" value="${esc(g.insta?'@'+g.insta:'')}" onchange="gwInsta(this)" autocomplete="off" autocapitalize="off"><span id="gwInstaOk" class="text-[11.5px] w-full"></span></div>
     ${tick('folgen','Dem ClosingHub-Account auf Instagram folgen'+link)}${tick('liken','Den Gewinnspiel-Beitrag liken')}${kom}${story}${beitrag}
-    <p class="text-xs mt-3 border-t border-line pt-2 ${all?'font-semibold':''}" style="${all?'color:#087A4B':''}">${all?`Deine Lose: ${lose} (1 Teilnahme + ${+g.extra||0} Extra-${(+g.extra||0)===1?'Los':'Lose'} aus der Challenge). Jeder geschaffte Challenge-Tag bringt ein weiteres Los.`:'In den Lostopf kommst du, sobald alle 6 Punkte grün sind. Jeder geschaffte Challenge-Tag bringt dir ein Extra-Los.'}${g.ende?` Teilnahme bis ${g.ende.slice(8)}.${g.ende.slice(5,7)}.`:''} Folgen und Like prüfen wir bei der Auslosung. <a href="#" onclick="event.preventDefault();legalOpen&&legalOpen('gewinnspiel')" style="text-decoration:underline">Teilnahmebedingungen</a></p></div>`; };
+    <p class="text-xs mt-3 border-t border-line pt-2 ${all?'font-semibold':''}" style="${all?'color:#087A4B':''}">${all?`Deine Lose: ${lose} von max. ${maxL} (${done} aus den Gewinnspiel-Punkten + ${+g.extra||0} aus der Challenge). Jeder weitere Punkt und jeder geschaffte Challenge-Tag bringt dir ein Los mehr.`:`Jeder Punkt bringt dir 1 Los, jeder geschaffte Challenge-Tag 1 Extra-Los (max. ${maxL} Lose). In den Lostopf kommst du mit deinem Beitrag auf ClosingHub.`}${g.ende?` Teilnahme bis ${g.ende.slice(8)}.${g.ende.slice(5,7)}.`:''} Folgen und Like prüfen wir bei der Auslosung. <a href="#" onclick="event.preventDefault();legalOpen&&legalOpen('gewinnspiel')" style="text-decoration:underline">Teilnahmebedingungen</a></p></div>`; };
 setInterval(()=>{ const g=S.gw; if(g&&g.insta&&g.markiert&&!g.kommentar_ok&&document.getElementById('gwcard')&&!document.hidden) gwLoad(); },90000);
 
 function feed(){
