@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r24 · Start-Challenge 750, Bonus-Lauf, Nachrichten von Auftraggebern) =====
+/* ===== ClosingHub App-Plus (r25 · Partner-Seite mit Live-Kalender statt Marktplatz) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -628,7 +628,7 @@
       +(sug.length?sec('Hashtags',`<div class="ht-chips">${sug.map(s=>chip(s.tag,s.n)).join('')}</div>`):'')
       +(list.length?sec(`Beiträge mit #${esc2(t)}`,htGrid(list.slice(0,9))+(list.length>9?`<button class="text-sm text-gold mt-2" onclick="htOpen('${esc2(t)}')">Alle ${list.length} Beiträge ansehen</button>`:'')):'')
       +sec('Jobs',jobs.length?jobs.map(j=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="S.job=${j.id};S.jopen=1;go('jobs')"><b class="text-sm block">${esc(j.t)}</b><span class="text-xs text-muted">${esc([j.ind,j.reg,j.pay].filter(Boolean).join(' · '))}</span></button>`).join(''):'<p class="text-sm text-muted">Kein Job gefunden.</p>')
-      +(S.member?sec('Marktplatz',offs.length?offs.map(o=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="S.mcat='${esc(o.cat).replace(/'/g,'')}';go('markt')"><b class="text-sm block">${o.t}</b><span class="text-xs text-muted">${esc(o.cat)} · ${esc(o.full||'')}</span></button>`).join(''):'<p class="text-sm text-muted">Kein Angebot gefunden.</p>'):'')); };
+      ); };
   // Neuer/geänderter Beitrag: Hashtag-Listen frisch laden
   const _rpcH=rpc; rpc=async function(fn){ const r=await _rpcH.apply(this,arguments); if((fn==='post_neu'||fn==='post_bearbeiten'||fn==='post_loeschen'||fn==='post_zurueckziehen')&&r&&r.ok){ S.htCache={}; S._srHtml=''; } return r; };
 
@@ -991,7 +991,7 @@
     const hm = x => new Date(x).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
     const cd = ms => { ms=Math.max(0,ms); const m=Math.floor(ms/60000), s=Math.floor(ms/1000)%60; return m+':'+String(s).padStart(2,'0'); };
     const ytId = u => { u=String(u||''); const m=u.match(/(?:youtu\.be\/|v=|\/live\/|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/)||u.match(/^([A-Za-z0-9_-]{11})$/); return m?m[1]:null; };
-    const label = e => e.typ==='vortrag' ? ('Partner-Vortrag'+(e.sprecher?' · '+e.sprecher:'')) : ('Motivations-Call'+(e.sprecher?' mit '+e.sprecher:''));
+    const label = e => e.typ==='vortrag' ? ('Partner-Vortrag'+(e.sprecher?' · '+e.sprecher:'')) : e.typ==='gast' ? ('Gastbeitrag'+(e.sprecher?' · '+e.sprecher:'')) : ('Motivations-Call'+(e.sprecher?' mit '+e.sprecher:''));
     const lockTxt = e => e.typ==='vortrag' ? 'Mit Premium live dabei' : 'Mit Plus live dabei';
     const cur = () => { const t=now(); const L=LV.ev.filter(e=>T(e.e)>t && T(e.s)-15*60000<=t); L.sort((a,b)=>((T(a.s)<=t)?0:1)-((T(b.s)<=t)?0:1) || T(a.s)-T(b.s)); return L; };
 
@@ -1030,10 +1030,11 @@
     /* ----- Fenster mit Stream ----- */
     function find(id,termin){ return LV.ev.find(e=>e.id===id&&e.termin===termin); }
     window.APLUS_lvOpen = openLive;
+    window.APLUS_lvLock = e => (e.typ!=='vortrag' && typeof plusModal==='function') ? plusModal(e.typ==='gast'?'bei Gastbeiträgen live dabei sein':'beim Motivations-Call live dabei sein') : lockSheet(e);
     function openLive(id,termin){
       const e=find(id,termin); if(!e) return;
       if(!e.zugang){
-        if(e.typ==='motivation' && typeof plusModal==='function') return plusModal('beim Motivations-Call live dabei sein');
+        if(e.typ!=='vortrag' && typeof plusModal==='function') return plusModal(e.typ==='gast'?'bei Gastbeiträgen live dabei sein':'beim Motivations-Call live dabei sein');
         return lockSheet(e);
       }
       LV.open={id,termin}; LV.sent=0; LV.seenT=Date.now();
@@ -1311,6 +1312,171 @@
     let kaT=0; const kaKick=()=>{ if(!S.member||Date.now()-kaT<3000) return; kaT=Date.now(); kaLoad().then(()=>{ if(route()==='messages') try{ drawMsgs(); }catch(e){} }); };
     window.addEventListener('hashchange',()=>{ if(route()==='messages') kaKick(); });
     { let n=0; const t=setInterval(()=>{ n++; if(S.member){ clearInterval(t); kaKick(); } else if(n>40) clearInterval(t); },500); }
+  })();
+
+  /* ---------- r25: Partner statt Marktplatz – Partnerübersicht + Wochenkalender der Live-Calls ---------- */
+  (function(){
+    if(typeof PAGES!=='object' || typeof NAV==='undefined') return;
+    const st=document.createElement('style'); st.textContent=`
+    .pk-week{margin-top:26px}
+    .pk-wh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .pk-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+    .pk-day{border:1px solid rgb(var(--line));border-radius:14px;padding:8px;min-height:140px;background:rgb(var(--panel));min-width:0}
+    .pk-day.today{border-color:#087A4B;box-shadow:inset 0 0 0 1px #087A4B}
+    .pk-dh{display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:12px;font-weight:600;margin-bottom:2px}
+    .pk-dh small{font-weight:500;color:rgb(var(--muted))}
+    .pk-today{background:#087A4B;color:#fff;border-radius:99px;font-size:10px;font-weight:700;padding:1px 7px}
+    .pk-ev{display:block;width:100%;text-align:left;border-radius:10px;padding:7px 8px;margin-top:6px;border:1px solid transparent;font-size:11.5px;line-height:1.3;color:inherit}
+    .pk-ev.vortrag{background:rgba(217,180,90,.13);border-color:rgba(217,180,90,.38)}
+    .pk-ev.motivation{background:rgba(8,122,75,.09);border-color:rgba(8,122,75,.28)}
+    .pk-ev.gast{background:rgba(64,98,168,.09);border-color:rgba(64,98,168,.30)}
+    .pk-ev.past{opacity:.45}
+    .pk-ev.live{box-shadow:0 0 0 2px #087A4B}
+    .pk-t{display:flex;align-items:center;gap:5px;font-weight:600;color:rgb(var(--muted));white-space:nowrap}
+    .pk-live{background:#087A4B;color:#fff;font-size:9.5px;font-weight:700;border-radius:99px;padding:1px 6px;animation:pkPulse 1.6s ease-in-out infinite}
+    @keyframes pkPulse{50%{opacity:.55}}
+    .pk-ti{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-weight:600;font-size:12.5px;margin:3px 0 4px}
+    .pk-sp{display:flex;align-items:center;gap:5px;font-size:11px;color:rgb(var(--muted));min-width:0}
+    .pk-sp span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .pk-av{width:18px;height:18px;border-radius:50%;overflow:hidden;flex:none;display:inline-flex}
+    .pk-av>*{width:100%!important;height:100%!important;font-size:8px!important}
+    .pk-tag{display:inline-flex;align-items:center;gap:3px;margin-top:5px;font-size:10px;font-weight:700;letter-spacing:.02em}
+    .pk-tag.v{color:#8a6a12} .pk-tag.m{color:#087A4B} .pk-tag.g{color:#3D5E9E}
+    html:not(.light) .pk-tag.v{color:#D9B45A} html:not(.light) .pk-tag.m{color:#3FCF8E} html:not(.light) .pk-tag.g{color:#9DB4E3}
+    .pk-gast{display:flex;align-items:center;gap:14px;margin-top:22px;padding:16px;border-radius:16px;border:1px dashed rgb(var(--line));background:rgb(var(--panel))}
+    .pk-gic{width:44px;height:44px;border-radius:12px;flex:none;display:grid;place-items:center;background:rgba(217,180,90,.18);color:#B8892E}
+    .pk-gic .ci{width:22px;height:22px}
+    .pk-f{display:block;font-size:12.5px;font-weight:600;margin-bottom:5px}
+    .pk-f small{font-weight:400;color:rgb(var(--muted))}
+    @media (max-width:767px){ .pk-gast{flex-wrap:wrap} .pk-gast .btn-gold{width:100%;text-align:center} }
+    .pk-tag .ci{width:11px;height:11px}
+    .pk-none{font-size:11.5px;color:rgb(var(--muted));margin-top:8px}
+    .pk-legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:rgb(var(--muted));margin-top:14px}
+    .pk-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+    @media (max-width:767px){
+      .pk-prow{flex-wrap:wrap;justify-content:center;row-gap:18px}
+      .pk-grid{grid-template-columns:1fr;gap:8px}
+      .pk-day{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;min-height:0;padding:10px}
+      .pk-day.empty:not(.today){display:none}
+      .pk-dh{flex-direction:column;align-items:center;justify-content:flex-start;margin:0;padding-top:2px;font-size:11px;color:rgb(var(--muted))}
+      .pk-dh b{font-size:20px;line-height:1.1;color:rgb(var(--fg))}
+      .pk-dh small{display:none}
+      .pk-dh>span:first-child{display:flex;flex-direction:column;align-items:center;gap:1px;font-weight:600}
+      .pk-day.today .pk-dh b{color:#087A4B} html:not(.light) .pk-day.today .pk-dh b{color:#3FCF8E}
+      .pk-ev{margin-top:0;margin-bottom:6px;font-size:12px} .pk-ev:last-child{margin-bottom:0}
+      .pk-ti{font-size:13.5px;-webkit-line-clamp:2}
+      .pk-none{margin-top:6px}
+    }
+    @media (min-width:768px){ .pk-dh b{font-weight:600} .pk-dh .pk-dnum{display:none} }`;
+    document.head.appendChild(st);
+
+    try{ IC.partner='<circle cx="9" cy="8" r="3.2"/><path d="M3.2 19.5c.8-3.4 3.1-5.2 5.8-5.2s5 1.8 5.8 5.2"/><circle cx="16.8" cy="9" r="2.6"/><path d="M15.6 14.5c2.5-.3 4.5 1.4 5.2 4.6"/>'; }catch(e){}
+    const ni=NAV.findIndex(x=>x[0]==='markt'); if(ni>=0) NAV[ni]=['partner','partner','Partner & Live'];
+    try{ const ri=REVIEWS.findIndex(g=>g.t==='Marktplatz'); if(ri>=0) REVIEWS.splice(ri,1); }catch(e){}
+
+    // Alte Links (#markt) führen jetzt zur Partner-Seite
+    const toP=()=>{ if(/^#markt(\b|$)/.test(location.hash)) location.replace('#partner'); };
+    window.addEventListener('hashchange',toP); toP();
+    PAGES.markt=()=>{ setTimeout(toP,0); return '<div class="px-4 py-16 text-center text-sm text-muted">Lädt …</div>'; };
+    // Reiter über Jobs und Forum
+    const tab=h=>typeof h==='string'?h.replace('<a href="#markt" class="btn-ghost">Marktplatz</a>','<a href="#partner" class="btn-ghost">Partner &amp; Live</a>'):h;
+    ['jobs','forum'].forEach(k=>{ const f=PAGES[k]; if(typeof f==='function') PAGES[k]=function(){ return tab(f.apply(this,arguments)); }; });
+    // Unten im Handy-Menü: Partner gehört wie Forum zum Bereich „Jobs“
+    if(typeof window.shell==='function'){ const _sh=window.shell; window.shell=function(){ let h=_sh.apply(this,arguments); if(route()==='partner') h=h.replace(/(<a href="#jobs" class="p-2 [^"]*"><span class=")(")/,'$1icon-on$2'); return h; }; }
+
+    S.pk={d:null,at:0,busy:0};
+    const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
+    const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const berlin=()=>{ const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); return new Date(p+'T12:00:00'); };
+    const wk=off=>{ const d=berlin(); d.setDate(d.getDate()-((d.getDay()+6)%7)+7*off); return d; };
+    const hm=t=>new Date(t).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Berlin'});
+    const dm=d=>d.toLocaleDateString('de-DE',{day:'numeric',month:'long'});
+    async function pkLoad(){ if(S.pk.busy) return; S.pk.busy=1; const a=wk(0), e=wk(1); e.setDate(e.getDate()+6);
+      try{ const r=await rpc('live_kalender',{p_von:ymd(a),p_bis:ymd(e)}); S.pk.d=Array.isArray(r)?r:[]; }catch(x){ if(!S.pk.d) S.pk.d=[]; }
+      S.pk.at=Date.now(); S.pk.busy=0; const el=document.getElementById('pkcal'); if(el&&route()==='partner') el.innerHTML=pkCal(); }
+    function pkEv(x,i){
+      const now=Date.now(), s=new Date(x.start).getTime(), e=new Date(x.ende).getTime(), live=s<=now&&now<e, past=e<=now, v=x.typ==='vortrag', g=x.typ==='gast', who=x.sprecher||x.partner||'';
+      return `<button class="pk-ev ${x.typ} ${past?'past':''} ${live?'live':''}" onclick="APLUS_pkEv(${i})">
+        <span class="pk-t">${hm(x.start)} – ${hm(x.ende)}${live?'<span class="pk-live">LIVE</span>':''}</span>
+        <span class="pk-ti">${esc(x.titel)}</span>
+        ${who?`<span class="pk-sp"><span class="pk-av">${avatar(who)}</span><span>${esc(who)}</span></span>`:''}
+        <span class="pk-tag ${v?'v':g?'g':'m'}">${v?'Vortrag · Premium':g?'Gastbeitrag · Plus':'Motivations-Call · Plus'}${x.zugang?'':' <svg class="ci"><use href="#i-sperren"/></svg>'}</span></button>`;
+    }
+    function pkWeek(off){
+      const a=wk(off), today=ymd(berlin()), L=S.pk.d||[];
+      const days=[...Array(7)].map((_,k)=>{ const d=new Date(a); d.setDate(a.getDate()+k); return d; });
+      const e=days[6], any=days.some(d=>L.some(x=>x.termin===ymd(d)));
+      return `<section class="pk-week"><div class="pk-wh"><p class="font-semibold">${off?'Nächste Woche':'Diese Woche'}</p><span class="text-xs text-muted">${a.getDate()}.${a.getMonth()!==e.getMonth()?' '+a.toLocaleDateString('de-DE',{month:'long'}):''} – ${dm(e)}</span></div>
+        <div class="pk-grid">${days.map((d,k)=>{ const id=ymd(d), ev=L.map((x,i)=>[x,i]).filter(([x])=>x.termin===id), t=id===today;
+          return `<div class="pk-day ${t?'today':''} ${ev.length?'':'empty'}"><div class="pk-dh"><span>${WD[k]} <b class="pk-dnum">${d.getDate()}</b><small>${d.getDate()}.${d.getMonth()+1}.</small></span>${t?'<span class="pk-today">Heute</span>':''}</div>
+            <div class="min-w-0">${ev.length?ev.map(([x,i])=>pkEv(x,i)).join(''):`<p class="pk-none">${t?'Heute keine Calls':'–'}</p>`}</div></div>`; }).join('')}</div>
+        ${any?'':`<p class="text-sm text-muted mt-2">${off?'Nächste Woche':'Diese Woche'} sind noch keine Calls geplant.</p>`}</section>`;
+    }
+    function pkCal(){
+      if(S.pk.d===null){ pkLoad(); return '<p class="text-sm text-muted mt-8">Live-Calls laden …</p>'; }
+      if(Date.now()-S.pk.at>60000) setTimeout(pkLoad,0);
+      return `<div class="mt-8"><h2 class="font-serif text-2xl">Live-Calls</h2><p class="text-muted text-sm">15 Minuten vor Beginn erscheint oben in der App der Live-Hinweis – ein Tipp, und du bist dabei.</p></div>
+        ${pkWeek(0)}${pkWeek(1)}
+        <div class="pk-legend"><span><i style="background:rgba(217,180,90,.55)"></i>Vortrag mit Partner · ab Premium</span><span><i style="background:rgba(8,122,75,.45)"></i>Motivations-Call · ab Plus</span><span><i style="background:rgba(64,98,168,.45)"></i>Gastbeitrag · ab Plus</span></div>
+        ${pkGastCard()}`;
+    }
+    S.gast=S.gast||{m:undefined};
+    async function gastLoad(){ if(!S.member) return; try{ const r=await rpc('gast_meine'); S.gast.m=r||{}; }catch(e){ S.gast.m={}; } const el=document.getElementById('pkgast'); if(el) el.outerHTML=pkGastCard(); }
+    function pkGastCard(){
+      if(S.member && S.gast.m===undefined){ S.gast.m=null; gastLoad(); }
+      const o=S.gast.m&&S.gast.m.offen;
+      return `<div class="pk-gast" id="pkgast"><span class="pk-gic"><svg class="ci"><use href="#i-mikrofon"/></svg></span>
+        <div class="flex-1 min-w-0">${o?`<p class="font-semibold">Deine Bewerbung ist eingereicht</p><p class="text-sm text-muted">„${esc(o.thema)}“ – wir schauen sie uns an und melden uns bei dir.</p>`
+          :`<p class="font-semibold">Du willst selbst einen Live-Call halten?</p><p class="text-sm text-muted">Bewirb dich für einen Gastbeitrag und teil dein Wissen mit der Community.</p>`}</div>
+        ${o?'':`<button class="btn-gold text-sm whitespace-nowrap" onclick="APLUS_gastForm()">Gastbeitrag vorschlagen</button>`}</div>`;
+    }
+    window.APLUS_gastForm=function(){
+      if(!S.user||!S.member) return go('login');
+      const f=(id,lab,sub,tag,ph,max,h)=>`<label class="block"><span class="pk-f">${lab}${sub?` <small>${sub}</small>`:''}</span>${tag==='ta'?`<textarea id="${id}" class="input text-sm" style="height:${h}px" maxlength="${max}" placeholder="${ph}"></textarea>`:`<input id="${id}" class="input text-sm" maxlength="${max}" placeholder="${ph}">`}</label>`;
+      sheet(`<div class="text-center"><p class="font-serif text-2xl leading-tight">Gastbeitrag vorschlagen</p><p class="text-sm text-muted mt-1">Halte selbst einen Live-Call für die ClosingHub-Community.</p></div>
+        ${f('gb-thema','Thema','','in','z. B. Einwände am Telefon knacken',120)}
+        ${f('gb-text','Worum geht’s?','2–3 Sätze','ta','Was lernen die Zuschauer bei dir?',800,92)}
+        ${f('gb-erf','Deine Erfahrung im Vertrieb','','ta','z. B. 4 Jahre Closer im Solar-Vertrieb, 300 Abschlüsse',400,64)}
+        ${f('gb-wunsch','Wann passt es dir?','optional','in','z. B. dienstags ab 18 Uhr',200)}
+        <p id="gb-err" class="text-sm" style="color:#C0392B;display:none"></p>
+        <button class="btn-gold w-full" style="padding:12px" onclick="APLUS_gastSend(this)">Bewerbung senden</button>
+        <button class="text-sm text-muted w-full" onclick="closeSheet()">Abbrechen</button>`);
+      setTimeout(()=>{ const e=document.getElementById('gb-thema'); if(e) e.focus(); },50);
+    };
+    window.APLUS_gastSend=async function(b){
+      const v=id=>(document.getElementById(id)||{}).value||'', err=t=>{ const e=document.getElementById('gb-err'); if(e){ e.textContent=t; e.style.display=''; } };
+      const th=v('gb-thema').trim(), tx=v('gb-text').trim(), er=v('gb-erf').trim();
+      if(th.length<3) return err('Bitte gib ein Thema an.'); if(tx.length<10) return err('Beschreib kurz, worum es geht.'); if(er.length<3) return err('Erzähl kurz von deiner Erfahrung.');
+      b.disabled=true; b.textContent='Wird gesendet …';
+      try{ const j=await rpc('gast_bewerben',{p_thema:th,p_text:tx,p_erfahrung:er,p_wunsch:v('gb-wunsch').trim()});
+        if(!j||!j.ok){ b.disabled=false; b.textContent='Bewerbung senden'; return err(j&&j.grund==='offen'?'Du hast schon eine offene Bewerbung. Wir melden uns bald.':j&&j.grund==='tempo'?'Du hast in den letzten 30 Tagen schon 3 Bewerbungen geschickt.':'Senden hat nicht geklappt. Versuch es gleich nochmal.'); }
+        S.gast.m={offen:{thema:th,at:new Date().toISOString()}};
+        sheet(`<div class="text-center space-y-3"><div style="width:60px;height:60px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:#087A4B;color:#fff"><svg class="ci" style="width:28px;height:28px"><use href="#i-erledigt"/></svg></div>
+          <p class="font-serif text-2xl leading-tight">Danke für deine Bewerbung!</p><p class="text-sm text-muted">Wir schauen uns dein Thema an und melden uns per Mitteilung bei dir.</p></div>
+          <button class="btn-gold w-full" style="padding:12px" onclick="closeSheet()">Alles klar</button>`);
+        const el=document.getElementById('pkgast'); if(el) el.outerHTML=pkGastCard();
+      }catch(e){ b.disabled=false; b.textContent='Bewerbung senden'; err('Senden hat nicht geklappt. Versuch es gleich nochmal.'); }
+    };
+    window.APLUS_pkEv=function(i){
+      const x=(S.pk.d||[])[i]; if(!x) return;
+      if(!S.user) return go('login');
+      const now=Date.now(), live=new Date(x.start)<=now&&now<new Date(x.ende);
+      if(!x.zugang){ if(typeof APLUS_lvLock==='function') return APLUS_lvLock({typ:x.typ,titel:x.titel,sprecher:x.sprecher||x.partner}); return; }
+      if(live && typeof APLUS_lvOpen==='function'){ APLUS_lvOpen(x.id,x.termin); return; }
+      const d=new Date(x.start), past=new Date(x.ende)<=now;
+      toastMsg(past?'Dieser Call ist schon vorbei.':`Startet ${d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Europe/Berlin'})} um ${hm(x.start)} Uhr. 15 Minuten vorher erscheint oben der Live-Hinweis.`);
+    };
+    PAGES.partner=function(){
+      if(S.member&&S.chs) setTimeout(()=>chEv('markt'),300);
+      return `<div class="px-4 py-6 max-w-6xl mx-auto">
+        <div class="flex gap-2 mb-5 hubtabs"><a href="#jobs" class="btn-ghost">Jobs</a><a href="#forum" class="btn-ghost">Forum</a><span class="btn-gold">Partner &amp; Live</span></div>
+        <div class="mb-4"><h1 class="font-serif text-3xl">Partner</h1><p class="text-muted text-sm">Erfahrene Vertriebsprofis an deiner Seite – lern von ihnen live in den Calls.</p></div>
+        ${partnersRow().replace('flex gap-4 overflow-x-auto noscroll pb-1','pk-prow flex gap-4 pb-1')}
+        <div id="pkcal">${pkCal()}</div></div>`;
+    };
+    // Partnerliste kommt etwas später aus der Datenbank: dann einmal neu zeichnen
+    { let n=0, was=!!S._ptOk; const t=setInterval(()=>{ n++; if(!was&&S._ptOk&&route()==='partner') render(); was=!!S._ptOk; if(was||n>30) clearInterval(t); },400); }
+    setInterval(()=>{ if(route()==='partner'&&!document.hidden){ const el=document.getElementById('pkcal'); if(el&&!S.pk.busy){ if(Date.now()-S.pk.at>60000) pkLoad(); else el.innerHTML=pkCal(); } } },30000);
   })();
 
   /* ---------- Start ---------- */
