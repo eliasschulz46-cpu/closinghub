@@ -273,7 +273,7 @@ function logout(){ keepSession(null); render(); }
 
 /* ===== Daten ===== */
 const DEFAULT_SETTINGS = {
-  plus:9.99, plusY:119.88, premiumM:19.99, premiumY:239.88, unlock:25, hire:250, marketFee:9.9, topJob:19, jobFee:0, vat:21,
+  plus:9.99, plusY:119.88, premiumM:19.99, premiumY:239.88, unlock:25, hire:0, marketFee:9.9, topJob:19, jobFee:0, vat:21,
   dayoneTotal:250, dayoneFreeMonths:12, dayonePremiumMonths:3, maxPerCountry:1000, perCategory:10,
   heroTop:'Mehr closen –', heroGold:'mehr verdienen.', heroSub:'Die Plattform für Closer & Setter, die mehr wollen.', heroLead:'Attraktive Jobs, motivierender Feed, Kontakte auch in deiner Nähe und mehr besondere Member-Vorteile, die dich jeden Tag besser machen – für maximale Abschlüsse.',
   features:{arena:false, marketplace:true, stories:true, breathing:true, forum:true, topjobs:true, waitlistOpen:true}
@@ -755,7 +755,7 @@ function newInvoice(cid){
     <label class="f">Kunde<input class="in" id="iCust" placeholder="Firma oder Name" value="${cl?esc(cl.firma):''}"></label>
     <label class="f">E-Mail<input class="in" id="iMail" type="email" placeholder="rechnung@firma.de" value="${cl?esc(cl.email||''):''}"></label>
     <label class="f">Leistung<select class="in" id="iItem" onchange="iNet.value=this.selectedOptions[0].dataset.p||iNet.value">
-      <option data-p="${cl?feeOf(cl,'fee_unlock'):D.settings.unlock}">Freischaltung Kandidat</option><option data-p="${D.settings.hire||250}">Einstellung Kandidat</option><option data-p="${cl?feeOf(cl,'fee_job'):D.settings.jobFee}">Stellenanzeige</option><option data-p="${D.settings.topJob}">Top-Job (30 Tage)</option><option data-p="149">Laufband-Anzeige (1 Monat)</option><option data-p="">Sonstiges</option></select></label>
+      <option data-p="${cl?feeOf(cl,'fee_unlock'):D.settings.unlock}">Freischaltung Kandidat</option><option data-p="${+D.settings.hire||0}">Einstellung Kandidat</option><option data-p="${cl?feeOf(cl,'fee_job'):D.settings.jobFee}">Stellenanzeige</option><option data-p="${D.settings.topJob}">Top-Job (30 Tage)</option><option data-p="149">Laufband-Anzeige (1 Monat)</option><option data-p="">Sonstiges</option></select></label>
     <div class="grid g2" style="gap:12px"><label class="f">Netto (€)<input class="in" id="iNet" type="number" step="0.01" value="${D.settings.unlock}"></label><label class="f">MwSt / IVA<input class="in" value="${D.settings.vat} %" disabled></label></div>
     <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn" onclick="closeModal()">Abbrechen</button><button class="btn gold-b" onclick="saveInvoice(this)">Rechnung erstellen</button></div>
   </div>`);
@@ -882,7 +882,7 @@ function support(){
 async function tSet(id,patch){ await q(`tickets?id=eq.${id}`,{method:'PATCH',body:patch}); const t=D.tickets.find(x=>x.id===id); if(patch.status) t.st=patch.status; if(patch.messages) t.msgs=patch.messages; render(); }
 function aiReply(id){
   const t=D.tickets.find(x=>x.id===id), s=D.settings;
-  const map={'Freischalt':`Hi! Für ${eur(s.unlock)} pro Kandidat schaltest du das komplette Profil inkl. Kontaktdaten frei. Stellst du jemanden ein, fällt einmalig ${eur(s.hire||250)} an. Kein Abo, keine Grundgebühr. Bei Fragen bin ich da.`,
+  const map={'Freischalt':`Hi! Für ${eur(s.unlock)} pro Kandidat schaltest du das komplette Profil inkl. Kontaktdaten frei. ${+s.hire>0?`Stellst du jemanden ein, fällt einmalig ${eur(s.hire)} an. `:'Bei einer Einstellung fällt nichts extra an. '}Kein Abo, keine Grundgebühr. Bei Fragen bin ich da.`,
     'Day':`Hey! Dein Eintrag ist gespeichert. Die Day-One-Plätze werden nach Reihenfolge vergeben, du bekommst zum Start eine Mail mit allen Infos.`};
   const k=Object.keys(map).find(k=>t.topic.includes(k));
   $('rep').value = map[k] || `Hi ${t.from.split(' ')[0]}, danke für deine Nachricht! Ich schau mir das direkt an und melde mich kurzfristig bei dir.`;
@@ -1094,7 +1094,7 @@ function ptCard(p,i){
     <div class="grid g2" style="gap:10px;margin-top:10px">
       ${f('n','Name','Paul')}${f('s','Wofür er Partner ist (steht groß im Profilkopf)','Morgen-Call')}
       ${f('role','Beruf oder Rolle','Mindset-Coach')}${f('meta','Erfahrung und Land (optional)','8 Jahre Vertrieb, Deutschland')}
-      ${f('bk','Text auf dem grünen Knopf','Coaching anfragen')}${f('live','Hinweis auf seine Live-Termine (optional)','Mo–Do, 7:30 Uhr live in der App')}${f('link','Link zu seinem Profil (Instagram, LinkedIn oder Website)','https://instagram.com/name')}
+      ${f('bk','Text auf dem grünen Knopf','Coaching anfragen')}${f('live','Hinweis auf seine Live-Termine (optional)','Mo–Fr, 8:00 Uhr live in der App')}${f('link','Link zu seinem Profil (Instagram, LinkedIn oder Website)','https://instagram.com/name')}
       ${f('k0','Zahl, mit der er überzeugt (optional)','312',(p.k||[])[0]||'')}${f('k1','Was die Zahl bedeutet','Calls analysiert',(p.k||[])[1]||'')}
       ${f('d0','Rabatt für Member auf seine eigenen Angebote (optional)','−20 % für Member',(p.deal||[])[0]||'')}${f('d1','Worauf der Rabatt gilt','auf das erste Coaching',(p.deal||[])[1]||'')}
       ${f('d2','Rabattcode für seine Angebote (optional)','PAUL20',(p.deal||[])[2]||'')}
@@ -1292,7 +1292,7 @@ function einstellungen(){
   <div class="grid g2">
     <div class="card"><h3>Abos</h3><div class="grid g2" style="gap:12px">${n('plus','Plus / Monat','0.01','€')}${n('plusY','Plus / Jahr','0.01','€')}${n('premiumM','Premium / Monat','0.01','€')}${n('premiumY','Premium / Jahr','0.01','€')}${n('vat','MwSt / IVA','1','%')}</div></div>
     <div class="card"><h3>Day Ones</h3><div class="grid g2" style="gap:12px">${n('dayoneTotal','Anzahl Plätze (live)','1')}${n('dayoneFreeMonths','Gratis-Monate','1')}${n('dayonePremiumMonths','Premium-Monate gratis','1')}${n('maxPerCountry','Max. Member je Land','1')}</div></div>
-    <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('hire','Einstellung (einmalig, bei Einstellung)','0.01','€')}${n('marketFee','Marktplatz-Gebühr','0.1','%')}${n('topJob','Top-Job','0.01','€')}${n('jobFee','Gebühr pro veröffentlichtem Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
+    <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('hire','Einstellung (einmalig, 0 = kostenlos)','0.01','€')}${n('marketFee','Marktplatz-Gebühr','0.1','%')}${n('topJob','Top-Job','0.01','€')}${n('jobFee','Gebühr pro veröffentlichtem Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
     <div class="card"><h3>Verbindung</h3><div class="row" style="margin-bottom:8px"><span class="pill p-ok">Supabase verbunden</span></div><p class="muted" style="font-size:13px">Angemeldet als ${esc(SESSION&&SESSION.email)}</p><button class="btn" style="margin-top:12px" onclick="logout()">Abmelden</button></div>
   </div>
   <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn gold-b" onclick="saveSettings(this)">Alles speichern</button></div>
@@ -1880,7 +1880,7 @@ gewinnspiel=function(){ if(D.gwT===undefined){ D.gwT=null; gwzLoad(); }
       <b>URL</b><code style="word-break:break-all">${esc(ep)}</code><button class="btn sm" onclick="gwzCopy('${esc(ep)}')">Kopieren</button>
       <b>Schlüssel</b><code style="word-break:break-all">${esc(String(D.mkKey).slice(0,6))}… (geheim)</code><button class="btn sm" onclick="gwzCopy('${esc(String(D.mkKey))}')">Kopieren</button></div>`}</div>
   <div class="card" style="margin-top:16px"><div class="row between"><h3 style="margin:0">Teilnehmer</h3><button class="btn sm" onclick="gwzLoad()">Aktualisieren</button></div>
-    <p class="muted" style="font-size:12.5px;margin:6px 0 12px">Im Lostopf ist nur, wer alles nachgewiesen hat: Instagram-Name, Kommentar mit 2 Markierten (von Make erkannt), Story-Screenshot und ein Beitrag in der App. Folgen und Like sind Selbstauskunft – die prüfst du beim Gewinner.</p>
+    <p class="muted" style="font-size:12.5px;margin:6px 0 12px">Im Lostopf ist jedes Plus/Premium-Mitglied mit einem Beitrag in der App (Pflicht). Jeder der 6 Punkte (Instagram-Name, Folgen, Like, Kommentar mit 2 Markierten, Story-Screenshot, Beitrag) bringt 1 Los, jeder Challenge-Tag bis zum Gewinnspiel-Ende 1 Extra-Los (max. 13). Folgen und Like sind Selbstauskunft – die prüfst du beim Gewinner.</p>
     ${D.gwT===null?'<p class="muted">Lädt …</p>':D.gwErr&&!A.length?`<p class="muted">Fehlt noch: closinghub-runde16.sql in Supabase ausführen.</p>`:`<div class="row" style="gap:28px;margin-bottom:12px"><div><b style="font-size:26px">${T.length}</b><div class="muted" style="font-size:12px">im Lostopf</div></div><div><b style="font-size:26px">${A.length-T.length}</b><div class="muted" style="font-size:12px">noch unvollständig</div></div><div><b style="font-size:26px">${lose}</b><div class="muted" style="font-size:12px">Lose gesamt</div></div><div><b style="font-size:26px">${ok}</b><div class="muted" style="font-size:12px">Gewinner gezogen</div></div></div>
     ${A.length?`<div style="max-height:380px;overflow:auto"><table class="tbl" style="width:100%;font-size:12.5px"><thead><tr><th style="text-align:left">Name</th><th style="text-align:left">Instagram</th><th>Folgen/Like</th><th style="text-align:left">Kommentar (markiert)</th><th>Story</th><th>Beitrag</th><th>Lose</th><th>Lostopf</th></tr></thead><tbody>${A.map(t=>`<tr style="${t.voll?'':'opacity:.65'}"><td>${esc(t.name)}<div class="muted" style="font-size:11px">${esc(t.abo)}</div></td><td>${gwzIg(t.insta)}</td><td style="text-align:center">${gwzOk(t.folgen)} ${gwzOk(t.liken)}</td><td>${t.kommentar_ok?gwzOk(1)+' ':''}${gwzMk(t.markiert)}</td><td style="text-align:center">${gwzShot(t.story_beweis)}</td><td style="text-align:center">${gwzOk(t.beitrag)}</td><td style="text-align:center">${t.lose}</td><td style="text-align:center">${t.voll?(t.gewinner?`<span style="color:${(stc[t.gewinner]||[])[1]}">${(stc[t.gewinner]||[])[0]}</span>`:gwzOk(1)):'<span class="muted">–</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Noch niemand dabei.</p>'}`}</div>
   <div class="card" style="margin-top:16px;border-color:#D9B45A"><div class="row between" style="flex-wrap:wrap;gap:10px"><h3 style="margin:0">Auslosung</h3><div class="row" style="gap:8px"><input type="number" id="gw-n" class="in" min="1" max="50" value="${Math.max(1,15-ok)}" style="width:80px"><button class="btn gold" onclick="gwzDraw($('gw-n').value,this)">Auslosen</button></div></div>
