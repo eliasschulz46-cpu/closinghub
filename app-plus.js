@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r23 · Start-Challenge 750 + Bonus-Lauf) =====
+/* ===== ClosingHub App-Plus (r24 · Start-Challenge 750, Bonus-Lauf, Nachrichten von Auftraggebern) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -1254,6 +1254,63 @@
     };
     window.grSpin=window.APLUS_blGo;
     if(typeof route==='function'&&route()==='feed') setTimeout(()=>{ try{ grRefresh(); }catch(e){} },0);
+  })();
+
+  /* ---------- r24: Nachrichten von Auftraggebern (nach der Freischaltung) ---------- */
+  (function(){
+    if(typeof window.chatsLoad!=='function' || typeof window.convHead!=='function') return;
+    S.ka = S.ka || [];
+    const kaUn = () => (S.ka||[]).reduce((a,c)=>a+(+c.ungelesen||0),0);
+    const kaFind = k => (S.ka||[]).find(x=>'a'+x.id===k);
+    async function kaLoad(){ try{ const r=await rpc('kandidat_postfach',{}); if(Array.isArray(r)) S.ka=r; }catch(e){} }
+
+    const _cl = window.chatsLoad;
+    window.chatsLoad = async function(){
+      const [r] = await Promise.all([_cl.apply(this,arguments), S.member?kaLoad():null]);
+      if(S.member && kaUn()){ S.unreadMsg=(+S.unreadMsg||0)+kaUn(); try{ markBell(); }catch(e){} }
+      if(route()==='messages') try{ drawMsgs(); }catch(e){}
+      return r;
+    };
+    const kaItems = () => { const q=(S.cq||'').trim().toLowerCase();
+      return (S.ka||[]).filter(x=>!q||(x.firma+' '+x.job).toLowerCase().includes(q)).map(x=>({k:'a'+x.id,name:x.firma,av:null,last:x.letzte,at:x.last_at,un:+x.ungelesen||0,sub:'Auftraggeber · '+esc(x.job)})); };
+    if(typeof window.cxItems==='function'){ const _ci=window.cxItems;
+      window.cxItems = function(items){ const ka=kaItems(); if(!ka.length||S.cl===null) return _ci.apply(this,arguments);
+        return _ci.call(this,[...(items||[]),...ka].sort((a,b)=>new Date(b.at)-new Date(a.at))); };
+    }
+    const _ch = window.convHead;
+    window.convHead = function(){
+      const k=S.cur; if(k && k[0]==='a'){ const x=kaFind(k); return {name:x?x.firma:'Auftraggeber', av:null, auftraggeber:true, job:x?x.job:''}; }
+      return _ch.apply(this,arguments);
+    };
+    const _cv = window.convHtml;
+    window.convHtml = function(){
+      let h=_cv.apply(this,arguments); const k=S.cur; if(!k||k[0]!=='a') return h;
+      const x=kaFind(k)||{};
+      return h.replace(/(<b class="block truncate" style="font-size:15px">[^<]*<\/b><span class="text-muted" style="font-size:12px">)/, `$1Auftraggeber · ${esc(x.job||'')}`)
+              .replace(/placeholder="Nachricht schreiben …"/,'placeholder="Antwort an den Auftraggeber …"');
+    };
+    const _mh = window.msgsHtml;
+    window.msgsHtml = function(){
+      const h=_mh.apply(this,arguments); if(!S.cur||S.cur[0]!=='a') return h;
+      return h.replace(/<span class="cm-act">(?:(?!<\/span>)[\s\S])*<\/span>/g,'');
+    };
+    const _lc = window.convLoad;
+    window.convLoad = async function(){
+      const k=S.cur; if(!k||k[0]!=='a') return _lc.apply(this,arguments);
+      try{ const r=await rpc('kandidat_nachrichten_laden',{p_bewerbung:+k.slice(1)}); if(S.cur===k){ const first=S.cmsg===null; S.cmsg=Array.isArray(r)?r:[]; drawMsgs(first); } }catch(e){}
+    };
+    const _cs = window.cSend;
+    window.cSend = async function(){
+      if(!S.cur||S.cur[0]!=='a') return _cs.apply(this,arguments);
+      const i=document.getElementById('cminput'), v=(i&&i.value||'').trim(); if(!v) return; i.value=''; S.cdraft=''; S.cerr='';
+      try{ const j=await rpc('kandidat_nachricht_senden',{p_bewerbung:+S.cur.slice(1),p_text:v});
+        if(!j||!j.ok){ S.cerr=j&&j.grund==='tempo'?'Kurze Pause: zu viele Nachrichten in der letzten Stunde.':j&&j.grund==='zu'?'Dieses Gespräch ist nicht mehr offen.':'Senden hat nicht geklappt.'; if(i) i.value=v; drawMsgs(); return; }
+      }catch(e){ S.cerr='Senden hat nicht geklappt.'; if(i) i.value=v; drawMsgs(); return; }
+      S._keepFocus=true; await convLoad(); chatsLoad();
+    };
+    let kaT=0; const kaKick=()=>{ if(!S.member||Date.now()-kaT<3000) return; kaT=Date.now(); kaLoad().then(()=>{ if(route()==='messages') try{ drawMsgs(); }catch(e){} }); };
+    window.addEventListener('hashchange',()=>{ if(route()==='messages') kaKick(); });
+    { let n=0; const t=setInterval(()=>{ n++; if(S.member){ clearInterval(t); kaKick(); } else if(n>40) clearInterval(t); },500); }
   })();
 
   /* ---------- Start ---------- */

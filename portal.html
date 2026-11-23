@@ -340,9 +340,9 @@ document.addEventListener('submit', async e=>{
 });
 
 /* ===== Navigation ===== */
-const NAV=[['dashboard','Dashboard','dash'],['jobs','Stellenangebote','jobs'],['rechnungen','Rechnungen','invoice'],['profil','Firmenprofil','user']];
+const NAV=[['dashboard','Dashboard','dash'],['jobs','Stellenangebote','jobs'],['postfach','Postfach','chat'],['rechnungen','Rechnungen','invoice'],['profil','Firmenprofil','user']];
 const route = () => (location.hash.slice(1)||'dashboard').split('?')[0];
-function drawNav(){ const r=route(); $('side').innerHTML = NAV.map(n=>`<a href="#${n[0]}" class="${r===n[0]?'on':''}">${ic(n[2])}<span>${n[1]}</span>${n[0]==='rechnungen'&&INVS.some(i=>i.status==='offen'||i.status==='überfällig')?`<span class="bdg">${INVS.filter(i=>i.status==='offen'||i.status==='überfällig').length}</span>`:''}</a>`).join(''); }
+function drawNav(){ const r=route(); $('side').innerHTML = NAV.map(n=>`<a href="#${n[0]}" class="${r===n[0]?'on':''}">${ic(n[2])}<span>${n[1]}</span>${n[0]==='rechnungen'&&INVS.some(i=>i.status==='offen'||i.status==='überfällig')?`<span class="bdg">${INVS.filter(i=>i.status==='offen'||i.status==='überfällig').length}</span>`:''}${n[0]==='postfach'&&typeof PFX!=='undefined'&&PFX.un?`<span class="bdg">${PFX.un}</span>`:''}</a>`).join(''); }
 const closedNote = () => ME.status!=='aktiv' ? `<div class="demo" style="color:var(--bad);border-color:#F3C9C4">Dein Konto ist ${ME.status==='gesperrt'?'gesperrt':'gekündigt'}. Du kannst deine Daten und Rechnungen weiter einsehen, aber keine neuen Jobs einreichen. Bei Fragen: info@getclosinghub.com</div>` : '';
 
 /* ===== Dashboard ===== */
@@ -540,7 +540,7 @@ async function saveProfil(b){
 }
 
 /* ===== Render ===== */
-const PAGES={dashboard,jobs:jobsPage,rechnungen,profil};
+const PAGES={dashboard,jobs:jobsPage,postfach,rechnungen,profil};
 
 /* ===== Bewerbungen: ansehen, freischalten, ablehnen, Einstellung melden ===== */
 let BCOUNT={};
@@ -571,7 +571,8 @@ async function openBewerbungen(jobId){
           <button class="btn sm" onclick="openKandidat(${b.id},${jobId},${i+1})">Profil ansehen</button>
           ${offen&&ME.status==='aktiv'?`<button class="btn sm" onclick="bAblehnen(${b.id},${jobId},this)">Ablehnen</button><button class="btn gold-b sm" onclick="bFreischalten(${b.id},${jobId},this)">Freischalten · ${eur(unl)}</button>`:''}
           ${b.status==='freigeschaltet'&&ME.status==='aktiv'?`<input class="in" type="date" id="hs${b.id}" style="width:auto"><button class="btn gold-b sm" onclick="bEinstellen(${b.id},${jobId},this)">Einstellung melden${hire>0?' · '+eur(hire):''}</button>`:''}
-          ${b.status==='eingestellt'?`<span class="muted" style="font-size:12.5px">Eingestellt${b.eingestellt_start?' ab '+dt(b.eingestellt_start):''}</span>`:''}</div></div>`;
+          ${b.status==='eingestellt'?`<span class="muted" style="font-size:12.5px">Eingestellt${b.eingestellt_start?' ab '+dt(b.eingestellt_start):''}</span>`:''}
+          ${frei?`<button class="btn sm" onclick="pfOpen(${b.id})">${ic('chat',14)} Nachricht schreiben</button>`:''}</div></div>`;
     }).join(''):'<div class="card empty">Noch keine Bewerbungen. Sobald sich jemand bewirbt, siehst du ihn hier.</div>'}</div>`);
 }
 async function bFreischalten(id,jobId,btn){ if(!confirm(`Kandidat für ${eur(fee('fee_unlock'))} netto freischalten? Die Rechnung wird automatisch erstellt.`)) return; btn.disabled=true;
@@ -604,6 +605,66 @@ async function openKandidat(bid,jobId,nr){
 
 async function kFrei(bid,jobId,nr,btn){ if(!confirm(`Kandidat für ${eur(fee('fee_unlock'))} netto freischalten? Die Rechnung wird automatisch erstellt.`)) return; btn.disabled=true;
   try{ const j=await api('rpc/client_freischalten',{method:'POST',body:{p_id:bid}}); if(!j||!j.ok) throw new Error('Freischalten nicht möglich'); toast('Freigeschaltet – das komplette Profil ist jetzt sichtbar'); await loadBewerbungsZahlen(); openKandidat(bid,jobId,nr); }catch(e){ toast('⚠️ '+e.message); btn.disabled=false; } }
+
+/* ===== Postfach: Nachrichten mit freigeschalteten Kandidaten ===== */
+const PFX={l:null,cur:null,msgs:null,un:0,err:0};
+I.chat='<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>';
+(function(){ const st=document.createElement('style'); st.textContent=`
+  .pf{display:grid;grid-template-columns:300px 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden;min-height:520px;background:var(--bg)}
+  .pf-l{border-right:1px solid var(--line);overflow:auto;max-height:640px}
+  .pf-i{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:none;cursor:pointer;color:inherit;font:inherit}
+  .pf-i:hover,.pf-i.on{background:var(--bg2)} .pf-i.on{box-shadow:inset 3px 0 0 var(--gold)}
+  .pf-av{width:40px;height:40px;border-radius:50%;flex:none;overflow:hidden;background:var(--bg2);display:grid;place-items:center;font-weight:700;font-size:14px}
+  .pf-av img{width:100%;height:100%;object-fit:cover}
+  .pf-t{flex:1;min-width:0} .pf-t b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pf-t span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pf-n{background:#087A4B;color:#fff;border-radius:99px;font-size:11px;font-weight:700;padding:1px 7px;flex:none}
+  .pf-c{display:flex;flex-direction:column;min-width:0}
+  .pf-h{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .pf-m{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:8px;max-height:470px;min-height:300px}
+  .pf-b{max-width:78%;padding:9px 13px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+  .pf-b.me{align-self:flex-end;background:#087A4B;border-color:#087A4B;color:#fff}
+  .pf-b small{display:block;font-size:10.5px;opacity:.65;margin-top:3px}
+  .pf-f{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+  .pf-f textarea{flex:1;resize:none;height:44px;min-height:44px}
+  .pf-back{display:none}
+  @media(max-width:760px){ .pf{grid-template-columns:1fr} .pf.has .pf-l{display:none} .pf:not(.has) .pf-c{display:none} .pf-l{border-right:0;max-height:none} .pf-back{display:inline-flex} }`;
+  document.head.appendChild(st); })();
+const pfTime=d=>{ const x=new Date(d), n=new Date(); return x.toDateString()===n.toDateString()?x.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):x.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+' '+x.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}); };
+async function pfLoad(){ try{ const [l,u]=await Promise.all([api('rpc/client_postfach',{method:'POST',body:{}}),api('rpc/client_postfach_ungelesen',{method:'POST',body:{}})]); PFX.l=Array.isArray(l)?l:[]; PFX.un=+u||0; PFX.err=0; }catch(e){ if(PFX.l===null) PFX.l=[]; PFX.err=1; } }
+async function pfConv(){ if(!PFX.cur) return; const id=PFX.cur; try{ const m=await api('rpc/client_nachrichten',{method:'POST',body:{p_bewerbung:id}}); if(PFX.cur===id) PFX.msgs=Array.isArray(m)?m:[]; }catch(e){ if(PFX.cur===id) PFX.msgs=PFX.msgs||[]; } }
+function postfach(){
+  if(PFX.l===null) pfLoad().then(()=>{ if(route()==='postfach') pfDraw(); drawNav(); });
+  setTimeout(()=>pfDraw(true),0);
+  return `<h1 class="h1">Postfach</h1><p class="sub">Schreib Kandidaten, die du freigeschaltet hast. Sie antworten in der ClosingHub-App, die Antworten erscheinen hier.</p>${closedNote()}<div id="pfbox" class="pf ${PFX.cur?'has':''}"><div class="pf-l" id="pfl"></div><div class="pf-c" id="pfc"></div></div>`;
+}
+function pfDraw(full){
+  const box=$('pfbox'); if(!box) return; box.classList.toggle('has',!!PFX.cur);
+  const l=PFX.l, av=t=>t.avatar_url?`<img src="${esc(t.avatar_url)}" alt="">`:esc((t.name||'?').trim().split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase());
+  $('pfl').innerHTML = l===null?'<div class="empty">Lade …</div>':l.length?l.map(t=>`<button class="pf-i ${t.id===PFX.cur?'on':''}" onclick="pfSel(${t.id})"><span class="pf-av">${av(t)}</span><span class="pf-t"><b>${esc(t.name)}</b><span>${esc(t.job)}</span><span>${t.letzte?(t.letzte.mine?'Du: ':'')+esc(t.letzte.text):'Noch nicht angeschrieben'}</span></span>${+t.ungelesen?`<span class="pf-n">${+t.ungelesen}</span>`:''}</button>`).join('')
+    :`<div class="empty" style="padding:24px 16px">Noch keine freigeschalteten Kandidaten. Sobald du jemanden freischaltest, kannst du ihm hier schreiben.</div>`;
+  const c=$('pfc'), t=(l||[]).find(x=>x.id===PFX.cur);
+  if(!t){ c.innerHTML=`<div class="empty" style="margin:auto;padding:24px">${l&&l.length?'Wähle links einen Kandidaten aus.':''}</div>`; c._id=null; return; }
+  if(c._id!==t.id||full){ const draft=$('pfin')?$('pfin').value:'';
+    c.innerHTML=`<div class="pf-h"><button class="btn sm pf-back" onclick="PFX.cur=null;pfDraw(true)">← Alle</button><span class="pf-av">${av(t)}</span><div style="min-width:0"><b>${esc(t.name)}</b><div class="muted" style="font-size:12px">${esc(t.job)} · ${t.status==='eingestellt'?'eingestellt':'freigeschaltet'}</div></div></div>
+      <div class="pf-m" id="pfm"></div>
+      ${ME.status==='aktiv'?`<form class="pf-f" onsubmit="event.preventDefault();pfSend(this)"><textarea class="in" id="pfin" maxlength="2000" placeholder="Nachricht an ${esc((t.name||'').split(' ')[0])} …" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();pfSend(this.form)}"></textarea><button class="btn gold-b">Senden</button></form>`:''}`;
+    c._id=t.id; c._s=null; if(draft&&c._id===t.id&&!full&&$('pfin')) $('pfin').value=draft; }
+  const m=$('pfm'), sig=JSON.stringify((PFX.msgs||[]).map(x=>[x.id,x.gelesen]))+(PFX.msgs===null);
+  if(m && c._s!==sig){ const atB=m.scrollHeight-m.scrollTop-m.clientHeight<80;
+    m.innerHTML = PFX.msgs===null?'<div class="muted">Lade …</div>':PFX.msgs.length?PFX.msgs.map(x=>`<div class="pf-b ${x.mine?'me':''}">${esc(x.text)}<small>${pfTime(x.created_at)}${x.mine&&x.gelesen?' · gelesen':''}</small></div>`).join('')
+      :`<div class="muted" style="margin:auto;text-align:center;font-size:13.5px">Noch keine Nachrichten. Schreib ${esc((t.name||'').split(' ')[0])} die erste – er bekommt eine Mitteilung in der App.</div>`;
+    c._s=sig; if(atB||full) m.scrollTop=m.scrollHeight; }
+}
+async function pfSel(id){ PFX.cur=id; PFX.msgs=null; pfDraw(true); await pfConv(); pfDraw(); await pfLoad(); pfDraw(); drawNav(); }
+function pfOpen(id){ closeModal(); PFX.cur=id; PFX.msgs=null; PFX.l=null; if(route()!=='postfach') location.hash='postfach'; else render(); pfConv().then(()=>pfDraw()); }
+async function pfSend(f){ const i=$('pfin'), v=(i&&i.value||'').trim(); if(!v||!PFX.cur||PFX.busy) return; PFX.busy=1; const btn=f.querySelector('button'); btn.disabled=true;
+  try{ const j=await api('rpc/client_nachricht_senden',{method:'POST',body:{p_bewerbung:PFX.cur,p_text:v}});
+    if(!j||!j.ok) throw new Error(j&&j.grund==='tempo'?'Kurze Pause: zu viele Nachrichten in der letzten Stunde.':j&&j.grund==='erst_freischalten'?'Schalte den Kandidaten zuerst frei.':'Senden hat nicht geklappt.');
+    i.value=''; await pfConv(); pfDraw(); pfLoad().then(()=>pfDraw()); }catch(e){ toast('⚠️ '+e.message); } PFX.busy=0; btn.disabled=false; i&&i.focus(); }
+setInterval(async()=>{ if(!SESSION||!LOADED||document.visibilityState!=='visible') return;
+  if(route()==='postfach'){ await Promise.all([pfLoad(),pfConv()]); pfDraw(); drawNav(); }
+  else if(Date.now()-(PFX.at||0)>60000){ PFX.at=Date.now(); const u=await api('rpc/client_postfach_ungelesen',{method:'POST',body:{}}).catch(()=>null); if(u!=null&&+u!==PFX.un){ PFX.un=+u; drawNav(); } } },12000);
 
 async function render(){
   const on=!!SESSION;
