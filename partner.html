@@ -183,7 +183,9 @@ async function doLogin(ev){
 async function load(){
   const t=store.get(TKEY);
   if(t){ const j=await api('rpc/partner_beitreten',{method:'POST',body:{p_token:t}}).catch(()=>null); if(j&&j.ok) store.set(TKEY,null); else if(j&&j.grund==='link'){ store.set(TKEY,null); toast('Die Einladung passt nicht zu diesem Konto oder ist nicht mehr gültig.'); } }
-  let rows; try{ rows=await api('partners?select=id,status,profile,draft,draft_at,themenbereich,leistungen,ausbilder&limit=1'); }catch(e){ rows=await api('partners?select=id,status,profile,draft,draft_at&limit=1'); }
+  // Immer den eigenen Partnerplatz laden (auch wenn das Konto zusätzlich Admin ist und alle Partner sehen darf)
+  const pid=+(await api('rpc/mein_partner_platz',{method:'POST',body:{}}).catch(()=>0))||0;
+  let rows=[]; if(pid){ try{ rows=await api(`partners?select=id,status,profile,draft,draft_at,themenbereich,leistungen,ausbilder&id=eq.${pid}&limit=1`); }catch(e){ rows=await api(`partners?select=id,status,profile,draft,draft_at&id=eq.${pid}&limit=1`); } }
   ME=rows&&rows[0]||null;
   if(!ME){ const kt=await api('rpc/konto_typ',{method:'POST',body:{}}).catch(()=>null);
     if(kt&&!kt.admin&&(kt.mitglied||kt.auftraggeber)){ keep(null); ME=null; GUESTS=[]; render._loaded=false; MSG=['bad',kt.mitglied?'Dieses Konto ist ein Mitgliedskonto. Mitglieder melden sich in der App an: getclosinghub.com/app':'Dieses Konto ist ein Auftraggeberkonto. Auftraggeber melden sich im Auftraggeber-Portal an.']; throw new Error('Kein Zugang'); } }
@@ -218,8 +220,8 @@ function portal(){
       <div class="note ok" style="margin:0"><b>10&nbsp;% Provision</b><br>auf alle weiteren Zahlungen, solange das Mitglied bleibt</div>
     </div>
     ${STAT?`<div class="row" style="margin-top:12px;gap:8px"><span class="pill ok">${+STAT.geworben||0} geworbene Mitglieder</span>${+STAT.warteliste?`<span class="pill wait">${+STAT.warteliste} auf der Warteliste</span>`:''}<span class="muted">Aus Datenschutzgründen siehst du nur Anzahl und Beträge, keine Namen.</span></div>`:''}
-    <p class="muted" style="margin-top:8px;font-size:12px">Grundlage ist der gezahlte Nettobetrag ohne Umsatzsteuer, im ersten Jahr nach Abzug des Rabatts. Provision gibt es auf die Mitgliedsbeiträge für Plus und Premium, nicht auf andere Leistungen wie Kurse, Events oder Käufe im Marktplatz. Keine Provision gibt es für dein eigenes Konto, deine Gäste und die kostenlose Zeit von Day-One-Mitgliedern. Abgerechnet wird monatlich bis zum 10. für Zahlungen, die mindestens 30 Tage zurückliegen. Du bekommst dafür eine Gutschrift, die deine Rechnung ersetzt. Einwände gegen eine Abrechnung bitte innerhalb von 8 Wochen. Was nach einem Vertragsende gilt, regelt § 10 deines Kooperationsvertrags. Beträge und Gutschriften siehst du hier, sobald die ersten Mitgliedschaften bezahlt werden.</p></div>`)}
-  ${ME.themenbereich?`<div class="card" style="margin-top:10px"><b>Dein Hoheitsbereich: ${esc(ME.themenbereich)}</b><p class="muted" style="margin-top:2px">In diesem Bereich gibt es auf ClosingHub keinen anderen Partner, und Mitglieder dürfen dazu im Marktplatz nichts anbieten. Deine eigenen Angebote müssen in diesem Bereich liegen.</p>${(ME.leistungen||[]).length?`<div class="chips">${ME.leistungen.map(l=>`<span class="chip">${esc(l)}</span>`).join('')}</div>`:''}</div>`:''}
+    <p class="muted" style="margin-top:8px;font-size:12px">Grundlage ist der gezahlte Nettobetrag ohne Umsatzsteuer, im ersten Jahr nach Abzug des Rabatts. Provision gibt es auf die Mitgliedsbeiträge für Plus und Premium, nicht auf andere Leistungen wie Kurse oder Events. Keine Provision gibt es für dein eigenes Konto, deine Gäste und die kostenlose Zeit von Day-One-Mitgliedern. Abgerechnet wird monatlich bis zum 10. für Zahlungen, die mindestens 30 Tage zurückliegen. Du bekommst dafür eine Gutschrift, die deine Rechnung ersetzt. Einwände gegen eine Abrechnung bitte innerhalb von 8 Wochen. Was nach einem Vertragsende gilt, regelt § 10 deines Kooperationsvertrags. Beträge und Gutschriften siehst du hier, sobald die ersten Mitgliedschaften bezahlt werden.</p></div>`)}
+  ${ME.themenbereich?`<div class="card" style="margin-top:10px"><b>Dein Hoheitsbereich: ${esc(ME.themenbereich)}</b><p class="muted" style="margin-top:2px">In diesem Bereich gibt es auf ClosingHub keinen anderen Partner. Deine eigenen Angebote müssen in diesem Bereich liegen.</p>${(ME.leistungen||[]).length?`<div class="chips">${ME.leistungen.map(l=>`<span class="chip">${esc(l)}</span>`).join('')}</div>`:''}</div>`:''}
   ${sec('profil',`${ME.draft?`<div class="note wait">Deine letzte Änderung wartet auf Freigabe. Du kannst sie hier weiter anpassen und erneut senden.</div>`:(ME.profile&&ME.profile.s?`<div class="note ok">Dein Profil ist live in der App.</div>`:`<div class="note wait">Dein Profil ist noch nicht ausgefüllt. Trag deine Angaben ein und sende sie zur Freigabe.</div>`)}
   <div class="card"><h2>Dein Profil</h2><p class="muted">Pflicht sind nur dein Name und wofür du Partner bist. Leere Felder erscheinen im Profil nicht. Änderungen prüft ClosingHub kurz, danach sind sie in der App sichtbar.</p>
     <div class="row" style="margin:14px 0"><img class="photo" id="p-img" src="${esc(p.img||'')}" alt="" style="${p.img?'':'visibility:hidden'}">
@@ -235,7 +237,7 @@ function portal(){
     <label class="f" style="margin-top:12px">Kurze Vorstellung in ein bis zwei Sätzen<textarea class="in" data-f="bio" rows="3" maxlength="300">${esc(p.bio||'')}</textarea></label>
     <label class="row muted" style="margin-top:12px"><input type="checkbox" data-f="fem" ${p.fem?'checked':''}> Im Profil „Partnerin“ statt „Partner“ schreiben</label>
     ${send}</div>`)}
-  ${sec('angebote',`<div class="card"><h2>Deine Angebote für Member</h2><p class="muted">Bis zu ${MAXO} Angebote mit Titel und Preis, ausschließlich in deinem Themenbereich${ME.themenbereich?' („'+esc(ME.themenbereich)+'“)':''}. Sie erscheinen in deinem Profil in der App, sobald ClosingHub die Änderung freigegeben hat. Für Coachings, Ausbildungen, Programme und Pläne gilt die Vermittlungsprovision aus deinem Vertrag.</p>
+  ${sec('angebote',`<div class="card"><h2>Deine Angebote für Member</h2><p class="muted">Lege deine Angebote mit Titel und Preis an, ausschließlich in deinem Themenbereich${ME.themenbereich?' („'+esc(ME.themenbereich)+'“)':''}. Sie erscheinen in deinem Partnerprofil unter „Partner &amp; Live“, sobald ClosingHub die Änderung freigegeben hat. Für Coachings, Ausbildungen, Programme und Pläne gilt die Vermittlungsprovision aus deinem Vertrag.</p>
     <div id="offers">${offersHtml((p.offers||[]).slice(0,MAXO))}</div>
     ${send}</div>`)}
   ${sec('postfach',`<div class="card" id="postfach">${postfachHtml()}</div>`)}
@@ -270,13 +272,13 @@ function navHtml(){
 function showTab(t){ TAB=t; document.querySelectorAll('.sec').forEach(x=>x.classList.toggle('on',x.dataset.sec===t)); $('nav').innerHTML=navHtml(); }
 
 /* ===== Angebote ===== */
-const MAXO=3;
+const MAXO=20;
 function offersHtml(list){
   return list.map((o,i)=>`<div class="offer"><div class="no">${i+1}</div>
       <label class="f">Titel des Angebots<input class="in" data-o="t" maxlength="70" value="${esc(o.t||'')}" placeholder="1:1 Mindset-Coaching (60 Min.)"></label>
       <label class="f eur">Preis<input class="in" data-o="pr" maxlength="12" inputmode="decimal" value="${esc(o.pr||'')}" placeholder="89"><span>€</span></label>
       <button type="button" class="del" title="Angebot entfernen" aria-label="Angebot ${i+1} entfernen" onclick="delOffer(${i})">×</button></div>`).join('')
-    + (list.length<MAXO?`<button type="button" class="add" onclick="addOffer()"><span class="plus">+</span>Angebot hinzufügen <span class="muted">(${list.length} von ${MAXO})</span></button>`
+    + (list.length<MAXO?`<button type="button" class="add" onclick="addOffer()"><span class="plus">+</span>Angebot hinzufügen</button>`
        :`<p class="muted" style="margin-top:10px">Du hast alle ${MAXO} Angebote belegt. Entferne eines, um ein neues anzulegen.</p>`);
 }
 function readOffers(){ return [...document.querySelectorAll('#offers .offer')].map(r=>({t:clean(r.querySelector('[data-o="t"]').value).slice(0,70),pr:clean(r.querySelector('[data-o="pr"]').value).slice(0,12)})); }
@@ -433,7 +435,7 @@ function anfrageOptionen(){
   return o;
 }
 function meldHtml(){
-  const head=`<h2>Meldungen</h2><p class="muted">Kommt ein Kunde über ClosingHub zu dir (Anfrage über dein Profil oder den Marktplatz, ClosingHub-Link oder gebuchter Partner-Call) und bucht ein Coaching, eine Ausbildung, ein Programm oder einen Plan, meldest du das hier innerhalb von 7 Tagen nach Zahlungseingang. Darauf fallen 10&nbsp;% Vermittlungsprovision vom Nettobetrag an, für alle Buchungen dieses Kunden innerhalb von 12 Monaten. Namen und Rechnungen deiner Kunden schickst du nicht mit. War jemand schon vorher dein Kontakt, meldest du das innerhalb von 14 Tagen nach der Anfrage als Bestandskontakt. Dann fällt keine Provision an.</p>`;
+  const head=`<h2>Meldungen</h2><p class="muted">Kommt ein Kunde über ClosingHub zu dir (Anfrage über dein Profil, ClosingHub-Link oder gebuchter Partner-Call) und bucht ein Coaching, eine Ausbildung, ein Programm oder einen Plan, meldest du das hier innerhalb von 7 Tagen nach Zahlungseingang. Darauf fallen 10&nbsp;% Vermittlungsprovision vom Nettobetrag an, für alle Buchungen dieses Kunden innerhalb von 12 Monaten. Namen und Rechnungen deiner Kunden schickst du nicht mit. War jemand schon vorher dein Kontakt, meldest du das innerhalb von 14 Tagen nach der Anfrage als Bestandskontakt. Dann fällt keine Provision an.</p>`;
   if(MELD===undefined) return head+`<div class="note wait">Dieser Bereich wird gerade eingerichtet und ist in Kürze verfügbar.</div>`;
   const opts=anfrageOptionen(), sel=`<label class="f">Anfrage-Nummer${opts.length?'':' (steht im Postfach bei der Anfrage)'}${opts.length?`<select class="in" id="m-nr">${opts.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select>`:`<input class="in" id="m-nr" maxlength="40" placeholder="A-…">`}</label>`;
   const ST={neu:['wait','eingegangen'],geprueft:['ok','geprüft']};
