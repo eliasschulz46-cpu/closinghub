@@ -63,7 +63,7 @@
   setNav('mitteilungen',[undefined,'KI-Mitteilungen','spark',()=>(D.ai||[]).filter(a=>a.st==='neu').length]);
   setNav('moderation',[undefined,'Prüfen & Meldungen','shield',()=>(D.meld||[]).filter(m=>(m.status||'offen')==='offen').length+(D.queue||[]).length+(D.reports||[]).length]);
   setNav('mitmachx',[undefined,'Mitmach-Karten','star',()=>{ if(!Array.isArray(D.mkz)) return 0; return ['dc','sd','wb','uf'].filter(t=>D.mkz.filter(c=>c.typ===t&&c.status==='warteschlange').length<3).length; }]);
-  setNav('marktx',[undefined,'Marktplatz & Forum','store']);
+  setNav('marktx',[undefined,'Forum','users',()=>0]);
   setNav('gewinnspiel',[undefined,'Start & Gewinnspiel','gift']);
   setNav('support',[undefined,'Support','support']);
   if(!navItem('affiliate')) NAV.push(['affiliate','Affiliates','link',()=>afNeu()]);
@@ -375,26 +375,34 @@
   const lvP2 = n => String(n).padStart(2,'0');
   const lvOffen = () => { const d=LV.d; if(!d||!d.fragen) return 0; const t=Date.now(); const lauf=new Set((d.termine||[]).filter(x=>lvT(x.s)-9e5<=t&&lvT(x.e)>t).map(x=>x.event_id+'|'+x.termin)); return d.fragen.filter(f=>f.status==='offen'&&lauf.has(f.event_id+'|'+f.termin)).length+(d.gast||[]).filter(g=>g.status==='neu').length; };
   async function lvLoad(){ try{ const r=await RPC('live_admin'); if(r&&r.ok){ LV.d=r; LV.err=0; } else { LV.d=LV.d||{}; LV.err=1; } }catch(e){ LV.d=LV.d||{}; LV.err=1; } if(route()==='live') render(); else drawNav(); }
-  ZP.lvEdit = id => { LV.edit=id; ZP.typed=0; render(); };
+  ZP.lvEdit = id => { LV.edit=id; LV.gastId=null; ZP.typed=0; render(); };
   function gastCard(){
-    const G=(LV.d&&LV.d.gast)||[], neu=G.filter(g=>g.status==='neu'), alt=G.filter(g=>g.status!=='neu').slice(0,8);
+    const G=(LV.d&&LV.d.gast)||[], neu=G.filter(g=>g.status==='neu'), an=G.filter(g=>g.status==='angenommen'&&(!g.event_id||g.termin)), ab=G.filter(g=>g.status==='abgelehnt').slice(0,6);
     const rk=r=>['Starter','Rising','Performer','Dealmaker','Rainmaker'][(+r||1)-1]||'';
+    const tel=t=>t?`<a href="tel:${esc(String(t).replace(/[^0-9+]/g,''))}" class="gold" style="font-weight:600">${esc(t)}</a>`:'<span class="muted">keine Telefonnummer</span>';
+    const wann=t=>new Date(t).toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' Uhr';
+    const wer=g=>`${esc(g.name)}${rk(g.rang)?' · '+rk(g.rang):''} · ${esc((g.abo||'').replace('dayone','Day One').replace(/^./,c=>c.toUpperCase()))}`;
     return `<div class="card" style="margin-top:16px"><h3 style="margin:0 0 4px">Gastbeitrag-Bewerbungen${neu.length?` <span class="zp-new">${neu.length} neu</span>`:''}</h3>
-      <p class="muted" style="font-size:12.5px;margin:0 0 10px">Member bewerben sich in der App (Seite Partner → Live-Calls). „Annehmen“ schickt eine Mitteilung und öffnet direkt einen neuen Live-Termin mit Thema und Name.</p>
+      <p class="muted" style="font-size:12.5px;margin:0 0 10px">Member bewerben sich in der App (Partner &amp; Live → Live-Calls). Nach „Annehmen“ rufst du an, stimmst den Termin ab und legst ihn mit „Termin anlegen“ an. Das Mitglied sieht den Termin dann in der App.</p>
       ${neu.length?neu.map(g=>`<div class="item" style="align-items:flex-start;gap:12px;padding:12px 0">
         <div style="flex:1;min-width:0"><b style="font-size:15px">${esc(g.thema)}</b>
-          <div class="muted" style="font-size:12px;margin:2px 0 6px">${esc(g.name)}${rk(g.rang)?' · '+rk(g.rang):''} · ${esc((g.abo||'').replace('dayone','Day One').replace(/^./,c=>c.toUpperCase()))} · ${esc(g.email||'')} · ${new Date(g.at).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}</div>
+          <div class="muted" style="font-size:12px;margin:2px 0 6px">${wer(g)} · ${esc(g.email||'')} · ${new Date(g.at).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}</div>
+          <div style="font-size:13px;margin-bottom:6px">📞 ${tel(g.telefon)}</div>
           <div style="font-size:13.5px;white-space:pre-wrap">${esc(g.text)}</div>
           <div style="font-size:12.5px;margin-top:6px"><b>Erfahrung:</b> ${esc(g.erfahrung)}</div>
           ${g.wunsch?`<div style="font-size:12.5px;margin-top:2px"><b>Wunschtermin:</b> ${esc(g.wunsch)}</div>`:''}</div>
         <div class="row" style="gap:6px;flex:none"><button class="btn sm gold-b" onclick="ZP.gastOk(${g.id},this)">Annehmen</button><button class="btn sm" onclick="ZP.gastNein(${g.id},this)">Ablehnen</button></div></div>`).join('')
         :'<div class="empty" style="padding:14px">Keine offenen Bewerbungen.</div>'}
-      ${alt.length?`<div class="muted" style="font-size:12px;margin-top:10px">Zuletzt entschieden: ${alt.map(g=>`${esc(g.thema)} (${esc(g.name)}) <span class="pill ${g.status==='angenommen'?'p-ok':''}">${g.status}</span>`).join(' · ')}</div>`:''}</div>`;
+      ${an.length?`<h4 style="margin:16px 0 4px;font-size:13px">Angenommen</h4>${an.map(g=>`<div class="item" style="gap:12px;padding:10px 0;align-items:center">
+        <div style="flex:1;min-width:0"><b>${esc(g.thema)}</b><div class="muted" style="font-size:12px;margin-top:2px">${wer(g)} · 📞 ${tel(g.telefon)} · ${esc(g.email||'')}</div></div>
+        ${g.termin?`<span class="pill p-ok" style="flex:none">Termin: ${wann(g.termin)}</span>`
+          :`<span class="pill p-warn" style="flex:none">Noch kein Termin</span><button class="btn sm gold-b" style="flex:none" onclick="ZP.gastTermin(${g.id})">Termin anlegen</button>`}</div>`).join('')}`:''}
+      ${ab.length?`<div class="muted" style="font-size:12px;margin-top:10px">Zuletzt abgelehnt: ${ab.map(g=>`${esc(g.thema)} (${esc(g.name)})`).join(' · ')}</div>`:''}</div>`;
   }
-  ZP.gastOk = async (id,b) => { const g=((LV.d&&LV.d.gast)||[]).find(x=>x.id===id); b.disabled=true;
-    try{ const j=await RPC('gast_entscheiden',{p_id:id,p_status:'angenommen'}); if(!j||!j.ok) throw 0; toast('Angenommen – Mitteilung ist raus');
-      await lvLoad(); ZP.lvEdit(0);
-      setTimeout(()=>{ const t=$('lv-typ'), ti=$('lv-titel'), sp=$('lv-spr'); if(t) t.value='gast'; if(ti&&g) ti.value=g.thema; if(sp&&g) sp.value=g.name; ZP.lvUpd(); const f=$('lv-titel'); if(f) f.scrollIntoView({block:'center'}); },60); }
+  ZP.gastTermin = id => { const g=((LV.d&&LV.d.gast)||[]).find(x=>x.id===id); ZP.lvEdit(0); LV.gastId=id;
+    setTimeout(()=>{ const t=$('lv-typ'), ti=$('lv-titel'), sp=$('lv-spr'), w=$('lv-wdh'); if(t) t.value='gast'; if(w) w.value='einmal'; if(ti&&g) ti.value=g.thema; if(sp&&g) sp.value=g.name; ZP.lvUpd(); const f=$('lv-titel'); if(f) f.scrollIntoView({block:'center'}); toast('Datum und Uhrzeit eintragen, dann speichern'); },60); };
+  ZP.gastOk = async (id,b) => { b.disabled=true;
+    try{ const j=await RPC('gast_entscheiden',{p_id:id,p_status:'angenommen'}); if(!j||!j.ok) throw 0; toast('Angenommen – jetzt anrufen und Termin anlegen'); await lvLoad(); }
     catch(e){ b.disabled=false; toast('Hat nicht geklappt'); } };
   ZP.gastNein = async (id,b) => { if(!confirm('Bewerbung ablehnen? Das Mitglied bekommt eine freundliche Absage als Mitteilung.')) return; b.disabled=true;
     try{ const j=await RPC('gast_entscheiden',{p_id:id,p_status:'abgelehnt'}); if(!j||!j.ok) throw 0; toast('Abgelehnt'); await lvLoad(); }
@@ -466,7 +474,7 @@
     if(!p.titel||!p.start_at){ toast('Titel, Datum und Uhrzeit fehlen'); return; }
     if(p.wiederholung==='woechentlich'&&!p.tage.length){ toast('Wähle mindestens einen Wochentag'); return; }
     b.disabled=true;
-    try{ const r=await RPC('live_event_speichern',{p_id:LV.edit||null,p}); if(!r||!r.ok) throw 0;
+    try{ if(!LV.edit&&LV.gastId) p.gast_id=LV.gastId; const r=await RPC('live_event_speichern',{p_id:LV.edit||null,p}); if(!r||!r.ok) throw 0; LV.gastId=null;
       const n=lvVorschau(p,1)[0]; toast(n?'Gespeichert – nächster Termin '+n.toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Gespeichert');
       LV.edit=null; ZP.typed=0; await lvLoad(); }
     catch(e){ b.disabled=false; toast('Hat nicht geklappt. Ist closinghub-runde23-live-termine-flexibel.sql ausgeführt?'); }

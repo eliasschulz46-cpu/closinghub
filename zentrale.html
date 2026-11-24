@@ -352,7 +352,7 @@ const NAV = [
   ['support','Support','support', ()=>D.tickets.filter(t=>t.st==='offen').length],
   ['member','Member','users', ()=>(D.proofs||[]).filter(p=>p.status==='offen').length],
   ['moderation','Prüfen & Meldungen','shield', ()=>D.queue.length+D.reports.length],
-  ['marktx','Marktplatz & Forum','users', ()=>(D.mx||[]).filter(x=>x.status==='beantragt').length],
+  ['marktx','Forum','users', ()=>0],
   ['mitmachx','Mitmach-Karten','flame', ()=>0],
   ['punktex','Punktesystem','shield', ()=>{ const P=D.ptz; if(!P||!P.gutscheine) return 0; const tb=(P.medaillen||[]).find(m=>m.code==='top_beitrag'); return P.gutscheine.filter(g=>g.status==='eingeloest').length+((P.mitglieder>=500&&tb&&tb.schwelle<50)?1:0); }],
   ['feedx','Feed & Battle','flame', ()=>{ try{ const b=D.battle; if(!b||!b.on||!b.start) return 0; const i=bxInfo().i; return (b.queue.length-i-1)<=7?'!':0; }catch(e){ return 0; } }],
@@ -1046,7 +1046,7 @@ const setKey = (key,value) => q('settings',{method:'POST',prefer:'resolution=mer
 function inhalte(){
   const s=D.settings, f=s.features;
   const sw=(k,l,d)=>`<div class="row between" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>${l}</b><div class="muted" style="font-size:12px">${d}</div></div><label class="switch"><input type="checkbox" ${f[k]?'checked':''} onchange="setFeature('${k}',this.checked)"><span></span></label></div>`;
-  return `<h1 class="h1">Website & App</h1><p class="sub">Funktionen und Marktplatz. Gespeichertes ist sofort live.</p>
+  return `<h1 class="h1">Website & App</h1><p class="sub">Funktionen der App. Gespeichertes ist sofort live.</p>
   <div class="grid g2">
     <div class="card" style="grid-column:1/-1"><div class="row between"><div><h3>App-Sperre</h3><p class="muted" style="font-size:13px;margin-top:2px">Solange die Sperre an ist, öffnet sich die App (app.html) nur mit Passwort. Die Website bleibt offen.</p></div>
         <span class="pill ${(D.gate||{}).on&&(D.gate||{}).hash?'p-ok':'p-warn'}">${(D.gate||{}).on&&(D.gate||{}).hash?'Sperre ist an':((D.gate||{}).hash?'Sperre ist aus':'Noch kein Passwort gesetzt')}</span></div>
@@ -1054,16 +1054,12 @@ function inhalte(){
       <p class="muted" style="font-size:12.5px;margin-top:8px">Gespeichert wird nur ein Prüfwert, nicht das Passwort selbst. Ein neues Passwort meldet alle Geräte ab, die das alte benutzt haben.</p></div>
     <div class="card" style="grid-column:1/-1"><h3>Funktionen</h3>
       ${sw('waitlistOpen','Warteliste offen','Live: Formular auf der Landingpage an/aus')}
-      ${sw('marketplace','Marktplatz','Wirkt, sobald die echte App läuft')}
       ${sw('topjobs','Top-Jobs','Wirkt, sobald die echte App läuft')}
       ${sw('forum','Forum','Wirkt, sobald die echte App läuft')}
       ${sw('stories','Stories','Wirkt, sobald die echte App läuft')}
       ${sw('breathing','Atempause','Wirkt, sobald die echte App läuft')}
       ${sw('arena','Closer Arena','Wirkt, sobald die echte App läuft')}
     </div>
-    <div class="card" style="grid-column:1/-1"><div class="row between"><div><h3>Marktplatz · Dienstleistungen</h3><p class="muted" style="font-size:13px;margin-top:2px">Nur diese Dienstleistungen können im Marktplatz angeboten werden. Eine pro Zeile, die Reihenfolge gilt auch in der App.</p></div><span class="pill p-gold" id="mkCount">${(D.markt||[]).length} Dienstleistungen</span></div>
-      <textarea class="in" id="mkList" rows="12" style="margin-top:12px;line-height:1.6" oninput="$('mkCount').textContent=this.value.split('\\n').filter(x=>x.trim()).length+' Dienstleistungen'">${esc((D.markt||[]).join('\n'))}</textarea>
-      <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="saveMarkt(this)">Speichern</button><button class="btn" onclick="$('mkList').value=MARKT_DEFAULT.join('\\n');$('mkList').dispatchEvent(new Event('input'))">Standardliste laden</button></div></div>
   </div>`;
 }
 function partner(){
@@ -1104,7 +1100,7 @@ function ptCard(p,i){
           <input type="hidden" data-pt="${i}" data-f="img" value="${esc(p.img||'')}"></div></div>
     </div>
     <label style="display:block;font-size:12px;margin-top:10px" class="muted">Kurze Vorstellung in ein bis zwei Sätzen<textarea class="in" data-pt="${i}" data-f="bio" rows="2" style="margin-top:4px">${esc(p.bio||'')}</textarea></label>
-    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Seine Angebote für Member, eines pro Zeile: Titel | Preis in Euro<textarea class="in" data-pt="${i}" data-f="offers" rows="3" style="margin-top:4px" placeholder="1:1 Mindset-Coaching (60 Min.) | 89">${esc((p.offers||[]).map(o=>o.t+' | '+o.pr).join('\n'))}</textarea></label>
+    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Seine Angebote für Member (bis zu 20), eines pro Zeile: Titel | Preis in Euro<textarea class="in" data-pt="${i}" data-f="offers" rows="6" style="margin-top:4px" placeholder="1:1 Mindset-Coaching (60 Min.) | 89">${esc((p.offers||[]).map(o=>o.t+' | '+o.pr).join('\n'))}</textarea></label>
     <div class="row" style="margin-top:10px"><label class="muted" style="font-size:13px"><input type="checkbox" data-pt="${i}" data-f="fem" ${p.fem?'checked':''}> Im Profil „Partnerin“ statt „Partner“ schreiben</label></div>
     ${vertragHtml(p,i)}
     <div class="row" style="margin-top:12px"><button class="btn gold-b" onclick="ptSave(${i},this)">Profil speichern (sofort live)</button><button class="btn" style="margin-left:auto" onclick="partnerEnd(${i})">${r.status==='aktiv'?'Partnerschaft beenden':'Einladung zurückziehen'}</button></div>
@@ -1129,7 +1125,7 @@ function ptReadOne(i){
   const p={n:g('n').slice(0,40),s:g('s').slice(0,60),role:g('role').slice(0,40),meta:g('meta').slice(0,80),bio:g('bio').slice(0,300),bk:g('bk').slice(0,40),img:/^(https:\/\/|data:image\/(jpeg|png|webp);base64,)/.test(g('img'))?g('img'):'',live:g('live').slice(0,90),link:/^https:\/\/\S+$/.test(g('link'))?g('link').slice(0,200):'',fem:!!g('fem')};
   if(g('k0')) p.k=[g('k0').slice(0,12),g('k1').slice(0,30)];
   if(g('d0')) p.deal=[g('d0').slice(0,40),g('d1').slice(0,60),g('d2').slice(0,20)];
-  p.offers=g('offers').split('\n').map(z=>{ const f=z.split('|').map(c); return {t:(f[0]||'').slice(0,70),pr:(f[1]||'').slice(0,12)}; }).filter(o=>o.t).slice(0,8);
+  p.offers=g('offers').split('\n').map(z=>{ const f=z.split('|').map(c); return {t:(f[0]||'').slice(0,70),pr:(f[1]||'').slice(0,12)}; }).filter(o=>o.t).slice(0,20);
   return p;
 }
 // Eingaben und aufgeklappte Karten über ein Neuzeichnen hinweg behalten
@@ -1219,10 +1215,10 @@ function vertragHtml(p,i){
   const r=p._row; if(!('leistungen' in r)) return `<div class="demo" style="margin-top:12px">Für Hoheitsbereich, Ausbilder und Partner-Calls bitte zuerst „closinghub-runde17.sql“ in Supabase ausführen.</div>`;
   const wt=['','Mo','Di','Mi','Do','Fr','Sa','So'], sl=(r.call_slots||[]).map(x=>wt[+x.d]+' '+x.t).join(', ');
   return `<div style="margin-top:14px;border-top:1px solid var(--line,#D5DAD3);padding-top:12px"><b>Vertrag: Hoheitsbereich (Anlage 1)</b>
-    <p class="muted" style="font-size:12.5px;margin-top:2px">In diesem Bereich nimmst du keinen weiteren Partner auf. Mitglieder können zu den hier eingetragenen Leistungen im Marktplatz nichts einreichen (die App und die Datenbank sperren das automatisch, auch bei ähnlichen Bezeichnungen).</p>
+    <p class="muted" style="font-size:12.5px;margin-top:2px">In diesem Bereich nimmst du keinen weiteren Partner auf. Seine eigenen Angebote im Partnerprofil müssen zu den hier eingetragenen Leistungen passen.</p>
     <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">${Object.keys(PT_VORLAGEN).map(k=>`<button class="btn sm" onclick="ptVorlage(${i},'${esc(k)}')">Vorlage: ${esc(k)}</button>`).join('')}</div>
     <label style="display:block;font-size:12px;margin-top:10px" class="muted">Themenbereich (steht im Partnerportal)<input class="in" id="pv-b-${i}" value="${esc(r.themenbereich||'')}" maxlength="80" style="margin-top:4px" placeholder="Vertriebsausbildung und Vertriebscoaching"></label>
-    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Gesperrte Leistungen, eine pro Zeile<textarea class="in" id="pv-l-${i}" rows="4" style="margin-top:4px">${esc((r.leistungen||[]).join('\n'))}</textarea></label>
+    <label style="display:block;font-size:12px;margin-top:10px" class="muted">Leistungen in seinem Bereich, eine pro Zeile<textarea class="in" id="pv-l-${i}" rows="4" style="margin-top:4px">${esc((r.leistungen||[]).join('\n'))}</textarea></label>
     <label class="muted" style="font-size:13px;display:block;margin-top:8px"><input type="checkbox" id="pv-a-${i}" ${r.ausbilder?'checked':''}> Ausbilder-Partner: Nur seine Absolventen bekommen das Abzeichen „Ausgebildet von …“ (mit seinem Namen)</label>
     <div class="row" style="margin-top:8px"><button class="btn sm gold-b" onclick="ptVertragSave(${i},this)">Hoheitsbereich speichern</button></div>
     <p class="muted" style="font-size:12.5px;margin-top:10px"><b>Partner-Calls:</b> ${r.call_gesetzt?`${+r.call_limit} pro Woche${r.call_limit_neu?` (ab ${deDate(r.call_limit_ab)}: ${+r.call_limit_neu})`:''} · ${sl||'keine Zeitfenster'}${r.call_link?' · Link hinterlegt':' · kein Link'}`:'noch nicht eingerichtet (der Partner macht das im Partnerportal)'}</p></div>`;
@@ -1292,7 +1288,7 @@ function einstellungen(){
   <div class="grid g2">
     <div class="card"><h3>Abos</h3><div class="grid g2" style="gap:12px">${n('plus','Plus / Monat','0.01','€')}${n('plusY','Plus / Jahr','0.01','€')}${n('premiumM','Premium / Monat','0.01','€')}${n('premiumY','Premium / Jahr','0.01','€')}${n('vat','MwSt / IVA','1','%')}</div></div>
     <div class="card"><h3>Day Ones</h3><div class="grid g2" style="gap:12px">${n('dayoneTotal','Anzahl Plätze (live)','1')}${n('dayoneFreeMonths','Gratis-Monate','1')}${n('dayonePremiumMonths','Premium-Monate gratis','1')}${n('maxPerCountry','Max. Member je Land','1')}</div></div>
-    <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('hire','Einstellung (einmalig, 0 = kostenlos)','0.01','€')}${n('marketFee','Marktplatz-Gebühr','0.1','%')}${n('topJob','Top-Job','0.01','€')}${n('jobFee','Gebühr pro veröffentlichtem Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
+    <div class="card"><h3>Gebühren</h3><div class="grid g2" style="gap:12px">${n('unlock','Freischaltung Auftraggeber','0.01','€')}${n('hire','Einstellung (einmalig, 0 = kostenlos)','0.01','€')}${n('topJob','Top-Job','0.01','€')}${n('jobFee','Gebühr pro veröffentlichtem Job','0.01','€')}${n('perCategory','Angebote je Kategorie/Region','1')}</div></div>
     <div class="card"><h3>Verbindung</h3><div class="row" style="margin-bottom:8px"><span class="pill p-ok">Supabase verbunden</span></div><p class="muted" style="font-size:13px">Angemeldet als ${esc(SESSION&&SESSION.email)}</p><button class="btn" style="margin-top:12px" onclick="logout()">Abmelden</button></div>
   </div>
   <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn gold-b" onclick="saveSettings(this)">Alles speichern</button></div>
@@ -1530,12 +1526,8 @@ function marktx(){
     ${x.beschreibung?`<p style="font-size:13.5px;margin:6px 0 0">${esc(x.beschreibung)}</p>`:''}
     ${(x.medien||[]).length?`<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${x.medien.map(m=>m.typ==='video'?`<video src="${esc(m.url)}" style="height:90px;border-radius:10px" controls preload="metadata"></video>`:`<a href="${esc(m.url)}" target="_blank"><img src="${esc(m.url)}" style="height:90px;border-radius:10px;object-fit:cover"></a>`).join('')}</div>`:''}
     <div class="row" style="margin-top:8px">${neu?`<button class="btn sm gold-b" onclick="mxDo(${x.id},true,this)" ${x.hoheit?'disabled title="Fällt in den Hoheitsbereich eines Partners. Falls das ein Irrtum ist: Leistung umbenennen."':(x.belegung||{}).aktiv_bis&&(x.belegung||{}).warteliste?'disabled title="Angebot und Warteliste sind schon belegt"':''}>${fbtn(x)}</button><button class="btn sm red" onclick="mxDo(${x.id},false,this)">Ablehnen</button><button class="btn sm" onclick="mxKat(${x.id},'${esc(x.kategorie).replace(/'/g,'')}')">Leistung umbenennen</button><button class="btn sm" onclick="mxMsgOpen(${x.id})">💬 Nachricht an Anbieter</button>`:`<button class="btn sm" onclick="mxDo(${x.id},false,this)">${x.status==='warteliste'?'Von der Warteliste nehmen':'Vorzeitig beenden'}</button>`}</div>${D.mxMsg===x.id?`<div style="margin-top:10px"><textarea class="in" id="mxm-${x.id}" rows="3" maxlength="2000" placeholder="z. B. Hi! Dein Angebot gefällt mir. Kannst du beim Preis noch genauer sagen, was enthalten ist?"></textarea><div class="row" style="justify-content:flex-end;gap:8px;margin-top:6px"><button class="btn sm" onclick="D.mxMsg=null;render()">Abbrechen</button><button class="btn sm gold-b" onclick="mxMsgSend(${x.id},this)">Senden</button></div><p class="muted" style="font-size:12px;margin-top:4px">Geht als normale Chat-Nachricht von deinem App-Konto an ${esc(x.name)}. Die Antwort siehst du in der App unter Nachrichten.</p></div>`:''}</div></div>`;
-  return `<h1 class="h1">Marktplatz & Forum</h1><p class="sub">Angebote von Mitgliedern freigeben und im Forum als ClosingHub Fragen stellen. Mitglieder dürfen jede Leistung anbieten, außer in den Hoheitsbereichen der Partner. Je Leistung gibt es einen Anbieter (6 Monate) und einen Platz auf der Warteliste. Wer danach kommt, bekommt automatisch die Nachricht „Warteliste voll, bitte am … wieder bewerben“. Gleiche Leistungen mit anderem Namen führst du über „Leistung umbenennen“ zusammen.</p>
-  <div class="card" style="margin-bottom:16px"><div class="row between"><h3 style="margin:0">Angebote zur Prüfung (${offen.length})</h3><button class="btn sm" onclick="D.mx=undefined;render()">Aktualisieren</button></div>
-    ${D.mx===null?'<p class="muted">Lade …</p>':offen.map(x=>card(x,true)).join('')||'<div class="empty">Keine offenen Anträge. Mitglieder reichen Angebote in der App unter Marktplatz → „Angebot einreichen“ ein.</div>'}</div>
-  <div class="grid g2">
-    <div class="card"><h3>Aktive Angebote (${aktiv.length})</h3>${aktiv.map(x=>card(x,false)).join('')||'<div class="empty">Noch keine aktiven Angebote.</div>'}
-      ${wl.length?`<h3 style="margin-top:18px">Warteliste (${wl.length})</h3>${wl.map(x=>card(x,false)).join('')}`:''}</div>
+  return `<h1 class="h1">Forum</h1><p class="sub">Im Forum als ClosingHub Fragen stellen. Sie erscheinen mit dem ClosingHub-Logo.</p>
+  <div class="grid" style="max-width:640px">
     <div class="card"><h3>Forum: Frage als ClosingHub stellen</h3><p class="muted" style="font-size:12.5px">Zum Start stellst du die ersten Fragen. Sie erscheinen mit dem ClosingHub-Logo.</p>
       <label class="f">Kategorie<select class="in" id="fq-k">${FORUM_KATS.map(k=>`<option>${k}</option>`).join('')}</select></label>
       <label class="f" style="margin-top:10px">Frage<input class="in" id="fq-t" maxlength="140" placeholder="z. B. Wie reagiert ihr auf „zu teuer“?"></label>

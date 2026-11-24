@@ -1,4 +1,4 @@
-/* ===== ClosingHub App-Plus (r25 · Partner-Seite mit Live-Kalender statt Marktplatz) =====
+/* ===== ClosingHub App-Plus (r26 · Partner-Angebote ohne 3er-Grenze, Suche findet Partner-Angebote, Follower-Listen) =====
    Stories (Kontrastfarben, Halten = Pause, links ausgerichtet), Spotlight aufklappbar rechts,
    Ränge im Player passend zum Hintergrund, Pause-Symbol kurz einblenden, Partner-Siegel im Marktplatz,
    geteilte Beiträge im Chat, Vorschau vor dem Hochladen von Nachweisen, eigene Story über das Profilbild,
@@ -622,11 +622,12 @@
     const exact=sug.find(s=>s.tag===t); const posts=exact?await htGet('hashtag_beitraege',{p_tag:t,p_vor:null,p_limit:60},'p:'+t):[];
     if(!still()) return;
     const ql=q.toLowerCase(), jobs=(JOBS||[]).filter(j=>(j.live||!S.member)&&[j.t,j.ind,j.p,j.reg,j.roles].join(' ').toLowerCase().includes(ql)).slice(0,6);
-    const offs=(typeof realOffers==='function'&&S.member?realOffers():[]).filter(o=>[o.t,o.cat,o.desc,o.full].join(' ').toLowerCase().includes(ql)).slice(0,6);
+    const offs=[]; try{ (PARTNERS||[]).filter(p=>p.real).forEach(p=>{ ((S.ptAll&&S.ptAll[p.n])||p.offers||[]).forEach(o=>{ if([o.t,p.s,p.n].join(' ').toLowerCase().includes(ql)) offs.push({p,o}); }); }); }catch(e){}
     const list=posts.map(mapPost);
     put(`<div data-q="~${esc2(q)}"></div>`+(S.member?sec('Mitglieder',mem.length?mem.map(m=>`<button class="w-full flex items-center gap-3 text-left p-3 rounded-xl hover:bg-panel" onclick="openProfile(${m.id})"><span class="w-11 h-11 rounded-full overflow-hidden shrink-0">${m.avatar_url?`<img src="${esc(m.avatar_url)}" class="w-full h-full object-cover">`:initAv(m.name)}</span><span class="min-w-0"><span class="block text-sm">${nameRank(esc(m.name),RANKS[(m.rang||1)-1])}</span><span class="text-xs text-muted">${esc([m.rolle,m.land].filter(Boolean).join(' · '))}</span></span></button>`).join(''):'<p class="text-sm text-muted">Kein Mitglied gefunden.</p>'):sec('Mitglieder','<p class="text-sm text-muted"><a href="#login" class="text-gold">Melde dich an</a>, um Mitglieder zu finden.</p>'))
       +(sug.length?sec('Hashtags',`<div class="ht-chips">${sug.map(s=>chip(s.tag,s.n)).join('')}</div>`):'')
       +(list.length?sec(`Beiträge mit #${esc2(t)}`,htGrid(list.slice(0,9))+(list.length>9?`<button class="text-sm text-gold mt-2" onclick="htOpen('${esc2(t)}')">Alle ${list.length} Beiträge ansehen</button>`:'')):'')
+      +(offs.length?sec('Angebote der Partner',offs.slice(0,8).map(({p,o})=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="APLUS_ptOpen('${esc(p.n).replace(/'/g,'')}')"><b class="text-sm block">${esc(o.t)}</b><span class="text-xs text-muted">${esc(p.n)} · ${esc(p.s)}${o.pr?' · '+esc(o.pr)+(/€|[a-zA-Z]/.test(String(o.pr))?'':' €'):''}</span></button>`).join('')):'')
       +sec('Jobs',jobs.length?jobs.map(j=>`<button class="w-full text-left p-3 rounded-xl hover:bg-panel" onclick="S.job=${j.id};S.jopen=1;go('jobs')"><b class="text-sm block">${esc(j.t)}</b><span class="text-xs text-muted">${esc([j.ind,j.reg,j.pay].filter(Boolean).join(' · '))}</span></button>`).join(''):'<p class="text-sm text-muted">Kein Job gefunden.</p>')
       ); };
   // Neuer/geänderter Beitrag: Hashtag-Listen frisch laden
@@ -1349,6 +1350,7 @@
     .pk-f{display:block;font-size:12.5px;font-weight:600;margin-bottom:5px}
     .pk-f small{font-weight:400;color:rgb(var(--muted))}
     @media (max-width:767px){ .pk-gast{flex-wrap:wrap} .pk-gast .btn-gold{width:100%;text-align:center} }
+    .pk-gast-ok{border:1px solid rgba(8,122,75,.45);background:rgba(8,122,75,.07)} .pk-gast-ok .pk-gic{background:#087A4B;color:#fff}
     .pk-tag .ci{width:11px;height:11px}
     .pk-none{font-size:11.5px;color:rgb(var(--muted));margin-top:8px}
     .pk-legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:rgb(var(--muted));margin-top:14px}
@@ -1421,14 +1423,18 @@
         ${pkGastCard()}`;
     }
     S.gast=S.gast||{m:undefined};
-    async function gastLoad(){ if(!S.member) return; try{ const r=await rpc('gast_meine'); S.gast.m=r||{}; }catch(e){ S.gast.m={}; } const el=document.getElementById('pkgast'); if(el) el.outerHTML=pkGastCard(); }
+    async function gastLoad(){ if(!S.member) return; try{ const r=await rpc('gast_meine'); S.gast.m=r||{}; if(r&&r.angenommen&&r.angenommen.termin) pkLoad(); }catch(e){ S.gast.m={}; } const el=document.getElementById('pkgast'); if(el) el.outerHTML=pkGastCard(); }
     function pkGastCard(){
       if(S.member && S.gast.m===undefined){ S.gast.m=null; gastLoad(); }
-      const o=S.gast.m&&S.gast.m.offen;
-      return `<div class="pk-gast" id="pkgast"><span class="pk-gic"><svg class="ci"><use href="#i-mikrofon"/></svg></span>
-        <div class="flex-1 min-w-0">${o?`<p class="font-semibold">Deine Bewerbung ist eingereicht</p><p class="text-sm text-muted">„${esc(o.thema)}“ – wir schauen sie uns an und melden uns bei dir.</p>`
-          :`<p class="font-semibold">Du willst selbst einen Live-Call halten?</p><p class="text-sm text-muted">Bewirb dich für einen Gastbeitrag und teil dein Wissen mit der Community.</p>`}</div>
-        ${o?'':`<button class="btn-gold text-sm whitespace-nowrap" onclick="APLUS_gastForm()">Gastbeitrag vorschlagen</button>`}</div>`;
+      const o=S.gast.m&&S.gast.m.offen, an=S.gast.m&&S.gast.m.angenommen;
+      const wann=t=>{ const d=new Date(t); return d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'})+' um '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+' Uhr'; };
+      const txt=o?`<p class="font-semibold">Deine Bewerbung ist eingereicht</p><p class="text-sm text-muted">„${esc(o.thema)}“ – wir schauen sie uns an und melden uns bei dir.</p>`
+        :an&&an.termin?`<p class="font-semibold">Dein Gastbeitrag steht!</p><p class="text-sm text-muted">„${esc(an.thema)}“ · <b style="color:rgb(var(--fg))">${wann(an.termin)}</b>. Du findest ihn oben im Kalender.</p>`
+        :an?`<p class="font-semibold">Deine Bewerbung ist angenommen!</p><p class="text-sm text-muted">„${esc(an.thema)}“ – wir rufen dich an, um den Termin abzustimmen.</p>`
+        :`<p class="font-semibold">Du willst selbst einen Live-Call halten?</p><p class="text-sm text-muted">Bewirb dich für einen Gastbeitrag und teil dein Wissen mit der Community.</p>`;
+      return `<div class="pk-gast${an&&!o?' pk-gast-ok':''}" id="pkgast"><span class="pk-gic"><svg class="ci"><use href="#i-${an&&!o?'erledigt':'mikrofon'}"/></svg></span>
+        <div class="flex-1 min-w-0">${txt}</div>
+        ${o||an?'':`<button class="btn-gold text-sm whitespace-nowrap" onclick="APLUS_gastForm()">Gastbeitrag vorschlagen</button>`}</div>`;
     }
     window.APLUS_gastForm=function(){
       if(!S.user||!S.member) return go('login');
@@ -1437,19 +1443,22 @@
         ${f('gb-thema','Thema','','in','z. B. Einwände am Telefon knacken',120)}
         ${f('gb-text','Worum geht’s?','2–3 Sätze','ta','Was lernen die Zuschauer bei dir?',800,92)}
         ${f('gb-erf','Deine Erfahrung im Vertrieb','','ta','z. B. 4 Jahre Closer im Solar-Vertrieb, 300 Abschlüsse',400,64)}
+        ${f('gb-tel','Telefonnummer','für die Terminabsprache','in','z. B. +49 171 2345678',30)}
         ${f('gb-wunsch','Wann passt es dir?','optional','in','z. B. dienstags ab 18 Uhr',200)}
         <p id="gb-err" class="text-sm" style="color:#C0392B;display:none"></p>
         <button class="btn-gold w-full" style="padding:12px" onclick="APLUS_gastSend(this)">Bewerbung senden</button>
         <button class="text-sm text-muted w-full" onclick="closeSheet()">Abbrechen</button>`);
+      { const t=document.getElementById('gb-tel'); if(t){ t.type='tel'; t.inputMode='tel'; t.autocomplete='tel'; } }
       setTimeout(()=>{ const e=document.getElementById('gb-thema'); if(e) e.focus(); },50);
     };
     window.APLUS_gastSend=async function(b){
       const v=id=>(document.getElementById(id)||{}).value||'', err=t=>{ const e=document.getElementById('gb-err'); if(e){ e.textContent=t; e.style.display=''; } };
       const th=v('gb-thema').trim(), tx=v('gb-text').trim(), er=v('gb-erf').trim();
       if(th.length<3) return err('Bitte gib ein Thema an.'); if(tx.length<10) return err('Beschreib kurz, worum es geht.'); if(er.length<3) return err('Erzähl kurz von deiner Erfahrung.');
+      const tel=v('gb-tel').trim(); if(!/^\+?[0-9 ()\/.-]+$/.test(tel)||tel.replace(/\D/g,'').length<7||tel.replace(/\D/g,'').length>15) return err('Bitte gib deine Telefonnummer an, damit wir den Termin mit dir abstimmen können.');
       b.disabled=true; b.textContent='Wird gesendet …';
-      try{ const j=await rpc('gast_bewerben',{p_thema:th,p_text:tx,p_erfahrung:er,p_wunsch:v('gb-wunsch').trim()});
-        if(!j||!j.ok){ b.disabled=false; b.textContent='Bewerbung senden'; return err(j&&j.grund==='offen'?'Du hast schon eine offene Bewerbung. Wir melden uns bald.':j&&j.grund==='tempo'?'Du hast in den letzten 30 Tagen schon 3 Bewerbungen geschickt.':'Senden hat nicht geklappt. Versuch es gleich nochmal.'); }
+      try{ const j=await rpc('gast_bewerben',{p_thema:th,p_text:tx,p_erfahrung:er,p_telefon:tel,p_wunsch:v('gb-wunsch').trim()});
+        if(!j||!j.ok){ b.disabled=false; b.textContent='Bewerbung senden'; return err(j&&j.grund==='offen'?'Du hast schon eine offene Bewerbung. Wir melden uns bald.':j&&j.grund==='tempo'?'Du hast in den letzten 30 Tagen schon 3 Bewerbungen geschickt.':j&&j.grund==='telefon'?'Bitte prüf deine Telefonnummer.':'Senden hat nicht geklappt. Versuch es gleich nochmal.'); }
         S.gast.m={offen:{thema:th,at:new Date().toISOString()}};
         sheet(`<div class="text-center space-y-3"><div style="width:60px;height:60px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:#087A4B;color:#fff"><svg class="ci" style="width:28px;height:28px"><use href="#i-erledigt"/></svg></div>
           <p class="font-serif text-2xl leading-tight">Danke für deine Bewerbung!</p><p class="text-sm text-muted">Wir schauen uns dein Thema an und melden uns per Mitteilung bei dir.</p></div>
@@ -1478,6 +1487,93 @@
     { let n=0, was=!!S._ptOk; const t=setInterval(()=>{ n++; if(!was&&S._ptOk&&route()==='partner') render(); was=!!S._ptOk; if(was||n>30) clearInterval(t); },400); }
     setInterval(()=>{ if(route()==='partner'&&!document.hidden){ const el=document.getElementById('pkcal'); if(el&&!S.pk.busy){ if(Date.now()-S.pk.at>60000) pkLoad(); else el.innerHTML=pkCal(); } } },30000);
   })();
+
+  /* ---------- r26: Partner-Angebote ohne 3er-Grenze (bis 20), lange Listen klappen auf ---------- */
+  (function(){
+    S.ptAll=S.ptAll||{};
+    const c=(x,m)=>String(x??'').replace(/[<>"'`]/g,'').trim().slice(0,m);
+    fetch('https://bzcnqggwyfocpbkwqhsy.supabase.co/rest/v1/rpc/partner_liste',{method:'POST',headers:{apikey:'sb_publishable_97FHvL7dI_g9ueRVwfhE6A_qv07CJ6D','Content-Type':'application/json'},body:'{}'})
+      .then(r=>r.ok?r.json():null).then(l=>{ if(!Array.isArray(l)) return;
+        l.forEach(p=>{ const n=c(p&&p.n,40); if(!n) return; S.ptAll[n]=(Array.isArray(p.offers)?p.offers:[]).slice(0,20).map(x=>({t:c(x&&x.t,70),pr:c(x&&x.pr,12)})).filter(x=>x.t); });
+      }).catch(()=>{});
+    const SHOW=5;
+    window.APLUS_ptOpen=n=>{ try{ personModal(n); }catch(e){} };
+    window.APLUS_ofAll=b=>{ const box=b.previousElementSibling; if(box) box.querySelectorAll('[data-ofx]').forEach(e=>e.style.display=''); b.remove(); };
+    if(typeof partnerModal==='function'){
+      const _pm=partnerModal;
+      partnerModal=function(p,offers,r,rt){
+        try{ const full=p&&p.real&&S.ptAll[p.n]; if(full&&full.length>=(offers||[]).length) offers=full.map(o=>({t:o.t,pr:o.pr,cat:p.s,n:0,st:0})); }catch(e){}
+        const res=_pm.call(this,p,offers,r,rt);
+        try{
+          const lab=[...document.querySelectorAll('#modal p')].find(e=>e.textContent.trim()==='Leistungen'), box=lab&&lab.nextElementSibling;
+          if(box){ const rows=[...box.children]; rows.forEach(e=>{ const t=e.querySelector('.truncate'); if(t){ t.classList.remove('truncate'); t.style.overflowWrap='anywhere'; } });
+            if(rows.length>SHOW+1){ rows.slice(SHOW).forEach(e=>{ e.dataset.ofx=1; e.style.display='none'; });
+              box.insertAdjacentHTML('afterend',`<button class="text-sm font-semibold mt-2" style="color:#087A4B" onclick="APLUS_ofAll(this)">Alle ${rows.length} Leistungen anzeigen</button>`); } }
+        }catch(e){}
+        return res;
+      };
+    }
+  })();
+
+  /* ---------- r26: Follower- und Gefolgt-Listen (Tipp auf die Zahlen im Profil) ---------- */
+  (function(){
+    const FL={mid:0,art:'follower',q:'',off:0,list:[],n:{},mehr:false,busy:false,name:''};
+    if(typeof memberModal==='function'){ const _mm=memberModal; memberModal=function(mid){ S.flModal=+mid||0; return _mm.apply(this,arguments); }; }
+    const ctxMid=el=>{ if(el.closest('#modal')) return S.flModal||0; const r=route(); if(r==='mitglied') return +S.mpid||0; if(r==='profile') return S.member?S.member.id:0; return 0; };
+    const ctxName=mid=>{ try{ if(S.member&&mid===S.member.id) return S.member.name||''; if(S.mp&&S.mp.p&&+S.mpid===mid) return S.mp.p.name||''; }catch(e){} return ''; };
+    function mark(){
+      document.querySelectorAll('#app span, #modal span').forEach(sp=>{
+        if(sp.dataset.fl) return; const t=sp.textContent.replace(/\s+/g,' ').trim(), m=t.match(/^[\d.]+ (Follower|gefolgt)$/); if(!m) return;
+        const mid=ctxMid(sp); if(!mid) return;
+        sp.dataset.fl=m[1]==='Follower'?'follower':'gefolgt'; sp.dataset.mid=mid; sp.setAttribute('role','button'); sp.tabIndex=0; sp.classList.add('fl-cnt');
+      });
+    }
+    let q=0; new MutationObserver(()=>{ if(q) return; q=requestAnimationFrame(()=>{ q=0; try{ mark(); }catch(e){} }); }).observe(document.body,{childList:true,subtree:true});
+    const st=document.createElement('style'); st.textContent='.fl-cnt{cursor:pointer;border-radius:8px}.fl-cnt:hover{text-decoration:underline;text-underline-offset:3px}.fl-cnt:focus-visible{outline:2px solid #087A4B;outline-offset:2px}'; document.head.appendChild(st);
+    const open=(mid,art)=>{ if(!S.member){ go('login'); return; } Object.assign(FL,{mid,art,q:'',off:0,list:[],mehr:false,name:ctxName(mid),n:{}}); try{ document.querySelectorAll(`[data-fl][data-mid="${mid}"]`).forEach(e=>{ const z=parseInt(e.textContent.replace(/\D/g,''),10); if(!isNaN(z)) FL.n[e.dataset.fl]=z; }); }catch(e){} draw(true); load(); };
+    document.addEventListener('click',e=>{ const sp=e.target.closest&&e.target.closest('[data-fl]'); if(!sp) return; e.preventDefault(); e.stopPropagation(); open(+sp.dataset.mid,sp.dataset.fl); },true);
+    document.addEventListener('keydown',e=>{ if(e.key!=='Enter') return; const sp=e.target.closest&&e.target.closest('[data-fl]'); if(sp) open(+sp.dataset.mid,sp.dataset.fl); });
+    async function load(more){
+      if(FL.busy) return; FL.busy=true; const key=FL.mid+FL.art+FL.q;
+      let r=null; try{ r=await rpc('folgen_liste',{p_member:FL.mid,p_art:FL.art,p_q:FL.q||null,p_offset:more?FL.off:0}); }catch(e){}
+      FL.busy=false; if(key!==FL.mid+FL.art+FL.q) return load(more);
+      if(!r||!r.ok){ FL.err=true; FL.list=more?FL.list:[]; draw(); return; }
+      FL.err=false; FL.list=more?FL.list.concat(r.liste||[]):(r.liste||[]); FL.off=FL.list.length; FL.mehr=!!r.mehr; if(!FL.q) FL.n[FL.art]=r.anzahl; draw();
+    }
+    const row=m=>`<div class="flex items-center gap-3 py-2">
+      <button class="flex items-center gap-3 min-w-0 flex-1 text-left" onclick="closeSheet();openProfile(${+m.id})">
+        <span class="w-11 h-11 rounded-full overflow-hidden shrink-0">${m.avatar_url?`<img src="${esc(m.avatar_url)}" alt="" class="w-full h-full object-cover">`:initAv(m.name||'?')}</span>
+        <span class="min-w-0"><span class="block text-sm truncate">${nameRank(esc(m.name||''),RANKS[(m.rang||1)-1])}</span><span class="block text-xs text-muted truncate">${esc([m.rolle,m.stadt].filter(Boolean).join(' · '))}</span></span></button>
+      ${m.ich?'<span class="text-xs text-muted pr-1">Du</span>':`<button class="${m.folge?'btn-ghost':'btn-gold'} text-sm shrink-0" style="padding:6px 14px;min-width:92px" onclick="APLUS_flTog(${+m.id},this)">${m.folge?'Gefolgt':'Folgen'}</button>`}</div>`;
+    function draw(first){
+      const tab=(a,l)=>`<button class="${FL.art===a?'btn-gold':'btn-ghost'} flex-1 text-sm" onclick="APLUS_flArt('${a}')">${l}${FL.n[a]!=null?' · '+FL.n[a]:''}</button>`;
+      const body=FL.busy&&!FL.list.length?'<p class="text-sm text-muted py-6 text-center">Lädt …</p>'
+        :FL.err?'<p class="text-sm text-muted py-6 text-center">Die Liste konnte gerade nicht geladen werden.</p>'
+        :!FL.list.length?`<p class="text-sm text-muted py-6 text-center">${FL.q?'Niemand mit diesem Namen.':FL.art==='follower'?'Noch keine Follower.':'Folgt noch niemandem.'}</p>`
+        :FL.list.map(row).join('')+(FL.mehr?`<button class="btn-ghost w-full text-sm mt-2" onclick="APLUS_flMore()">Mehr laden</button>`:'');
+      const html=`<div class="flex items-center justify-between"><p class="font-semibold">${esc(FL.name?String(FL.name).split(' ')[0]:'Profil')}</p><button onclick="closeSheet()" class="text-muted text-xl" aria-label="Schließen"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>
+        <div class="flex gap-2">${tab('follower','Follower')}${tab('gefolgt','Gefolgt')}</div>
+        ${(FL.n[FL.art]||0)>12||FL.q?`<input id="flQ" class="input text-sm" type="search" placeholder="Name suchen …" value="${esc(FL.q)}" oninput="APLUS_flQ(this.value)">`:''}
+        <div id="flBody">${body}</div>`;
+      const box=document.querySelector('#psheet > div');
+      if(first||!box){ sheet(html); return; }
+      const f=document.activeElement&&document.activeElement.id==='flQ', pos=f?document.activeElement.selectionStart:0;
+      box.innerHTML=html; if(f){ const i=document.getElementById('flQ'); if(i){ i.focus(); try{ i.setSelectionRange(pos,pos); }catch(e){} } }
+    }
+    let qt=0;
+    window.APLUS_flArt=a=>{ if(FL.art===a) return; Object.assign(FL,{art:a,q:'',off:0,list:[],mehr:false}); draw(); load(); };
+    window.APLUS_flQ=v=>{ FL.q=String(v||'').slice(0,40); clearTimeout(qt); qt=setTimeout(()=>{ FL.off=0; load(); },250); };
+    window.APLUS_flMore=()=>load(true);
+    window.APLUS_flTog=async(id,b)=>{ b.disabled=true; let r=null; try{ r=await rpc('folgen_umschalten',{p_member:id}); }catch(e){} b.disabled=false;
+      if(!r||!r.ok){ toastMsg&&toastMsg('Hat nicht geklappt. Versuch es gleich nochmal.'); return; }
+      const m=FL.list.find(x=>+x.id===+id); if(m) m.folge=!!r.folge;
+      if(S.member&&ME){ ME.following=Math.max(0,(+ME.following||0)+(r.folge?1:-1)); if(FL.mid===S.member.id) FL.n.gefolgt=Math.max(0,(+FL.n.gefolgt||0)+(r.folge?1:-1)); }
+      S.flDirty=1; draw(); };
+    const _cs=closeSheet; closeSheet=function(){ const r=_cs.apply(this,arguments); if(S.flDirty){ S.flDirty=0; if(route()==='mitglied'){ S.mp=null; } try{ render(); }catch(e){} } return r; };
+  })();
+
+  /* ---------- r26: Fremde Profile ohne Punkte- und Streak-Karte (Streak steht schon am Profilbild) ---------- */
+  try{ if(typeof mpStats==='function') mpStats=function(){ return ''; }; }catch(e){}
 
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
