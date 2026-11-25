@@ -343,7 +343,7 @@ const NAV = [
   ['dashboard','Dashboard','dash'],
   ['mitteilungen','KI-Mitteilungen','spark', ()=>D.ai.filter(a=>a.st==='neu').length],
   ['Geschäft'],
-  ['auftraggeber','Auftraggeber','users', ()=>D.jobs.filter(j=>j.status==='anfrage'||(j.status==='entwurf'&&j.client_note)||(j.status==='live'&&j.rechnung_offen)).length],
+  ['auftraggeber','Auftraggeber','users', ()=>D.jobs.filter(j=>j.status==='anfrage'||(j.status==='entwurf'&&j.client_note)||(j.status==='live'&&j.rechnung_offen)||(j.status==='live'&&j.aenderung)).length],
   ['rechnungen','Rechnungen','invoice', ()=>D.invoices.filter(i=>i.st==='überfällig').length],
   ['laufband','Laufband & Angebote','ticker'],
   ['anfragen','Anfragen & Warteliste','inbox', ()=>D.requests.filter(r=>r.st==='neu').length],
@@ -413,6 +413,7 @@ function stellenBlock(){
     ${j.client_note&&j.status==='entwurf'?`<p style="margin-top:10px;border:1px solid var(--gold);border-radius:10px;padding:10px 12px"><b class="gold">Änderungswunsch vom Auftraggeber:</b><br><span style="white-space:pre-wrap">${esc(j.client_note)}</span></p>`:''}
     ${j.status==='freigabe'?`<p class="gold" style="font-size:12.5px;margin-top:8px">Wartet darauf, dass der Auftraggeber die Anzeige im Portal prüft und veröffentlicht.</p>`:''}
     ${j.rechnung_offen&&j.status==='live'?`<p class="gold" style="font-size:12.5px;margin-top:8px">Vom Auftraggeber selbst veröffentlicht · Rechnung noch offen</p>`:''}
+    ${j.aenderung&&j.status==='live'?jobDiff(j):''}
     ${j.status==='anfrage'?`${j.beschreibung?`<p style="margin-top:10px"><span class="pill p-gold" style="margin-right:6px">automatisch zusammengefasst</span>${esc(j.beschreibung)}</p><div class="row" style="margin-top:8px;gap:6px">${[j.provision,j.region,j.modell,j.umfang,j.auftragsdauer].filter(Boolean).map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div>`:''}
       <details style="margin-top:10px"><summary class="muted" style="cursor:pointer;font-size:13px">Original-Anfrage</summary><p style="margin-top:6px;white-space:pre-wrap;background:var(--bg2);border-radius:10px;padding:10px 12px;max-height:160px;overflow:auto">${esc(j.anfrage_text)||'<span class="muted">Kein Text</span>'}</p></details>`
       :`<p style="margin-top:10px">${esc(j.beschreibung)}</p><div class="row" style="margin-top:8px;gap:6px">${[j.provision,j.region,j.modell,j.umfang,j.auftragsdauer].filter(Boolean).map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div>`}
@@ -563,6 +564,7 @@ function auftraggeber(){
   ${D.jobs.some(j=>j.status==='anfrage')?`<div class="card" style="border-color:var(--gold);margin-bottom:14px;cursor:pointer" onclick="jobTab='anfrage';render();document.getElementById('jobsec').scrollIntoView({behavior:'smooth'})"><b class="gold">${D.jobs.filter(j=>j.status==='anfrage').length} Stellenangebot(e) warten auf deine Prüfung</b> <span class="muted">· hier klicken ↓</span></div>`:''}
   ${D.jobs.some(j=>j.status==='entwurf'&&j.client_note)?`<div class="card" style="border-color:var(--gold);margin-bottom:14px;cursor:pointer" onclick="jobTab='entwurf';render();document.getElementById('jobsec').scrollIntoView({behavior:'smooth'})"><b class="gold">${D.jobs.filter(j=>j.status==='entwurf'&&j.client_note).length} Änderungswunsch/-wünsche von Auftraggebern</b> <span class="muted">· hier klicken ↓</span></div>`:''}
   ${D.jobs.some(j=>j.status==='live'&&j.rechnung_offen)?`<div class="card" style="border-color:var(--gold);margin-bottom:14px;cursor:pointer" onclick="jobTab='live';render();document.getElementById('jobsec').scrollIntoView({behavior:'smooth'})"><b class="gold">${D.jobs.filter(j=>j.status==='live'&&j.rechnung_offen).length} Job(s) vom Auftraggeber veröffentlicht</b> <span class="muted">· Rechnung erstellen ↓</span></div>`:''}
+  ${D.jobs.some(j=>j.status==='live'&&j.aenderung)?`<div class="card" style="border-color:var(--gold);margin-bottom:14px;cursor:pointer" onclick="jobTab='live';render();document.getElementById('jobsec').scrollIntoView({behavior:'smooth'})"><b class="gold">${D.jobs.filter(j=>j.status==='live'&&j.aenderung).length} Änderung(en) an Live-Jobs warten auf deine Prüfung</b> <span class="muted">· ansehen ↓</span></div>`:''}
   <div class="grid g4" style="margin-bottom:16px">
     ${kpi('Auftraggeber', D.clients.filter(c=>c.status==='aktiv').length, D.clients.length+' gesamt')}
     ${kpi('Jobs online', live.length, D.jobs.filter(j=>j.status==='anfrage').length+' warten auf Prüfung')}
@@ -645,10 +647,32 @@ async function clReactivate(id){
   const patch={status:'aktiv',gekuendigt_am:null}; await q(`clients?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(clById(id),patch); render(); toast('Wieder aktiv');
 }
 // Beim Veröffentlichen: Gebühr als Rechnung anbieten
-async function jobInvoice(id){ const j=D.jobs.find(x=>x.id===id); if(!j) return; const n=D.invoices.length; await offerJobInvoice(j); if(D.invoices.length>n){ await setJob(id,{rechnung_offen:false}); } else render(); }
+async function jobInvoice(id){ const j=D.jobs.find(x=>x.id===id); if(!j) return toast('Job nicht gefunden – bitte Seite neu laden'); const n=D.invoices.length;
+  try{ await offerJobInvoice(j); }catch(e){ return; }
+  if(D.invoices.length>n){ await setJob(id,{rechnung_offen:false}); } else if(!$('iCust')) render(); }
+// Gebühr 0 € oder kein Kundenkonto: Rechnungsformular vorausgefüllt öffnen statt still abzubrechen
+function jobInvoiceManual(job,c){
+  newInvoice(c?c.id:null);
+  const item=`Stellenanzeige „${job.titel||'Stellenangebot'}“${job.top?' (Top-Job)':''}`, it=$('iItem');
+  if(it){ const o=document.createElement('option'); o.textContent=item; o.dataset.p=''; it.prepend(o); it.value=item; }
+  if(!c && $('iCust')){ $('iCust').value=job.firma||''; $('iMail').value=job.kontakt_email||''; }
+  if($('iNet')) $('iNet').value='';
+  D._invJob=job.id;
+  toast(c?'Für diesen Auftraggeber ist die Job-Gebühr 0 € – trag den Betrag selbst ein':'Bitte Betrag eintragen');
+}
+function jobDiff(j){
+  const L={titel:'Titel',rolle:'Gesucht',branche:'Branche',produkt:'Produkt',ticket:'Preis des Produkts',provision:'Provision',fixum:'Fixum',modell:'Arbeitsmodell',region:'Region',umfang:'Umfang',start_text:'Start',auftragsdauer:'Dauer',beschreibung:'Beschreibung',anforderungen:'Das sollte die Person mitbringen'};
+  const rows=Object.entries(j.aenderung||{}).map(([k,v])=>`<div style="margin-top:8px"><b style="font-size:12.5px">${L[k]||esc(k)}</b><div class="grid g2" style="gap:8px;margin-top:4px;font-size:13px"><div style="background:var(--bg2);border-radius:8px;padding:8px 10px;white-space:pre-wrap"><span class="muted" style="font-size:11px">Aktuell online</span><br>${esc(j[k]||'–')}</div><div style="border:1px solid var(--gold);border-radius:8px;padding:8px 10px;white-space:pre-wrap"><span class="gold" style="font-size:11px">Neu</span><br>${esc(v||'– (leer)')}</div></div></div>`).join('');
+  return `<div style="margin-top:10px;border:1px solid var(--gold);border-radius:12px;padding:12px"><b class="gold">Änderung vom Auftraggeber · ${fmtAt(j.aenderung_at)}</b><p class="muted" style="font-size:12px;margin-top:2px">Bis du entscheidest, bleibt der aktuelle Text online.</p>${rows}
+    <div class="row" style="margin-top:10px;gap:8px"><button class="btn gold-b sm" onclick="jobAend(${j.id},true,this)">Übernehmen</button><button class="btn sm red" onclick="jobAend(${j.id},false,this)">Ablehnen</button></div></div>`;
+}
+async function jobAend(id,ok,b){ b.disabled=true;
+  try{ const r=await q('rpc/job_aenderung_entscheiden',{method:'POST',body:{p_id:id,p_ok:ok}}); const j=D.jobs.find(x=>x.id===id); if(j&&r) Object.assign(j,r); render(); toast(ok?'Übernommen – ist jetzt online':'Abgelehnt – der alte Text bleibt'); }
+  catch(e){ b.disabled=false; } }
 async function offerJobInvoice(job){
-  const c=clById(job.client_id); if(!c) return;
-  const fee=feeOf(c,'fee_job') + (job.top ? feeOf(c,'fee_top') : 0); if(!(fee>0)) return;
+  const c=clById(job.client_id);
+  const fee=c ? feeOf(c,'fee_job') + (job.top ? feeOf(c,'fee_top') : 0) : 0;
+  if(!c || !(fee>0)){ jobInvoiceManual(job,c); return; }
   if(!confirm(`Rechnung über ${eur(fee)} netto an ${c.firma} für diesen Job erstellen?`)) return;
   const [r]=await q('invoices',{method:'POST',prefer:'return=representation',body:{no:nextNo(),customer:c.firma,email:c.email||null,item:`Stellenanzeige „${job.titel}“${job.top?' (Top-Job)':''}`,net:fee,vat:D.settings.vat,status:'offen',client_id:c.id}});
   D.invoices.unshift({id:r.id,no:r.no,date:r.created_at.slice(0,10),cust:r.customer,email:r.email||'',item:r.item,net:+r.net,vat:+r.vat,st:r.status,client_id:r.client_id});
@@ -748,6 +772,7 @@ async function invDel(id){ const i=D.invoices.find(x=>x.id===id); if(!i) return;
 async function invSet(id,st){ await q(`invoices?id=eq.${id}`,{method:'PATCH',body:{status:st}}); D.invoices.find(i=>i.id===id).st=st; render(); toast('Gespeichert'); }
 function nextNo(){ const y=new Date().getFullYear(); const n=Math.max(0,...D.invoices.filter(i=>i.no.startsWith('CH-'+y)).map(i=>+i.no.split('-')[2]||0))+1; return `CH-${y}-${String(n).padStart(4,'0')}`; }
 function newInvoice(cid){
+  D._invJob=null;
   const cl = cid ? clById(cid) : null;
   if(location.hash.includes('?neu')) history.replaceState(null,'','#rechnungen');
   openModal(`<h3 style="font-size:18px">Neue Rechnung · ${nextNo()}</h3><input type="hidden" id="iClient" value="${cl?cl.id:''}">
@@ -767,7 +792,7 @@ async function saveInvoice(b){
   try{
     const [r]=await q('invoices',{method:'POST',prefer:'return=representation',body:{no:nextNo(),customer:c,email:$('iMail').value.trim()||null,item:$('iItem').value,net:n,vat:D.settings.vat,status:'offen',...( $('iClient').value ? {client_id:+$('iClient').value} : {} )}});
     D.invoices.unshift({id:r.id,no:r.no,date:r.created_at.slice(0,10),cust:r.customer,email:r.email||'',item:r.item,net:+r.net,vat:+r.vat,st:r.status,client_id:r.client_id??null});
-    closeModal(); render(); toast('Rechnung erstellt');
+    closeModal(); if(D._invJob){ const jid=D._invJob; D._invJob=null; try{ await setJob(jid,{rechnung_offen:false}); }catch(x){} } render(); toast('Rechnung erstellt');
   }catch(e){ b.disabled=false; }
 }
 function showInvoice(id){
@@ -1029,14 +1054,8 @@ async function mbProofSet(pid,patch,msg){ try{ await q(`member_proofs?id=eq.${pi
 
 /* ===== Moderation ===== */
 function moderation(){
-  return `<h1 class="h1">Prüfen & Meldungen</h1><p class="sub">Die KI prüft alles vor. Du gibst nur noch frei oder lehnst ab.</p>
-  ${meldCard()}
-  <div class="grid g2">
-    <div class="card"><h3>Zur Prüfung (${D.queue.length})</h3>${D.queue.map(x=>`<div class="item"><div class="ico">${ic(x.kind==='Auftraggeber'?'users':x.kind==='Video'?'spark':'shield',16)}</div><div style="flex:1"><span class="pill">${x.kind}</span><div style="margin-top:4px"><b>${esc(x.title)}</b></div><div class="muted" style="font-size:12px">KI: ${esc(x.ai)}</div>
-      <div class="row" style="margin-top:8px"><button class="btn sm gold-b" onclick="qDone(${x.id},'Freigegeben')">Freigeben</button><button class="btn sm red" onclick="qDone(${x.id},'Abgelehnt')">Ablehnen</button></div></div></div>`).join('')||'<div class="empty">Noch nichts zu prüfen. Inhalte erscheinen hier, sobald Member in der App posten.</div>'}</div>
-    <div class="card"><h3>Meldungen (${D.reports.length})</h3>${D.reports.map(r=>`<div class="item"><div class="ico" style="color:var(--bad);border-color:#F3C9C4">${ic('bell',16)}</div><div style="flex:1"><b>${esc(r.title)}</b><div class="muted" style="font-size:12px">${esc(r.why)}</div>
-      <div class="row" style="margin-top:8px"><button class="btn sm" onclick="rDone(${r.id},'Ausgeblendet')">Ausblenden</button><button class="btn sm" onclick="rDone(${r.id},'Mahnung verschickt')">Mahnung</button><button class="btn sm" onclick="rDone(${r.id},'Erledigt')">Ignorieren</button></div></div></div>`).join('')||'<div class="empty">Keine Meldungen. Gemeldete Beiträge landen hier, sobald die App live ist.</div>'}</div>
-  </div>`;
+  return `<h1 class="h1">Prüfen & Meldungen</h1><p class="sub">Alles, was Mitglieder in der App melden. Du entfernst den Inhalt oder ignorierst die Meldung.</p>
+  ${meldCard()}`;
 }
 function qDone(id,t){ D.queue=D.queue.filter(x=>x.id!==id); render(); toast(t); }
 function rDone(id,t){ D.reports=D.reports.filter(x=>x.id!==id); render(); toast(t); }
@@ -1494,7 +1513,10 @@ async function zProofApprove(pid,btn){
 
 /* ===== Echte Meldungen aus der App (Nachrichten, Beiträge, Kommentare, Profile) ===== */
 async function meldLoad(){ D._meldT=Date.now(); try{ D.meld=(await q('rpc/meldungen_liste',{method:'POST',body:{}}))||[]; }catch(e){ D.meld=[]; } if((location.hash||'').includes('moderation')) render(); }
-const MELD_TYP={nachricht:'Chat-Nachricht',beitrag:'Beitrag',kommentar:'Kommentar',member:'Profil',forum:'Forum-Antwort',forumfrage:'Forum-Frage',markt:'Marktplatz'};
+const MELD_TYP={nachricht:'Chat-Nachricht',beitrag:'Beitrag',kommentar:'Kommentar',member:'Profil',forum:'Forum-Antwort',forumfrage:'Forum-Frage',markt:'Marktplatz',story:'Status',battle:'Battle-Antwort'};
+const meldPrev=x=>{ const h=x.inhalt||{}; if(!h.media) return ''; const u=esc(h.media), v=h.media_typ==='video'||/\.(mp4|mov|webm|m3u8)(\?|$)/i.test(h.media);
+  return v?`<video src="${u}" ${h.thumb?`poster="${esc(h.thumb)}"`:''} controls preload="none" style="display:block;max-width:260px;max-height:320px;border-radius:10px;margin-top:8px;background:#000"></video>`
+    :`<a href="${u}" target="_blank" rel="noopener"><img src="${u}" style="display:block;max-width:260px;max-height:260px;border-radius:10px;margin-top:8px"></a>`; };
 async function meldMedia(path,typ,b){ b.disabled=true; try{ const r=await fetch(`${SB_URL}/storage/v1/object/sign/chat/${path}`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SESSION.access_token,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:600})}); const j=await r.json(); const u=j.signedURL||j.signedUrl; if(!u) throw 0;
   const url=/^https?:/.test(u)?u:`${SB_URL}/storage/v1${u.startsWith('/')?'':'/'}${u}`; const box=b.parentElement; b.remove();
   box.insertAdjacentHTML('beforeend', typ==='bild'?`<img src="${url}" style="max-width:260px;max-height:260px;border-radius:10px;display:block;margin-top:6px">`:typ==='video'?`<video src="${url}" controls style="max-width:300px;border-radius:10px;display:block;margin-top:6px"></video>`:`<audio src="${url}" controls style="display:block;margin-top:6px"></audio>`); }catch(e){ b.disabled=false; toast('Medium konnte nicht geladen werden'); } }
@@ -1504,11 +1526,11 @@ function meldCard(){
   const l=(D.meld||[]).filter(x=>x.status==='offen');
   return `<div class="card" style="margin-bottom:16px"><div class="row between"><h3 style="margin:0">Meldungen aus der App (${l.length})</h3><button class="btn sm" onclick="D.meld=undefined;render()">Aktualisieren</button></div>
     ${D.meld===null?'<p class="muted">Lade …</p>':l.length?l.map(x=>`<div class="item"><div class="ico" style="color:var(--bad);border-color:#F3C9C4">${ic('bell',16)}</div><div style="flex:1">
-      <div class="row" style="gap:6px"><span class="pill">${MELD_TYP[x.typ]||x.typ}</span><span class="muted" style="font-size:12px">${new Date(x.created_at).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})} · gemeldet von ${esc(x.melder||'–')}</span></div>
-      <div style="margin-top:6px"><b>${esc(x.inhalt&&x.inhalt.autor||'–')}:</b> ${esc((x.inhalt&&x.inhalt.text)||(x.inhalt&&x.inhalt.chat_pfad?'':'(ohne Text)')).slice(0,500)}${x.inhalt&&x.inhalt.chat_pfad?`<br><button class="btn sm" style="margin-top:6px" onclick="meldMedia('${esc(x.inhalt.chat_pfad)}','${x.inhalt.chat_typ}',this)">${({bild:'📷 Bild',video:'🎬 Video',audio:'🎤 Sprachnachricht'})[x.inhalt.chat_typ]||'Medium'} ansehen</button>`:''}${x.inhalt&&x.inhalt.verlauf&&x.inhalt.verlauf.length>1?`<details style="margin-top:6px"><summary class="muted" style="font-size:12px;cursor:pointer">Chatverlauf davor (${x.inhalt.verlauf.length})</summary>${x.inhalt.verlauf.map(v=>`<div style="font-size:12.5px;margin-top:3px"><b>${esc(String(v.von).split(' ')[0])}:</b> ${v.typ?({bild:'📷 Bild',video:'🎬 Video',audio:'🎤 Sprachnachricht'})[v.typ]:''} ${esc(v.text||'')}</div>`).join('')}</details>`:''}${x.inhalt&&x.inhalt.media?` · <a class="gold" href="${esc(x.inhalt.media)}" target="_blank" rel="noopener">Medium ↗</a>`:''}</div>
+      <div class="row" style="gap:6px"><span class="pill">${x.inhalt&&x.inhalt.media_typ==='video'?(x.typ==='story'?'Status-Video':'Video'):(MELD_TYP[x.typ]||x.typ)}</span><span class="muted" style="font-size:12px">${new Date(x.created_at).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})} · gemeldet von ${esc(x.melder||'–')}</span></div>
+      <div style="margin-top:6px"><b>${esc(x.inhalt&&x.inhalt.autor||'–')}:</b> ${esc((x.inhalt&&x.inhalt.text)||(x.inhalt&&x.inhalt.chat_pfad?'':'(ohne Text)')).slice(0,500)}${x.inhalt&&x.inhalt.chat_pfad?`<br><button class="btn sm" style="margin-top:6px" onclick="meldMedia('${esc(x.inhalt.chat_pfad)}','${x.inhalt.chat_typ}',this)">${({bild:'📷 Bild',video:'🎬 Video',audio:'🎤 Sprachnachricht'})[x.inhalt.chat_typ]||'Medium'} ansehen</button>`:''}${x.inhalt&&x.inhalt.verlauf&&x.inhalt.verlauf.length>1?`<details style="margin-top:6px"><summary class="muted" style="font-size:12px;cursor:pointer">Chatverlauf davor (${x.inhalt.verlauf.length})</summary>${x.inhalt.verlauf.map(v=>`<div style="font-size:12.5px;margin-top:3px"><b>${esc(String(v.von).split(' ')[0])}:</b> ${v.typ?({bild:'📷 Bild',video:'🎬 Video',audio:'🎤 Sprachnachricht'})[v.typ]:''} ${esc(v.text||'')}</div>`).join('')}</details>`:''}</div>${meldPrev(x)}
       ${x.grund?`<div class="muted" style="font-size:12.5px;margin-top:4px">Grund: ${esc(x.grund)}</div>`:''}
       <div class="row" style="margin-top:8px"><button class="btn sm red" onclick="meldDo(${x.id},true,this)">${x.typ==='member'?'Als erledigt markieren':'Entfernen'}</button>${x.inhalt&&x.inhalt.autor_id?`<button class="btn sm" onclick="mbSel=${x.inhalt.autor_id};location.hash='member'">Profil von ${esc(String(x.inhalt.autor).split(' ')[0])}</button>`:''}<button class="btn sm" onclick="meldDo(${x.id},false,this)">Ignorieren</button></div></div></div>`).join('')
-      :'<div class="empty">Keine offenen Meldungen. Mitglieder können Nachrichten, Beiträge und Profile in der App melden.</div>'}</div>`;
+      :'<div class="empty">Keine offenen Meldungen. Mitglieder können Beiträge, Videos, Status, Kommentare, Nachrichten und Profile in der App melden.</div>'}</div>`;
 }
 async function meldDo(id,weg,b){ b.disabled=true; try{ await q('rpc/meldung_bearbeiten',{method:'POST',body:{p_id:id,p_entfernen:weg}}); toast(weg?'Entfernt':'Ignoriert'); D.meld=undefined; render(); }catch(e){ b.disabled=false; } }
 

@@ -597,16 +597,17 @@
       const auch=x=>STUFEN.filter(([k])=>k!==T&&+x[k]>0).map(([,n])=>n).join(', ');
       const row=x=>`<tr><td style="min-width:200px"><input class="in" id="bl-t${x.id}" maxlength="40" value="${esc(x.text)}"><div class="muted" style="font-size:11px;margin-top:3px">${auch(x)?'Auch bei: '+auch(x)+' (Text und Punkte gelten überall)':'Nur bei '+name}</div></td>
         <td><input class="in" id="bl-p${x.id}" type="number" min="0" max="10000" value="${+x.punkte||0}"></td>
+        <td><select class="in" id="bl-ab${x.id}" title="Gewinnt ein Basic-Mitglied, ist es 24 Stunden lang Plus bzw. Premium">${[['','–'],['plus','1 Tag Plus'],['premium','1 Tag Premium']].map(([k,n])=>`<option value="${k}" ${(x.abo_tag||'')===k?'selected':''}>${n}</option>`).join('')}</select></td>
         <td><input class="in" id="bl-w${x.id}" type="number" min="1" max="1000" value="${+x[T]}"></td>
         <td style="white-space:nowrap"><b>${x.aktiv&&sum?Math.round(+x[T]/sum*1000)/10:0} %</b></td>
         <td style="text-align:center"><input type="checkbox" id="bl-a${x.id}" ${x.aktiv?'checked':''}></td>
         <td style="white-space:nowrap"><button class="btn sm" onclick="ZP.blSave(${x.id},this)">Speichern</button> <button class="btn sm red" onclick="ZP.blRaus(${x.id},this)">Entfernen</button></td></tr>`;
       return top+`<div class="card"><h3>Gewinne für ${name}</h3>
         <p class="muted" style="font-size:12.5px">Das Gewicht bestimmt, wie oft ein Gewinn fällt, die Chance steht daneben in %. Gewinne mit Punkten werden automatisch gutgeschrieben, alles andere landet unter „Läufe“ zum Einlösen. „Entfernen“ nimmt den Gewinn nur bei ${name} raus.${T==='gw_premium'?' Day One zählt in den Premium-Monaten als Premium.':T==='gw_plus'?' Day One zählt nach den Premium-Monaten als Plus.':''}</p>
-        ${drin.length?`<div class="bl-wrap"><table class="bl-t"><thead><tr><th>Gewinn</th><th>Punkte</th><th>Gewicht</th><th>Chance</th><th>Aktiv</th><th></th></tr></thead><tbody>${drin.map(row).join('')}</tbody></table></div>`:`<div class="empty">Noch kein Gewinn für ${name}. ${name}-Mitglieder bekommen dann keinen Bonus-Lauf.</div>`}</div>
+        ${drin.length?`<div class="bl-wrap"><table class="bl-t"><thead><tr><th>Gewinn</th><th>Punkte</th><th>Abo-Tag</th><th>Gewicht</th><th>Chance</th><th>Aktiv</th><th></th></tr></thead><tbody>${drin.map(row).join('')}</tbody></table></div>`:`<div class="empty">Noch kein Gewinn für ${name}. ${name}-Mitglieder bekommen dann keinen Bonus-Lauf.</div>`}</div>
       <div class="grid g2" style="margin-top:16px">
         <div class="card"><h3>Neuer Gewinn</h3>
-          <div class="row" style="gap:8px;align-items:flex-end"><label class="f" style="flex:3">Gewinn<input class="in" id="bl-t0" maxlength="40" placeholder="z. B. +50 Punkte"></label><label class="f" style="flex:1">Punkte<input class="in" id="bl-p0" type="number" min="0" value="0"></label><label class="f" style="flex:1">Gewicht<input class="in" id="bl-w0" type="number" min="1" value="10"></label></div>
+          <div class="row" style="gap:8px;align-items:flex-end"><label class="f" style="flex:3">Gewinn<input class="in" id="bl-t0" maxlength="40" placeholder="z. B. +50 Punkte"></label><label class="f" style="flex:1">Punkte<input class="in" id="bl-p0" type="number" min="0" value="0"></label><label class="f" style="flex:1.4">Abo-Tag<select class="in" id="bl-ab0"><option value="">–</option><option value="plus">1 Tag Plus</option><option value="premium">1 Tag Premium</option></select></label><label class="f" style="flex:1">Gewicht<input class="in" id="bl-w0" type="number" min="1" value="10"></label></div>
           <div class="row" style="gap:14px;margin-top:10px;flex-wrap:wrap">${STUFEN.map(([k,n])=>`<label class="bl-ck"><input type="checkbox" id="bl-n-${k}" ${k===T?'checked':''}> ${n}</label>`).join('')}</div>
           <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn gold-b" onclick="ZP.blSave(0,this)">Hinzufügen</button></div></div>
         <div class="card"><h3>Vorhandenen Gewinn übernehmen</h3>
@@ -614,7 +615,7 @@
     };
     ZP.blTab = t => { BL.tab=t; render(); };
     const blSend = async (x,patch,b,msg) => { if(b) b.disabled=true; const n={...x,...patch};
-      try{ const j=await RPC('bonuslauf_gewinn_speichern',{p_id:x.id||null,p_text:n.text,p_punkte:+n.punkte||0,p_aktiv:n.aktiv!==false,p_gw_free:+n.gw_free||0,p_gw_plus:+n.gw_plus||0,p_gw_premium:+n.gw_premium||0});
+      try{ const j=await RPC('bonuslauf_gewinn_speichern',{p_id:x.id||null,p_text:n.text,p_punkte:+n.punkte||0,p_aktiv:n.aktiv!==false,p_gw_free:+n.gw_free||0,p_gw_plus:+n.gw_plus||0,p_gw_premium:+n.gw_premium||0,p_abo_tag:n.abo_tag||null});
         if(!j||!j.ok) throw 0; toast(msg); await reload(); }catch(e){ if(b) b.disabled=false; toast('Speichern hat nicht geklappt'); } };
     const blFind = id => ((D.grz||{}).gewinne||[]).find(x=>x.id===id);
     ZP.blFil = f => { BL.filter=f; render(); };
@@ -622,8 +623,8 @@
       const w=Math.max(1,Math.round(+v('bl-w'+id)||10)), pk=Math.max(0,Math.round(+v('bl-p'+id)||0));
       if(!id){ const st={}; STUFEN.forEach(([k])=>{ st[k]=$('bl-n-'+k)&&$('bl-n-'+k).checked?w:0; });
         if(!STUFEN.some(([k])=>st[k]>0)) return toast('Hak mindestens eine Stufe an');
-        return blSend({id:0,text:t,punkte:pk,aktiv:true,...st},{},b,'Gewinn hinzugefügt'); }
-      const x=blFind(id); if(!x) return; blSend(x,{text:t,punkte:pk,aktiv:$('bl-a'+id).checked,[BL.tab]:w},b,'Gespeichert'); };
+        return blSend({id:0,text:t,punkte:pk,aktiv:true,abo_tag:v('bl-ab0')||null,...st},{},b,'Gewinn hinzugefügt'); }
+      const x=blFind(id); if(!x) return; blSend(x,{text:t,punkte:pk,aktiv:$('bl-a'+id).checked,abo_tag:v('bl-ab'+id)||null,[BL.tab]:w},b,'Gespeichert'); };
     ZP.blRaus = (id,b) => { const x=blFind(id); if(!x) return; const n=(STUFEN.find(s=>s[0]===BL.tab)||[])[1];
       if(!confirm(`„${x.text}“ bei ${n} rausnehmen? In den anderen Stufen bleibt er.`)) return;
       blSend(x,{[BL.tab]:0},b,`Bei ${n} entfernt`); };

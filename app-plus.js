@@ -1235,7 +1235,7 @@
       if(demo){ k=Math.floor(Math.random()*f.length); t=f[k].t; try{ localStorage.setItem('ch_gr_demo',grWeek()); }catch(e){} }
       else{ const j=await rpc('bonuslauf_starten',{p_art:art}).catch(()=>null);
         if(!j||!j.ok){ b.disabled=false; b.textContent='Lauf starten'; const g=j&&j.grund; alert(g==='gedreht'?'Den Lauf hast du schon gemacht.':g==='zu'?'Der Lauf ist gerade nicht offen.':'Das hat gerade nicht geklappt. Versuch es gleich nochmal.'); return; }
-        k=Math.max(0,f.findIndex(x=>x.id===j.id)); t=j.t; p=+j.punkte||0; }
+        k=Math.max(0,f.findIndex(x=>x.id===j.id)); t=j.t; p=+j.punkte||0; S.blJ=j; }
       S.blRun={art,f,k,t,p,i:0,done:false}; grRefresh();
       const n=f.length, steps=n*3+k, fast=55, slow=420; let s=0;
       const step=()=>{ if(!S.blRun) return; S.blRun.i=s%n; blPaint();
@@ -1245,7 +1245,7 @@
       function fertig(){
         if(!S.blRun) return; S.blRun.done=true;
         if(!demo&&S.gr){ if(art==='willkommen'){ S.gr.w_offen=false; S.gr.w_gedreht=true; S.gr.w_gewinn=t; } else { S.gr.gedreht=true; S.gr.gewinn=t; } }
-        grRefresh(); APLUS_konfetti(false);
+        grRefresh(); APLUS_konfetti(false); try{ if(!demo&&window.APLUS_blNach) APLUS_blNach(S.blJ,p); }catch(e){}
         if(p>0 && typeof ptLoad==='function') ptLoad();
         if(art==='willkommen' && typeof chLoad==='function') setTimeout(()=>chLoad(),400);
         setTimeout(()=>{ const c=$('grcard'); S.blRun=null; const nxt=wheelCard();
@@ -1575,7 +1575,146 @@
   /* ---------- r26: Fremde Profile ohne Punkte- und Streak-Karte (Streak steht schon am Profilbild) ---------- */
   try{ if(typeof mpStats==='function') mpStats=function(){ return ''; }; }catch(e){}
 
+  /* ---------- r27: Premium-Test (14 Tage), Angebot an Tag 15, eingefrorene Punkte bei Basic ---------- */
+  (function(){
+    const PR={plus:9.99,premium:19.99}, eur=v=>v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €', rab=v=>Math.round(v*0.75*100-0.5)/100;
+    const NATIVE_IOS=()=>!!window.CH_NATIVE_IOS;
+    const AB=()=>{ const m=S.member; if(!m||m.partner) return {phase:'aus'}; const now=Date.now(), tb=m.test_bis?Date.parse(m.test_bis):0, ab=m.angebot_bis?Date.parse(m.angebot_bis):0, tg=m.abo_tag_bis?Date.parse(m.abo_tag_bis):0;
+      if(tg>now) return {phase:'tag',bis:tg};
+      if((m.abo_test!==false)&&tb>now){ const rest=Math.ceil((tb-now)/864e5); return {phase:'test',rest,tag:Math.max(1,Math.min(14,15-rest))}; }
+      if(m.abo==='basic'&&ab>now) return {phase:'angebot',bis:ab};
+      if(m.abo==='basic') return {phase:'basic'}; return {phase:'abo'}; };
+    window.APLUS_AB=AB;
+    const cd=bis=>{ const t=Math.max(0,Math.floor((bis-Date.now())/1000)), h=Math.floor(t/3600), mi=Math.floor(t%3600/60), se=t%60; return [h,mi,se].map(x=>String(x).padStart(2,'0')).join(':'); };
+    setInterval(()=>document.querySelectorAll('[data-abcd]').forEach(e=>{ e.textContent=cd(+e.dataset.abcd); }),1000);
+    const st=document.createElement('style'); st.textContent=`
+      .ab-bar{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;font-size:13px;border-bottom:1px solid rgb(var(--line));text-align:center;flex-wrap:wrap}
+      .ab-test{background:linear-gradient(90deg,rgba(8,122,75,.10),rgba(217,180,90,.16))}
+      .ab-test b{color:#087A4B} .ab-dots{display:inline-flex;gap:3px;vertical-align:middle} .ab-dots i{width:7px;height:7px;border-radius:50%;background:rgb(var(--line))} .ab-dots i.on{background:#087A4B}
+      .ab-off{background:#0d0f12;color:#fff;border-bottom:2px solid #E0342B} .ab-off b{color:#FF4A3D} .ab-off .ab-cd{color:#FF4A3D} .ab-off button{background:#E0342B;color:#fff;border-radius:999px;padding:5px 14px;font-weight:700;font-size:12px}
+      .ab-sheet{width:100%;max-width:460px} .ab-cd{font-variant-numeric:tabular-nums;font-weight:800}
+      .ab-plan{border:1px solid rgb(var(--line));border-radius:16px;padding:14px;text-align:left;position:relative}
+      .ab-plan.top{border:2px solid #D9B45A;background:rgba(217,180,90,.07)}
+      .ab-tag{position:absolute;top:-10px;right:12px;background:#D9B45A;color:#111;font-size:11px;font-weight:800;border-radius:999px;padding:2px 9px}
+      .ab-was{text-decoration:line-through;color:rgb(var(--muted));font-size:13px;margin-right:6px}
+      .ab-loss{display:flex;gap:10px;align-items:center;border-radius:14px;padding:10px 12px;background:rgba(220,60,60,.08);border:1px solid rgba(220,60,60,.25);font-size:13px;text-align:left}
+      .ab-frz{background:rgb(var(--panel))} .ab-frz .ab-g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;filter:grayscale(1);opacity:.55}
+      .ab-frz .ab-g b{display:block;font-size:18px;line-height:1.2} .ab-frz .ab-g span{font-size:11px;color:rgb(var(--muted))}
+      .ab-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:rgb(var(--muted))}
+      body.ab-basic .bm-row{filter:grayscale(1);opacity:.45}`;
+    document.head.appendChild(st);
+    function bar(){
+      const a=AB();
+      if(a.phase==='test') return `<div class="ab-bar ab-test"><span><svg class="ci"><use href="#i-stern"/></svg> <b>Premium-Test</b> · Tag ${a.tag} von 14</span><span class="ab-dots">${Array.from({length:14},(_,i)=>`<i class="${i<a.tag?'on':''}"></i>`).join('')}</span><span class="text-muted">noch ${a.rest} ${a.rest===1?'Tag':'Tage'} alles frei</span></div>`;
+      if(a.phase==='tag') return `<div class="ab-bar ab-test"><span>🎉 <b>Gewonnen: 1 Tag ${S.member.abo==='plus'?'Plus':'Premium'}</b> · noch <span class="ab-cd" data-abcd="${a.bis}">${cd(a.bis)}</span></span></div>`;
+      if(a.phase==='angebot') return `<div class="ab-bar ab-off"><span>Vermisst du Premium? Jetzt wechseln mit <b>25 % Rabatt</b> für 1 Jahr. Angebot läuft ab in <span class="ab-cd" data-abcd="${a.bis}">${cd(a.bis)}</span></span><button onclick="APLUS_abOffer()">Sichern</button></div>`;
+      return '';
+    }
+    if(typeof shell==='function'){ const _sh=shell; shell=function(c){ if(S.member&&!S.abAt) setTimeout(()=>window.APLUS_abLoad&&APLUS_abLoad(false),0); const h=_sh.apply(this,arguments); try{ document.body.classList.toggle('ab-basic',['basic','angebot'].includes(AB().phase)); }catch(e){} const b=bar(); return b?h.replace('<main>',b+'<main>'):h; }; }
+    const planCard=(k,top)=>{ const p=PR[k], n=rab(p); return `<div class="ab-plan ${top?'top':''}">${top?'<span class="ab-tag">Beliebt</span>':''}
+      <p class="font-semibold">${k==='plus'?'Plus':'Premium'}</p>
+      <p class="mt-1"><span class="ab-was">${eur(p)}</span><span class="font-serif" style="font-size:26px">${eur(n)}</span><span class="text-sm text-muted"> / Monat</span></p>
+      <p class="text-xs text-muted mt-1">${k==='plus'?'5 Bewerbungen pro Monat, Punkte, Medaillen, Motivations-Calls, Gewinnspiele':'10 Bewerbungen pro Monat, alles aus Plus + Partner-Vorträge und Offline-Event'}</p>
+      ${NATIVE_IOS()?'':`<button class="${top?'btn-gold':'btn-ghost'} w-full mt-3" style="padding:10px" onclick="APLUS_abKauf('${k}')">${k==='plus'?'Plus':'Premium'} sichern</button>`}</div>`; };
+    window.APLUS_abOffer=()=>{
+      const a=AB(), bis=a.bis||Date.now()+864e5, p={punkte:(S.pt&&+S.pt.punkte)||(S.member&&S.member.ab_punkte)||0}, med=(ME.medals||[]).reduce((x,m)=>x+(+m[1]||0),0)||(S.member&&S.member.ab_med)||0, abz=(ME.badges||[]).filter(b=>b!=='Day One'&&b!=='Partner').length;
+      const loss=[(+p.punkte||0)?`<b>${(+p.punkte).toLocaleString('de-DE')} Punkte</b>`:'',med?`<b>${med} ${med===1?'Medaille':'Medaillen'}</b>`:'',abz?`<b>${abz} ${abz===1?'Abzeichen':'Abzeichen'}</b>`:''].filter(Boolean);
+      const old=document.getElementById('abMd'); if(old) old.remove();
+      const d=document.createElement('div'); d.id='abMd'; d.className='fixed inset-0 flex justify-center ks-wrap'; d.style.cssText='z-index:320;background:rgba(4,8,14,.62);backdrop-filter:blur(3px)';
+      d.onclick=e=>{ if(e.target===d) d.remove(); };
+      d.innerHTML=`<div class="bg-panel ks-sheet ab-sheet"><div class="flex justify-end -mb-2"><button class="text-muted text-xl" onclick="document.getElementById('abMd').remove()" aria-label="Schließen"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>
+        <div class="text-center space-y-2"><p class="text-xs uppercase tracking-wider text-gold font-semibold">Nur für dich · einmalig</p>
+          <p class="font-serif text-2xl leading-tight">Vermisst du Premium?</p>
+          <p class="text-sm text-muted">Bleib dabei und spar <b style="color:rgb(var(--fg))">25 % im ersten Jahr</b>. Angebot endet in <span class="ab-cd" style="color:#C0392B" data-abcd="${bis}">${cd(bis)}</span></p></div>
+        ${loss.length?`<div class="ab-loss mt-4"><span style="font-size:20px;color:#C0392B"><svg class="ci"><use href="#i-sanduhr"/></svg></span><span>Deine ${loss.join(', ').replace(/, ([^,]*)$/,' und $1')} bleiben eingefroren, wenn du nicht wechselst.</span></div>`:''}
+        <div class="grid gap-3 mt-4">${planCard('premium',true)}${planCard('plus',false)}</div>
+        <p class="text-[11px] text-muted mt-3 text-center">${NATIVE_IOS()?'Das Angebot kannst du auf getclosinghub.com einlösen. ':''}Danach regulärer Preis, monatlich kündbar. Bezahlung sicher über Stripe.</p>
+        <button class="text-sm text-muted w-full mt-2" onclick="document.getElementById('abMd').remove()">Nein danke, ich bleibe bei Basic</button></div>`;
+      document.body.appendChild(d); };
+    if(typeof basicBanner==='function'){ basicBanner=function(){ if(!isBasic()||S.bbOff||AB().phase==='angebot') return '';
+      return `<div class="card p-3 flex items-center gap-3" style="border-color:rgba(8,122,75,.45);background:rgba(8,122,75,.06)"><span style="font-size:20px"><svg class="ci"><use href="#i-entsperrt"/></svg></span><p class="text-sm flex-1">Du nutzt <b>Basic</b>. Mit Premium genießt du Motivations-Calls, Partner-Vorträge, Offline-Event, Bewerbungen uvm.</p><button class="btn-gold text-xs whitespace-nowrap" style="padding:6px 12px" onclick="${AB().phase==='angebot'?'APLUS_abOffer()':'plusModal()'}">Ansehen</button><button class="text-muted" onclick="S.bbOff=1;render()" aria-label="Ausblenden"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>`; }; }
+    try{ if(Array.isArray(PLUS_LIST)) PLUS_LIST.splice(0,PLUS_LIST.length,'Auf Jobs bewerben und Nachweise hochladen','Punkte, Medaillen und Abzeichen sammeln','Motivations-Calls (Premium: auch Partner-Vorträge)','Gewinnspiele und Glücksrad-Gewinne','Member-Rabatte unserer Partner'); }catch(e){}
+
+    /* Abo-Stand vom Server (Test, Angebot, eingefroren, Glücksrad-Tag) */
+    window.APLUS_abLoad=async force=>{ if(!S.member||S.abBusy) return; if(!force&&S.abAt&&Date.now()-S.abAt<300000) return; S.abBusy=1;
+      let r=null; try{ r=await rpc('abo_status',{}); }catch(e){} S.abBusy=0; S.abAt=Date.now(); if(!r||!r.ok||!S.member) return;
+      const vor=JSON.stringify([S.member.abo,S.member.test_bis,S.member.angebot_bis,S.member.eingefroren,S.member.abo_tag_bis]);
+      Object.assign(S.member,{ab_punkte:+r.punkte||0,ab_med:+r.medaillen||0,abo:r.abo,abo_test:!!r.abo_test,test_bis:r.test_bis,angebot_bis:r.angebot_bis,eingefroren:!!r.eingefroren,abo_tag_bis:r.abo_tag_bis,test_bewerbung:!!r.test_bewerbung});
+      if(JSON.stringify([S.member.abo,S.member.test_bis,S.member.angebot_bis,S.member.eingefroren,S.member.abo_tag_bis])!==vor){ S.pt=null; try{ render(); }catch(e){} } };
+    setInterval(()=>{ if(S.member&&!document.hidden){ const a=AB(); if((a.bis&&a.bis<Date.now())||(S.member.test_bis&&Date.parse(S.member.test_bis)<Date.now()&&S.member.abo_test)) APLUS_abLoad(true); else APLUS_abLoad(false); } },20000);
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) APLUS_abLoad(false); });
+
+    /* Basic darf jetzt: posten, Status, Chats starten/antworten, Bio */
+    try{ ['post_neu','story_neu','story_medaille','nachricht_senden','chat_starten','partner_nachricht'].forEach(k=>{ delete BASIC_BLOCK[k]; }); }catch(e){}
+    try{ if(typeof _create14==='function'){ create=_create14; if(PAGES.create&&PAGES.create!==_create14) PAGES.create=_create14; } }catch(e){}
+    try{ if(typeof _messages14==='function'){ messages=_messages14; if(PAGES.messages&&PAGES.messages!==_messages14) PAGES.messages=_messages14; } }catch(e){}
+    try{ if(typeof _pf14==='function') profilFelderCard=function(){ const h=_pf14(); return isBasic()?h+`<p class="text-xs text-muted mt-2">Erfahrung, Land und Sprachen sowie Lebenslauf und Nachweise gibt es ab Plus.</p>`:h; }; }catch(e){}
+    { const _rpcAB=rpc; rpc=async function(fn,body){
+        if(fn==='bewerbung_neu'&&AB().phase==='test'&&S.member&&S.member.test_bewerbung){ APLUS_abTestLimit(); return {ok:false,grund:'test_limit'}; }
+        let r; try{ r=await _rpcAB.apply(this,arguments); }
+        catch(e){ const st=String(e&&e.message||'');
+          if(fn==='bewerbung_neu'&&/ 400$/.test(st)&&AB().phase==='test'){ APLUS_abTestLimit(); return {ok:false,grund:'test_limit'}; }
+          if(fn==='partner_nachricht'&&/ 400$/.test(st)&&isBasic()){ plusModal('Partner direkt anschreiben'); return {ok:false,grund:'basic'}; }
+          throw e; }
+        if(fn==='bewerbung_neu'&&r&&r.ok&&S.member&&AB().phase==='test') S.member.test_bewerbung=true;
+        if(fn==='profil_speichern'&&isBasic()&&body&&body.p&&Object.prototype.hasOwnProperty.call(body.p,'bio')){ try{ await _rpc0('profil_speichern',{p:{bio:body.p.bio}}); }catch(e){} }
+        return r; }; }
+    window.APLUS_abTestLimit=()=>sheet(`<div class="text-center space-y-2"><p class="font-serif text-2xl">Deine Test-Bewerbung ist vergeben</p>
+      <p class="text-sm text-muted">Im Premium-Test ist <b>1 Bewerbung</b> dabei. Mit Plus bewirbst du dich 5-mal im Monat, mit Premium 10-mal.</p></div>
+      ${window.CH_NATIVE_IOS?'':'<button class="btn-gold w-full mt-4" style="padding:12px" onclick="closeSheet();plusModal()">Mehr Bewerbungen freischalten</button>'}`);
+
+    /* Streak-Karte: Medaillen-Hinweis für Basic */
+    if(typeof streakCard==='function'){ const _sc=streakCard; streakCard=function(){ const h=_sc.apply(this,arguments); return ['basic','angebot'].includes(AB().phase)?h.replace(/Noch \d+ Tage? bis zur Medaille[^.]*\./,'Medaillen sammelst du mit Plus oder Premium.'):h; }; }
+
+    /* Rang: ausgeblendet (vom Server als 6 geliefert) -> nur Name zeigen */
+    if(typeof nameRank==='function'){ const _nr=nameRank; nameRank=function(n,r,medals){ if((r===undefined||r===null)&&n!=='ClosingHub'&&!(typeof isPartnerName==='function'&&isPartnerName(n))) return `<span class="inline-flex items-center gap-[.4em]"><span class="font-semibold">${n}</span></span>`; return _nr.apply(this,arguments); }; }
+
+    if(typeof mapPost==='function'){ const _mpR=mapPost; mapPost=function(p){ const r=_mpR.apply(this,arguments); try{ if(p&&+p.rang===6&&r) r.r=null; }catch(e){} return r; }; }
+    /* Glücksrad: Ergebnis für Basic und Gewinn-Tag */
+    window.APLUS_blNach=(j,p)=>{ if(!j) return;
+      if(j.abo_tag){ APLUS_abLoad(true); toastMsg&&toastMsg('🎉 '+(j.abo_tag==='premium'?'1 Tag Premium':'1 Tag Plus')+' ist aktiv – 24 Stunden alles freigeschaltet!'); }
+      else if(j.basic&&p>0) setTimeout(()=>sheet(`<p class="font-serif text-2xl text-center">+${p} Punkte gezogen</p><div class="mt-3">${APLUS_abHinweis()}</div>`),1200); };
+
+    /* Partner-Leistungen buchen (auch Basic); freie Nachricht an Partner nur ab Plus */
+    window.APLUS_bk={};
+    window.APLUS_bkOpen=(pid,i)=>{ const B=APLUS_bk[pid]; if(!B) return; if(!S.member){ closeModal&&closeModal(); go('login'); return; }
+      sheet(`<p class="font-serif text-2xl text-center">Leistung buchen</p><p class="text-sm text-muted text-center mb-3">bei ${esc(B.n)} · ${esc(B.n.split(' ')[0])} meldet sich mit Termin und Zahlung bei dir.</p>
+        <label class="block text-sm font-semibold mb-1">Leistung</label><select id="bkL" class="input w-full mb-3">${B.o.map((o,k)=>`<option value="${k}" ${k===(i||0)?'selected':''}>${esc(o.t)}${o.pr?' · '+esc(o.pr)+(/€|[a-zA-Z]/.test(o.pr)?'':' €'):''}</option>`).join('')}</select>
+        <label class="block text-sm font-semibold mb-1">Wunschtermin <span class="text-muted font-normal">optional</span></label><input id="bkW" class="input w-full mb-3" maxlength="120" placeholder="z. B. Dienstag ab 18 Uhr">
+        <label class="block text-sm font-semibold mb-1">Notiz <span class="text-muted font-normal">optional</span></label><textarea id="bkN" class="input w-full h-20" maxlength="600" placeholder="Worum geht es dir?"></textarea>
+        <p id="bkE" class="text-sm mt-2" style="color:#C0392B"></p>
+        <button class="btn-gold w-full mt-2" style="padding:12px" onclick="APLUS_bkSend(${+pid},this)">Buchungsanfrage senden</button>`); };
+    window.APLUS_bkSend=async(pid,b)=>{ const B=APLUS_bk[pid], o=B&&B.o[+document.getElementById('bkL').value]; if(!o) return; b.disabled=true;
+      let j=null; try{ j=await rpc('partner_buchen',{p_partner:pid,p_leistung:o.t,p_wunsch:document.getElementById('bkW').value.trim()||null,p_notiz:document.getElementById('bkN').value.trim()||null}); }catch(e){}
+      if(!j||!j.ok){ b.disabled=false; document.getElementById('bkE').textContent=j&&j.grund==='tempo'?'Du hast heute schon 5 Anfragen geschickt.':'Das hat nicht geklappt. Versuch es gleich nochmal.'; return; }
+      sheet(`<div class="text-center space-y-2"><div style="font-size:34px;color:#087A4B"><svg class="ci"><use href="#i-erledigt"/></svg></div><p class="font-serif text-2xl">Anfrage ist raus</p>
+        <p class="text-sm text-muted">${esc(B.n.split(' ')[0])} bekommt deine Buchung für „${esc(o.t)}“ und antwortet dir in deinen Nachrichten. Dort kannst du auch zurückschreiben.</p></div>
+        <button class="btn-ghost w-full mt-4" onclick="closeSheet()">Fertig</button>`); };
+    if(typeof partnerModal==='function'){ const _pmB=partnerModal; partnerModal=function(p,offers){ const res=_pmB.apply(this,arguments);
+      try{ if(!p||!p.real||!p.pid) return res; const o=((S.ptAll&&S.ptAll[p.n])||offers||[]).filter(x=>x&&x.t); APLUS_bk[p.pid]={n:p.n,o};
+        const lab=[...document.querySelectorAll('#modal p')].find(e=>e.textContent.trim()==='Leistungen'), box=lab&&lab.nextElementSibling;
+        if(box&&o.length) [...box.children].forEach((row,k)=>{ if(k<o.length&&!row.querySelector('.bk-b')) row.insertAdjacentHTML('beforeend',`<button class="bk-b btn-ghost text-xs shrink-0" style="padding:4px 12px;margin-left:8px" onclick="event.stopPropagation();APLUS_bkOpen(${+p.pid},${k})">Buchen</button>`); });
+        const main=[...document.querySelectorAll('#modal button.btn-gold')].find(b=>/pmtxt/.test(b.getAttribute('onclick')||''));
+        if(main&&o.length) main.setAttribute('onclick',`APLUS_bkOpen(${+p.pid},0)`);
+        if(isBasic()){ const pm=document.getElementById('pmsg'); if(pm) pm.innerHTML=`<div class="rounded-xl p-3 text-sm" style="background:rgba(217,180,90,.12);border:1px solid rgba(217,180,90,.4)">Leistungen kannst du auch mit Basic buchen. Mit Plus oder Premium kannst du ${esc(p.n.split(' ')[0])} direkt anschreiben.</div>`;
+          const nb=[...document.querySelectorAll('#modal button')].find(b=>b.textContent.trim()==='Nachricht'); if(nb) nb.style.display='none';
+          document.querySelectorAll('#modal button[onclick*="clipboard"]').forEach(b=>{ b.outerHTML=`<div class="w-full mt-3 rounded-lg px-3 py-2 text-xs text-muted" style="border:1px dashed rgb(var(--line))"><svg class="ci"><use href="#i-sperren"/></svg> Member-Rabatt mit Plus oder Premium</div>`; }); }
+      }catch(e){} return res; }; }
+    window.APLUS_abKauf=k=>{ toastMsg&&toastMsg('Die Bezahlung wird mit Stripe verbunden, sobald das Konto steht.'); };
+    window.APLUS_abHinweis=()=>`<div class="rounded-xl p-3 text-sm" style="background:rgba(217,180,90,.12);border:1px solid rgba(217,180,90,.4)"><svg class="ci"><use href="#i-entsperrt"/></svg> Wechsel zu Plus oder Premium, um Punkte, Medaillen und Abzeichen zu sammeln.${NATIVE_IOS()?'':` <button class="text-gold font-semibold" onclick="APLUS_abOffer()">Jetzt wechseln</button>`}</div>`;
+    if(typeof ptCard==='function'){ const _pc=ptCard; ptCard=function(){ const a=AB(); if(!(a.phase==='basic'||a.phase==='angebot')||!S.pt) return _pc.apply(this,arguments);
+      if(!S.member.eingefroren) return `<div class="card p-4 mt-5">${APLUS_abHinweis()}</div>`;
+      const p=S.pt, med=(ME.medals||[]).reduce((x,m)=>x+(+m[1]||0),0), abz=(ME.badges||[]).length;
+      return `<div class="card p-4 mt-5 ab-frz"><span class="ab-pill"><svg class="ci"><use href="#i-sperren"/></svg> Eingefroren · nur für dich sichtbar</span>
+        <div class="ab-g"><div><b>${(+p.punkte||0).toLocaleString('de-DE')}</b><span>Punkte</span></div><div><b>${esc(ME.rank||'Starter')}</b><span>Rang</span></div><div><b>${med}</b><span>Medaillen</span></div><div><b>${abz}</b><span>Abzeichen</span></div></div>
+        <p class="text-sm mt-3">Wechsel zu Plus oder Premium, um Punkte, Medaillen und Abzeichen zu sammeln.</p>
+        ${NATIVE_IOS()?'':`<button class="btn-gold text-sm mt-3" style="padding:8px 16px" onclick="APLUS_abOffer()">Wieder aktivieren</button>`}</div>`; }; }
+  })();
+
   /* ---------- Start ---------- */
   document.documentElement.dataset.r=route();
   try{ render(); }catch(e){}
 })();
+
+/* r28: Bewerbung „vergeben“ (Person wurde über einen anderen Job eingestellt) */
+try{ if(typeof MB_ST!=='undefined' && !MB_ST.vergeben) MB_ST.vergeben=['Geschlossen','Du wurdest über einen anderen Job eingestellt. Diese Bewerbung ist damit automatisch geschlossen.']; }catch(e){}
