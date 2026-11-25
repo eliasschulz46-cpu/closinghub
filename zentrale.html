@@ -1000,7 +1000,7 @@ function mbProfile(m){
     <div class="card"><h3>Stammdaten und Aktivität</h3>
       <div class="grid g2" style="gap:12px;margin-top:6px"><label class="f">Name<input class="in" id="mb-name" value="${esc(m.name)}"></label><label class="f">E-Mail<input class="in" id="mb-mail" type="email" value="${esc(m.email||'')}"></label>
         <label class="f">Rolle<select class="in" id="mb-rolle">${['Closer','Setter','Vertriebler'].map(r=>`<option ${r===m.rolle?'selected':''}>${r}</option>`).join('')}</select></label>
-        <label class="f">Paket<select class="in" id="mb-abo">${[['dayone','Day One'],['plus','Plus'],['premium','Premium']].map(([k,l])=>`<option value="${k}" ${k===m.abo?'selected':''}>${l}</option>`).join('')}</select></label></div>
+        <label class="f">Paket<select class="in" id="mb-abo">${(()=>{const cur=m.abo_test?'test1':m.abo;return [['dayone','Day One'],['plus','Plus'],['premium','Premium'],['basic','Basic'],['test1','Test: Premium-Test Tag 1'],['test14','Test: Premium-Test Tag 14'],['tag15','Test: Tag 15 (Angebot 24 h)']].map(([k,l])=>`<option value="${k}" ${k===cur?'selected':''}>${l}${k==='test1'&&m.abo_test&&m.test_bis?' (bis '+new Date(m.test_bis).toLocaleDateString('de-DE')+')':''}</option>`).join('')})()}</select></label></div>
       <label class="f" style="margin-top:12px">Notiz (nur für dich)<textarea class="in" id="mb-notiz" rows="2">${esc(m.notiz||'')}</textarea></label>
       <button class="btn gold-b" style="margin-top:12px" onclick="mbSaveBase(${m.id},this)">Speichern</button>
       <div style="margin-top:14px">${row('Punkte diesen Monat',m.punkte_monat)}${row('Punkte gesamt',m.punkte)}${row('Mahnungen',m.mahnungen+' von 3')}${row('Status',pill(m.status==='gekuendigt'?'gekündigt':m.status))}</div></div>
@@ -1020,7 +1020,14 @@ async function mbSaveRank(id,b){
   if(!fest&&rang<m.rang&&!confirm('Der Rang sinkt damit. Ohne „Rang fest einstellen“ steigt er wieder automatisch, sobald die Nachweise es hergeben. Trotzdem speichern?')) return;
   b.disabled=true; await mbSet(id,{im_vertrieb_seit:seit,rang,rang_fest:fest},'Gespeichert');
 }
-async function mbSaveBase(id,b){ const n=$('mb-name').value.trim(); if(!n) return toast('Name fehlt'); b.disabled=true; await mbSet(id,{name:n,email:$('mb-mail').value.trim()||null,rolle:$('mb-rolle').value,abo:$('mb-abo').value,notiz:$('mb-notiz').value.trim()||null},'Gespeichert'); }
+async function mbSaveBase(id,b){ const n=$('mb-name').value.trim(); if(!n) return toast('Name fehlt'); b.disabled=true; await mbSet(id,Object.assign({name:n,email:$('mb-mail').value.trim()||null,rolle:$('mb-rolle').value,notiz:$('mb-notiz').value.trim()||null},mbAboPatch($('mb-abo').value)),'Gespeichert'); }
+/* Paket + Test-Zustände (Basic, Premium-Test, Tag 15) – Tag 15 nutzt die echte Umstellung beim nächsten App-Öffnen */
+function mbAboPatch(v){ const t=d=>new Date(Date.now()+d*864e5).toISOString();
+  if(v==='basic') return {abo:'basic',abo_test:false,test_bis:t(-2),angebot_bis:t(-1),eingefroren:true};
+  if(v==='test1') return {abo:'premium',abo_test:true,test_bis:t(14),angebot_bis:null,eingefroren:false};
+  if(v==='test14') return {abo:'premium',abo_test:true,test_bis:t(1),angebot_bis:null,eingefroren:false};
+  if(v==='tag15') return {abo:'premium',abo_test:true,test_bis:t(-1/1440),angebot_bis:null,eingefroren:false};
+  return {abo:v,abo_test:false,test_bis:null,angebot_bis:null,eingefroren:false}; }
 async function mbWarn(id){
   const m=mbById(id); if(!confirm(`${m.name} verwarnen?\n\n• Mahnung ${Math.min(3,m.mahnungen+1)} von 3\n• 500 Punkte Abzug\n• Bei der dritten Mahnung wird gesperrt`)) return;
   const w=Math.min(3,m.mahnungen+1); await mbSet(id,{mahnungen:w,punkte:m.punkte-500,punkte_monat:m.punkte_monat-500,...(w>=3?{status:'gesperrt'}:{})}, w>=3?'Dritte Mahnung, gesperrt':'Mahnung '+w+' von 3');
