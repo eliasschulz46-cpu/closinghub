@@ -2,6 +2,22 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<script>
+/* ===== Demo-Modus (app.html?demo=1, z. B. im Demo-Handy der Startseite): keine Sperre, keine Datenbank, eigener Speicher ===== */
+window.CH_DEMO = /[?&]demo(=|&|$)/.test(location.search);
+if (window.CH_DEMO) (function(){
+  var m = {};
+  Storage.prototype.getItem = function(k){ return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; };
+  Storage.prototype.setItem = function(k, v){ m[k] = String(v); };
+  Storage.prototype.removeItem = function(k){ delete m[k]; };
+  Storage.prototype.clear = function(){ m = {}; };
+  var of = window.fetch.bind(window);
+  window.fetch = function(u, o){ var s = String(u && u.url || u); if (/supabase\.co|\/api\//.test(s)) return Promise.reject(new Error('Demo')); return of(u, o); };
+  try { if (navigator.serviceWorker) navigator.serviceWorker.register = function(){ return Promise.reject(new Error('Demo')); }; } catch(e) {}
+  try { window.Notification = undefined; } catch(e) {}
+  document.documentElement.classList.add('ch-demo');
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>ClosingHub</title>
@@ -522,6 +538,7 @@ html.ch-locked body>*:not(#chgate){display:none!important}
   function put(v){ try{ localStorage.setItem(LS,v); }catch(e){} }
   async function hash(pw){ var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('closinghub-app:'+pw)); return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join(''); }
   async function start(){
+    if(window.CH_DEMO) return unlock();
     $('chgate-e').textContent=''; $('chgate-r').style.display='none'; $('chgate-f').style.display='none'; $('chgate-t').textContent='Einen Moment …';
     try{ var r=await fetch(SB+'/rest/v1/settings?select=value&key=eq.app_gate',{headers:{apikey:KEY},cache:'no-store'}); if(!r.ok) throw 0; var j=await r.json(); conf=(j[0]&&j[0].value)||{on:false}; }
     catch(e){ $('chgate-t').textContent='Die App ist gerade nicht erreichbar. Prüf deine Internetverbindung.'; $('chgate-r').style.display=''; return; }
@@ -3221,6 +3238,8 @@ const _nw14=nachweiseCard; nachweiseCard=function(){ return isBasic()?'':_nw14()
 function basicBanner(){ if(!isBasic()||S.bbOff) return ''; return `<div class="card p-3 flex items-center gap-3" style="border-color:rgba(8,122,75,.45);background:rgba(8,122,75,.06)"><span style="font-size:20px"><svg class="ci"><use href="#i-entsperrt"/></svg></span><p class="text-sm flex-1">Du nutzt <b>Basic</b>. Mit Plus bewirbst du dich auf Jobs und schreibst mit allen Mitgliedern.</p><button class="btn-gold text-xs whitespace-nowrap" style="padding:6px 12px" onclick="plusModal()">Ansehen</button><button class="text-muted" onclick="S.bbOff=1;render()" aria-label="Ausblenden"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>`; }
 
 // Kostenlos registrieren
+// Demo-Modus: statt Anmeldung ein Hinweis mit Weg zur Warteliste der Startseite
+function demoLogin(){ return `<div style="padding:72px 22px 0"><div class="max-w-sm mx-auto card p-7 text-center space-y-4"><p class="font-serif text-2xl">Das hier ist die Demo</p><p class="text-sm text-muted">Anmelden und Posten geht ab dem Start. Sichere dir jetzt deinen Platz, dann bekommst du zum Start deinen Zugang per Mail.</p><a href="/#vertrag" target="_top" onclick="try{const v=parent.document.getElementById('vertrag');if(v&&parent!==window){v.scrollIntoView({behavior:'smooth'});go('feed');return false}}catch(e){}" class="btn-gold block">Day-One-Platz sichern</a><a href="#feed" class="block text-sm text-muted underline">Zurück zur Demo</a></div></div>`; }
 function signupView(){ const logo=`<h1 class="text-4xl text-center"><span class="chlogo ${LP()}"><span class="l1">closing</span><span class="l2">HUB</span></span></h1>`;
   if(S.signup==='mail') return `<div class="min-h-screen flex items-center justify-center px-4"><div class="card w-full max-w-sm p-8 space-y-4 text-center">${logo}<p class="font-serif text-xl">Fast geschafft!</p><p class="text-sm text-muted">Wir haben dir eine E-Mail geschickt. Bestätige deine Adresse und melde dich dann hier an.</p><button class="btn-gold w-full" onclick="S.signup=null;go('login')">Zur Anmeldung</button></div></div>`;
   return `<div class="min-h-screen flex items-center justify-center px-4"><div class="card w-full max-w-sm p-8 space-y-4">${logo}
@@ -4042,7 +4061,7 @@ function render(){
   if(S.invite){ document.getElementById('app').innerHTML=inviteView(); return; }
   if(S.signup&&!S.member){ document.getElementById('app').innerHTML=signupView(); return; }
   const r=route();
-  if(r==='login'){ document.getElementById('app').innerHTML=login(); return; }
+  if(r==='login'){ document.getElementById('app').innerHTML=window.CH_DEMO?demoLogin():login(); return; }
   if(r==='zentrale'){ document.getElementById('app').innerHTML=zentrale(); return; }
   if(SES&&!S.member&&!S.adminPreview&&!S._mDone){ document.getElementById('app').innerHTML=bootView(); return; }
   const fn = PAGES[r] || feed;
