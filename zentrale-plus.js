@@ -376,6 +376,10 @@
   const lvOffen = () => { const d=LV.d; if(!d||!d.fragen) return 0; const t=Date.now(); const lauf=new Set((d.termine||[]).filter(x=>lvT(x.s)-9e5<=t&&lvT(x.e)>t).map(x=>x.event_id+'|'+x.termin)); return d.fragen.filter(f=>f.status==='offen'&&lauf.has(f.event_id+'|'+f.termin)).length+(d.gast||[]).filter(g=>g.status==='neu').length; };
   async function lvLoad(){ try{ const r=await RPC('live_admin'); if(r&&r.ok){ LV.d=r; LV.err=0; } else { LV.d=LV.d||{}; LV.err=1; } }catch(e){ LV.d=LV.d||{}; LV.err=1; } if(route()==='live') render(); else drawNav(); }
   ZP.lvEdit = id => { LV.edit=id; LV.gastId=null; ZP.typed=0; render(); };
+  // Fragen im Live-Chat: beantwortet / ausblenden / wieder zeigen
+  ZP.lvQ = async (id,st) => { const f=((LV.d&&LV.d.fragen)||[]).find(x=>x.id===id), alt=f&&f.status; if(f) f.status=st; render();
+    try{ const r=await RPC('live_frage_status',{p_id:id,p_status:st}); if(!r||!r.ok) throw 0; toast(st==='versteckt'?'Ausgeblendet – Zuschauer sehen die Nachricht nicht mehr':st==='offen'?'Wieder sichtbar':'Als beantwortet markiert'); }
+    catch(e){ if(f) f.status=alt; render(); toast('⚠️ Das hat nicht geklappt'); } lvLoad(); };
   function gastCard(){
     const G=(LV.d&&LV.d.gast)||[], neu=G.filter(g=>g.status==='neu'), an=G.filter(g=>g.status==='angenommen'&&(!g.event_id||g.termin)), ab=G.filter(g=>g.status==='abgelehnt').slice(0,6);
     const rk=r=>['Starter','Rising','Performer','Dealmaker','Rainmaker'][(+r||1)-1]||'';

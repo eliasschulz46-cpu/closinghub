@@ -402,7 +402,7 @@
     const _ko = cfKatOpen;
     cfKatOpen = function(){ const r=_ko.apply(this,arguments); try{
       const go=$('cfGo'); if(go && !$('cfHl')){ const f=S.cf||{};
-        go.insertAdjacentHTML('beforebegin',`<label class="hl-opt"><input type="checkbox" id="cfHl" ${f.hl?'checked':''} onchange="S.cf&&(S.cf.hl=this.checked)"><span><b class="block text-sm"><svg class="ci"><use href="#i-stern_voll"/></svg> In meinen Highlights zeigen</b><span class="block text-xs text-muted mt-0.5">Highlights stehen ganz vorne in deinem Profil. Auftraggeber sehen nach der Freischaltung nur deine Highlights (maximal 6).</span></span></label>`); }
+        go.insertAdjacentHTML('beforebegin',`<label class="hl-opt"><input type="checkbox" id="cfHl" ${f.hl?'checked':''} onchange="S.cf&&(S.cf.hl=this.checked)"><span><b class="block text-sm"><svg class="ci"><use href="#i-stern_voll"/></svg> In meinen Highlights zeigen</b><span class="block text-xs text-muted mt-0.5">Highlights stehen ganz vorne in deinem Profil. Bis zu 3 Highlights stehen ganz oben in deinem Profil. Auftraggeber sehen sie nach der Freischaltung.</span></span></label>`); }
     }catch(e){} return r; };
   }
   const _rpc = rpc;
@@ -420,6 +420,11 @@
 
   /* ---------- Profil: Highlights zuerst, Beiträge rechts daneben ---------- */
   profTabs = function(mid,posts,own){
+    if(S.member){ if(S.hl[mid]===undefined){ S.hl[mid]=null; hlLoad(mid); } const hl=(S.hl[mid]||[]).slice(0,3);
+      const strip = S.hl[mid]===null ? '' : hl.length ? `<div class="mt-8"><p class="text-xs uppercase tracking-wider text-gold font-semibold mb-2"><svg class="ci"><use href="#i-stern_voll"/></svg> Highlights</p>${postGrid(hl,false).replace('mt-8 ','')}</div>`
+        : own ? `<div class="mt-8 rounded-xl border border-dashed border-line p-4 text-sm text-muted"><b class="text-gold"><svg class="ci"><use href="#i-stern_voll"/></svg> Highlights</b> · Pinne bis zu 3 Beiträge ganz oben in dein Profil: Beitrag öffnen und auf „<svg class="ci"><use href="#i-stern"/></svg> Highlight“ tippen.</div>` : '';
+      const ids=new Set(hl.map(x=>x.id)), rest=(posts||[]).filter(x=>!ids.has(x.id));
+      return `${strip}<div class="flex gap-6 border-b border-line mt-8"><span class="pb-2 text-sm font-semibold" style="border-bottom:2px solid #087A4B">Beiträge</span></div>${rest.length||!hl.length?postGrid(rest,own).replace('mt-8 ','mt-3 '):'<p class="mt-6 text-sm text-muted text-center">Weitere Beiträge erscheinen hier.</p>'}`; }
     const t=S.ptab[mid]||'hl'; if(t==='hl'&&S.hl[mid]===undefined){ S.hl[mid]=null; hlLoad(mid); }
     const tab=(k,l)=>`<button onclick="S.ptab[${mid}]='${k}';render()" class="pb-2 text-sm font-semibold" style="border-bottom:2px solid ${t===k?'#087A4B':'transparent'};color:${t===k?'rgb(var(--fg))':'rgb(var(--muted))'}">${l}</button>`;
     const hl=S.hl[mid];
@@ -679,7 +684,8 @@
     if(!S.user) return _tl.apply(this,arguments);   // Feed UND Player: nur Herz + Zahl aktualisieren
     const btns=[...document.querySelectorAll('[onclick*="toggleLike('+id+',"]')];
     if(!btns.length) return _tl.apply(this,arguments);
-    const paint=(on)=>btns.forEach(b=>{ const was=b.classList.contains('icon-on'); b.classList.toggle('icon-on',!!on); const s=b.querySelector('span');
+    const paint=(on)=>btns.forEach(b=>{ const was=b.classList.contains('icon-on'); b.classList.toggle('icon-on',!!on);
+      const s=[...b.querySelectorAll('span')].filter(x=>!x.classList.contains('icbox')&&!x.closest('.icbox')&&/^\s*\d+\s*$/.test(x.textContent)).pop();
       if(s && was!==!!on){ const n=parseInt(s.textContent,10)||0; s.textContent=Math.max(0,n+(on?1:-1)); } });
     S.liked[id]=!S.liked[id]; paint(S.liked[id]);
     if(id>=1e6 && S.member) rpc('post_like',{p_post:id-1e6}).then(j=>{ if(j&&j.ok&&j.liked!==S.liked[id]){ S.liked[id]=j.liked; paint(j.liked); } }).catch(()=>{});
@@ -967,6 +973,7 @@
     #chlvo .lvo-x{margin-left:auto;flex:none;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;background:rgba(127,127,127,.15)}
     #chlvo .lvo-v{position:relative;width:100%;aspect-ratio:16/9;background:#000;flex:none}
     #chlvo .lvo-v iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+    #chlvo .lvo-yt{display:block;text-align:center;font-size:12.5px;font-weight:600;padding:8px 12px;color:#3FCF8E;border-bottom:1px solid rgb(var(--line,128 128 128) / .3);flex:none}
     #chlvo .lvo-v .lvo-wait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;text-align:center;padding:20px}
     #chlvo .lvo-v .lvo-wait b{font-size:34px;font-variant-numeric:tabular-nums;color:#E3B85C}
     #chlvo .lvo-q{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid rgba(127,127,127,.2)}
@@ -991,7 +998,9 @@
     const T = x => new Date(x).getTime();
     const hm = x => new Date(x).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
     const cd = ms => { ms=Math.max(0,ms); const m=Math.floor(ms/60000), s=Math.floor(ms/1000)%60; return m+':'+String(s).padStart(2,'0'); };
-    const ytId = u => { u=String(u||''); const m=u.match(/(?:youtu\.be\/|v=|\/live\/|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/)||u.match(/^([A-Za-z0-9_-]{11})$/); return m?m[1]:null; };
+    const ytId = u => { u=String(u||'').trim(); const m=u.match(/(?:youtu\.be\/|[?&]v=|\/live\/|\/embed\/|\/shorts\/|\/v\/)([A-Za-z0-9_-]{11})/)||u.match(/^([A-Za-z0-9_-]{11})$/); if(m) return m[1]; const c=u.match(/\/channel\/(UC[A-Za-z0-9_-]{22})/); return c?'ch:'+c[1]:null; };
+    const ytSrc = id => (String(id).startsWith('ch:') ? `https://www.youtube.com/embed/live_stream?channel=${id.slice(3)}&` : `https://www.youtube.com/embed/${id}?`) + `autoplay=1&playsinline=1&rel=0&modestbranding=1&origin=${encodeURIComponent(location.origin)}`;
+    const ytOpen = (id,raw) => /^https?:\/\//.test(String(raw||'')) ? String(raw) : String(id).startsWith('ch:') ? `https://www.youtube.com/channel/${id.slice(3)}/live` : `https://www.youtube.com/watch?v=${id}`;
     const label = e => e.typ==='vortrag' ? ('Partner-Vortrag'+(e.sprecher?' · '+e.sprecher:'')) : e.typ==='gast' ? ('Gastbeitrag'+(e.sprecher?' · '+e.sprecher:'')) : ('Motivations-Call'+(e.sprecher?' mit '+e.sprecher:''));
     const lockTxt = e => e.typ==='vortrag' ? 'Mit Premium live dabei' : 'Mit Plus live dabei';
     const cur = () => { const t=now(); const L=LV.ev.filter(e=>T(e.e)>t && T(e.s)-15*60000<=t); L.sort((a,b)=>((T(a.s)<=t)?0:1)-((T(b.s)<=t)?0:1) || T(a.s)-T(b.s)); return L; };
@@ -1056,7 +1065,10 @@
       const t=now(), id=ytId(e.yt), started=T(e.s)<=t;
       const want = id ? (started||T(e.s)-t<5*60000 ? 'yt' : 'wait') : 'nolink';
       if(!force && box.dataset.m===want) return; box.dataset.m=want;
-      if(want==='yt') box.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="${esc2(e.titel)}"></iframe>`;
+      if(want==='yt'){ box.innerHTML=`<iframe src="${ytSrc(id)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="${esc2(e.titel)}"></iframe>`;
+        let ob=document.getElementById('lvo-yt'); if(!ob){ box.insertAdjacentHTML('afterend',`<a id="lvo-yt" class="lvo-yt" target="_blank" rel="noopener">Stream startet nicht? In YouTube öffnen ↗</a>`); ob=document.getElementById('lvo-yt'); } ob.href=ytOpen(id,e.yt); }
+      else { const ob=document.getElementById('lvo-yt'); if(ob) ob.remove(); }
+      if(want==='yt'){}
       else if(want==='wait') box.innerHTML=`<div class="lvo-wait"><span style="opacity:.75;font-size:13px">Startet in</span><b data-lvo-cd>${cd(T(e.s)-t)}</b><span style="opacity:.6;font-size:12px">Lass das Fenster offen, der Stream startet hier.</span></div>`;
       else box.innerHTML=`<div class="lvo-wait"><span style="opacity:.75;font-size:13px">${started?'Gleich geht\'s los':'Startet in'}</span>${started?'':`<b data-lvo-cd>${cd(T(e.s)-t)}</b>`}<span style="opacity:.6;font-size:12px">Der Stream erscheint hier automatisch.</span></div>`;
     }
@@ -1718,3 +1730,217 @@
 
 /* r28: Bewerbung „vergeben“ (Person wurde über einen anderen Job eingestellt) */
 try{ if(typeof MB_ST!=='undefined' && !MB_ST.vergeben) MB_ST.vergeben=['Geschlossen','Du wurdest über einen anderen Job eingestellt. Diese Bewerbung ist damit automatisch geschlossen.']; }catch(e){}
+
+/* ===================== r35: Bugfixes aus der Website-Prüfung (26.11.) ===================== */
+(function(){
+  if(window.APLUS35) return; window.APLUS35=1;
+  const $=id=>document.getElementById(id);
+  const e2=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const css=document.createElement('style');
+  css.textContent=`
+  /* Forum: lange Texte umbrechen, Zeilenumbrüche behalten */
+  [id^="fq"]{min-width:0}
+  [id^="fq"] h2{overflow-wrap:anywhere;word-break:break-word;min-width:0}
+  [id^="fq"] > p.text-sm.text-muted{overflow-wrap:anywhere;word-break:break-word;white-space:pre-line}
+  /* Eingabezeilen: Senden-/Antworten-Knöpfe nie abschneiden */
+  #app form .flex > .input, #app form.flex > .input, #psheet form .flex > .input, #modal form .flex > .input{min-width:0;flex:1 1 auto}
+  #app form .flex > button, #app form.flex > button, #psheet form .flex > button, #modal form .flex > button{flex:none;white-space:nowrap}
+  #app form[onsubmit*="fReplySend"]{flex-wrap:wrap;margin-left:12px!important;row-gap:8px}
+  #app form[onsubmit*="fReplySend"] > .input{flex:1 1 100%;width:100%}
+  @media(min-width:640px){ #app form[onsubmit*="fReplySend"]{margin-left:36px!important} }
+  /* Handy: grüne Zahl neben dem Wischbalken weg – ungelesene Nachrichten stehen jetzt am Nachrichten-Symbol oben */
+  #chathandle > span{display:none!important}
+  /* Feed flüssiger am Handy: keine Unschärfe-Effekte über dem scrollenden Feed, Karten außerhalb des Bildschirms nicht zeichnen */
+  @media (max-width:767px){
+    header.sticky, nav.fixed.bottom-0{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgb(var(--bg))!important}
+  }
+  #app section > article.card{content-visibility:auto;contain-intrinsic-size:auto 620px}
+  /* Laufband in der Zentrale ausgeschaltet */
+  html.lb-aus div:has(> .perk-label){display:none!important}
+  /* Rechtstexte */
+  .lg-ov{position:fixed;inset:0;z-index:70;background:rgba(8,8,9,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+  .lg-box{width:100%;max-width:680px;max-height:86vh;display:flex;flex-direction:column;border-radius:20px;overflow:hidden;background:rgb(var(--panel));border:1px solid rgb(var(--line))}
+  .lg-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 12px 20px;border-bottom:1px solid rgb(var(--line));flex:none}
+  .lg-x{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;border:1px solid rgb(var(--line))}
+  .lg-b{padding:16px 20px 8px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1 1 auto}
+  .lg-f{padding:12px 20px calc(14px + env(safe-area-inset-bottom));border-top:1px solid rgb(var(--line));flex:none}
+  @media (max-width:767px){ .lg-ov{padding:0;align-items:stretch} .lg-box{max-width:none;max-height:none;height:100%;border-radius:0;border:0} .lg-h{padding-top:calc(14px + env(safe-area-inset-top))} }
+  /* Bewertungen */
+  .rv-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .rv-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgb(var(--line));border-radius:999px;padding:6px 12px;font-size:13px;line-height:1}
+  .rv-chip:hover{border-color:#087A4B}
+  .rv-st{color:#E0A82E;letter-spacing:1px;white-space:nowrap}
+  .rv-pick{display:flex;gap:6px;justify-content:center;margin:6px 0 2px}
+  .rv-pick button{font-size:34px;line-height:1;color:rgb(var(--line));transition:transform .1s}
+  .rv-pick button.on{color:#E0A82E}
+  .rv-pick button:active{transform:scale(.9)}
+  /* Jobbörse am PC: breite Übersicht, Job öffnet sich im Fenster */
+  .jw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+  .jw-card{text-align:left;border-radius:16px;padding:16px;border:1px solid rgb(var(--line));background:rgb(var(--panel));transition:border-color .15s,transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:4px;min-height:132px}
+  .jw-card:hover{border-color:#087A4B;transform:translateY(-2px);box-shadow:0 12px 28px -18px rgba(8,122,75,.6)}
+  .jw-top{background:linear-gradient(135deg,rgba(217,180,90,.14),rgba(8,122,75,.10) 60%),rgb(var(--panel));border-color:#D9B45A}
+  .jw-ov{position:fixed;inset:0;z-index:55;background:rgba(8,8,9,.62);overflow-y:auto;padding:28px 16px}
+  .jw-in{max-width:760px;margin:0 auto;position:relative}
+  .jw-in .md\\:sticky{position:static!important}
+  .jw-x{position:absolute;right:-6px;top:-6px;z-index:3;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgb(var(--panel));border:1px solid rgb(var(--line));box-shadow:0 6px 16px rgba(0,0,0,.25)}
+  `;
+  document.head.appendChild(css);
+
+  /* ---------- Forum: Kategorie „Sonstiges“ ---------- */
+  try{ if(typeof FCATS!=='undefined' && !FCATS.some(g=>g[1].some(c=>c[1]==='Sonstiges'))) FCATS.push(['Sonstiges',[['<svg class="ci"><use href="#i-idee"/></svg>','Sonstiges',0]]]); }catch(e){}
+
+  /* ---------- Handy: Nachrichten-Symbol oben neben der Glocke ---------- */
+  try{ const _sh=shell; shell=function(){ let h=_sh.apply(this,arguments);
+    if(typeof h==='string' && S.user && h.indexOf('id="hdrmsg"')<0) h=h.replace('<a href="#notifications">',`<a href="#messages" id="hdrmsg" aria-label="Nachrichten">${ic('chat')}</a><a href="#notifications">`);
+    setTimeout(()=>{ try{ markBell(); }catch(e){} },0);
+    return h; }; }catch(e){}
+
+  /* ---------- Rechtstexte: Schließen immer sichtbar (oben fest + unten), am Handy als ganze Seite ---------- */
+  window.legalOpen=legalOpen=async function(k){ const T={impressum:'Impressum',datenschutz:'Datenschutz',agb:'AGB',widerruf:'Widerruf',gewinnspiel:'Teilnahmebedingungen Gewinnspiel'};
+    const close=()=>{ const o=$('lgov'); if(o) o.remove(); document.removeEventListener('keydown',onKey); };
+    const onKey=ev=>{ if(ev.key==='Escape') close(); };
+    window.APLUS_lgClose=close;
+    const show=txt=>{ let o=$('lgov'); if(!o){ o=document.createElement('div'); o.id='lgov'; o.className='lg-ov'; o.onclick=ev=>{ if(ev.target===o) close(); }; document.body.appendChild(o); document.addEventListener('keydown',onKey); }
+      o.innerHTML=`<div class="lg-box" role="dialog" aria-modal="true"><div class="lg-h"><h2 class="font-serif text-2xl" style="min-width:0">${T[k]||''}</h2><button type="button" class="lg-x" onclick="APLUS_lgClose()" aria-label="Schließen"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>
+        <div class="lg-b"><div class="text-sm" style="white-space:pre-line;line-height:1.6;overflow-wrap:anywhere">${txt?esc_(txt):'<span class="text-muted">Dieser Text wird gerade vorbereitet.</span>'}</div>
+        <div class="flex flex-wrap gap-3 mt-6 mb-2 text-xs text-muted">${Object.keys(T).filter(x=>x!==k).map(x=>`<button class="underline" onclick="legalOpen('${x}')">${T[x]}</button>`).join('')}</div></div>
+        <div class="lg-f"><button type="button" class="btn-gold w-full" onclick="APLUS_lgClose()">Schließen</button></div></div>`; };
+    const esc_=t=>(typeof esc==='function'?esc(t):e2(t));
+    if(S.recht){ show(S.recht[k]); return; } show(null);
+    try{ const r=await fetch(`${SB_URL}/rest/v1/settings?select=value&key=eq.recht`,{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}); const j=await r.json(); S.recht=(j&&j[0]&&j[0].value)||{}; if($('lgov')) show(S.recht[k]); }catch(e){} };
+  window.addEventListener('hashchange',()=>{ const o=$('lgov'); if(o) o.remove(); });
+
+  /* ---------- Streak: überall dieselbe Zahl (vom Server), keine Schätzwerte für echte Mitglieder ---------- */
+  try{ const _ms=myStreak; myStreak=function(){ if(S.sk) return +S.sk.streak||0; if(S.member) return (S.skMap&&S.skMap[ME.name]!=null)?(+S.skMap[ME.name]||0):0; return _ms.apply(this,arguments); }; }catch(e){}
+  try{ const _so=streakOf; streakOf=function(n){ if(!S.member) return _so.apply(this,arguments);
+      if(!n||n==='ClosingHub') return 0; if(typeof isPartnerName==='function'&&isPartnerName(n)) return 0;
+      if(n===ME.name) return myStreak(); return (S.skMap&&S.skMap[n]!==undefined)?(+S.skMap[n]||0):0; }; }catch(e){}
+  { let n=0; const t=setInterval(()=>{ n++; if(S.member){ clearInterval(t); if(!S.sk&&typeof skPing==='function') skPing(0); } else if(n>60) clearInterval(t); },500); }
+
+  /* ---------- Feed: Videos erst kurz vor dem Bildschirm laden ---------- */
+  const lzIO=('IntersectionObserver' in window)?new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ const v=en.target; lzIO.unobserve(v); v.preload='metadata'; try{ v.load(); }catch(e){} } }),{rootMargin:'900px 0px'}):null;
+  const lzScan=()=>{ if(!lzIO) return; document.querySelectorAll('#app video[data-lzv]').forEach(v=>{ if(!v.dataset.lzo){ v.dataset.lzo=1; lzIO.observe(v); } }); };
+  try{ const _pf=PAGES.feed; PAGES.feed=function(){ let h=_pf.apply(this,arguments); if(typeof h==='string'&&lzIO) h=h.replace(/(<video src="[^"]*" class="absolute inset-0 w-full h-full object-cover" muted playsinline loop) preload="metadata"><\/video>/g,'$1 preload="none" data-lzv="1"></video>'); setTimeout(lzScan,0); return h; }; }catch(e){}
+
+  /* ---------- Laufband: in der Zentrale mit einem Klick an/aus ---------- */
+  const lbCheck=()=>fetch(`${SB_URL}/rest/v1/settings?select=value&key=eq.laufband`,{headers:{apikey:SB_KEY},cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{ const v=j&&j[0]&&j[0].value; document.documentElement.classList.toggle('lb-aus',!!v&&v.aktiv===false); }).catch(()=>{});
+  lbCheck(); setInterval(()=>{ if(!document.hidden) lbCheck(); },120000);
+
+  /* ---------- Highlights: höchstens 3 ---------- */
+  try{ const _hl=hlToggle; hlToggle=async function(id,btn){ const _al=window.alert; window.alert=m=>_al(String(m).replace('Du hast schon 6 Highlights.','Du hast schon 3 Highlights.')); try{ return await _hl.apply(this,arguments); } finally { window.alert=_al; } }; }catch(e){}
+
+  /* ---------- Bewertungen: Mitglieder bewerten Mitglieder ---------- */
+  S.rv=S.rv||{};
+  const stars=(n,big)=>{ n=Math.round(+n||0); return `<span class="rv-st"${big?' style="font-size:18px"':''}>${'★'.repeat(n)}<span style="opacity:.28">${'★'.repeat(5-n)}</span></span>`; };
+  async function rvLoad(mid,force){ if(!force&&S.rv[mid]&&S.rv[mid]!=='l') return S.rv[mid]; S.rv[mid]='l'; let r=null; try{ r=await rpc('bewertungen_laden',{p_member:mid}); }catch(e){} S.rv[mid]=r||{anzahl:0,liste:[]}; return S.rv[mid]; }
+  const rvLine=(mid,own)=>{ const r=S.rv[mid]; if(!r||r==='l'){ if(!r) rvLoad(mid).then(()=>{ const el=$('rvrow'+mid); if(el) el.outerHTML=rvLine(mid,own); }); return `<div id="rvrow${mid}" class="rv-row text-sm text-muted">Bewertungen laden …</div>`; }
+    const n=+r.anzahl||0;
+    const chip=n>=5&&r.schnitt!=null?`<button type="button" class="rv-chip" onclick="APLUS_rvOpen(${mid})">${stars(r.schnitt)}<b>${String(r.schnitt).replace('.',',')}</b><span class="text-muted">· ${n} Bewertungen ›</span></button>`
+      :`<button type="button" class="rv-chip text-muted" onclick="APLUS_rvOpen(${mid})">${n?`${n} ${n===1?'Bewertung':'Bewertungen'} · Sterne ab 5`:'Noch keine Bewertungen'}</button>`;
+    const btn=!own&&S.member?`<button type="button" class="btn-ghost text-sm" style="padding:6px 14px" onclick="APLUS_rvOpen(${mid},1)">${r.meine?'Deine Bewertung ändern':'★ Bewerten'}</button>`:'';
+    return `<div id="rvrow${mid}" class="rv-row">${chip}${btn}</div>`; };
+  window.APLUS_rvOpen=async function(mid,form){ const r=await rvLoad(mid,true), own=S.member&&mid===S.member.id, n=+r.anzahl||0;
+    const blockBasic=!own&&typeof isBasic==='function'&&isBasic();
+    S.rvPick=(r.meine&&r.meine.sterne)||0;
+    const list=n>=5?(r.liste||[]).map(x=>`<div class="py-3 border-t border-line"><div class="flex items-center justify-between gap-2">${stars(x.sterne)}<span class="text-[11px] text-muted">${new Date(x.at).toLocaleDateString('de-DE')}${x.eigene?' · deine':''}</span></div>${x.text?`<p class="text-sm mt-1" style="overflow-wrap:anywhere">„${e2(x.text)}“</p>`:''}${S.member&&!x.eigene&&!own?`<button class="text-[11px] text-muted mt-1" onclick="fReport('bewertung',${x.id})">Melden</button>`:''}${own?`<button class="text-[11px] text-muted mt-1" onclick="fReport('bewertung',${x.id})">Melden</button>`:''}</div>`).join('')
+      :`<p class="text-sm text-muted">${n?`${n} von 5 Bewertungen – die Sterne und Texte erscheinen ab 5 Bewertungen, damit sie fair und aussagekräftig sind.`:'Noch keine Bewertungen.'}</p>`;
+    const frm=own||!S.member?'':blockBasic?`<div class="rounded-xl p-3 text-sm" style="background:rgba(217,180,90,.12);border:1px solid rgba(217,180,90,.4)">Mit Plus oder Premium kannst du andere Mitglieder bewerten.</div>`
+      :`<div class="rounded-2xl p-4" style="background:rgba(8,122,75,.06);border:1px solid rgba(8,122,75,.25)"><p class="font-semibold text-sm text-center">${r.meine?'Deine Bewertung ändern':'Wie war deine Erfahrung?'}</p>
+        <div class="rv-pick" id="rvpick">${[1,2,3,4,5].map(i=>`<button type="button" class="${i<=S.rvPick?'on':''}" onclick="APLUS_rvSet(${i})" aria-label="${i} Sterne">★</button>`).join('')}</div>
+        <textarea id="rvtxt" maxlength="500" class="input text-sm mt-2" rows="3" placeholder="Optional: Was war gut, was nicht? (anonym)">${e2(r.meine&&r.meine.text||'')}</textarea>
+        <p id="rverr" class="text-xs mt-1" style="color:#e5484d;display:none"></p>
+        <button type="button" class="btn-gold w-full mt-2" onclick="APLUS_rvSend(${mid},this)">${r.meine?'Änderung speichern':'Bewertung abgeben'}</button>
+        <p class="text-[11px] text-muted mt-2 text-center">Anonym für alle Mitglieder · jede Person nur einmal · Missbrauch wird geprüft</p></div>`;
+    sheet(`<div class="flex justify-between items-center"><p class="font-semibold">Bewertungen</p><button onclick="closeSheet()" class="text-muted text-xl" aria-label="Schließen"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>
+      ${n>=5&&r.schnitt!=null?`<div class="flex items-center gap-3">${stars(r.schnitt,1)}<b class="text-xl">${String(r.schnitt).replace('.',',')}</b><span class="text-sm text-muted">aus ${n} Bewertungen</span></div>`:''}
+      ${form?frm+`<div>${list}</div>`:`<div>${list}</div>`+frm}`);
+    if(form){ const t=$('rvtxt'); if(t&&!S.rvPick) setTimeout(()=>{ const p=$('rvpick'); p&&p.scrollIntoView({block:'center'}); },50); } };
+  window.APLUS_rvSet=i=>{ S.rvPick=i; document.querySelectorAll('#rvpick button').forEach((b,k)=>b.classList.toggle('on',k<i)); };
+  window.APLUS_rvSend=async function(mid,b){ const er=$('rverr'), say=t=>{ er.textContent=t; er.style.display='block'; };
+    if(!S.rvPick) return say('Bitte wähle 1 bis 5 Sterne.');
+    b.disabled=true; let j=null; try{ j=await rpc('bewertung_abgeben',{p_member:mid,p_sterne:S.rvPick,p_text:($('rvtxt')||{}).value||''}); }catch(e){}
+    if(!j||!j.ok){ b.disabled=false; const g=j&&j.grund; return say(g==='filter'?(j.text||'Bitte keine Kontaktdaten oder Werbung.'):g==='tempo'?'Für heute hast du schon viele Mitglieder bewertet. Morgen geht es weiter.':g==='basic'?'Mit Plus oder Premium kannst du bewerten.':g==='selbst'?'Dich selbst kannst du nicht bewerten.':'Das hat nicht geklappt. Bitte versuch es noch einmal.'); }
+    await rvLoad(mid,true); closeSheet(); toastMsg(j.neu?'Danke für deine Bewertung!':'Bewertung geändert');
+    const el=$('rvrow'+mid); if(el) el.outerHTML=rvLine(mid,false); };
+  // Fremdes Profil: Bewertungen unter der Profilzeile
+  try{ const _mps=mpStats; mpStats=function(p){ const h=_mps.apply(this,arguments)||''; return h+(S.member&&p&&p.id?rvLine(+p.id,S.member.id===+p.id):''); }; }catch(e){}
+  // Eigenes Profil: echte Bewertungen statt Beispielwerten
+  try{ const _pp=PAGES.profile; PAGES.profile=function(){ const h=_pp.apply(this,arguments);
+      if(S.member&&!(S.member.partner)) setTimeout(()=>{ if(route()!=='profile'||$('rvrow'+S.member.id)) return; const b=[...document.querySelectorAll('#app b')].find(x=>/gefolgt/.test((x.parentElement&&x.parentElement.textContent)||'')); const row=b&&b.closest('div.flex'); if(row) row.insertAdjacentHTML('afterend',rvLine(S.member.id,true)); },0);
+      return h; }; }catch(e){}
+
+  /* ---------- Mitteilungen aufs Handy (Web-Push) ---------- */
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const standalone=()=>window.matchMedia&&matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  (function head(){ const add=(tag,attrs)=>{ const el=document.createElement(tag); Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v)); document.head.appendChild(el); };
+    if(!document.querySelector('link[rel="manifest"]')) add('link',{rel:'manifest',href:'/manifest.webmanifest'});
+    if(!document.querySelector('link[rel="apple-touch-icon"]')) add('link',{rel:'apple-touch-icon',href:'/apple-touch-icon.png'});
+    if(!document.querySelector('meta[name="apple-mobile-web-app-capable"]')) add('meta',{name:'apple-mobile-web-app-capable',content:'yes'});
+    if(!document.querySelector('meta[name="mobile-web-app-capable"]')) add('meta',{name:'mobile-web-app-capable',content:'yes'});
+    if(!document.querySelector('meta[name="apple-mobile-web-app-title"]')) add('meta',{name:'apple-mobile-web-app-title',content:'ClosingHub'}); })();
+  const u8=b64=>{ const p='='.repeat((4-b64.length%4)%4), s=atob((b64+p).replace(/-/g,'+').replace(/_/g,'/')); return Uint8Array.from([...s].map(c=>c.charCodeAt(0))); };
+  async function vapid(){ let k=null; try{ k=await rpc('push_key',{}); }catch(e){}
+    if(!k){ try{ const tok=(JSON.parse(localStorage.getItem('ch_app_session')||'{}')||{}).access_token; await fetch(`${SB_URL}/functions/v1/push-senden`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+(tok||SB_KEY),'Content-Type':'application/json'},body:JSON.stringify({setup:true})}); k=await rpc('push_key',{}); }catch(e){} }
+    return k||null; }
+  async function pushSub(ask){
+    if(window.CH_DEMO||!S.member) return {ok:false,grund:'konto'};
+    if(isIOS&&!standalone()) return {ok:false,grund:'ios'};
+    if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)) return {ok:false,grund:'browser'};
+    const reg=await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready;
+    let perm=Notification.permission; if(perm==='default'&&ask) perm=await Notification.requestPermission();
+    if(perm!=='granted') return {ok:false,grund:perm==='denied'?'blockiert':'offen'};
+    const key=await vapid(); if(!key) return {ok:false,grund:'key'};
+    let sub=await reg.pushManager.getSubscription();
+    if(sub&&sub.options&&sub.options.applicationServerKey){ try{ const a=new Uint8Array(sub.options.applicationServerKey), b=u8(key); if(a.length!==b.length||a.some((x,i)=>x!==b[i])){ await sub.unsubscribe(); sub=null; } }catch(e){} }
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8(key)});
+    const j=sub.toJSON(); const r=await rpc('push_abo_speichern',{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_prefs:S.notif||{},p_geraet:(isIOS?'iPhone/iPad':/Android/.test(navigator.userAgent)?'Android':'Computer')}).catch(()=>null);
+    return r&&r.ok?{ok:true}:{ok:false,grund:'speichern'}; }
+  window.askPush=askPush=async function(btn){ const set=t=>{ if(btn) btn.innerHTML=t; };
+    set('Einen Moment …'); let r={ok:false}; try{ r=await pushSub(true); }catch(e){ r={ok:false,grund:'fehler'}; }
+    if(r.ok){ set('<svg class="ci"><use href="#i-erledigt"/></svg> Mitteilungen auf diesem Gerät sind an'); return; }
+    const T={ios:'Auf dem iPhone: unten auf „Teilen“ tippen → „Zum Home-Bildschirm“, ClosingHub von dort öffnen und hier nochmal tippen.',
+      blockiert:'Mitteilungen sind blockiert. Erlaube sie in den Einstellungen deines Handys bzw. Browsers für ClosingHub.',
+      offen:'Bitte tippe im Fenster auf „Erlauben“.',browser:'Dieser Browser kann keine Mitteilungen empfangen. Nutze Chrome, Safari (ab iOS 16.4 über den Home-Bildschirm) oder Edge.',
+      key:'Mitteilungen werden gerade eingerichtet. Bitte versuch es gleich noch einmal.'};
+    set(T[r.grund]||'Das hat nicht geklappt. Bitte versuch es noch einmal.'); };
+  try{ const _tn=toggleNotif; toggleNotif=function(){ const res=_tn.apply(this,arguments); if(S.member&&'Notification' in window&&Notification.permission==='granted') rpc('push_prefs_speichern',{p_prefs:S.notif||{}}).catch(()=>{}); return res; }; }catch(e){}
+  // Wenn schon erlaubt: Gerät beim Start still neu anmelden (z. B. nach neuem Schlüssel)
+  { let n=0; const t=setInterval(()=>{ n++; if(S.member){ clearInterval(t); try{ if('Notification' in window&&Notification.permission==='granted') pushSub(false).catch(()=>{}); }catch(e){} } else if(n>60) clearInterval(t); },1000); }
+  try{ navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',ev=>{ const d=ev.data||{}; if(d.ch==='open'&&d.url){ try{ const u=new URL(d.url,location.origin); if(u.hash) location.hash=u.hash; }catch(e){} } }); }catch(e){}
+  // Hinweis-Text in den Einstellungen anpassen, wenn Mitteilungen schon an sind
+  try{ const _nc=notifCard; notifCard=function(){ let h=_nc.apply(this,arguments); if('Notification' in window&&Notification.permission==='granted'&&!(isIOS&&!standalone())) h=h.replace('Mitteilungen auf diesem Gerät erlauben','Mitteilungen auf diesem Gerät sind an · neu verbinden'); else if(isIOS&&!standalone()) h=h.replace('Mitteilungen auf diesem Gerät erlauben','Mitteilungen aufs iPhone einrichten'); return h; }; }catch(e){}
+
+  /* ---------- Jobbörse am PC: breite Übersicht, Klick öffnet den Job im Fenster ---------- */
+  const wide=()=>innerWidth>=768;
+  const jAction=j=>{ if(S.member&&j.live) return memberJobAction(j); if(!S.user) return `<a href="#login" class="btn-gold"><svg class="ci"><use href="#i-sperren"/></svg> Anmelden zum Bewerben</a>`; return `<p class="text-sm text-muted">Bewerben ist mit deinem Mitgliedskonto möglich.</p>`; };
+  const jSig=j=>{ try{ const a=typeof myApp==='function'?myApp(j):null; return j.id+'|'+(a?a.status+(a.member_meldet_at||''):'-')+'|'+(S.mb?S.mb.genutzt:''); }catch(e){ return String(j.id); } };
+  window.APLUS_jClose=function(){ const o=$('jwov'); if(o) o.remove(); S.jopen=0; S.jwSig=null; document.documentElement.style.overflow=''; };
+  window.APLUS_jOpen=function(id){ S.job=id; S.sent=false; S.jopen=1; try{ chEv('job'); }catch(e){} jDraw(true); };
+  function jDraw(force){ if(!wide()||route()!=='jobs'||!S.jopen) return; const j=JOBS.find(x=>x.id===S.job); if(!j){ APLUS_jClose(); return; }
+    const sig=jSig(j); let o=$('jwov'); if(o&&!force&&S.jwSig===sig) return; S.jwSig=sig;
+    if(!o){ o=document.createElement('div'); o.id='jwov'; o.className='jw-ov'; o.onclick=ev=>{ if(ev.target===o) APLUS_jClose(); }; document.body.appendChild(o); document.documentElement.style.overflow='hidden'; }
+    o.innerHTML=`<div class="jw-in"><button type="button" class="jw-x" onclick="APLUS_jClose()" aria-label="Schließen"><svg class="ci"><use href="#i-schliessen"/></svg></button>${jobDetail(j,jAction(j))}</div>`; }
+  document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'&&$('jwov')) APLUS_jClose(); });
+  window.addEventListener('hashchange',()=>{ if(route()!=='jobs'&&$('jwov')) APLUS_jClose(); });
+  try{ const _pj=PAGES.jobs; PAGES.jobs=function(){
+      if(!wide()||(S.member&&!JOBS.some(x=>x.live))){ if($('jwov')&&!wide()) { const o=$('jwov'); o.remove(); document.documentElement.style.overflow=''; } return _pj.apply(this,arguments); }
+      const card=x=>`<button type="button" onclick="APLUS_jOpen(${x.id})" class="jw-card ${x.top?'jw-top':''}">
+          <span class="flex items-center justify-between gap-2">${x.top?'<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style="background:#087A4B;color:#fff"><svg class="ci"><use href="#i-stern_voll"/></svg> Top-Job</span>':'<span></span>'}<span class="text-[11px] text-muted">${x.d===0?'Heute':x.d===1?'Gestern':'vor '+x.d+' Tagen'}</span></span>
+          <span class="block font-semibold text-[15px] leading-snug mt-1">${x.t}</span><span class="block text-sm text-muted">${[x.ind,x.reg].filter(Boolean).join(' · ')}</span>
+          <span class="flex items-center justify-between mt-auto pt-2"><span class="text-sm font-semibold text-gold">${x.pay||''}</span><span class="text-xs text-gold">Ansehen →</span></span></button>`;
+      const top=JOBS.filter(x=>x.top).filter(jobFits), rest=JOBS.filter(x=>!x.top).filter(jobFits);
+      const free=Math.max(0,3-JOBS.filter(x=>x.top).length);
+      let h=`<div class="px-6 py-6 max-w-7xl mx-auto">
+        <div class="flex gap-2 mb-5 hubtabs"><span class="btn-gold">Jobs</span><a href="#forum" class="btn-ghost">Forum</a><a href="#partner" class="btn-ghost">Partner &amp; Live</a></div>
+        <div class="flex flex-wrap items-center gap-2 mb-3">${JROLES.map(r=>`<button onclick="S.jrole=S.jrole==='${r}'?null:'${r}';render()" class="px-3.5 py-1.5 rounded-full border text-sm ${S.jrole===r?'text-black font-semibold':'text-muted'}" style="${S.jrole===r?'background:linear-gradient(135deg,#7FD1A8,#087A4B 50%,#06603B);border-color:#087A4B':'border-color:rgb(var(--line))'}">${r}</button>`).join('')}</div>
+        <div class="grid gap-4 mb-6" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"><div>${typeof jobSubBar==='function'?jobSubBar():''}</div><div>${S.member&&typeof myAppsCard==='function'?myAppsCard():''}</div></div>
+        <p class="text-xs uppercase tracking-wider text-gold font-semibold mb-3"><svg class="ci"><use href="#i-stern_voll"/></svg> Top-Jobs</p>
+        <div class="jw-grid mb-8">${top.map(card).join('')}${Array.from({length:free}).map(()=>`<div class="jw-card border-dashed text-sm text-muted" style="border-style:dashed;justify-content:center;align-items:center;text-align:center">Freier Top-Platz · <span class="text-gold">19 €</span><br><span class="text-xs">für Auftraggeber</span></div>`).join('')}</div>
+        <p class="text-xs uppercase tracking-wider text-muted mb-3">Alle Jobs</p>
+        <div class="jw-grid">${rest.map(card).join('')||'<p class="text-sm text-muted">Gerade keine Jobs in dieser Kategorie.</p>'}</div></div>`;
+      setTimeout(()=>jDraw(false),0);
+      return h; }; }catch(e){}
+  window.addEventListener('resize',()=>{ if(route()==='jobs'){ clearTimeout(S._jwR); S._jwR=setTimeout(()=>{ if(!wide()&&$('jwov')){ $('jwov').remove(); document.documentElement.style.overflow=''; } try{ render(); }catch(e){} },250); } });
+
+  try{ render(); }catch(e){}
+})();

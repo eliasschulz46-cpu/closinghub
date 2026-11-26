@@ -661,8 +661,9 @@ function jobInvoiceManual(job,c){
   toast(c?'Für diesen Auftraggeber ist die Job-Gebühr 0 € – trag den Betrag selbst ein':'Bitte Betrag eintragen');
 }
 function jobDiff(j){
-  const L={titel:'Titel',rolle:'Gesucht',branche:'Branche',produkt:'Produkt',ticket:'Preis des Produkts',provision:'Provision',fixum:'Fixum',modell:'Arbeitsmodell',region:'Region',umfang:'Umfang',start_text:'Start',auftragsdauer:'Dauer',beschreibung:'Beschreibung',anforderungen:'Das sollte die Person mitbringen'};
-  const rows=Object.entries(j.aenderung||{}).map(([k,v])=>`<div style="margin-top:8px"><b style="font-size:12.5px">${L[k]||esc(k)}</b><div class="grid g2" style="gap:8px;margin-top:4px;font-size:13px"><div style="background:var(--bg2);border-radius:8px;padding:8px 10px;white-space:pre-wrap"><span class="muted" style="font-size:11px">Aktuell online</span><br>${esc(j[k]||'–')}</div><div style="border:1px solid var(--gold);border-radius:8px;padding:8px 10px;white-space:pre-wrap"><span class="gold" style="font-size:11px">Neu</span><br>${esc(v||'– (leer)')}</div></div></div>`).join('');
+  const L={titel:'Titel',rolle:'Gesucht',branche:'Branche',produkt:'Produkt',ticket:'Preis des Produkts',provision:'Provision',fixum:'Fixum',modell:'Arbeitsmodell',region:'Region',umfang:'Umfang',start_text:'Start',auftragsdauer:'Dauer',beschreibung:'Beschreibung',anforderungen:'Das sollte die Person mitbringen',fragen:'Fragen an Bewerber'};
+  const fx=x=>Array.isArray(x)?(x.length?x.map((q,i)=>(i+1)+'. '+q).join('\n'):''):x;
+  const rows=Object.entries(j.aenderung||{}).map(([k,v])=>`<div style="margin-top:8px"><b style="font-size:12.5px">${L[k]||esc(k)}</b><div class="grid g2" style="gap:8px;margin-top:4px;font-size:13px"><div style="background:var(--bg2);border-radius:8px;padding:8px 10px;white-space:pre-wrap"><span class="muted" style="font-size:11px">Aktuell online</span><br>${esc(fx(j[k])||'–')}</div><div style="border:1px solid var(--gold);border-radius:8px;padding:8px 10px;white-space:pre-wrap"><span class="gold" style="font-size:11px">Neu</span><br>${esc(fx(v)||'– (leer)')}</div></div></div>`).join('');
   return `<div style="margin-top:10px;border:1px solid var(--gold);border-radius:12px;padding:12px"><b class="gold">Änderung vom Auftraggeber · ${fmtAt(j.aenderung_at)}</b><p class="muted" style="font-size:12px;margin-top:2px">Bis du entscheidest, bleibt der aktuelle Text online.</p>${rows}
     <div class="row" style="margin-top:10px;gap:8px"><button class="btn gold-b sm" onclick="jobAend(${j.id},true,this)">Übernehmen</button><button class="btn sm red" onclick="jobAend(${j.id},false,this)">Ablehnen</button></div></div>`;
 }
@@ -817,7 +818,9 @@ function printInvoice(){
 /* ===== Laufband ===== */
 function laufband(){
   const on=D.ticker.filter(t=>t.on), items=on.map(t=>`<span>${esc(t.title)} · <b>${esc(t.offer)}</b></span>`).join('');
+  if(D.lbAn===undefined){ D.lbAn=null; q('settings?select=value&key=eq.laufband').then(r=>{ const v=r&&r[0]&&r[0].value; D.lbAn=!(v&&v.aktiv===false); render(); }).catch(()=>{ D.lbAn=true; render(); }); }
   return `<div class="row between"><div><h1 class="h1">Laufband & Angebote</h1><p class="sub">Was oben in der App durchläuft. Änderungen sind sofort live.</p></div><button class="btn gold-b" onclick="editTick()">+ Angebot</button></div>
+  <div class="card row between" style="margin-bottom:16px;${D.lbAn===false?'border-color:var(--gold)':''}"><div><b style="font-size:15px">Laufband in der App ${D.lbAn===false?'ist aus':'ist an'}</b><div class="muted" style="font-size:12.5px">${D.lbAn===false?'Die Leiste „Member-Vorteile“ ist in der App ausgeblendet. Die Angebote bleiben gespeichert.':'Ein Klick blendet die ganze Leiste „Member-Vorteile“ in der App aus – für alle Mitglieder.'}</div></div><label class="switch"><input type="checkbox" ${D.lbAn!==false?'checked':''} ${D.lbAn===null?'disabled':''} onchange="lbSet(this.checked,this)"><span></span></label></div>
   <div class="card" style="margin-bottom:16px"><h3>Live-Vorschau</h3>
     <div class="ticker"><span class="lab">🎁 Member-Vorteile</span><div style="overflow:hidden;flex:1"><div class="track">${items}${items}</div></div></div>
     <p class="muted" style="font-size:12px;margin-top:8px">${on.length} aktiv · Umsatz Laufband: <b class="gold">${eur(on.reduce((a,t)=>a+(+t.price||0),0))} / Monat</b></p></div>
@@ -829,6 +832,7 @@ function laufband(){
     <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="editTick(${t.id})">${ic('pen',13)}</button> <button class="btn sm red" onclick="delTick(${t.id})">${ic('trash',13)}</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Noch keine Angebote.</td></tr>'}
   </tbody></table></div>`;
 }
+async function lbSet(on,el){ el.disabled=true; try{ await setKey('laufband',{aktiv:!!on}); D.lbAn=!!on; toast(on?'Laufband ist wieder an':'Laufband ist aus – in der App ausgeblendet'); }catch(e){ el.checked=!on; } el.disabled=false; render(); }
 async function tickActive(id,on){ await q(`ticker?id=eq.${id}`,{method:'PATCH',body:{active:on}}); D.ticker.find(t=>t.id===id).on=on; render(); toast(on?'Läuft jetzt':'Pausiert'); }
 async function moveTick(i,d){
   const a=D.ticker; [a[i],a[i+d]]=[a[i+d],a[i]];
@@ -1011,8 +1015,14 @@ function mbProfile(m){
     <td class="muted">${p.monate?p.monate+' Monate':'–'}</td><td class="muted">${new Date(p.created_at).toLocaleDateString('de-DE')}</td>
     <td>${pill(p.status==='bestaetigt'?'bestätigt':p.status)}${p.gegengeprueft?' <span class="pill p-ok">gegengeprüft</span>':''}</td>
     <td style="text-align:right;white-space:nowrap">${p.vorschau_url?`<a class="btn sm" href="${esc(p.vorschau_url)}" target="_blank" rel="noopener" title="So sieht der Auftraggeber den Nachweis">👁 Auftraggeber-Ansicht</a> `:''}${p.status==='bestaetigt'&&p.datei_url?`<button class="btn sm" onclick="redEditor(${p.id})">✎ Schwärzung bearbeiten</button> `:''}${p.status!=='bestaetigt'?`<button class="btn sm gold-b" onclick="zProofApprove(${p.id},this)">Prüfen & schwärzen</button> `:''}${p.status!=='abgelehnt'?`<button class="btn sm" onclick="mbProofSet(${p.id},{status:'abgelehnt',geprueft_at:new Date().toISOString()},'Abgelehnt')">Ablehnen</button> `:''}<button class="btn sm" onclick="mbProofSet(${p.id},{gegengeprueft:${p.gegengeprueft?'false':'true'}},'Gespeichert')">${p.gegengeprueft?'Gegenprüfung zurücknehmen':'Per Anruf gegengeprüft'}</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Noch keine Nachweise. Mitglieder reichen sie später in der App unter Einstellungen → „Nachweise hochladen“ ein. Bis dahin kannst du sie hier von Hand eintragen.</td></tr>'}
-  </tbody></table></div>`;
+  </tbody></table></div>${mbRevCard(m.id)}`;
 }
+D.rev={};
+function mbRevCard(id){ const r=D.rev[id]; if(r===undefined){ D.rev[id]=null; q('rpc/bewertungen_admin',{method:'POST',body:{p_member:id}}).then(x=>{ D.rev[id]=x||[]; if((location.hash||'').includes('member')) render(); }).catch(()=>{ D.rev[id]=[]; }); }
+  const l=r||[], vis=l.filter(x=>!x.versteckt), avg=vis.length?(vis.reduce((a,x)=>a+x.sterne,0)/vis.length).toFixed(1).replace('.',','):'–';
+  return `<div class="row between" style="margin:24px 0 10px"><h3 style="font-size:16px;margin:0">Bewertungen (${l.length})</h3><span class="muted" style="font-size:12.5px">Schnitt ${avg} · in der App anonym, Sterne ab 5 Bewertungen sichtbar</span></div>
+  <div class="card">${r===null?'<p class="muted">Lädt …</p>':l.length?l.map(x=>`<div class="item" style="align-items:flex-start;gap:10px;${x.versteckt?'opacity:.45':''}"><div style="flex:1"><b style="color:#E0A82E">${'★'.repeat(x.sterne)}<span style="opacity:.3">${'★'.repeat(5-x.sterne)}</span></b> <span class="muted" style="font-size:12px">von <a href="#member" class="gold" onclick="mbSel=${x.von_id}">${esc(x.von)}</a> · ${new Date(x.at).toLocaleDateString('de-DE')}</span>${x.text?`<div style="font-size:13.5px;margin-top:2px">${esc(x.text)}</div>`:''}</div><button class="btn sm" onclick="mbRevHide(${id},${x.id},${!x.versteckt},this)">${x.versteckt?'Wieder zeigen':'Ausblenden'}</button></div>`).join(''):'<p class="muted">Noch keine Bewertungen.</p>'}</div>`; }
+async function mbRevHide(mid,id,an,b){ b.disabled=true; try{ await q('rpc/bewertung_verstecken',{method:'POST',body:{p_id:id,p_an:an}}); delete D.rev[mid]; render(); toast(an?'Ausgeblendet':'Wieder sichtbar'); }catch(e){ b.disabled=false; } }
 const mbById = id => D.members.find(x=>x.id===id);
 async function mbSet(id,patch,msg){ try{ await q(`members?id=eq.${id}`,{method:'PATCH',body:patch}); Object.assign(mbById(id),patch); await mbAutoRise(); render(); if(msg) toast(msg); }catch(e){} }
 async function mbSaveRank(id,b){
@@ -1520,7 +1530,7 @@ async function zProofApprove(pid,btn){
 
 /* ===== Echte Meldungen aus der App (Nachrichten, Beiträge, Kommentare, Profile) ===== */
 async function meldLoad(){ D._meldT=Date.now(); try{ D.meld=(await q('rpc/meldungen_liste',{method:'POST',body:{}}))||[]; }catch(e){ D.meld=[]; } if((location.hash||'').includes('moderation')) render(); }
-const MELD_TYP={nachricht:'Chat-Nachricht',beitrag:'Beitrag',kommentar:'Kommentar',member:'Profil',forum:'Forum-Antwort',forumfrage:'Forum-Frage',markt:'Marktplatz',story:'Status',battle:'Battle-Antwort'};
+const MELD_TYP={nachricht:'Chat-Nachricht',beitrag:'Beitrag',kommentar:'Kommentar',member:'Profil',forum:'Forum-Antwort',forumfrage:'Forum-Frage',markt:'Marktplatz',story:'Status',battle:'Battle-Antwort',bewertung:'Bewertung'};
 const meldPrev=x=>{ const h=x.inhalt||{}; if(!h.media) return ''; const u=esc(h.media), v=h.media_typ==='video'||/\.(mp4|mov|webm|m3u8)(\?|$)/i.test(h.media);
   return v?`<video src="${u}" ${h.thumb?`poster="${esc(h.thumb)}"`:''} controls preload="none" style="display:block;max-width:260px;max-height:320px;border-radius:10px;margin-top:8px;background:#000"></video>`
     :`<a href="${u}" target="_blank" rel="noopener"><img src="${u}" style="display:block;max-width:260px;max-height:260px;border-radius:10px;margin-top:8px"></a>`; };
