@@ -85,6 +85,8 @@
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
   .modal.open{display:flex}
   .modal .card{width:100%;max-width:560px;max-height:88vh;overflow:auto}
+  .mclose{position:sticky;top:0;float:right;margin:-8px -8px 6px 12px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--rule,#D5DAD3);background:#fff;color:#0E1A2B;cursor:pointer;z-index:5;padding:0}
+  .mclose:hover{border-color:#0E1A2B}
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--gold);padding:10px 18px;border-radius:12px;transition:transform .3s;z-index:70}
   .toast.show{transform:translateX(-50%) translateY(0)}
   svg{flex:none}
@@ -329,10 +331,9 @@ const eur = n => (+n).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $ = id => document.getElementById(id);
 function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2600); }
-function openModal(html){ $('mbox').innerHTML=html; $('modal').classList.add('open'); }
+function openModal(html){ $('mbox').innerHTML='<button type="button" class="mclose" onclick="closeModal()" aria-label="Schließen" title="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'+html; $('modal').classList.add('open'); }
 function closeModal(){ $('modal').classList.remove('open'); }
-$('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+/* Fenster schließen sich nur über das X (oder Abbrechen) – kein Schließen durch Klick daneben oder Esc, damit nichts Eingetipptes verloren geht */
 const pill = st => { const m={'bestätigt':'p-ok',bezahlt:'p-ok',gelöst:'p-ok',aktiv:'p-ok',übernommen:'p-ok',beantwortet:'p-ok',offen:'p-warn',neu:'p-gold',wartet:'p-warn',einbehalten:'p-gold',überfällig:'p-bad',gesperrt:'p-bad','gekündigt':'p-bad',online:'p-ok','wartet auf Prüfung':'p-gold',abgelehnt:'p-bad',später:'p-warn',hoch:'p-bad',normal:'',niedrig:''}; return `<span class="pill ${m[st]||''}">${esc(st)}</span>`; };
 const gross = inv => inv.net*(1+(inv.vat ?? D.settings.vat)/100);
 const demoNote = t => `<div class="demo">${t}</div>`;
@@ -390,7 +391,7 @@ document.addEventListener('submit', async e=>{
 let jobTab='anfrage';
 const JOB_FIELDS=[
   ['titel','Titel','text','z. B. High-Ticket Closer Coaching (Remote)'],
-  ['rolle','Gesucht','select',['Closer','Setter','Closer & Setter']],
+  ['rolle','Gesucht','select',['Closer','Setter','Closer & Setter','Vertrieb','Sonstiges']],
   ['branche','Branche','text','z. B. Coaching'],
   ['produkt','Produkt / Angebot','text','Was wird verkauft?'],
   ['ticket','Ticketgröße','text','z. B. 3.000–8.000 €'],
@@ -437,7 +438,7 @@ async function extendJob(id){ const j=D.jobs.find(x=>x.id===id); const base=Math
 // Schnell-Vorschlag ohne KI (falls die KI-Funktion noch nicht eingerichtet ist)
 function quickParse(t, j={}){
   t=t||''; const low=(t+' '+(j.rolle||'')).toLowerCase(), f={};
-  f.rolle = j.rolle || (/closer/.test(low)&&/setter/.test(low) ? 'Closer & Setter' : /setter/.test(low) ? 'Setter' : 'Closer');
+  f.rolle = j.rolle || (/closer/.test(low)&&/setter/.test(low) ? 'Closer & Setter' : /setter/.test(low) ? 'Setter' : /closer/.test(low) ? 'Closer' : /vertrieb|außendienst|aussendienst|sales/.test(low) ? 'Vertrieb' : 'Closer');
   f.modell = j.modell || (/remote|home.?office|online/.test(low) ? 'Remote' : /vor ort|außendienst|aussendienst/.test(low) ? 'Vor Ort' : null);
   const prov=t.match(/(\d{1,2}(?:[.,]\d)?\s?%[^.,;\n]{0,30})/); if(prov) f.provision=prov[1].trim();
   const eur=t.match(/(\d[\d.]*\s?(?:–|-|bis)?\s?\d*[\d.]*\s?(?:€|eur))(\s*(?:pro|je)\s+(?:termin|abschluss|deal|lead)[^.,;\n]{0,20})?/i);

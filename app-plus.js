@@ -457,7 +457,7 @@
       const title=def?def[1]:'Weitere Einstellungen';
       let extra='';
       if(sub==='konto'){ const abo=S.member&&S.member.abo; const L={basic:'Basic (kostenlos)',dayone:'Day One',plus:'Plus',premium:'Premium'};
-        extra=`${S.member?`<div class="card p-4 flex items-center justify-between gap-3"><div><p class="font-semibold">Dein Abo</p><p class="text-sm text-muted">${L[abo]||abo||'–'}</p></div>${abo==='basic'&&typeof plusModal==='function'?`<button class="btn-gold text-sm" onclick="plusModal('alle Funktionen nutzen')">Plus holen</button>`:''}</div>`:''}
+        extra=`${S.member?`<div class="card p-4 flex items-center justify-between gap-3"><div><p class="font-semibold">Dein Abo</p><p class="text-sm text-muted">${L[abo]||abo||'–'}</p></div>${abo==='basic'&&typeof plusModal==='function'?`<button class="btn-gold text-sm" onclick="plusModal('alle Funktionen nutzen')">Abo wählen</button>`:''}</div>`:''}
           <div class="card p-4 text-sm space-y-2"><p class="font-semibold">Rechtliches</p><p class="text-muted">${typeof LEGAL==='function'?LEGAL():''} · <button class="hover:underline" onclick="legalOpen('widerruf')">Widerruf</button></p></div>
           ${S.user?`<button onclick="doLogout()" class="btn-ghost w-full">Abmelden</button>`:''}`; }
       return `<div class="ch-left sm px-4 py-6 space-y-4"><button class="set-back" onclick="S.setSub=null;render();scrollTo(0,0)">‹ Einstellungen</button>
@@ -1623,28 +1623,31 @@
       return '';
     }
     if(typeof shell==='function'){ const _sh=shell; shell=function(c){ if(S.member&&!S.abAt) setTimeout(()=>window.APLUS_abLoad&&APLUS_abLoad(false),0); const h=_sh.apply(this,arguments); try{ document.body.classList.toggle('ab-basic',['basic','angebot'].includes(AB().phase)); }catch(e){} const b=bar(); return b?h.replace('<main>',b+'<main>'):h; }; }
-    const planCard=(k,top)=>{ const p=PR[k], n=rab(p); return `<div class="ab-plan ${top?'top':''}">${top?'<span class="ab-tag">Beliebt</span>':''}
+    const planCard=(k,top,off=true)=>{ const p=PR[k], n=off?rab(p):p; return `<div class="ab-plan ${top?'top':''}">${top?'<span class="ab-tag">Beliebt</span>':''}
       <p class="font-semibold">${k==='plus'?'Plus':'Premium'}</p>
-      <p class="mt-1"><span class="ab-was">${eur(p)}</span><span class="font-serif" style="font-size:26px">${eur(n)}</span><span class="text-sm text-muted"> / Monat</span></p>
+      <p class="mt-1">${off?`<span class="ab-was">${eur(p)}</span>`:''}<span class="font-serif" style="font-size:26px">${eur(n)}</span><span class="text-sm text-muted"> / Monat</span></p>
       <p class="text-xs text-muted mt-1">${k==='plus'?'5 Bewerbungen pro Monat, Punkte, Medaillen, Motivations-Calls, Gewinnspiele':'10 Bewerbungen pro Monat, alles aus Plus + Partner-Vorträge und Offline-Event'}</p>
       ${NATIVE_IOS()?'':`<button class="${top?'btn-gold':'btn-ghost'} w-full mt-3" style="padding:10px" onclick="APLUS_abKauf('${k}')">${k==='plus'?'Plus':'Premium'} sichern</button>`}</div>`; };
-    window.APLUS_abOffer=()=>{
-      const a=AB(), bis=a.bis||Date.now()+864e5, p={punkte:(S.pt&&+S.pt.punkte)||(S.member&&S.member.ab_punkte)||0}, med=(ME.medals||[]).reduce((x,m)=>x+(+m[1]||0),0)||(S.member&&S.member.ab_med)||0, abz=(ME.badges||[]).filter(b=>b!=='Day One'&&b!=='Partner').length;
+    window.APLUS_abOffer=(was)=>{
+      const a=AB(), off=a.phase==='angebot', bis=a.bis||Date.now()+864e5, p={punkte:(S.pt&&+S.pt.punkte)||(S.member&&S.member.ab_punkte)||0}, med=(ME.medals||[]).reduce((x,m)=>x+(+m[1]||0),0)||(S.member&&S.member.ab_med)||0, abz=(ME.badges||[]).filter(b=>b!=='Day One'&&b!=='Partner').length;
       const loss=[(+p.punkte||0)?`<b>${(+p.punkte).toLocaleString('de-DE')} Punkte</b>`:'',med?`<b>${med} ${med===1?'Medaille':'Medaillen'}</b>`:'',abz?`<b>${abz} ${abz===1?'Abzeichen':'Abzeichen'}</b>`:''].filter(Boolean);
       const old=document.getElementById('abMd'); if(old) old.remove();
       const d=document.createElement('div'); d.id='abMd'; d.className='fixed inset-0 flex justify-center ks-wrap'; d.style.cssText='z-index:320;background:rgba(4,8,14,.62);backdrop-filter:blur(3px)';
       d.onclick=e=>{ if(e.target===d) d.remove(); };
       d.innerHTML=`<div class="bg-panel ks-sheet ab-sheet"><div class="flex justify-end -mb-2"><button class="text-muted text-xl" onclick="document.getElementById('abMd').remove()" aria-label="Schließen"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>
-        <div class="text-center space-y-2"><p class="text-xs uppercase tracking-wider text-gold font-semibold">Nur für dich · einmalig</p>
+        ${off?`<div class="text-center space-y-2"><p class="text-xs uppercase tracking-wider text-gold font-semibold">Nur für dich · einmalig</p>
           <p class="font-serif text-2xl leading-tight">Vermisst du Premium?</p>
-          <p class="text-sm text-muted">Jetzt <b style="color:rgb(var(--fg))">25 % sparen auf das erste Jahr</b>, nur 24 h gültig. Angebot endet in <span class="ab-cd" style="color:#C0392B" data-abcd="${bis}">${cd(bis)}</span></p></div>
+          <p class="text-sm text-muted">Jetzt <b style="color:rgb(var(--fg))">25 % sparen auf das erste Jahr</b>, nur 24 h gültig. Angebot endet in <span class="ab-cd" style="color:#C0392B" data-abcd="${bis}">${cd(bis)}</span></p></div>`
+          :`<div class="text-center space-y-2"><p class="text-xs uppercase tracking-wider text-gold font-semibold">Upgrade</p>
+          <p class="font-serif text-2xl leading-tight">Wähle dein Abo</p>
+          <p class="text-sm text-muted">Mit Plus oder Premium kannst du ${esc(typeof was==='string'&&was?was:'alle Funktionen nutzen')}.</p></div>`}
         ${loss.length?`<div class="ab-loss mt-4"><span style="font-size:20px;color:#C0392B"><svg class="ci"><use href="#i-sanduhr"/></svg></span><span>Deine ${loss.join(', ').replace(/, ([^,]*)$/,' und $1')} bleiben eingefroren, wenn du nicht wechselst.</span></div>`:''}
-        <div class="grid gap-3 mt-4">${planCard('premium',true)}${planCard('plus',false)}</div>
-        <p class="text-[11px] text-muted mt-3 text-center">${NATIVE_IOS()?'Das Angebot kannst du auf getclosinghub.com einlösen. ':''}Danach regulärer Preis, monatlich kündbar. Bezahlung sicher über Stripe.</p>
-        <button class="text-sm text-muted w-full mt-2" onclick="document.getElementById('abMd').remove()">Nein danke, ich bleibe bei Basic</button></div>`;
+        <div class="grid gap-3 mt-4">${planCard('premium',true,off)}${planCard('plus',false,off)}</div>
+        <p class="text-[11px] text-muted mt-3 text-center">${off?`${NATIVE_IOS()?'Das Angebot kannst du auf getclosinghub.com einlösen. ':''}Danach regulärer Preis, monatlich kündbar.`:`${NATIVE_IOS()?'Ein Abo kannst du auf getclosinghub.com abschließen. ':''}Monatlich kündbar.`} Bezahlung sicher über Stripe.</p>
+        <button class="text-sm text-muted w-full mt-2" onclick="document.getElementById('abMd').remove()">${off?'Nein danke, ich bleibe bei Basic':'Später'}</button></div>`;
       document.body.appendChild(d); };
     if(typeof basicBanner==='function'){ basicBanner=function(){ if(!isBasic()||S.bbOff||AB().phase==='angebot') return '';
-      return `<div class="card p-3 flex items-center gap-3" style="border-color:rgba(8,122,75,.45);background:rgba(8,122,75,.06)"><span style="font-size:20px"><svg class="ci"><use href="#i-entsperrt"/></svg></span><p class="text-sm flex-1">Du nutzt <b>Basic</b>. Mit Premium genießt du Motivations-Calls, Partner-Vorträge, Offline-Event, Bewerbungen uvm.</p><button class="btn-gold text-xs whitespace-nowrap" style="padding:6px 12px" onclick="${AB().phase==='angebot'?'APLUS_abOffer()':'plusModal()'}">Ansehen</button><button class="text-muted" onclick="S.bbOff=1;render()" aria-label="Ausblenden"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>`; }; }
+      return `<div class="card p-3 flex items-center gap-3" style="border-color:rgba(8,122,75,.45);background:rgba(8,122,75,.06)"><span style="font-size:20px"><svg class="ci"><use href="#i-entsperrt"/></svg></span><p class="text-sm flex-1">Du nutzt <b>Basic</b>. Mit Premium genießt du Motivations-Calls, Partner-Vorträge, Offline-Event, Bewerbungen uvm.</p><button class="btn-gold text-xs whitespace-nowrap" style="padding:6px 12px" onclick="APLUS_abOffer()">Ansehen</button><button class="text-muted" onclick="S.bbOff=1;render()" aria-label="Ausblenden"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>`; }; }
     try{ if(Array.isArray(PLUS_LIST)) PLUS_LIST.splice(0,PLUS_LIST.length,'Auf Jobs bewerben und Nachweise hochladen','Punkte, Medaillen und Abzeichen sammeln','Motivations-Calls (Premium: auch Partner-Vorträge)','Gewinnspiele und Glücksrad-Gewinne','Member-Rabatte unserer Partner'); }catch(e){}
 
     /* Abo-Stand vom Server (Test, Angebot, eingefroren, Glücksrad-Tag) */
@@ -1712,6 +1715,7 @@
           const nb=[...document.querySelectorAll('#modal button')].find(b=>b.textContent.trim()==='Nachricht'); if(nb) nb.style.display='none';
           document.querySelectorAll('#modal button[onclick*="clipboard"]').forEach(b=>{ b.outerHTML=`<div class="w-full mt-3 rounded-lg px-3 py-2 text-xs text-muted" style="border:1px dashed rgb(var(--line))"><svg class="ci"><use href="#i-sperren"/></svg> Member-Rabatt mit Plus oder Premium</div>`; }); }
       }catch(e){} return res; }; }
+    try{ window.plusModal=plusModal=function(was){ const o=document.getElementById('plusMd'); if(o) o.remove(); return APLUS_abOffer(was); }; }catch(e){}
     window.APLUS_abKauf=k=>{ toastMsg&&toastMsg('Die Bezahlung wird mit Stripe verbunden, sobald das Konto steht.'); };
     window.APLUS_abHinweis=()=>`<div class="rounded-xl p-3 text-sm" style="background:rgba(217,180,90,.12);border:1px solid rgba(217,180,90,.4)"><svg class="ci"><use href="#i-entsperrt"/></svg> Wechsel zu Plus oder Premium, um Punkte, Medaillen und Abzeichen zu sammeln.${NATIVE_IOS()?'':` <button class="text-gold font-semibold" onclick="APLUS_abOffer()">Jetzt wechseln</button>`}</div>`;
     if(typeof ptCard==='function'){ const _pc=ptCard; ptCard=function(){ const a=AB(); if(!(a.phase==='basic'||a.phase==='angebot')||!S.pt) return _pc.apply(this,arguments);
@@ -1943,4 +1947,33 @@ try{ if(typeof MB_ST!=='undefined' && !MB_ST.vergeben) MB_ST.vergeben=['Geschlos
   window.addEventListener('resize',()=>{ if(route()==='jobs'){ clearTimeout(S._jwR); S._jwR=setTimeout(()=>{ if(!wide()&&$('jwov')){ $('jwov').remove(); document.documentElement.style.overflow=''; } try{ render(); }catch(e){} },250); } });
 
   try{ render(); }catch(e){}
+})();
+
+/* r37: Jede Mitteilung (in der App und als Push) führt zur passenden Stelle */
+(function(){
+  const strip=l=>String(l||'').trim().replace(/^#+/,'').replace(/[^a-zA-Z0-9:_-]/g,'');
+  const okRoute=r=>!!(r&&typeof PAGES==='object'&&PAGES[r]);
+  const FALL={job:'jobs',bewerbung:'jobs',nachricht:'messages',forum:'forum',markt:'markt',like:'feed',kommentar:'feed',folgen:'profile',erfolg:'profile',konto:'profile',community:'messages'};
+  const DEEP=/^(post:\d+(:k)?|mitglied:\d+|forum:\d+|job:\d+|bewerbung:\d+|chat:[apm]?\d+)$/;
+  function openJob(dbId){ const t0=Date.now(), id=100000+dbId;
+    (function w(){ const da=JOBS.some(x=>x.id===id);
+      if(!da && !JOBS.some(x=>x.live) && Date.now()-t0<4000) return setTimeout(w,150);
+      if(da) return openLink('j',id);
+      S.jopen=0; go('jobs'); })(); }
+  window.APLUS_noteOpen=function(l,typ){ l=strip(l); let m;
+    if((m=/^post:(\d+)(:k)?$/.exec(l))) return openPost(+m[1],!!m[2]);
+    if((m=/^mitglied:(\d+)$/.exec(l))) return openProfile(+m[1]);
+    if((m=/^forum:(\d+)$/.exec(l))) return openLink('f',+m[1]);
+    if((m=/^(job|bewerbung):(\d+)$/.exec(l))) return openJob(+m[2]);
+    if((m=/^chat:([apm]?)(\d+)$/.exec(l))) return openConv((m[1]||'m')+m[2]);
+    const r=okRoute(l)?l:(FALL[typ]||'notifications'); if(r==='jobs') S.jopen=0; if(r==='forum') S.thread=null; go(r); };
+  try{ window.noteHref=noteHref=function(n){ return `href="javascript:void(0)" onclick="event.preventDefault();APLUS_noteOpen('${strip(n.link)}','${strip(n.typ)}')"`; }; }catch(e){}
+  try{ window.noteGo=noteGo=function(l){ APLUS_noteOpen(l); }; }catch(e){}
+  // Push-Links (#job:12, #post:5, #chat:p3 …) und doppelte Rauten (##jobs)
+  function hashDeep(){ const raw=location.hash||''; let l; try{ l=strip(decodeURIComponent(raw)); }catch(e){ l=strip(raw); }
+    if(DEEP.test(l)){ try{ history.replaceState(null,'',location.pathname+location.search+'#feed'); }catch(e){} S.route='feed';
+      const t0=Date.now(); (function w(){ if(S.member||Date.now()-t0>10000) APLUS_noteOpen(l); else setTimeout(w,200); })(); return; }
+    if(/^##/.test(raw)&&okRoute(l)){ try{ history.replaceState(null,'',location.pathname+location.search+'#'+l); }catch(e){} S.route=l; render(); } }
+  hashDeep(); window.addEventListener('hashchange',hashDeep);
+  try{ if(route()==='notifications') render(); }catch(e){}
 })();

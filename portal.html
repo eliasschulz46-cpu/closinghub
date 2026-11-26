@@ -12,6 +12,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.5}
   a{color:inherit;text-decoration:none}
+  .lglink{text-decoration:underline;color:var(--ink,#0E1A2B);font-weight:600}
   button,input,select,textarea{font:inherit;color:inherit}
   .gold{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
   .muted{color:var(--muted)}
@@ -85,6 +86,8 @@
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
   .modal.open{display:flex}
   .modal .card{width:100%;max-width:560px;max-height:88vh;overflow:auto}
+  .mclose{position:sticky;top:0;float:right;margin:-8px -8px 6px 12px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--rule,#D5DAD3);background:#fff;color:#0E1A2B;cursor:pointer;z-index:5;padding:0}
+  .mclose:hover{border-color:#0E1A2B}
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--gold);padding:10px 18px;border-radius:12px;transition:transform .3s;z-index:70}
   .toast.show{transform:translateX(-50%) translateY(0)}
   svg{flex:none}
@@ -262,10 +265,9 @@ const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>'
 const $ = id => document.getElementById(id);
 const dt = iso => new Date(iso).toLocaleDateString('de-DE');
 function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2800); }
-function openModal(html){ $('mbox').innerHTML=html; $('modal').classList.add('open'); }
+function openModal(html){ $('mbox').innerHTML='<button type="button" class="mclose" onclick="closeModal()" aria-label="Schließen" title="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'+html; $('modal').classList.add('open'); }
 function closeModal(){ $('modal').classList.remove('open'); }
-$('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+/* Fenster schließen sich nur über das X (oder Abbrechen) – kein Schließen durch Klick daneben oder Esc, damit nichts Eingetipptes verloren geht */
 const ST = { anfrage:['In Prüfung','p-gold'], entwurf:['In Prüfung','p-gold'], freigabe:['Bitte prüfen & veröffentlichen','p-gold'], live:['Online','p-ok'], beendet:['Beendet',''], abgelehnt:['Abgelehnt','p-bad'] };
 const INV = { bezahlt:'p-ok', offen:'p-warn', 'überfällig':'p-bad', einbehalten:'p-gold' };
 const pill = (t,c='') => `<span class="pill ${c}">${esc(t)}</span>`;
@@ -311,7 +313,7 @@ function authView(){
       <label class="f">Dein Name<input class="in" id="aName" autocomplete="name" required></label>`:''}
       <label class="f">E-Mail<input class="in" id="aMail" type="email" autocomplete="username" required></label>
       <label class="f">Passwort${reg?' (mind. 8 Zeichen)':''}<input class="in" id="aPw" type="password" autocomplete="${reg?'new-password':'current-password'}" required></label>
-      ${reg?`<label style="display:flex;gap:8px;font-size:12.5px;color:var(--muted);align-items:flex-start"><input type="checkbox" id="aOk" style="margin-top:3px"><span>Ich akzeptiere die AGB und die Datenschutzerklärung von ClosingHub.</span></label>`:''}
+      ${reg?`<label style="display:flex;gap:8px;font-size:12.5px;color:var(--muted);align-items:flex-start"><input type="checkbox" id="aOk" style="margin-top:3px"><span>Ich akzeptiere die <a href="#" class="lglink" onclick="event.preventDefault();event.stopPropagation();rechtOpen('agb')">AGB</a> und die <a href="#" class="lglink" onclick="event.preventDefault();event.stopPropagation();rechtOpen('datenschutz')">Datenschutzerklärung</a> von ClosingHub.</span></label>`:''}
       <p id="aErr" class="down" style="display:none;font-size:13px"></p>
       <p id="aOkMsg" class="up" style="display:none;font-size:13px"></p>
       <button class="btn gold-b" style="justify-content:center;padding:11px">${reg?'Kostenlos registrieren':'Anmelden'}</button>
@@ -382,7 +384,7 @@ function dashboard(){
 
 /* ===== Stellenangebote ===== */
 const FIELDS=[
-  ['rolle','Wen suchst du?','select',['Closer','Setter','Closer & Setter']],
+  ['rolle','Wen suchst du?','select',['Closer','Setter','Closer & Setter','Vertrieb','Sonstiges']],
   ['branche','Branche','text','z. B. Coaching, Solar, Software'],
   ['produkt','Produkt / Angebot','text','Was wird verkauft?'],
   ['ticket','Preis des Produkts','text','z. B. 3.000–8.000 €'],
@@ -645,6 +647,20 @@ async function openKandidat(bid,jobId,nr){
 const IC_ABZ='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M12 2l7 3v6c0 4.6-3 8.6-7 10-4-1.4-7-5.4-7-10V5z"/><path d="M8.8 12l2.2 2.2 4.4-4.4"/></svg>';
 const IC_MED='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M8 2l2.5 6M16 2l-2.5 6"/><circle cx="12" cy="14.5" r="6"/><path d="M12 11.6l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/></svg>';
 /* Geschwärzte Nachweise groß ansehen – direkt im Portal */
+// AGB / Datenschutz lesen (Text aus der Zentrale, sonst Text der Startseite)
+async function rechtOpen(k){
+  const T={agb:'AGB',datenschutz:'Datenschutzerklärung'}, close=()=>{ const o=$('lgov'); if(o) o.remove(); };
+  let o=$('lgov'); if(!o){ o=document.createElement('div'); o.id='lgov'; o.style.cssText='position:fixed;inset:0;z-index:320;background:rgba(14,26,43,.6);overflow:auto;padding:18px;display:flex;align-items:flex-start;justify-content:center'; o.onclick=e=>{ if(e.target===o) close(); }; document.body.appendChild(o); }
+  const box=t=>`<div class="card" style="max-width:720px;width:100%;margin:4vh auto;position:relative;padding:0"><div class="row between" style="position:sticky;top:0;background:#fff;border-radius:16px 16px 0 0;padding:16px 20px;border-bottom:1px solid var(--line);z-index:1"><b style="font-size:18px">${T[k]}</b><button type="button" class="mclose" style="position:static;float:none;margin:0" onclick="document.getElementById('lgov').remove()" aria-label="Schließen">✕</button></div><div class="lgtxt" style="padding:18px 20px 22px;font-size:14px;line-height:1.6;overflow-wrap:anywhere">${t}</div></div>`;
+  o.innerHTML=box('<span class="muted">Lädt …</span>');
+  const toHtml=t=>{ const out=[]; let buf=[]; const fl=()=>{ if(buf.length){ out.push('<p>'+buf.join('<br>')+'</p>'); buf=[]; } };
+    esc(t).replace(/\r/g,'').split('\n').forEach(l=>{ const x=l.trim(); if(!x) fl(); else if(x.startsWith('## ')){ fl(); out.push('<h4 style="margin:16px 0 6px">'+x.slice(3)+'</h4>'); } else buf.push(x); }); fl(); return out.join(''); };
+  let html='';
+  try{ const r=await fetch(`${SB_URL}/rest/v1/settings?select=value&key=eq.recht`,{headers:{apikey:SB_KEY}}); const j=r.ok?await r.json():[]; const t=((j[0]&&j[0].value&&j[0].value[k])||'').trim(); if(t) html=toHtml(t); }catch(e){}
+  if(!html){ try{ const d=new DOMParser().parseFromString(await (await fetch('/index.html')).text(),'text/html'); const b=d.querySelector('#m-'+(k==='agb'?'agb':'ds')+' .box'); if(b){ b.querySelectorAll('h3,.x,button,script').forEach(e=>e.remove()); if(b.textContent.trim()) html=b.innerHTML; } }catch(e){} }
+  if($('lgov')) o.innerHTML=box(html||'<span class="muted">Dieser Text wird gerade vorbereitet. Bei Fragen: info@getclosinghub.com</span>');
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&$('lgov')) $('lgov').remove(); });
 function docView(i){ const l=(window._docs||[]), d=l[i]; if(!d) return; let o=$('docov'); if(!o){ o=document.createElement('div'); o.id='docov'; o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(14,26,43,.88);overflow:auto;padding:18px'; o.onclick=e=>{ if(e.target===o) o.remove(); }; document.body.appendChild(o); }
   o.innerHTML=`<div style="max-width:980px;margin:0 auto"><div class="row between" style="position:sticky;top:0;z-index:2;background:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;box-shadow:0 6px 20px rgba(0,0,0,.25)"><div><b>${esc(d.t)}</b> <span class="muted" style="font-size:12.5px">· ${i+1} von ${l.length} · geschwärzt, geprüft von ClosingHub</span></div><div class="row" style="gap:6px">${l.length>1?`<button class="btn sm" ${i?'':'disabled'} onclick="docView(${i-1})">‹</button><button class="btn sm" ${i<l.length-1?'':'disabled'} onclick="docView(${i+1})">›</button>`:''}<button class="btn sm gold-b" onclick="$('docov').remove()">Schließen</button></div></div>
     <img src="${esc(d.u)}" alt="${esc(d.t)}" style="width:100%;display:block;border-radius:8px;background:#fff"></div>`; o.scrollTop=0; }
