@@ -1587,14 +1587,14 @@
   /* ---------- r26: Fremde Profile ohne Punkte- und Streak-Karte (Streak steht schon am Profilbild) ---------- */
   try{ if(typeof mpStats==='function') mpStats=function(){ return ''; }; }catch(e){}
 
-  /* ---------- r27: Premium-Test (14 Tage), Angebot an Tag 15, eingefrorene Punkte bei Basic ---------- */
+  /* ---------- r27/r36: Premium-Test (7 Tage), ab Tag 8 Basic, Angebot an Tag 14 (24 h), eingefrorene Punkte bei Basic ---------- */
   (function(){
     const PR={plus:9.99,premium:19.99}, eur=v=>v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €', rab=v=>Math.round(v*0.75*100-0.5)/100;
     const NATIVE_IOS=()=>!!window.CH_NATIVE_IOS;
-    const AB=()=>{ const m=S.member; if(!m||m.partner) return {phase:'aus'}; const now=Date.now(), tb=m.test_bis?Date.parse(m.test_bis):0, ab=m.angebot_bis?Date.parse(m.angebot_bis):0, tg=m.abo_tag_bis?Date.parse(m.abo_tag_bis):0;
+    const AB=()=>{ const m=S.member; if(!m||m.partner) return {phase:'aus'}; const now=Date.now(), tb=m.test_bis?Date.parse(m.test_bis):0, ab=m.angebot_bis?Date.parse(m.angebot_bis):0, aa=m.angebot_ab?Date.parse(m.angebot_ab):0, tg=m.abo_tag_bis?Date.parse(m.abo_tag_bis):0;
       if(tg>now) return {phase:'tag',bis:tg};
-      if((m.abo_test!==false)&&tb>now){ const rest=Math.ceil((tb-now)/864e5); return {phase:'test',rest,tag:Math.max(1,Math.min(14,15-rest))}; }
-      if(m.abo==='basic'&&ab>now) return {phase:'angebot',bis:ab};
+      if((m.abo_test!==false)&&tb>now){ const rest=Math.ceil((tb-now)/864e5); return {phase:'test',rest,tag:Math.max(1,Math.min(7,8-rest))}; }
+      if(m.abo==='basic'&&ab>now&&(!aa||aa<=now)) return {phase:'angebot',bis:ab};
       if(m.abo==='basic') return {phase:'basic'}; return {phase:'abo'}; };
     window.APLUS_AB=AB;
     const cd=bis=>{ const t=Math.max(0,Math.floor((bis-Date.now())/1000)), h=Math.floor(t/3600), mi=Math.floor(t%3600/60), se=t%60; return [h,mi,se].map(x=>String(x).padStart(2,'0')).join(':'); };
@@ -1617,9 +1617,9 @@
     document.head.appendChild(st);
     function bar(){
       const a=AB();
-      if(a.phase==='test') return `<div class="ab-bar ab-test"><span><svg class="ci"><use href="#i-stern"/></svg> <b>Premium-Test</b> · Tag ${a.tag} von 14</span><span class="ab-dots">${Array.from({length:14},(_,i)=>`<i class="${i<a.tag?'on':''}"></i>`).join('')}</span><span class="text-muted">noch ${a.rest} ${a.rest===1?'Tag':'Tage'} alles frei</span></div>`;
+      if(a.phase==='test') return `<div class="ab-bar ab-test"><span><svg class="ci"><use href="#i-stern"/></svg> <b>Premium-Test</b> · Tag ${a.tag} von 7</span><span class="ab-dots">${Array.from({length:7},(_,i)=>`<i class="${i<a.tag?'on':''}"></i>`).join('')}</span><span class="text-muted">noch ${a.rest} ${a.rest===1?'Tag':'Tage'} alles frei</span></div>`;
       if(a.phase==='tag') return `<div class="ab-bar ab-test"><span>🎉 <b>Gewonnen: 1 Tag ${S.member.abo==='plus'?'Plus':'Premium'}</b> · noch <span class="ab-cd" data-abcd="${a.bis}">${cd(a.bis)}</span></span></div>`;
-      if(a.phase==='angebot') return `<div class="ab-bar ab-off"><span>Vermisst du Premium? Jetzt wechseln mit <b>25 % Rabatt</b> für 1 Jahr. Angebot läuft ab in <span class="ab-cd" data-abcd="${a.bis}">${cd(a.bis)}</span></span><button onclick="APLUS_abOffer()">Sichern</button></div>`;
+      if(a.phase==='angebot') return `<div class="ab-bar ab-off"><span>Jetzt <b>25 % sparen</b> auf das erste Jahr, nur 24 h gültig · noch <span class="ab-cd" data-abcd="${a.bis}">${cd(a.bis)}</span></span><button onclick="APLUS_abOffer()">Sichern</button></div>`;
       return '';
     }
     if(typeof shell==='function'){ const _sh=shell; shell=function(c){ if(S.member&&!S.abAt) setTimeout(()=>window.APLUS_abLoad&&APLUS_abLoad(false),0); const h=_sh.apply(this,arguments); try{ document.body.classList.toggle('ab-basic',['basic','angebot'].includes(AB().phase)); }catch(e){} const b=bar(); return b?h.replace('<main>',b+'<main>'):h; }; }
@@ -1637,7 +1637,7 @@
       d.innerHTML=`<div class="bg-panel ks-sheet ab-sheet"><div class="flex justify-end -mb-2"><button class="text-muted text-xl" onclick="document.getElementById('abMd').remove()" aria-label="Schließen"><svg class="ci"><use href="#i-schliessen"/></svg></button></div>
         <div class="text-center space-y-2"><p class="text-xs uppercase tracking-wider text-gold font-semibold">Nur für dich · einmalig</p>
           <p class="font-serif text-2xl leading-tight">Vermisst du Premium?</p>
-          <p class="text-sm text-muted">Bleib dabei und spar <b style="color:rgb(var(--fg))">25 % im ersten Jahr</b>. Angebot endet in <span class="ab-cd" style="color:#C0392B" data-abcd="${bis}">${cd(bis)}</span></p></div>
+          <p class="text-sm text-muted">Jetzt <b style="color:rgb(var(--fg))">25 % sparen auf das erste Jahr</b>, nur 24 h gültig. Angebot endet in <span class="ab-cd" style="color:#C0392B" data-abcd="${bis}">${cd(bis)}</span></p></div>
         ${loss.length?`<div class="ab-loss mt-4"><span style="font-size:20px;color:#C0392B"><svg class="ci"><use href="#i-sanduhr"/></svg></span><span>Deine ${loss.join(', ').replace(/, ([^,]*)$/,' und $1')} bleiben eingefroren, wenn du nicht wechselst.</span></div>`:''}
         <div class="grid gap-3 mt-4">${planCard('premium',true)}${planCard('plus',false)}</div>
         <p class="text-[11px] text-muted mt-3 text-center">${NATIVE_IOS()?'Das Angebot kannst du auf getclosinghub.com einlösen. ':''}Danach regulärer Preis, monatlich kündbar. Bezahlung sicher über Stripe.</p>
@@ -1650,9 +1650,9 @@
     /* Abo-Stand vom Server (Test, Angebot, eingefroren, Glücksrad-Tag) */
     window.APLUS_abLoad=async force=>{ if(!S.member||S.abBusy) return; if(!force&&S.abAt&&Date.now()-S.abAt<300000) return; S.abBusy=1;
       let r=null; try{ r=await rpc('abo_status',{}); }catch(e){} S.abBusy=0; S.abAt=Date.now(); if(!r||!r.ok||!S.member) return;
-      const vor=JSON.stringify([S.member.abo,S.member.test_bis,S.member.angebot_bis,S.member.eingefroren,S.member.abo_tag_bis]);
-      Object.assign(S.member,{ab_punkte:+r.punkte||0,ab_med:+r.medaillen||0,abo:r.abo,abo_test:!!r.abo_test,test_bis:r.test_bis,angebot_bis:r.angebot_bis,eingefroren:!!r.eingefroren,abo_tag_bis:r.abo_tag_bis,test_bewerbung:!!r.test_bewerbung});
-      if(JSON.stringify([S.member.abo,S.member.test_bis,S.member.angebot_bis,S.member.eingefroren,S.member.abo_tag_bis])!==vor){ S.pt=null; try{ render(); }catch(e){} } };
+      const vor=JSON.stringify([S.member.abo,S.member.test_bis,S.member.angebot_bis,S.member.angebot_ab,S.member.eingefroren,S.member.abo_tag_bis]);
+      Object.assign(S.member,{ab_punkte:+r.punkte||0,ab_med:+r.medaillen||0,abo:r.abo,abo_test:!!r.abo_test,test_bis:r.test_bis,angebot_bis:r.angebot_bis,angebot_ab:r.angebot_ab||null,eingefroren:!!r.eingefroren,abo_tag_bis:r.abo_tag_bis,test_bewerbung:!!r.test_bewerbung});
+      if(JSON.stringify([S.member.abo,S.member.test_bis,S.member.angebot_bis,S.member.angebot_ab,S.member.eingefroren,S.member.abo_tag_bis])!==vor){ S.pt=null; try{ render(); }catch(e){} } };
     setInterval(()=>{ if(S.member&&!document.hidden){ const a=AB(); if((a.bis&&a.bis<Date.now())||(S.member.test_bis&&Date.parse(S.member.test_bis)<Date.now()&&S.member.abo_test)) APLUS_abLoad(true); else APLUS_abLoad(false); } },20000);
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden) APLUS_abLoad(false); });
 

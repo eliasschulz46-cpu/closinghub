@@ -1004,7 +1004,7 @@ function mbProfile(m){
     <div class="card"><h3>Stammdaten und Aktivität</h3>
       <div class="grid g2" style="gap:12px;margin-top:6px"><label class="f">Name<input class="in" id="mb-name" value="${esc(m.name)}"></label><label class="f">E-Mail<input class="in" id="mb-mail" type="email" value="${esc(m.email||'')}"></label>
         <label class="f">Rolle<select class="in" id="mb-rolle">${['Closer','Setter','Vertriebler'].map(r=>`<option ${r===m.rolle?'selected':''}>${r}</option>`).join('')}</select></label>
-        <label class="f">Paket<select class="in" id="mb-abo">${(()=>{const cur=m.abo_test?'test1':m.abo;return [['dayone','Day One'],['plus','Plus'],['premium','Premium'],['basic','Basic'],['test1','Test: Premium-Test Tag 1'],['test14','Test: Premium-Test Tag 14'],['tag15','Test: Tag 15 (Angebot 24 h)']].map(([k,l])=>`<option value="${k}" ${k===cur?'selected':''}>${l}${k==='test1'&&m.abo_test&&m.test_bis?' (bis '+new Date(m.test_bis).toLocaleDateString('de-DE')+')':''}</option>`).join('')})()}</select></label></div>
+        <label class="f">Paket<select class="in" id="mb-abo">${(()=>{const cur=m.abo_test?'test1':m.abo;return [['dayone','Day One'],['plus','Plus'],['premium','Premium'],['basic','Basic'],['test1','Test: Premium-Test Tag 1'],['test7','Test: Premium-Test Tag 7'],['tag8','Test: Tag 8 (ab jetzt Basic)'],['tag14','Test: Tag 14 (Angebot 24 h)']].map(([k,l])=>`<option value="${k}" ${k===cur?'selected':''}>${l}${k==='test1'&&m.abo_test&&m.test_bis?' (bis '+new Date(m.test_bis).toLocaleDateString('de-DE')+')':''}</option>`).join('')})()}</select></label></div>
       <label class="f" style="margin-top:12px">Notiz (nur für dich)<textarea class="in" id="mb-notiz" rows="2">${esc(m.notiz||'')}</textarea></label>
       <button class="btn gold-b" style="margin-top:12px" onclick="mbSaveBase(${m.id},this)">Speichern</button>
       <div style="margin-top:14px">${row('Punkte diesen Monat',m.punkte_monat)}${row('Punkte gesamt',m.punkte)}${row('Mahnungen',m.mahnungen+' von 3')}${row('Status',pill(m.status==='gekuendigt'?'gekündigt':m.status))}</div></div>
@@ -1031,13 +1031,14 @@ async function mbSaveRank(id,b){
   b.disabled=true; await mbSet(id,{im_vertrieb_seit:seit,rang,rang_fest:fest},'Gespeichert');
 }
 async function mbSaveBase(id,b){ const n=$('mb-name').value.trim(); if(!n) return toast('Name fehlt'); b.disabled=true; await mbSet(id,Object.assign({name:n,email:$('mb-mail').value.trim()||null,rolle:$('mb-rolle').value,notiz:$('mb-notiz').value.trim()||null},mbAboPatch($('mb-abo').value)),'Gespeichert'); }
-/* Paket + Test-Zustände (Basic, Premium-Test, Tag 15) – Tag 15 nutzt die echte Umstellung beim nächsten App-Öffnen */
+/* Paket + Test-Zustände (Premium-Test 7 Tage, ab Tag 8 Basic, Angebot an Tag 14) – Tag 8 nutzt die echte Umstellung beim nächsten App-Öffnen */
 function mbAboPatch(v){ const t=d=>new Date(Date.now()+d*864e5).toISOString();
-  if(v==='basic') return {abo:'basic',abo_test:false,test_bis:t(-2),angebot_bis:t(-1),eingefroren:true};
-  if(v==='test1') return {abo:'premium',abo_test:true,test_bis:t(14),angebot_bis:null,eingefroren:false};
-  if(v==='test14') return {abo:'premium',abo_test:true,test_bis:t(1),angebot_bis:null,eingefroren:false};
-  if(v==='tag15') return {abo:'premium',abo_test:true,test_bis:t(-1/1440),angebot_bis:null,eingefroren:false};
-  return {abo:v,abo_test:false,test_bis:null,angebot_bis:null,eingefroren:false}; }
+  if(v==='basic') return {abo:'basic',abo_test:false,test_bis:t(-8),angebot_ab:t(-2),angebot_bis:t(-1),eingefroren:true};
+  if(v==='test1') return {abo:'premium',abo_test:true,test_bis:t(7),angebot_ab:null,angebot_bis:null,eingefroren:false};
+  if(v==='test7') return {abo:'premium',abo_test:true,test_bis:t(1),angebot_ab:null,angebot_bis:null,eingefroren:false};
+  if(v==='tag8') return {abo:'premium',abo_test:true,test_bis:t(-1/1440),angebot_ab:null,angebot_bis:null,eingefroren:false};
+  if(v==='tag14') return {abo:'basic',abo_test:false,test_bis:t(-6),angebot_ab:t(-1/1440),angebot_bis:t(1),eingefroren:true};
+  return {abo:v,abo_test:false,test_bis:null,angebot_ab:null,angebot_bis:null,eingefroren:false}; }
 async function mbWarn(id){
   const m=mbById(id); if(!confirm(`${m.name} verwarnen?\n\n• Mahnung ${Math.min(3,m.mahnungen+1)} von 3\n• 500 Punkte Abzug\n• Bei der dritten Mahnung wird gesperrt`)) return;
   const w=Math.min(3,m.mahnungen+1); await mbSet(id,{mahnungen:w,punkte:m.punkte-500,punkte_monat:m.punkte_monat-500,...(w>=3?{status:'gesperrt'}:{})}, w>=3?'Dritte Mahnung, gesperrt':'Mahnung '+w+' von 3');
@@ -1866,7 +1867,7 @@ function gewinnspiel(){ if(D.gwT===undefined){ D.gwT=null; gwzLoad(); }
   return `<div><h1 class="h1">Start & Gewinnspiel</h1><p class="sub">Launch-Datum, Gründungsmitglieder, Feed-Video und die Auslosung des Start-Gewinnspiels.</p>
   <div class="card"><h3 style="margin:0 0 6px">Launch</h3><p class="muted" style="font-size:12.5px;margin:0 0 12px">Ab dem Startdatum läuft die 14-Tage-Challenge für alle. Wer in den ersten Tagen Plus oder Premium nimmt, wird automatisch Gründungsmitglied.</p>
     <div class="row" style="gap:12px;flex-wrap:wrap;align-items:flex-end">
-      <label style="font-size:12px">Start (Livestream)<br><input type="date" class="in" id="ln-start" value="${esc(L.start||'2026-12-13')}"></label>
+      <label style="font-size:12px">Start (Livestream)<br><input type="date" class="in" id="ln-start" value="${esc(L.start||'2027-01-03')}"></label>
       <label style="font-size:12px">Gründer-Zeitraum (Tage)<br><input type="number" class="in" id="ln-tage" min="1" max="30" style="width:90px" value="${+L.gruender_tage||7}"></label>
       <label style="font-size:12px">Gewinnspiel-Ende<br><input type="date" class="in" id="ln-ende" value="${esc(L.gewinnspiel_ende||'')}"></label>
       <label style="font-size:12px;flex:1;min-width:240px">Video oben im Feed während des Gewinnspiels (YouTube- oder Video-Link)<br><input class="in" id="ln-video" placeholder="https://youtube.com/shorts/…" value="${esc(L.video||'')}"></label>
@@ -1898,7 +1899,7 @@ gewinnspiel=function(){ if(D.gwT===undefined){ D.gwT=null; gwzLoad(); }
   return `<div><h1 class="h1">Start & Gewinnspiel</h1><p class="sub">Launch-Datum, Gründungsmitglieder, Feed-Video und die Auslosung des Start-Gewinnspiels.</p>
   <div class="card"><h3 style="margin:0 0 6px">Launch</h3><p class="muted" style="font-size:12.5px;margin:0 0 12px">Ab dem Startdatum läuft die 14-Tage-Challenge für alle. Wer in den ersten Tagen Plus oder Premium nimmt, wird automatisch Gründungsmitglied.</p>
     <div class="row" style="gap:12px;flex-wrap:wrap;align-items:flex-end">
-      <label style="font-size:12px">Start (Livestream)<br><input type="date" class="in" id="ln-start" value="${esc(L.start||'2026-12-13')}"></label>
+      <label style="font-size:12px">Start (Livestream)<br><input type="date" class="in" id="ln-start" value="${esc(L.start||'2027-01-03')}"></label>
       <label style="font-size:12px">Gründer-Zeitraum (Tage)<br><input type="number" class="in" id="ln-tage" min="1" max="30" style="width:90px" value="${+L.gruender_tage||7}"></label>
       <label style="font-size:12px">Gewinnspiel-Ende<br><input type="date" class="in" id="ln-ende" value="${esc(L.gewinnspiel_ende||'')}"></label>
       <label style="font-size:12px">Euer Instagram-Account<br><input class="in" id="ln-insta" placeholder="closinghub" style="width:160px" value="${esc(L.insta||'')}"></label>
